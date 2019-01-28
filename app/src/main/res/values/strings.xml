@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Appunti</string>
+    <string name="title_item_detail">Item Detail</string>
+    <string name="category_default">Uncategorized</string>
+
+
+    <!-- debug -->
+    <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum id fringilla augue, nec convallis
+        mi. Pellentesque auctor iaculis ex nec dignissim. Proin elit magna, mattis at vulputate nec, laoreet ut neque. Morbi
+        venenatis est a elit bibendum accumsan. Etiam condimentum scelerisque dapibus. Praesent ex nibh, mollis ac faucibus ac,
+        congue sit amet ex. Vestibulum facilisis efficitur ante at convallis. Proin condimentum erat lacus, nec gravida dolor
+        rhoncus sit amet. Nunc lobortis, odio id volutpat luctus, ipsum velit mattis tortor, sit amet euismod nisl nisi non lorem.
+        Donec fermentum enim et eleifend maximus. Curabitur dictum molestie hendrerit. Orci varius natoque penatibus et magnis dis
+        parturient montes, nascetur ridiculus mus. Aenean sit amet tellus quis nibh congue consequat. Cras convallis est id ligula
+        facilisis scelerisque.
+    </string>
+    <string name="search_title">Search</string>
+    <string name="search_hint">Search</string>
+    <string name="search_view_hint_text">Cerca negli Appunti...</string>
+</resources>
