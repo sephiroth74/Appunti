@@ -16,11 +16,8 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import it.sephiroth.android.app.appunti.database.AppDatabase
-import it.sephiroth.android.app.appunti.database.Entry
 import it.sephiroth.android.app.appunti.database.EntryWithCategory
 import it.sephiroth.android.app.appunti.ext.getColorStateList
-import it.sephiroth.android.app.appunti.ext.ioThread
 import it.sephiroth.android.app.appunti.ext.isLightTheme
 import it.sephiroth.android.app.appunti.models.EntryViewModel
 import kotlinx.android.synthetic.main.item_list_content.view.*
@@ -61,7 +58,6 @@ class MainActivity : AppCompatActivity() {
 //            }
 //        }
 
-        drawerLayout.setStatusBarBackground(android.R.color.white)
 
         searchView.setOnMicClickListener { }
 
@@ -105,6 +101,17 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
+
+        model.displayAsGrid.observe(this, Observer {
+            if (it) {
+                (itemsRecycler.layoutManager as StaggeredGridLayoutManager).spanCount = 2
+            } else {
+                (itemsRecycler.layoutManager as StaggeredGridLayoutManager).spanCount = 1
+            }
+
+            bottomAppBar.menu.findItem(R.id.menu_show_as_list).isVisible = it
+            bottomAppBar.menu.findItem(R.id.menu_show_as_grid).isVisible = !it
+        })
     }
 
     private fun updateNavigationMenuCheckedItems() {
@@ -132,7 +139,11 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.menu_show_as_list -> model.displayAsGrid.value = false
+            R.id.menu_show_as_grid -> model.displayAsGrid.value = true
+        }
         return super.onOptionsItemSelected(item)
     }
 

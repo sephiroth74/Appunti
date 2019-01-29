@@ -12,6 +12,7 @@ import kotlin.properties.Delegates
 class EntryViewModel(application: Application) : AndroidViewModel(application) {
 
     val entries = MutableLiveData<LiveData<List<EntryWithCategory>>>()
+    val displayAsGrid = MutableLiveData<Boolean>()
 
     var category: String? by Delegates.observable<String?>(null) { prop, oldValue, newValue ->
         newValue?.let {

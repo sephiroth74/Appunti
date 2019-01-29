@@ -3,14 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/menu_sort"
-        android:icon="@drawable/sharp_sort_24"
-        android:title="@string/sort_by"
-        app:showAsAction="ifRoom" />
+        android:id="@+id/menu_show_as_list"
+        android:icon="@drawable/sharp_view_headline_24"
+        android:title="Display as List"
+        android:visible="false"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menu_show_as_grid"
+        android:icon="@drawable/sharp_view_module_24"
+        android:title="Display as Grid"
+        android:visible="true"
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/menu_share"
         android:icon="@drawable/sharp_share_24"
         android:title="@string/share"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
 </menu>
