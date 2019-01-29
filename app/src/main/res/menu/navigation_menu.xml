@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_item_labels"
+        android:title="@string/labels">
+        <menu>
+            <group
+                android:id="@+id/navigation_group_labels"
+                android:menuCategory="alternative" />
+        </menu>
+    </item>
+
+    <group
+        android:id="@+id/navigation_group_misc"
+        android:checkableBehavior="none"
+        android:menuCategory="container">
+        <item
+            android:id="@+id/navigation_item_2"
+            android:icon="@drawable/sharp_settings_24"
+            android:title="@string/settings" />
+    </group>
+</menu>

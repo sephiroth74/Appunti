@@ -1,102 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout android:id="@+id/drawerLayout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".MainActivity">
+    tools:openDrawer="start">
 
-    <!--<com.google.android.material.appbar.AppBarLayout-->
-    <!--android:id="@+id/app_bar"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:background="@android:color/transparent"-->
-    <!--android:fitsSystemWindows="true"-->
-    <!--android:theme="@style/Theme.Appunti.AppBarOverlay"-->
-    <!--app:elevation="0dp">-->
-
-    <!--<androidx.appcompat.widget.Toolbar-->
-    <!--android:id="@+id/toolbar"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:background="@android:color/transparent"-->
-    <!--android:fitsSystemWindows="true"-->
-    <!--app:contentInsetEnd="0dp"-->
-    <!--app:contentInsetLeft="0dp"-->
-    <!--app:contentInsetRight="0dp"-->
-    <!--app:contentInsetStart="0dp"-->
-    <!--app:layout_collapseMode="pin"-->
-    <!--app:layout_scrollFlags="scroll|enterAlways|snap"-->
-    <!--app:popupTheme="@style/Theme.Appunti.PopupOverlay">-->
-
-    <!--<com.lapism.searchview.widget.SearchView-->
-    <!--android:id="@+id/searchView"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:background="@android:color/transparent"-->
-    <!--app:layout_behavior="@string/search_behavior"-->
-    <!--app:search_hint="@string/search_view_hint_text"-->
-    <!--app:search_mic_icon="@drawable/baseline_mic_24"-->
-    <!--app:search_shape="rounded"-->
-    <!--app:search_theme="play" />-->
-
-    <!--</androidx.appcompat.widget.Toolbar>-->
-    <!--</com.google.android.material.appbar.AppBarLayout>-->
-
-    <FrameLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="8dp"
-        android:layout_marginTop="8dp"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        tools:context=".MainActivity">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/item_list"
-            android:name="it.sephiroth.android.app.appunti.ItemListFragment"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layoutManager="LinearLayoutManager"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/itemsRecycler"
+                android:name="it.sephiroth.android.app.appunti.ItemListFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layoutManager="androidx.recyclerview.widget.StaggeredGridLayoutManager"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                app:spanCount="@integer/list_items_columns"
+                tools:context=".MainActivity"
+                tools:listitem="@layout/item_list_content" />
+
+        </FrameLayout>
+
+        <com.lapism.searchview.widget.SearchView
+            android:id="@+id/searchView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="12dp"
+            android:layout_marginTop="@dimen/search_view_margin_top"
+            android:background="@android:color/transparent"
+            app:layout_behavior="@string/search_behavior"
+            app:search_hint="@string/search_view_hint_text"
+            app:search_mic_icon="@drawable/baseline_mic_24"
+            app:search_shadow_color="@android:color/transparent"
+            app:search_shape="rounded"
+            app:search_theme="play" />
+
+        <com.google.android.material.bottomappbar.BottomAppBar
+            android:id="@+id/bottomAppBar"
+            style="@style/Widget.MaterialComponents.BottomAppBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:elevation="6dp"
+            app:backgroundTint="?android:attr/windowBackground"
+            app:buttonGravity="bottom"
+            app:fabAlignmentMode="end"
+            app:fabCradleRoundedCornerRadius="0dp"
+            app:hideOnScroll="true" />
+
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fabSize="normal"
+            app:layout_anchor="@id/bottomAppBar"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:context=".MainActivity"
-            tools:listitem="@layout/item_list_content" />
+            app:srcCompat="@drawable/sharp_add_24" />
 
-    </FrameLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-    <!--<com.lapism.searchview.widget.SearchView-->
-    <!--android:id="@+id/searchView"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:layout_marginLeft="12dp"-->
-    <!--android:layout_marginRight="12dp"-->
-    <!--android:layout_marginTop="@dimen/search_view_margin_top"-->
-    <!--android:background="@android:color/transparent"-->
-    <!--app:layout_behavior="@string/search_behavior"-->
-    <!--app:search_hint="@string/search_view_hint_text"-->
-    <!--app:search_mic_icon="@drawable/baseline_mic_24"-->
-    <!--app:search_shape="rounded"-->
-    <!--app:search_theme="play" />-->
-
-    <com.arlib.floatingsearchview.FloatingSearchView
-        android:id="@+id/searchView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:floatingSearch_close_search_on_keyboard_dismiss="true"
-        app:floatingSearch_leftActionMode="showHamburger"
-        app:floatingSearch_searchBarMarginLeft="8dp"
-        app:floatingSearch_searchBarMarginRight="8dp"
-        app:floatingSearch_searchBarMarginTop="4dp"
-        app:floatingSearch_searchHint="@string/search_view_hint_text"
-        app:floatingSearch_showVoiceInput="true"
-        app:floatingSearch_suggestionsListAnimDuration="250" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab"
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigationView"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@drawable/sharp_add_24" />
+        android:layout_height="match_parent"
+        android:layout_gravity="start|left"
+        android:fitsSystemWindows="false"
+        app:headerLayout="@layout/navigation_header"
+        app:menu="@menu/navigation_menu" />
 
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

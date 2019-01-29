@@ -12,6 +12,13 @@ interface EntryDao {
             "INNER JOIN categories ON entries.entry_category_uid = categories.category_uid ORDER BY entries.entry_date DESC")
     fun all(): LiveData<List<EntryWithCategory>>
 
+    @Query("SELECT entries.*, categories.* FROM entries " +
+            "INNER JOIN categories ON entries.entry_category_uid = categories.category_uid WHERE categories.category_title = " +
+            ":categoryName" +
+            " ORDER " +
+            "BY entries.entry_date DESC")
+    fun allByCategory(categoryName: String): LiveData<List<EntryWithCategory>>
+
 
     @Insert
     fun add(entry: Entry)
@@ -20,7 +27,7 @@ interface EntryDao {
 @Dao
 interface CategoryDao {
     @Query("SELECT * from categories")
-    fun getAll(): List<Category>
+    fun getAll(): LiveData<List<Category>>
 
     @Insert
     fun add(category: Category)

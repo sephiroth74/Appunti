@@ -4,23 +4,18 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.os.Parcel
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.view.textservice.SuggestionsInfo
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.graphics.ColorUtils
+import androidx.core.view.GravityCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import androidx.recyclerview.widget.StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
-import com.arlib.floatingsearchview.suggestions.model.SearchSuggestion
 import it.sephiroth.android.app.appunti.database.AppDatabase
 import it.sephiroth.android.app.appunti.database.Entry
 import it.sephiroth.android.app.appunti.database.EntryWithCategory
@@ -40,15 +35,24 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
+        setSupportActionBar(bottomAppBar)
 
         adapter = ItemEntryListAdapter(this, arrayListOf(), false)
         model = ViewModelProviders.of(this).get(EntryViewModel::class.java)
 
-        item_list.adapter = adapter
-        item_list.setHasFixedSize(false)
+        itemsRecycler.adapter = adapter
+        itemsRecycler.setHasFixedSize(false)
 
         model.entries.observe(this, Observer {
-            adapter.update(it)
+            Timber.i("entries category changed")
+
+
+
+            it.removeObservers(this)
+            it.observe(this, Observer {
+                Timber.i("entries changed")
+                adapter.update(it)
+            })
         })
 
         fab.setOnClickListener {
@@ -57,30 +61,71 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        item_list.layoutManager = StaggeredGridLayoutManager(2, RecyclerView.VERTICAL)
-        (item_list.layoutManager as StaggeredGridLayoutManager).gapStrategy = GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
+        searchView.setOnMicClickListener { }
 
-        searchView.setOnQueryChangeListener { oldQuery, newQuery ->
-            Timber.v("Query: $newQuery")
-
-            val suggestionInfo = object : SearchSuggestion {
-                override fun writeToParcel(dest: Parcel?, flags: Int) {
-                }
-
-                override fun describeContents(): Int {
-                    return 0
-                }
-
-                override fun getBody(): String {
-                    return "Ciao"
-                }
-
-            }
-
-            searchView.swapSuggestions(mutableListOf(suggestionInfo))
+        searchView.setOnLogoClickListener {
+            toggleDrawer()
         }
 
-        searchView.setDimBackground(false)
+        model.categories.observe(this@MainActivity, Observer {
+            val menu = navigationView.menu
+            val labels = menu.findItem(R.id.navigation_item_labels)
+            val subMenu = labels.subMenu
+            subMenu.clear()
+
+
+            for (category in it) {
+                subMenu
+                        .add(R.id.navigation_group_labels, R.id.navigation_item_label_id, Menu.NONE, category.category_title)
+                        .setIcon(R.drawable.outline_label_24)
+                        .setCheckable(true)
+            }
+
+            subMenu
+                    .add(R.id.navigation_group_labels, R.id.navigation_item_label_id, Menu.NONE, R.string.categories_all)
+                    .setIcon(R.drawable.outline_label_24)
+                    .setCheckable(true)
+        })
+
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.navigation_item_label_all -> {
+                    model.category = null
+//                    closeDrawerIfOpened()
+                }
+                R.id.navigation_item_label_id -> {
+                    if (!menuItem.isChecked) {
+                        model.category = menuItem.title.toString()
+                    } else {
+                        model.category = null
+                    }
+//                    closeDrawerIfOpened()
+                }
+                else -> {
+                }
+            }
+            true
+        }
+
+    }
+
+    private fun closeDrawerIfOpened() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START))
+            drawerLayout.closeDrawer(GravityCompat.START)
+    }
+
+    private fun toggleDrawer() {
+        if (!drawerLayout.isDrawerOpen(GravityCompat.START)) drawerLayout.openDrawer(GravityCompat.START)
+        else drawerLayout.closeDrawer(GravityCompat.START)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        return super.onOptionsItemSelected(item)
     }
 
     class EntriesDiffCallback(var oldData: List<EntryWithCategory>,
@@ -154,10 +199,10 @@ class MainActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = getItem(position)
-            item?.let { item ->
-                holder.titleTextView.text = item.entry.entry_title
-                holder.contentTextView.text = item.entry.entry_text.substring(0, 100) + "..."
-                holder.categoryTextView.text = item.category.category_title
+            item?.let { entryItem ->
+                holder.titleTextView.text = entryItem.entry.entry_title
+                holder.contentTextView.text = entryItem.entry.entry_text.substring(0, 100) + "..."
+                holder.categoryTextView.text = entryItem.category.category_title
 
                 if (null == cardBackgroundColorDefault) {
                     cardBackgroundColorDefault = holder.cardView.cardBackgroundColor
@@ -166,14 +211,14 @@ class MainActivity : AppCompatActivity() {
 
                 var textColor: ColorStateList? = textColorDefault
 
-                if (item.category.category_color != 0) {
+                if (entryItem.category.category_color != 0) {
 
-                    holder.cardView.setCardBackgroundColor(item.category.category_color)
+                    holder.cardView.setCardBackgroundColor(entryItem.category.category_color)
                     holder.cardView.foreground = cardForegroundNoStroke.constantState.newDrawable()
                     holder.categoryTextView.visibility = View.VISIBLE
 
 
-                    val luminance = ColorUtils.calculateLuminance(item.category.category_color)
+                    val luminance = ColorUtils.calculateLuminance(entryItem.category.category_color)
 
                     if (luminance < 0.4) {
                         textColor = textColorInverse
@@ -188,7 +233,7 @@ class MainActivity : AppCompatActivity() {
                 holder.titleTextView.setTextColor(textColor)
 
                 with(holder.cardView) {
-                    tag = item
+                    tag = entryItem
                     setOnClickListener {
                         Timber.d("card clicked!")
                     }
