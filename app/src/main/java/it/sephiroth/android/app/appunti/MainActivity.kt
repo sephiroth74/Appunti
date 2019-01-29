@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.graphics.ColorUtils
-import androidx.core.view.GravityCompat
+import androidx.core.view.children
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         model.entries.observe(this, Observer {
             Timber.i("entries category changed")
 
-
+            updateNavigationMenuCheckedItems()
 
             it.removeObservers(this)
             it.observe(this, Observer {
@@ -55,43 +55,42 @@ class MainActivity : AppCompatActivity() {
             })
         })
 
-        fab.setOnClickListener {
-            ioThread {
-                AppDatabase.getInstance(this).entryDao().add(Entry("Title1", 1))
-            }
-        }
+//        fab.setOnClickListener {
+//            ioThread {
+//                AppDatabase.getInstance(this).entryDao().add(Entry("Title1", 1))
+//            }
+//        }
+
+        drawerLayout.setStatusBarBackground(android.R.color.white)
 
         searchView.setOnMicClickListener { }
 
-        searchView.setOnLogoClickListener {
-            toggleDrawer()
-        }
+        searchView.setOnLogoClickListener { toggleDrawer() }
 
         model.categories.observe(this@MainActivity, Observer {
             val menu = navigationView.menu
-            val labels = menu.findItem(R.id.navigation_item_labels)
-            val subMenu = labels.subMenu
+            val subMenu = menu.findItem(R.id.navigation_item_labels).subMenu
+
             subMenu.clear()
 
-
-            for (category in it) {
-                subMenu
-                        .add(R.id.navigation_group_labels, R.id.navigation_item_label_id, Menu.NONE, category.category_title)
-                        .setIcon(R.drawable.outline_label_24)
-                        .setCheckable(true)
-            }
-
-            subMenu
-                    .add(R.id.navigation_group_labels, R.id.navigation_item_label_id, Menu.NONE, R.string.categories_all)
+            subMenu.add(0, R.id.navigation_item_label_all, Menu.NONE, R.string.categories_all)
                     .setIcon(R.drawable.outline_label_24)
                     .setCheckable(true)
+                    .isChecked = model.category.isNullOrEmpty()
+
+            for (category in it) {
+                subMenu.add(1, R.id.navigation_item_label_id, Menu.NONE, category.category_title)
+                        .setIcon(R.drawable.outline_label_24)
+                        .setCheckable(true)
+                        .isChecked = model.category.equals(category.category_title)
+            }
         })
 
         navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.navigation_item_label_all -> {
                     model.category = null
-//                    closeDrawerIfOpened()
+                    closeDrawerIfOpened()
                 }
                 R.id.navigation_item_label_id -> {
                     if (!menuItem.isChecked) {
@@ -99,24 +98,33 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         model.category = null
                     }
-//                    closeDrawerIfOpened()
+                    closeDrawerIfOpened()
                 }
                 else -> {
                 }
             }
             true
         }
+    }
 
+    private fun updateNavigationMenuCheckedItems() {
+        val menu = navigationView.menu.findItem(R.id.navigation_item_labels).subMenu
+        for (item in menu.children) {
+            when (item.groupId) {
+                0 -> item.isChecked = model.category.isNullOrEmpty()
+                1 -> item.isChecked = model.category?.equals(item.title) ?: run { false }
+            }
+        }
     }
 
     private fun closeDrawerIfOpened() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START))
-            drawerLayout.closeDrawer(GravityCompat.START)
+        if (drawerLayout.isDrawerOpen(navigationView))
+            drawerLayout.closeDrawer(navigationView)
     }
 
     private fun toggleDrawer() {
-        if (!drawerLayout.isDrawerOpen(GravityCompat.START)) drawerLayout.openDrawer(GravityCompat.START)
-        else drawerLayout.closeDrawer(GravityCompat.START)
+        if (!drawerLayout.isDrawerOpen(navigationView)) drawerLayout.openDrawer(navigationView)
+        else drawerLayout.closeDrawer(navigationView)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

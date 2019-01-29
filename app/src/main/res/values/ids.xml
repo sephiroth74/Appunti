@@ -2,4 +2,6 @@
 <resources>
     <item name="navigation_item_label_id" type="id" />
     <item name="navigation_item_label_all" type="id" />
+    <item name="navigation_item_category_add" type="id" />
+    <item name="navigation_item_category_edit" type="id" />
 </resources>
