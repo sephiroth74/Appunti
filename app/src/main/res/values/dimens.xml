@@ -7,4 +7,5 @@
     <dimen name="item_list_margin_horizontal">8dp</dimen>
     <dimen name="material_cardview_cornerRadius">8dp</dimen>
     <dimen name="material_cardview_stroke_width">0.5dp</dimen>
+    <dimen name="search_view_margin_top">4dp</dimen>
 </resources>

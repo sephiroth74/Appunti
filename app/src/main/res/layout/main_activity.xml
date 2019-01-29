@@ -7,45 +7,88 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/app_bar"
+    <!--<com.google.android.material.appbar.AppBarLayout-->
+    <!--android:id="@+id/app_bar"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:background="@android:color/transparent"-->
+    <!--android:fitsSystemWindows="true"-->
+    <!--android:theme="@style/Theme.Appunti.AppBarOverlay"-->
+    <!--app:elevation="0dp">-->
+
+    <!--<androidx.appcompat.widget.Toolbar-->
+    <!--android:id="@+id/toolbar"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:background="@android:color/transparent"-->
+    <!--android:fitsSystemWindows="true"-->
+    <!--app:contentInsetEnd="0dp"-->
+    <!--app:contentInsetLeft="0dp"-->
+    <!--app:contentInsetRight="0dp"-->
+    <!--app:contentInsetStart="0dp"-->
+    <!--app:layout_collapseMode="pin"-->
+    <!--app:layout_scrollFlags="scroll|enterAlways|snap"-->
+    <!--app:popupTheme="@style/Theme.Appunti.PopupOverlay">-->
+
+    <!--<com.lapism.searchview.widget.SearchView-->
+    <!--android:id="@+id/searchView"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:background="@android:color/transparent"-->
+    <!--app:layout_behavior="@string/search_behavior"-->
+    <!--app:search_hint="@string/search_view_hint_text"-->
+    <!--app:search_mic_icon="@drawable/baseline_mic_24"-->
+    <!--app:search_shape="rounded"-->
+    <!--app:search_theme="play" />-->
+
+    <!--</androidx.appcompat.widget.Toolbar>-->
+    <!--</com.google.android.material.appbar.AppBarLayout>-->
+
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:fitsSystemWindows="true"
-        android:theme="@style/Theme.Appunti.AppBarOverlay"
-        app:elevation="0dp">
+        android:layout_height="match_parent"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/item_list"
+            android:name="it.sephiroth.android.app.appunti.ItemListFragment"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:fitsSystemWindows="true"
-            app:contentInsetEnd="0dp"
-            app:contentInsetLeft="0dp"
-            app:contentInsetRight="0dp"
-            app:contentInsetStart="0dp"
-            app:layout_collapseMode="pin"
-            app:layout_scrollFlags="scroll|enterAlways|snap"
-            app:popupTheme="@style/Theme.Appunti.PopupOverlay">
+            android:layout_height="match_parent"
+            app:layoutManager="LinearLayoutManager"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:context=".MainActivity"
+            tools:listitem="@layout/item_list_content" />
 
-            <com.lapism.searchview.widget.SearchView
-                android:id="@+id/searchView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                app:layout_behavior="@string/search_behavior"
-                app:search_hint="@string/search_view_hint_text"
-                app:search_mic_icon="@drawable/baseline_mic_24"
-                app:search_shape="rounded"
-                app:search_theme="play" />
+    </FrameLayout>
 
-        </androidx.appcompat.widget.Toolbar>
+    <!--<com.lapism.searchview.widget.SearchView-->
+    <!--android:id="@+id/searchView"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_marginLeft="12dp"-->
+    <!--android:layout_marginRight="12dp"-->
+    <!--android:layout_marginTop="@dimen/search_view_margin_top"-->
+    <!--android:background="@android:color/transparent"-->
+    <!--app:layout_behavior="@string/search_behavior"-->
+    <!--app:search_hint="@string/search_view_hint_text"-->
+    <!--app:search_mic_icon="@drawable/baseline_mic_24"-->
+    <!--app:search_shape="rounded"-->
+    <!--app:search_theme="play" />-->
 
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <include layout="@layout/main_activity_content" />
+    <com.arlib.floatingsearchview.FloatingSearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:floatingSearch_close_search_on_keyboard_dismiss="true"
+        app:floatingSearch_leftActionMode="showHamburger"
+        app:floatingSearch_searchBarMarginLeft="8dp"
+        app:floatingSearch_searchBarMarginRight="8dp"
+        app:floatingSearch_searchBarMarginTop="4dp"
+        app:floatingSearch_searchHint="@string/search_view_hint_text"
+        app:floatingSearch_showVoiceInput="true"
+        app:floatingSearch_suggestionsListAnimDuration="250" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
