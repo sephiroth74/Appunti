@@ -13,7 +13,6 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
-import androidx.core.graphics.ColorUtils
 import androidx.core.view.children
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -47,6 +46,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.main_activity)
+        setSupportActionBar(toolbar)
 
         adapter = ItemEntryListAdapter(this, arrayListOf())
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
@@ -238,7 +238,6 @@ class MainActivity : AppCompatActivity() {
                     textColorDefault = holder.titleTextView.textColors
                 }
 
-                var textColor: ColorStateList? = textColorDefault
                 val color = categoryColors[entryItem.category.category_color_index]
 
                 if (entryItem.category.category_color_index != 0) {
@@ -247,19 +246,13 @@ class MainActivity : AppCompatActivity() {
                     holder.cardView.foreground = cardForegroundNoStroke.constantState.newDrawable()
                     holder.categoryTextView.visibility = View.VISIBLE
 
-                    val luminance = ColorUtils.calculateLuminance(color)
-//
-//                    if (luminance < 0.4) {
-//                        textColor = textColorInverse
-//                    }
+                    // val luminance = ColorUtils.calculateLuminance(color)
 
                 } else {
                     holder.cardView.setCardBackgroundColor(cardBackgroundColorDefault)
                     holder.cardView.foreground = cardForegroundStroke.constantState.newDrawable()
                     holder.categoryTextView.visibility = View.GONE
                 }
-
-//                holder.titleTextView.setTextColor(textColor)
 
                 with(holder.cardView) {
                     tag = entryItem

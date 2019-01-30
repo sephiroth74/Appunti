@@ -35,20 +35,27 @@
                 tools:listitem="@layout/main_item_list_content" />
         </FrameLayout>
 
-        <com.lapism.searchview.widget.SearchView
-            android:id="@+id/searchView"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="12dp"
-            android:layout_marginRight="12dp"
-            android:layout_marginTop="@dimen/appunti_main_search_view_margin_top"
-            android:background="@android:color/transparent"
-            app:layout_behavior="@string/search_behavior"
-            app:search_hint="@string/search_view_hint_text"
-            app:search_mic_icon="@drawable/baseline_mic_24"
-            app:search_shadow_color="@android:color/transparent"
-            app:search_shape="rounded"
-            app:search_theme="?attr/search_theme" />
+            android:layout_height="wrap_content">
+
+            <com.lapism.searchview.widget.SearchView
+                android:id="@+id/searchView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:layout_marginRight="12dp"
+                android:layout_marginTop="@dimen/appunti_main_search_view_margin_top"
+                android:background="@android:color/transparent"
+                app:layout_behavior="@string/search_behavior"
+                app:search_hint="@string/search_view_hint_text"
+                app:search_mic_icon="@drawable/baseline_mic_24"
+                app:search_shadow_color="@android:color/transparent"
+                app:search_shape="rounded"
+                app:search_theme="?attr/search_theme"
+                tools:ignore="PrivateResource" />
+        </androidx.appcompat.widget.Toolbar>
 
         <it.sephiroth.android.app.appunti.widget.BottomAppBar
             android:id="@+id/bottomAppBar"

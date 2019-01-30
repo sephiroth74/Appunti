@@ -8,11 +8,30 @@
 
 
     <item android:id="@+id/item_background">
-        <shape android:shape="rectangle">
-            <corners android:radius="@dimen/material_cardview_cornerRadius" />
-            <stroke
-                android:width="@dimen/material_cardview_stroke_width"
-                android:color="?attr/colorControlNormal" />
-        </shape>
+
+        <selector
+            android:constantSize="true"
+            android:enterFadeDuration="@android:integer/config_shortAnimTime"
+            android:exitFadeDuration="@android:integer/config_shortAnimTime">
+
+            <item android:state_checked="true">
+                <shape android:shape="rectangle">
+                    <corners android:radius="@dimen/material_cardview_cornerRadius" />
+                    <stroke
+                        android:width="@dimen/appunti_amin_cardview_stroke_width_checked"
+                        android:color="?attr/colorControlActivated" />
+                </shape>
+            </item>
+
+
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="@dimen/material_cardview_cornerRadius" />
+                    <stroke
+                        android:width="@dimen/material_cardview_stroke_width"
+                        android:color="?attr/colorControlNormal" />
+                </shape>
+            </item>
+        </selector>
     </item>
 </ripple>

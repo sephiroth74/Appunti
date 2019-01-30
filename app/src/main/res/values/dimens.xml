@@ -6,6 +6,9 @@
     <dimen name="material_cardview_cornerRadius">8dp</dimen>
     <dimen name="material_cardview_stroke_width">0.5dp</dimen>
 
+    <!-- main cardview stroke size when item is checked -->
+    <dimen name="appunti_amin_cardview_stroke_width_checked">1dp</dimen>
+
     <!-- top margin of the main search view -->
     <dimen name="appunti_main_search_view_margin_top">4dp</dimen>
 
