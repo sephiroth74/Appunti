@@ -3,11 +3,13 @@ package it.sephiroth.android.app.appunti.widget
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.Checkable
+import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.appcompat.widget.AppCompatImageButton
 
 class CheckableAppcompatImageButton(context: Context?, attrs: AttributeSet?) : AppCompatImageButton(context, attrs), Checkable {
 
     private var mChecked: Boolean = false
+    private var mBroadcasting = false
 
 
     private var checkedChangedListener: ((checked: Boolean) -> Unit)? = null
@@ -21,13 +23,25 @@ class CheckableAppcompatImageButton(context: Context?, attrs: AttributeSet?) : A
     }
 
     override fun setChecked(value: Boolean) {
-        mChecked = value
-        checkedChangedListener?.invoke(value)
-        refreshDrawableState()
+        if (mChecked != value) {
+            mChecked = value
+            refreshDrawableState()
+
+            if (mBroadcasting) return
+
+            mBroadcasting = true
+            checkedChangedListener?.invoke(value)
+            mBroadcasting = false
+        }
     }
 
     override fun toggle() {
         isChecked = !isChecked
+    }
+
+    override fun performClick(): Boolean {
+        toggle()
+        return super.performClick()
     }
 
     override fun onCreateDrawableState(extraSpace: Int): IntArray {

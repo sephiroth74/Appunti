@@ -18,14 +18,18 @@ class BottomAppBar @JvmOverloads constructor(
     var hideOnScroll = false
 
     private var menuItemListener: ((value: View) -> Unit)? = null
+    private var displayAsListChangeListener: ((value: Boolean) -> Unit)? = null
 
     fun doOnMenuItemClick(action: (value: View) -> Unit) {
         menuItemListener = action
     }
 
+    fun doOnDisplayAsListChanged(action: (Boolean) -> Unit) {
+        displayAsListChangeListener = action
+    }
+
     fun setDisplayAsList(value: Boolean) {
         buttonDisplayAsList.isChecked = value
-
     }
 
     init {
@@ -36,9 +40,10 @@ class BottomAppBar @JvmOverloads constructor(
         super.onFinishInflate()
 
 
-//        buttonDisplayAsList.setOnCheckedChangeListener { buttonView, isChecked ->
-//
-//        }
+        buttonDisplayAsList.doOnCheckedChanged { value ->
+            Timber.i("doOnCheckedChanged: $value")
+            displayAsListChangeListener?.invoke(value)
+        }
 
         buttonNewNote.setOnClickListener {
             menuItemListener?.invoke(it)

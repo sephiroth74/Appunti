@@ -1,7 +1,6 @@
 package it.sephiroth.android.app.appunti
 
 import android.content.Context
-import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -123,6 +122,11 @@ class MainActivity : AppCompatActivity() {
 
             bottomAppBar.setDisplayAsList(it)
         })
+
+        bottomAppBar.doOnDisplayAsListChanged { value ->
+            Timber.i("doOnDisplayAsListChanged: $value")
+            model.settingsManager.displayAsList = value
+        }
 //
 //        bottomAppBar.doOnMenuItemClick { view: View ->
 //            when (view.id) {
