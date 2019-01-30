@@ -16,18 +16,22 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.lapism.searchview.Search
 import it.sephiroth.android.app.appunti.database.EntryWithCategory
 import it.sephiroth.android.app.appunti.ext.getColorStateList
 import it.sephiroth.android.app.appunti.ext.isLightTheme
-import it.sephiroth.android.app.appunti.models.EntryViewModel
+import it.sephiroth.android.app.appunti.models.MainViewModel
 import kotlinx.android.synthetic.main.item_list_content.view.*
 import kotlinx.android.synthetic.main.main_activity.*
 import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var model: EntryViewModel
+    lateinit var model: MainViewModel
     lateinit var adapter: ItemEntryListAdapter
+    lateinit var layoutManager: StaggeredGridLayoutManager
+
+    private var mainMenuCreated: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,10 +39,12 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(bottomAppBar)
 
         adapter = ItemEntryListAdapter(this, arrayListOf(), false)
-        model = ViewModelProviders.of(this).get(EntryViewModel::class.java)
+        model = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
         itemsRecycler.adapter = adapter
         itemsRecycler.setHasFixedSize(false)
+
+        layoutManager = itemsRecycler.layoutManager as StaggeredGridLayoutManager
 
         model.entries.observe(this, Observer {
             Timber.i("entries category changed")
@@ -58,9 +64,9 @@ class MainActivity : AppCompatActivity() {
 //            }
 //        }
 
-
-        searchView.setOnMicClickListener { }
-
+        searchView.setOnMicClickListener {
+            Search.setVoiceSearch(this, "")
+        }
         searchView.setOnLogoClickListener { toggleDrawer() }
 
         model.categories.observe(this@MainActivity, Observer {
@@ -70,15 +76,15 @@ class MainActivity : AppCompatActivity() {
             subMenu.clear()
 
             subMenu.add(0, R.id.navigation_item_label_all, Menu.NONE, R.string.categories_all)
-                    .setIcon(R.drawable.outline_label_24)
-                    .setCheckable(true)
-                    .isChecked = model.category.isNullOrEmpty()
+                .setIcon(R.drawable.outline_label_24)
+                .setCheckable(true)
+                .isChecked = model.category.isNullOrEmpty()
 
             for (category in it) {
                 subMenu.add(1, R.id.navigation_item_label_id, Menu.NONE, category.category_title)
-                        .setIcon(R.drawable.outline_label_24)
-                        .setCheckable(true)
-                        .isChecked = model.category.equals(category.category_title)
+                    .setIcon(R.drawable.outline_label_24)
+                    .setCheckable(true)
+                    .isChecked = model.category.equals(category.category_title)
             }
         })
 
@@ -102,15 +108,18 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        model.displayAsGrid.observe(this, Observer {
+        model.displayAsList.observe(this, Observer {
+            Timber.i("displayAsList -> $it")
             if (it) {
-                (itemsRecycler.layoutManager as StaggeredGridLayoutManager).spanCount = 2
+                layoutManager.spanCount = resources.getInteger(R.integer.list_items_columns_list)
             } else {
-                (itemsRecycler.layoutManager as StaggeredGridLayoutManager).spanCount = 1
+                layoutManager.spanCount = resources.getInteger(R.integer.list_items_columns_grid)
             }
 
-            bottomAppBar.menu.findItem(R.id.menu_show_as_list).isVisible = it
-            bottomAppBar.menu.findItem(R.id.menu_show_as_grid).isVisible = !it
+            if (mainMenuCreated) {
+                bottomAppBar.menu.findItem(R.id.menu_show_as_list).isVisible = !it
+                bottomAppBar.menu.findItem(R.id.menu_show_as_grid).isVisible = it
+            }
         })
     }
 
@@ -134,15 +143,24 @@ class MainActivity : AppCompatActivity() {
         else drawerLayout.closeDrawer(navigationView)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        Timber.i("onCreateOptionsMenu")
+
         menuInflater.inflate(R.menu.main_menu, menu)
+
+        val displayAsList = model.displayAsList.value ?: true
+
+        menu.findItem(R.id.menu_show_as_list).isVisible = !displayAsList
+        menu.findItem(R.id.menu_show_as_grid).isVisible = displayAsList
+
+        mainMenuCreated = true
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_show_as_list -> model.displayAsGrid.value = false
-            R.id.menu_show_as_grid -> model.displayAsGrid.value = true
+            R.id.menu_show_as_list -> model.settingsManager.displayAsList = true
+            R.id.menu_show_as_grid -> model.settingsManager.displayAsList = false
         }
         return super.onOptionsItemSelected(item)
     }

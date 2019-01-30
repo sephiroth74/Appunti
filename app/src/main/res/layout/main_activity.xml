@@ -33,6 +33,16 @@
 
         </FrameLayout>
 
+        <!--<androidx.appcompat.widget.SearchView-->
+            <!--android:id="@+id/searchView"-->
+            <!--style="@style/Widget.AppCompat.SearchView.ActionBar"-->
+            <!--app:iconifiedByDefault="false"-->
+            <!--android:layout_marginTop="@dimen/search_view_margin_top"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content">-->
+
+        <!--</androidx.appcompat.widget.SearchView>-->
+
         <com.lapism.searchview.widget.SearchView
             android:id="@+id/searchView"
             android:layout_width="match_parent"

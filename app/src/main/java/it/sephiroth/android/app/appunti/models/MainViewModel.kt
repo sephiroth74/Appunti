@@ -4,15 +4,17 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import it.sephiroth.android.app.appunti.SettingsManager
 import it.sephiroth.android.app.appunti.database.AppDatabase
 import it.sephiroth.android.app.appunti.database.Category
 import it.sephiroth.android.app.appunti.database.EntryWithCategory
 import kotlin.properties.Delegates
 
-class EntryViewModel(application: Application) : AndroidViewModel(application) {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val entries = MutableLiveData<LiveData<List<EntryWithCategory>>>()
-    val displayAsGrid = MutableLiveData<Boolean>()
+    val displayAsList: LiveData<Boolean> = MutableLiveData<Boolean>()
+    val settingsManager = SettingsManager.getInstance(application)
 
     var category: String? by Delegates.observable<String?>(null) { prop, oldValue, newValue ->
         newValue?.let {
@@ -22,8 +24,7 @@ class EntryViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
-    fun getEntriesByCategory(name: String?): LiveData<List<EntryWithCategory>> {
+    private fun getEntriesByCategory(name: String?): LiveData<List<EntryWithCategory>> {
         name?.let {
             return AppDatabase.getInstance(getApplication()).entryDao().allByCategory(name)
         } ?: run {
@@ -37,5 +38,9 @@ class EntryViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         category = null
+        (displayAsList as MutableLiveData).value = settingsManager.displayAsList
+        settingsManager.doOnDisplayAsListChanged { value: Boolean -> displayAsList.value = value }
     }
+
+
 }
