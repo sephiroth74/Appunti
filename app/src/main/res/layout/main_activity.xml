@@ -76,7 +76,7 @@
                 android:id="@+id/buttonNewNote"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/button_material_background"
+                android:background="@drawable/button_material_background_ripple"
                 android:clickable="true"
                 android:drawablePadding="8dp"
                 android:drawableStart="@drawable/sharp_add_box_24"
@@ -91,23 +91,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
 
-            <androidx.appcompat.widget.AppCompatImageButton
+            <it.sephiroth.android.app.appunti.widget.CheckableAppcompatImageButton
                 android:id="@+id/buttonDisplayAsList"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/button_material_background"
+                android:background="@drawable/button_material_background_ripple"
                 android:padding="8dp"
-                android:src="@drawable/sharp_view_headline_24"
-                android:tooltipText="Display as List" />
+                android:src="@drawable/background_selector_list_vs_grid" />
 
-            <androidx.appcompat.widget.AppCompatImageButton
-                android:id="@+id/buttonDisplayAsGrid"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/button_material_background"
-                android:padding="8dp"
-                android:src="@drawable/sharp_view_module_24"
-                android:tooltipText="Display as Grid" />
 
         </it.sephiroth.android.app.appunti.widget.BottomAppBar>
 

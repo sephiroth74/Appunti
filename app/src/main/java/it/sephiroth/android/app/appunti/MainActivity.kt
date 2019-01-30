@@ -123,18 +123,18 @@ class MainActivity : AppCompatActivity() {
 
             bottomAppBar.setDisplayAsList(it)
         })
-
-        bottomAppBar.doOnMenuItemClick { view: View ->
-            when (view.id) {
-                R.id.buttonDisplayAsList -> model.settingsManager.displayAsList = true
-                R.id.buttonDisplayAsGrid -> model.settingsManager.displayAsList = false
-                R.id.buttonNewNote -> {
-                    SettingsManager.getInstance(this).isLightTheme = !SettingsManager.getInstance(this).isLightTheme
-                    finish()
-                    startActivity(Intent(this, this::class.java))
-                }
-            }
-        }
+//
+//        bottomAppBar.doOnMenuItemClick { view: View ->
+//            when (view.id) {
+//                R.id.buttonDisplayAsList -> model.settingsManager.displayAsList = true
+//                R.id.buttonDisplayAsGrid -> model.settingsManager.displayAsList = false
+//                R.id.buttonNewNote -> {
+//                    SettingsManager.getInstance(this).isLightTheme = !SettingsManager.getInstance(this).isLightTheme
+//                    finish()
+//                    startActivity(Intent(this, this::class.java))
+//                }
+//            }
+//        }
     }
 
     private fun updateNavigationMenuCheckedItems() {

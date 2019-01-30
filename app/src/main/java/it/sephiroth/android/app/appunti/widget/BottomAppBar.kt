@@ -24,13 +24,8 @@ class BottomAppBar @JvmOverloads constructor(
     }
 
     fun setDisplayAsList(value: Boolean) {
-        if (value) {
-            buttonDisplayAsList.visibility = View.GONE
-            buttonDisplayAsGrid.visibility = View.VISIBLE
-        } else {
-            buttonDisplayAsList.visibility = View.VISIBLE
-            buttonDisplayAsGrid.visibility = View.GONE
-        }
+        buttonDisplayAsList.isChecked = value
+
     }
 
     init {
@@ -39,13 +34,11 @@ class BottomAppBar @JvmOverloads constructor(
 
     override fun onFinishInflate() {
         super.onFinishInflate()
-        buttonDisplayAsGrid.setOnClickListener {
-            menuItemListener?.invoke(it)
-        }
 
-        buttonDisplayAsList.setOnClickListener {
-            menuItemListener?.invoke(it)
-        }
+
+//        buttonDisplayAsList.setOnCheckedChangeListener { buttonView, isChecked ->
+//
+//        }
 
         buttonNewNote.setOnClickListener {
             menuItemListener?.invoke(it)
