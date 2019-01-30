@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <color name="colorPrimary">#FFA726</color>
     <color name="colorPrimaryDark">#FFC400</color>
     <color name="colorAccent">#304FFE</color>
+
+
+    <!-- colors for categories -->
+
+    <integer-array name="category_colors_light">
+        <item>0xFFFFFFFF</item>
+        <item>0xFFFF8A65</item>
+        <item>0xFFFFD54F</item>
+        <item>0xFFAED581</item>
+        <item>0xFF4DB6AC</item>
+        <item>0xFF4FC3F7</item>
+        <item>0xFF7986CB</item>
+        <item>0xFFBA68C8</item>
+        <item>0xFFF06292</item>
+    </integer-array>
 </resources>

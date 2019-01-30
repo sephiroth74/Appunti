@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <com.google.android.material.circularreveal.cardview.CircularRevealCardView android:id="@+id/id_card"
     style="@style/Widget.MaterialComponents.CardView"
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -6,8 +7,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="4dp"
-    android:layout_marginLeft="@dimen/item_list_margin_horizontal"
-    android:layout_marginRight="@dimen/item_list_margin_horizontal"
+    android:layout_marginLeft="@dimen/appunti_main_item_list_margins_horizontal"
+    android:layout_marginRight="@dimen/appunti_main_item_list_margins_horizontal"
     android:layout_marginTop="4dp"
     android:clickable="true"
     android:focusable="true"
@@ -32,7 +33,8 @@
             android:id="@+id/id_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceListItem" />
+            android:textAppearance="?attr/textAppearanceListItem"
+            app:fontFamily="@font/roboto_medium" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/id_content"
@@ -40,7 +42,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textAppearance="?attr/textAppearanceListItemSmall"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            app:fontFamily="@font/roboto_light" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/chip"

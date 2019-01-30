@@ -2,7 +2,7 @@
 
 package it.sephiroth.android.app.appunti.database
 
-import android.graphics.Color
+import androidx.annotation.IntDef
 import androidx.room.*
 import java.util.*
 
@@ -42,7 +42,7 @@ data class Attachment(
 @Entity(tableName = "categories", indices = [Index(value = ["category_title"], unique = true)])
 data class Category(
         var category_title: String,
-        var category_color: Int = 0xFFFFFFFF.toInt()) {
+        var category_color_index: Int = 0) {
 
     @PrimaryKey(autoGenerate = true)
     var category_uid: Int = 0
@@ -51,7 +51,7 @@ data class Category(
     var category_type: CategoryType = CategoryType.SYSTEM
 
     override fun toString(): String {
-        return "Category(uid=$category_uid, title=$category_title, color=$category_color)"
+        return "Category(uid=$category_uid, title=$category_title, color=$category_color_index)"
     }
 
     enum class CategoryType {

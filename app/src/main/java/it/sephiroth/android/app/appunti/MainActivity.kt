@@ -1,10 +1,14 @@
 package it.sephiroth.android.app.appunti
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.View
+import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -21,9 +25,11 @@ import it.sephiroth.android.app.appunti.database.EntryWithCategory
 import it.sephiroth.android.app.appunti.ext.getColorStateList
 import it.sephiroth.android.app.appunti.ext.isLightTheme
 import it.sephiroth.android.app.appunti.models.MainViewModel
-import kotlinx.android.synthetic.main.item_list_content.view.*
+import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.main_activity.*
+import kotlinx.android.synthetic.main.main_item_list_content.view.*
 import timber.log.Timber
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,14 +37,18 @@ class MainActivity : AppCompatActivity() {
     lateinit var adapter: ItemEntryListAdapter
     lateinit var layoutManager: StaggeredGridLayoutManager
 
-    private var mainMenuCreated: Boolean = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.main_activity)
-        setSupportActionBar(bottomAppBar)
 
-        adapter = ItemEntryListAdapter(this, arrayListOf(), false)
+        if (SettingsManager.getInstance(this).isLightTheme) {
+            setTheme(R.style.Theme_Appunti_Light)
+        } else {
+            setTheme(R.style.Theme_Appunti_Dark)
+        }
+
+        setContentView(R.layout.main_activity)
+
+        adapter = ItemEntryListAdapter(this, arrayListOf())
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
         itemsRecycler.adapter = adapter
@@ -58,11 +68,6 @@ class MainActivity : AppCompatActivity() {
             })
         })
 
-//        fab.setOnClickListener {
-//            ioThread {
-//                AppDatabase.getInstance(this).entryDao().add(Entry("Title1", 1))
-//            }
-//        }
 
         searchView.setOnMicClickListener {
             Search.setVoiceSearch(this, "")
@@ -76,15 +81,15 @@ class MainActivity : AppCompatActivity() {
             subMenu.clear()
 
             subMenu.add(0, R.id.navigation_item_label_all, Menu.NONE, R.string.categories_all)
-                .setIcon(R.drawable.outline_label_24)
-                .setCheckable(true)
-                .isChecked = model.category.isNullOrEmpty()
+                    .setIcon(R.drawable.outline_label_24)
+                    .setCheckable(true)
+                    .isChecked = model.category.isNullOrEmpty()
 
             for (category in it) {
                 subMenu.add(1, R.id.navigation_item_label_id, Menu.NONE, category.category_title)
-                    .setIcon(R.drawable.outline_label_24)
-                    .setCheckable(true)
-                    .isChecked = model.category.equals(category.category_title)
+                        .setIcon(R.drawable.outline_label_24)
+                        .setCheckable(true)
+                        .isChecked = model.category.equals(category.category_title)
             }
         })
 
@@ -116,11 +121,20 @@ class MainActivity : AppCompatActivity() {
                 layoutManager.spanCount = resources.getInteger(R.integer.list_items_columns_grid)
             }
 
-            if (mainMenuCreated) {
-                bottomAppBar.menu.findItem(R.id.menu_show_as_list).isVisible = !it
-                bottomAppBar.menu.findItem(R.id.menu_show_as_grid).isVisible = it
-            }
+            bottomAppBar.setDisplayAsList(it)
         })
+
+        bottomAppBar.doOnMenuItemClick { view: View ->
+            when (view.id) {
+                R.id.buttonDisplayAsList -> model.settingsManager.displayAsList = true
+                R.id.buttonDisplayAsGrid -> model.settingsManager.displayAsList = false
+                R.id.buttonNewNote -> {
+                    SettingsManager.getInstance(this).isLightTheme = !SettingsManager.getInstance(this).isLightTheme
+                    finish()
+                    startActivity(Intent(this, this::class.java))
+                }
+            }
+        }
     }
 
     private fun updateNavigationMenuCheckedItems() {
@@ -143,28 +157,6 @@ class MainActivity : AppCompatActivity() {
         else drawerLayout.closeDrawer(navigationView)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        Timber.i("onCreateOptionsMenu")
-
-        menuInflater.inflate(R.menu.main_menu, menu)
-
-        val displayAsList = model.displayAsList.value ?: true
-
-        menu.findItem(R.id.menu_show_as_list).isVisible = !displayAsList
-        menu.findItem(R.id.menu_show_as_grid).isVisible = displayAsList
-
-        mainMenuCreated = true
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.menu_show_as_list -> model.settingsManager.displayAsList = true
-            R.id.menu_show_as_grid -> model.settingsManager.displayAsList = false
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
     class EntriesDiffCallback(var oldData: List<EntryWithCategory>,
                               var newData: List<EntryWithCategory>) : DiffUtil.Callback() {
 
@@ -184,13 +176,13 @@ class MainActivity : AppCompatActivity() {
 
 
     class ItemEntryListAdapter(private val context: Context,
-                               val values: ArrayList<EntryWithCategory>,
-                               private val twoPane: Boolean) :
+                               val values: ArrayList<EntryWithCategory>) :
             RecyclerView.Adapter<ItemEntryListAdapter.ViewHolder>() {
 
         private var cardBackgroundColorDefault: ColorStateList? = null
         private var textColorDefault: ColorStateList? = null
         private var textColorInverse: ColorStateList? = null
+        private val categoryColors = ResourceUtils.getCategoryColors(context)
 
         private var cardForegroundStroke: Drawable
         private var cardForegroundNoStroke: Drawable
@@ -222,14 +214,14 @@ class MainActivity : AppCompatActivity() {
             if (viewType == TYPE_EMPTY) {
                 view = LayoutInflater.from(parent.context).inflate(R.layout.item_list_empty, parent, false)
                 val search_view_height = context.resources.getDimensionPixelSize(R.dimen.search_height_view)
-                val search_view_margin = context.resources.getDimensionPixelSize(R.dimen.search_view_margin_top)
+                val search_view_margin = context.resources.getDimensionPixelSize(R.dimen.appunti_main_search_view_margin_top)
 
                 val params =
                         StaggeredGridLayoutManager.LayoutParams(MATCH_PARENT, search_view_height + search_view_margin * 2)
                 params.isFullSpan = true
                 view.layoutParams = params
             } else {
-                view = LayoutInflater.from(parent.context).inflate(R.layout.item_list_content, parent, false)
+                view = LayoutInflater.from(parent.context).inflate(R.layout.main_item_list_content, parent, false)
             }
             return ViewHolder(view)
         }
@@ -247,19 +239,19 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 var textColor: ColorStateList? = textColorDefault
+                val color = categoryColors[entryItem.category.category_color_index]
 
-                if (entryItem.category.category_color != 0) {
+                if (entryItem.category.category_color_index != 0) {
 
-                    holder.cardView.setCardBackgroundColor(entryItem.category.category_color)
+                    holder.cardView.setCardBackgroundColor(color)
                     holder.cardView.foreground = cardForegroundNoStroke.constantState.newDrawable()
                     holder.categoryTextView.visibility = View.VISIBLE
 
-
-                    val luminance = ColorUtils.calculateLuminance(entryItem.category.category_color)
-
-                    if (luminance < 0.4) {
-                        textColor = textColorInverse
-                    }
+                    val luminance = ColorUtils.calculateLuminance(color)
+//
+//                    if (luminance < 0.4) {
+//                        textColor = textColorInverse
+//                    }
 
                 } else {
                     holder.cardView.setCardBackgroundColor(cardBackgroundColorDefault)
@@ -267,7 +259,7 @@ class MainActivity : AppCompatActivity() {
                     holder.categoryTextView.visibility = View.GONE
                 }
 
-                holder.titleTextView.setTextColor(textColor)
+//                holder.titleTextView.setTextColor(textColor)
 
                 with(holder.cardView) {
                     tag = entryItem

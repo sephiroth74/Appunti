@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.Appunti.DayNight" parent="Theme.Appunti.Light" />
+    <!--<style name="Theme.Appunti.Default" parent="Theme.Appunti.Dark" />-->
 </resources>

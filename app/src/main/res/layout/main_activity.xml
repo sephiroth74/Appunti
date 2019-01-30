@@ -18,30 +18,22 @@
             android:layout_height="match_parent"
             android:layout_marginBottom="8dp"
             android:layout_marginTop="8dp"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+            app:layout_anchor="@id/bottomAppBar"
+            app:layout_anchorGravity="top">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/itemsRecycler"
                 android:name="it.sephiroth.android.app.appunti.ItemListFragment"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginLeft="@dimen/appunti_main_recycler_margins_horizontal"
+                android:layout_marginRight="@dimen/appunti_main_recycler_margins_horizontal"
                 app:layoutManager="androidx.recyclerview.widget.StaggeredGridLayoutManager"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 app:spanCount="@integer/list_items_columns"
                 tools:context=".MainActivity"
-                tools:listitem="@layout/item_list_content" />
-
+                tools:listitem="@layout/main_item_list_content" />
         </FrameLayout>
-
-        <!--<androidx.appcompat.widget.SearchView-->
-            <!--android:id="@+id/searchView"-->
-            <!--style="@style/Widget.AppCompat.SearchView.ActionBar"-->
-            <!--app:iconifiedByDefault="false"-->
-            <!--android:layout_marginTop="@dimen/search_view_margin_top"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content">-->
-
-        <!--</androidx.appcompat.widget.SearchView>-->
 
         <com.lapism.searchview.widget.SearchView
             android:id="@+id/searchView"
@@ -49,40 +41,94 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="12dp"
             android:layout_marginRight="12dp"
-            android:layout_marginTop="@dimen/search_view_margin_top"
+            android:layout_marginTop="@dimen/appunti_main_search_view_margin_top"
             android:background="@android:color/transparent"
             app:layout_behavior="@string/search_behavior"
             app:search_hint="@string/search_view_hint_text"
             app:search_mic_icon="@drawable/baseline_mic_24"
             app:search_shadow_color="@android:color/transparent"
             app:search_shape="rounded"
-            app:search_theme="play" />
+            app:search_theme="?attr/search_theme" />
 
-        <com.google.android.material.bottomappbar.BottomAppBar
+        <it.sephiroth.android.app.appunti.widget.BottomAppBar
             android:id="@+id/bottomAppBar"
-            style="@style/Widget.MaterialComponents.BottomAppBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            app:backgroundTint="?android:attr/windowBackground"
-            app:buttonGravity="top"
-            app:elevation="6dp"
-            app:fabAlignmentMode="end"
-            app:fabCradleRoundedCornerRadius="0dp"
-            app:hideOnScroll="true"
-            app:layout_dodgeInsetEdges="none" />
+            android:layout_gravity="bottom"
+            android:background="@drawable/shadow_top"
+            android:elevation="6dp"
+            android:gravity="center"
+            android:paddingBottom="0dp"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:paddingTop="2dp"
+            android:translationZ="6dp"
+            app:layout_anchorGravity="bottom">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/buttonNewNote"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_material_background"
+                android:clickable="true"
+                android:drawablePadding="8dp"
+                android:drawableStart="@drawable/sharp_add_box_24"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="Add New Note"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textColorHighlight="?android:attr/textColorHighlight" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/buttonDisplayAsList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_material_background"
+                android:padding="8dp"
+                android:src="@drawable/sharp_view_headline_24"
+                android:tooltipText="Display as List" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/buttonDisplayAsGrid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_material_background"
+                android:padding="8dp"
+                android:src="@drawable/sharp_view_module_24"
+                android:tooltipText="Display as Grid" />
+
+        </it.sephiroth.android.app.appunti.widget.BottomAppBar>
+
+        <!--<com.google.android.material.bottomappbar.BottomAppBar-->
+        <!--android:id="@+id/bottomAppBar"-->
+        <!--style="@style/Widget.MaterialComponents.BottomAppBar"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="bottom|center_horizontal"-->
+        <!--app:backgroundTint="?android:attr/windowBackground"-->
+        <!--app:buttonGravity="bottom"-->
+        <!--app:elevation="6dp"-->
+        <!--app:hideOnScroll="true"-->
+        <!--android:gravity="start"-->
+        <!--android:translationZ="6dp"-->
+        <!--app:layout_dodgeInsetEdges="none" />-->
 
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            app:elevation="6dp"
-            app:fabSize="normal"
-            app:layout_anchor="@id/bottomAppBar"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            app:srcCompat="@drawable/sharp_add_24" />
+        <!--<com.google.android.material.floatingactionbutton.FloatingActionButton-->
+        <!--android:id="@+id/fab"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="bottom|center_horizontal"-->
+        <!--app:elevation="6dp"-->
+        <!--app:fabSize="normal"-->
+        <!--app:layout_anchor="@id/bottomAppBar"-->
+        <!--app:layout_behavior="@string/appbar_scrolling_view_behavior"-->
+        <!--app:srcCompat="@drawable/sharp_add_24" />-->
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

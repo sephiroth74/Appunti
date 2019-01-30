@@ -47,13 +47,16 @@ abstract class AppDatabase : RoomDatabase() {
                                     with(categoryDao()) {
                                         add(Category(
                                                 category_title = context.resources.getString(R.string.category_default),
-                                                category_color = 0))
+                                                category_color_index = 0))
                                         add(Category(
                                                 category_title = "Personal",
-                                                category_color = 0xFFFFAB91.toInt()))
+                                                category_color_index = 1))
                                         add(Category(
                                                 category_title = "Work",
-                                                category_color = 0xFF80CBC4.toInt()))
+                                                category_color_index = 2))
+                                        add(Category(
+                                                category_title = "Todo",
+                                                category_color_index = 5))
                                     }
 
                                     with(entryDao()) {
@@ -69,8 +72,8 @@ abstract class AppDatabase : RoomDatabase() {
                                         add(Entry("Second Item", 5, 1, Date(), context.getString(R.string.lorem_ipsum)))
                                         Thread.sleep(300)
                                         add(Entry("Third Item", 8, 1, Date(), context.getString(R.string.lorem_ipsum)))
-                                        add(Entry("Lorem Ipsum anche nel Titolo", 2, 2, Date(), context.getString(R.string.lorem_ipsum)))
-                                        add(Entry("Fourth Item", 8, 2, Date(), context.getString(R.string.lorem_ipsum)))
+                                        add(Entry("Lorem Ipsum anche nel Titolo", 4, 2, Date(), context.getString(R.string.lorem_ipsum)))
+                                        add(Entry("Fourth Item", 8, 4, Date(), context.getString(R.string.lorem_ipsum)))
                                         add(Entry("Third Item", 8, 3, Date(), context.getString(R.string.lorem_ipsum)))
                                         add(Entry("Third Item 2", 8, 3, Date(), context.getString(R.string.lorem_ipsum)))
                                         add(Entry("Third Item 3", 8, 3, Date(), context.getString(R.string.lorem_ipsum)))

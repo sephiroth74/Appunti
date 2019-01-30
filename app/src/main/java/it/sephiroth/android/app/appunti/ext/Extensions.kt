@@ -7,6 +7,7 @@ import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.core.content.ContextCompat
 import io.reactivex.schedulers.Schedulers
+import it.sephiroth.android.app.appunti.R
 import java.text.DateFormat
 import java.util.*
 
@@ -29,6 +30,12 @@ fun Context.isLightTheme(): Boolean {
     val identifier = resources.getIdentifier("isLightTheme", "attr", this.packageName)
     theme.resolveAttribute(identifier, typedValue, false)
     return typedValue.data != 0
+}
+
+fun Resources.Theme.resolveAttribute(@AttrRes id: Int): Int {
+    val typedValue = TypedValue()
+    resolveAttribute(id, typedValue, false)
+    return typedValue.data
 }
 
 object ExtensionUtils {

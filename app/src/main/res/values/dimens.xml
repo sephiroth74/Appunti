@@ -3,9 +3,15 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="app_bar_height">200dp</dimen>
     <dimen name="item_width">200dp</dimen>
-    <dimen name="text_margin">16dp</dimen>
-    <dimen name="item_list_margin_horizontal">8dp</dimen>
     <dimen name="material_cardview_cornerRadius">8dp</dimen>
     <dimen name="material_cardview_stroke_width">0.5dp</dimen>
-    <dimen name="search_view_margin_top">4dp</dimen>
+
+    <!-- top margin of the main search view -->
+    <dimen name="appunti_main_search_view_margin_top">4dp</dimen>
+
+    <!-- horizontal margins for the main activity recycler view -->
+    <dimen name="appunti_main_recycler_margins_horizontal">8dp</dimen>
+
+    <!-- horizontal margins for the default item of the main recycler view -->
+    <dimen name="appunti_main_item_list_margins_horizontal">4dp</dimen>
 </resources>

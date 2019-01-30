@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <integer-array name="category_colors_dark">
+        <item>0xFF2A2A2A</item>
+        <item>0xFF9C3413</item>
+        <item>0xFFB37F00</item>
+        <item>0xFF7A8121</item>
+        <item>0xFF275E2A</item>
+        <item>0xFF00646F</item>
+        <item>0xFF273276</item>
+        <item>0xFF6C1B81</item>
+        <item>0xFF88113C</item>
+    </integer-array>
+
+    <!-- override default SearchView background color in dark mode -->
+    <color name="search_dark_background" tools:override="true">#3E3E3E</color>
+
+</resources>

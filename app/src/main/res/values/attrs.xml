@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- reference to the colors array for the note category -->
+    <attr name="categoryColors" format="reference" />
+
+</resources>

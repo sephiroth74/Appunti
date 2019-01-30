@@ -2,20 +2,34 @@
 
     <!-- main themes-->
 
-    <style name="Theme.Appunti.Light" parent="Theme.MaterialComponents.Light">
+    <style name="Theme.Appunti.Light.Base" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:fontFamily">@font/roboto_regular</item>
+
+        <item name="search_theme">play</item>
+        <item name="categoryColors">@array/category_colors_light</item>
     </style>
 
-    <style name="Theme.Appunti.Dark" parent="Theme.MaterialComponents">
+    <style name="Theme.Appunti.Dark.Base" parent="Theme.MaterialComponents.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
+        <item name="android:fontFamily">@font/roboto_regular</item>
+        <item name="search_theme">dark</item>
+        <item name="categoryColors">@array/category_colors_dark</item>
     </style>
+
+    <style name="Theme.Appunti.Light" parent="Theme.Appunti.Light.Base" />
+
+    <style name="Theme.Appunti.Dark" parent="Theme.Appunti.Dark.Base" />
+
+    <style name="Theme.Appunti.DayNight" parent="Theme.Appunti.Default" />
 
     <!-- default theme -->
-    <style name="Theme.Appunti.DayNight" parent="Theme.Appunti.Light" />
+    <style name="Theme.Appunti.Default" parent="Theme.Appunti.Light" />
 
 
     <style name="Theme.Appunti.NoActionBar" parent="Theme.Appunti.DayNight">
@@ -32,8 +46,7 @@
         <item name="android:background">@android:color/transparent</item>
     </style>
 
-    <style name="Theme.Appunti.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light">
-    </style>
+    <style name="Theme.Appunti.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
 
 
 </resources>

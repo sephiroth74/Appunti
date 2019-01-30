@@ -3,6 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/menu_new_note"
+        android:icon="@drawable/sharp_add_box_24"
+        android:title="New Note"
+        android:visible="true"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/menu_show_as_list"
         android:icon="@drawable/sharp_view_headline_24"
         android:title="Display as List"
@@ -16,9 +23,9 @@
         android:visible="true"
         app:showAsAction="always" />
 
-    <item
-        android:id="@+id/menu_share"
-        android:icon="@drawable/sharp_share_24"
-        android:title="@string/share"
-        app:showAsAction="always" />
+    <!--<item-->
+        <!--android:id="@+id/menu_share"-->
+        <!--android:icon="@drawable/sharp_share_24"-->
+        <!--android:title="@string/share"-->
+        <!--app:showAsAction="always" />-->
 </menu>

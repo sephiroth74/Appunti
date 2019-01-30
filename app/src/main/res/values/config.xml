@@ -4,5 +4,4 @@
 
     <integer name="list_items_columns_grid">2</integer>
     <integer name="list_items_columns_list">1</integer>
-
 </resources>
