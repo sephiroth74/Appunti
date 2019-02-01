@@ -1,21 +1,22 @@
-package it.sephiroth.android.app.appunti
+package it.sephiroth.android.app.appunti.models
 
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.ext.isLightTheme
 import timber.log.Timber
 import kotlin.properties.Delegates
 
 class SettingsManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences(SETTINGS_NAME, 0)
+
     private var displayAsListChanged: ((value: Boolean) -> Unit)? = null
     private var themeChangedListener: ((value: Boolean) -> Unit)? = null
 
     fun doOnDisplayAsListChanged(action: (value: Boolean) -> Unit) {
         displayAsListChanged = action
     }
-
 
     fun doOnThemeChanged(action: (value: Boolean) -> Unit) {
         themeChangedListener = action
@@ -27,7 +28,7 @@ class SettingsManager(context: Context) {
         themeChangedListener?.invoke(newValue)
     }
 
-    var displayAsList: Boolean by Delegates.observable(
+    internal var displayAsList: Boolean by Delegates.observable(
             prefs.getBoolean("main.display_as_list",
                     context.resources.getInteger(R.integer.list_items_columns) ==
                             context.resources.getInteger(R.integer.list_items_columns_list))) { prop, oldValue, newValue ->
@@ -42,7 +43,8 @@ class SettingsManager(context: Context) {
 
         fun getInstance(context: Context): SettingsManager =
                 INSTANCE ?: synchronized(this) {
-                    INSTANCE ?: SettingsManager(context).also { INSTANCE = it }
+                    INSTANCE
+                            ?: SettingsManager(context).also { INSTANCE = it }
                 }
 
     }

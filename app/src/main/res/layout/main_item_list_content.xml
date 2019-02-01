@@ -12,7 +12,7 @@
     android:layout_marginTop="4dp"
     android:clickable="true"
     android:focusable="true"
-    android:foreground="@drawable/material_selectable_item_background_with_stroke"
+    android:foreground="@drawable/appunti_card_selectable_item_background_with_stroke"
     android:orientation="horizontal"
     app:cardCornerRadius="@dimen/material_cardview_cornerRadius"
     app:cardElevation="0dp"
@@ -34,7 +34,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?attr/textAppearanceListItem"
-            app:fontFamily="@font/roboto_medium" />
+            android:textSize="@dimen/text_size_headline_material"
+            app:fontFamily="?attr/fontFamily" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/id_content"
@@ -42,8 +43,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textAppearance="?attr/textAppearanceListItemSmall"
-            android:textSize="12sp"
-            app:fontFamily="@font/roboto_light" />
+            android:textSize="@dimen/text_size_subhead_material"
+            app:fontFamily="?attr/fontFamilyThin" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/chip"
@@ -53,9 +54,9 @@
             android:background="@drawable/category_chip_background"
             android:checkable="false"
             android:padding="8dp"
-            android:text="Personale"
-            android:textAppearance="?android:attr/textAppearanceListItemSmall"
-            android:textSize="10sp" />
+            android:textAppearance="?attr/textAppearanceListItemSmall"
+            android:textSize="@dimen/text_size_caption_material"
+            app:fontFamily="?attr/fontFamilyThin" />
 
 
     </LinearLayout>

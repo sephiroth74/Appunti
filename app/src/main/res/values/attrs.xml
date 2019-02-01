@@ -4,4 +4,9 @@
     <!-- reference to the colors array for the note category -->
     <attr name="categoryColors" format="reference" />
 
+    <attr name="fontFamilyThin" format="reference" />
+    <attr name="fontFamilyLight" format="reference" />
+    <attr name="fontFamilyBook" format="reference" />
+    <attr name="fontFamilyBold" format="reference" />
+
 </resources>

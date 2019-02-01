@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
+import it.sephiroth.android.app.appunti.R
 import kotlinx.android.synthetic.main.main_activity.view.*
 import timber.log.Timber
 
@@ -17,11 +18,11 @@ class BottomAppBar @JvmOverloads constructor(
 
     var hideOnScroll = false
 
-    private var menuItemListener: ((value: View) -> Unit)? = null
+    private var newNoteListener: (() -> Unit)? = null
     private var displayAsListChangeListener: ((value: Boolean) -> Unit)? = null
 
-    fun doOnMenuItemClick(action: (value: View) -> Unit) {
-        menuItemListener = action
+    fun doOnNewNoteClick(action: () -> Unit) {
+        newNoteListener = action
     }
 
     fun doOnDisplayAsListChanged(action: (Boolean) -> Unit) {
@@ -41,12 +42,11 @@ class BottomAppBar @JvmOverloads constructor(
 
 
         buttonDisplayAsList.doOnCheckedChanged { value ->
-            Timber.i("doOnCheckedChanged: $value")
             displayAsListChangeListener?.invoke(value)
         }
 
         buttonNewNote.setOnClickListener {
-            menuItemListener?.invoke(it)
+            newNoteListener?.invoke()
         }
     }
 
@@ -68,16 +68,16 @@ class BottomAppBar @JvmOverloads constructor(
     }
 
     override fun getBehavior(): CoordinatorLayout.Behavior<BottomAppBar> {
-        Timber.i("getBehavior")
-        return BottomAppBar.Behavior()
+        return BottomAppBar.Behavior(context)
     }
 
-    class Behavior : HideBottomViewOnScrollBehavior<BottomAppBar> {
+    class Behavior(context: Context) : HideBottomViewOnScrollBehavior<BottomAppBar>() {
 
-        constructor() {}
+        private var shadowHeight: Int = 0
 
-        constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {}
-
+        init {
+            shadowHeight = context.resources.getDimensionPixelSize(R.dimen.appunti_bottomappbar_shadow_height)
+        }
 
         override fun onLayoutChild(parent: CoordinatorLayout, child: BottomAppBar, layoutDirection: Int): Boolean {
             Timber.i("onLayoutChild(layoutDirection=$layoutDirection)")
@@ -86,7 +86,7 @@ class BottomAppBar @JvmOverloads constructor(
             view?.let {
                 val params = view.layoutParams as CoordinatorLayout.LayoutParams
                 Timber.d("found dependent: child.height=${child.height}, bottomMargin=${params.bottomMargin}")
-                params.bottomMargin = child.measuredHeight
+                params.bottomMargin = child.measuredHeight - shadowHeight
                 it.layoutParams = params
             }
 

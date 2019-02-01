@@ -77,14 +77,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/button_material_background_ripple"
-                android:clickable="true"
                 android:drawablePadding="8dp"
                 android:drawableStart="@drawable/sharp_add_box_24"
                 android:gravity="center"
                 android:padding="8dp"
-                android:text="Add New Note"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textColorHighlight="?android:attr/textColorHighlight" />
+                android:text="@string/add_new_note"
+                android:textAppearance="?attr/textAppearanceBody1"
+                app:fontFamily="?attr/fontFamily" />
 
             <Space
                 android:layout_width="0dp"
@@ -135,6 +134,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start|left"
+        app:itemIconTint="?attr/colorControlNormal"
         android:fitsSystemWindows="false"
         app:headerLayout="@layout/navigation_header"
         app:menu="@menu/navigation_menu" />

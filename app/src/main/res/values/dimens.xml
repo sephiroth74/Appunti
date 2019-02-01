@@ -4,7 +4,9 @@
     <dimen name="app_bar_height">200dp</dimen>
     <dimen name="item_width">200dp</dimen>
     <dimen name="material_cardview_cornerRadius">8dp</dimen>
-    <dimen name="material_cardview_stroke_width">0.5dp</dimen>
+
+    <!-- stroke width for the main list card background -->
+    <dimen name="appunti_card_stroke_width">0.5dp</dimen>
 
     <!-- main cardview stroke size when item is checked -->
     <dimen name="appunti_amin_cardview_stroke_width_checked">1dp</dimen>
@@ -17,4 +19,26 @@
 
     <!-- horizontal margins for the default item of the main recycler view -->
     <dimen name="appunti_main_item_list_margins_horizontal">4dp</dimen>
+
+
+    <dimen name="text_size_display_4_material">71sp</dimen>
+    <dimen name="text_size_display_3_material">44sp</dimen>
+    <dimen name="text_size_display_2_material">36sp</dimen>
+    <dimen name="text_size_display_1_material">27sp</dimen>
+    <dimen name="text_size_headline_material">18sp</dimen>
+    <dimen name="text_size_title_material">16sp</dimen>
+    <dimen name="text_size_subhead_material">16sp</dimen>
+    <dimen name="text_size_title_material_toolbar">16dp</dimen>
+    <dimen name="text_size_subtitle_material_toolbar">16dp</dimen>
+    <dimen name="text_size_menu_material">16sp</dimen>
+    <dimen name="text_size_menu_header_material">14sp</dimen>
+    <dimen name="text_size_body_2_material">14sp</dimen>
+    <dimen name="text_size_body_1_material">14sp</dimen>
+    <dimen name="text_size_caption_material">12sp</dimen>
+    <dimen name="text_size_button_material">14sp</dimen>
+
+    <dimen name="text_size_large_material">16sp</dimen>
+    <dimen name="text_size_medium_material">14sp</dimen>
+    <dimen name="text_size_small_material">12sp</dimen>
+    <dimen name="appunti_bottomappbar_shadow_height">2dp</dimen>
 </resources>

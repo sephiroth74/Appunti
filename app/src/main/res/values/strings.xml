@@ -22,4 +22,5 @@
     <string name="labels">Labels</string>
     <string name="sort_by">Sort By...</string>
     <string name="share">Share</string>
+    <string name="add_new_note">Add New Note</string>
 </resources>

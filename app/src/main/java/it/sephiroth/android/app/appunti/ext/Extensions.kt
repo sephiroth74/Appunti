@@ -3,6 +3,7 @@ package it.sephiroth.android.app.appunti.ext
 import android.content.Context
 import android.content.res.ColorStateList
 import android.content.res.Resources
+import android.os.Build
 import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.core.content.ContextCompat
@@ -16,6 +17,12 @@ fun Any.ioThread(func: () -> Unit) {
         func.invoke()
     }
 }
+
+fun Any.isAPI(value: Int) = Build.VERSION.SDK_INT == value
+
+fun Any.isAtLeastAPI(value: Int) = Build.VERSION.SDK_INT >= value
+
+fun Any.currentThread() = Thread.currentThread()
 
 fun Date.toUserDate() = ExtensionUtils.dateformat.format(this)
 
