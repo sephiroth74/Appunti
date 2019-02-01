@@ -29,8 +29,6 @@ class MainApplication : Application() {
 
         FlowLog.setMinimumLoggingLevel(FlowLog.Level.V)
 
-//        FlowManager.init(FlowConfig.Builder(this).build())
-
         FlowManager.init(FlowConfig.Builder(this)
                 .database(DatabaseConfig.Builder(AppDatabase::class.java)
                         .modelNotifier(DirectModelNotifier.get())
@@ -44,7 +42,32 @@ class MainApplication : Application() {
 
             Timber.d("entries size: $size")
 
-            if (size < 20) {
+            if (categories.isEmpty()) {
+                var category = Category()
+                category.categoryTitle = getString(R.string.category_default)
+                category.categoryType = Category.CategoryType.SYSTEM
+                category.insert()
+
+                category = Category()
+                category.categoryTitle = "Personal"
+                category.categoryType = Category.CategoryType.USER
+                category.categoryColorIndex = 1
+                category.insert()
+
+                category = Category()
+                category.categoryTitle = "Work"
+                category.categoryType = Category.CategoryType.USER
+                category.categoryColorIndex = 2
+                category.insert()
+
+                category = Category()
+                category.categoryTitle = "Todo"
+                category.categoryType = Category.CategoryType.USER
+                category.categoryColorIndex = 5
+                category.insert()
+            }
+
+            if (size < 10) {
                 for (i in 0..3) {
                     val entry = Entry()
                     entry.entryTitle = "Entry ${size + i}"
@@ -56,6 +79,9 @@ class MainApplication : Application() {
                     if (index > 1) {
                         entry.category = categories[index]
                     }
+
+                    Thread.sleep(300)
+
                     entry.save()
                 }
             }

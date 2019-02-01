@@ -28,7 +28,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginLeft="@dimen/appunti_main_recycler_margins_horizontal"
                 android:layout_marginRight="@dimen/appunti_main_recycler_margins_horizontal"
-                app:layoutManager="androidx.recyclerview.widget.StaggeredGridLayoutManager"
+                app:layoutManager="it.sephiroth.android.app.appunti.widget.NpaStaggeredGridLayoutManager"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 app:spanCount="@integer/list_items_columns"
                 tools:context=".MainActivity"

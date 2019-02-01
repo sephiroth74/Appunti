@@ -2,6 +2,7 @@ package it.sephiroth.android.app.appunti
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -12,6 +13,7 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.cardview.widget.CardView
 import androidx.core.view.children
 import androidx.lifecycle.Observer
@@ -23,16 +25,13 @@ import com.dbflow5.structure.save
 import com.lapism.searchview.Search
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.getColorStateList
-import it.sephiroth.android.app.appunti.ext.isAPI
-import it.sephiroth.android.app.appunti.ext.isLightTheme
+import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.main_activity.*
 import kotlinx.android.synthetic.main.main_item_list_content.view.*
 import timber.log.Timber
-import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -48,7 +47,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         lightTheme = SettingsManager.getInstance(this).isLightTheme
-        setTheme(if (lightTheme) R.style.Theme_Appunti_Light else R.style.Theme_Appunti_Dark)
+        setTheme(if (lightTheme) R.style.Theme_Appunti_Light_NoActionbar else R.style.Theme_Appunti_Dark_NoActionbar)
 
         setContentView(R.layout.main_activity)
         setSupportActionBar(toolbar)
@@ -57,16 +56,20 @@ class MainActivity : AppCompatActivity() {
             toolbar.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
         }
 
-        adapter = ItemEntryListAdapter(this, arrayListOf())
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
+
+
+
+        adapter = ItemEntryListAdapter(this, arrayListOf())
         itemsRecycler.adapter = adapter
         itemsRecycler.setHasFixedSize(false)
-
         layoutManager = itemsRecycler.layoutManager as StaggeredGridLayoutManager
 
         model.entries.observe(this, Observer {
-            Timber.i("entries changed")
-            adapter.update(it)
+            Timber.i("[${currentThread()}] entries changed")
+            mainThread {
+                adapter.update(it)
+            }
         })
 
         model.category.observe(this, Observer {
@@ -89,44 +92,32 @@ class MainActivity : AppCompatActivity() {
             subMenu.add(0, R.id.navigation_item_label_all, Menu.NONE, R.string.categories_all)
                     .setIcon(R.drawable.outline_label_24)
                     .setCheckable(true)
-                    .isChecked = model.currentCategoryID == 0
+                    .isChecked = model.category.value == null
 
             for (category in it) {
                 subMenu.add(1, R.id.navigation_item_label_id, Menu.NONE, category.categoryTitle)
                         .setIcon(R.drawable.outline_label_24)
                         .setCheckable(true)
-                        .isChecked = model.currentCategoryID == category.categoryID
+                        .isChecked = model.category.value?.let { cat -> cat.categoryID == category.categoryID } ?: run { false }
             }
         })
 
         navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.navigation_item_category_add -> {
-                    val category = Category()
-                    category.categoryTitle = "Test 2"
-                    category.categoryColorIndex = 6
-                    category.save()
+                    startActivity(Intent(this, CategoriesActivity::class.java))
                 }
                 R.id.navigation_item_label_all -> {
-                    model.currentCategoryID = 0
+                    model.currentCategory = null
                     closeDrawerIfOpened()
                 }
 
                 R.id.navigation_item_label_id -> {
                     if (!menuItem.isChecked) {
-                        val result = model.categories.value?.filter { it.categoryTitle.equals(menuItem.title.toString()) }
-                        Timber.v("result=$result")
-                        result?.let {
-                            if (it.isNotEmpty()) {
-                                model.currentCategoryID = it[0].categoryID
-                            } else {
-                                model.currentCategoryID = 0
-                            }
-                        } ?: kotlin.run {
-                            model.currentCategoryID = 0
-                        }
+                        val category = model.findCategoryByName(menuItem.title.toString())
+                        model.currentCategory = category
                     } else {
-                        model.currentCategoryID = 0
+                        model.currentCategory = null
                     }
                     closeDrawerIfOpened()
                 }
@@ -163,15 +154,14 @@ class MainActivity : AppCompatActivity() {
 //            }
 //        }
 
-        model.currentCategoryID = 0
     }
 
     private fun updateNavigationMenuCheckedItems() {
         val menu = navigationView.menu.findItem(R.id.navigation_item_labels).subMenu
         for (item in menu.children) {
             when (item.groupId) {
-                0 -> item.isChecked = model.currentCategoryID == 0
-//                1 -> item.isChecked = model.category?.equals(item.title) ?: run { false }
+                0 -> item.isChecked = model.category.value == null
+                1 -> item.isChecked = model.category.value?.equals(item.title) ?: run { false }
             }
         }
     }
@@ -186,11 +176,11 @@ class MainActivity : AppCompatActivity() {
         else drawerLayout.closeDrawer(navigationView)
     }
 
-    class EntriesDiffCallback(var oldData: List<Entry>,
-                              var newData: List<Entry>) : DiffUtil.Callback() {
+    class EntriesDiffCallback(private var oldData: List<Entry>,
+                              private var newData: List<Entry>) : DiffUtil.Callback() {
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldData.get(oldItemPosition).entryID == newData.get(newItemPosition).entryID
+            return oldData[oldItemPosition].entryID == newData[newItemPosition].entryID
         }
 
         override fun getOldListSize(): Int = oldData.size
@@ -198,14 +188,14 @@ class MainActivity : AppCompatActivity() {
         override fun getNewListSize(): Int = newData.size
 
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldData.get(oldItemPosition).equals(newData.get(newItemPosition))
+            return oldData[oldItemPosition] == newData[newItemPosition]
         }
 
     }
 
 
     class ItemEntryListAdapter(private val context: Context,
-                               val values: ArrayList<Entry>) :
+                               private var values: List<Entry>) :
             RecyclerView.Adapter<ItemEntryListAdapter.ViewHolder>() {
 
         private var cardBackgroundColorDefault: ColorStateList? = null
@@ -237,16 +227,17 @@ class MainActivity : AppCompatActivity() {
             return TYPE_REGULAR
         }
 
+        @SuppressLint("PrivateResource")
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view: View
 
             if (viewType == TYPE_EMPTY) {
-                view = LayoutInflater.from(parent.context).inflate(R.layout.item_list_empty, parent, false)
-                val search_view_height = context.resources.getDimensionPixelSize(R.dimen.search_height_view)
-                val search_view_margin = context.resources.getDimensionPixelSize(R.dimen.appunti_main_search_view_margin_top)
+                view = LayoutInflater.from(context).inflate(R.layout.item_list_empty, parent, false)
+                val searchViewHeight = context.resources.getDimensionPixelSize(R.dimen.search_height_view)
+                val searchViewTopMargin = context.resources.getDimensionPixelSize(R.dimen.appunti_main_search_view_margin_top)
 
                 val params =
-                        StaggeredGridLayoutManager.LayoutParams(MATCH_PARENT, search_view_height + search_view_margin * 2)
+                        StaggeredGridLayoutManager.LayoutParams(MATCH_PARENT, searchViewHeight + searchViewTopMargin * 2)
                 params.isFullSpan = true
                 view.layoutParams = params
             } else {
@@ -279,14 +270,14 @@ class MainActivity : AppCompatActivity() {
                 if (color != 0) {
 
                     holder.cardView.setCardBackgroundColor(color)
-                    holder.cardView.foreground = cardForegroundNoStroke.constantState.newDrawable()
+                    holder.cardView.foreground = cardForegroundNoStroke.constantState?.newDrawable()
                     holder.categoryTextView.visibility = View.VISIBLE
 
                     // val luminance = ColorUtils.calculateLuminance(color)
 
                 } else {
                     holder.cardView.setCardBackgroundColor(cardBackgroundColorDefault)
-                    holder.cardView.foreground = cardForegroundStroke.constantState.newDrawable()
+                    holder.cardView.foreground = cardForegroundStroke.constantState?.newDrawable()
                     holder.categoryTextView.visibility = View.GONE
                 }
 
@@ -300,7 +291,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun getItemCount(): Int {
-            if (values.size > 0) return values.size + 1
+            if (values.isNotEmpty()) return values.size + 1
             return 0
         }
 
@@ -309,7 +300,7 @@ class MainActivity : AppCompatActivity() {
             return values[position - 1].entryID.toLong()
         }
 
-        fun getItem(position: Int): Entry? {
+        private fun getItem(position: Int): Entry? {
             if (position == 0) return null
             return values[position - 1]
         }
@@ -320,12 +311,11 @@ class MainActivity : AppCompatActivity() {
             newData?.let {
                 val callback = EntriesDiffCallback(values, it)
                 val result = DiffUtil.calculateDiff(callback, true)
-                values.clear()
-                values.addAll(it)
+                values = it
                 result.dispatchUpdatesTo(this)
 
             } ?: run {
-                values.clear()
+                values = listOf()
                 notifyDataSetChanged()
             }
         }
@@ -333,8 +323,10 @@ class MainActivity : AppCompatActivity() {
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val titleTextView: TextView by lazy { view.id_title }
             val contentTextView: TextView by lazy { view.id_content }
-            val categoryTextView by lazy { view.chip }
+            val categoryTextView: AppCompatTextView by lazy { view.chip }
             val cardView: CardView by lazy { view.id_card }
         }
     }
+
 }
+

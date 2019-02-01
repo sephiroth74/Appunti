@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.core.content.ContextCompat
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.R
 import java.text.DateFormat
@@ -16,6 +17,10 @@ fun Any.ioThread(func: () -> Unit) {
     Schedulers.io().scheduleDirect {
         func.invoke()
     }
+}
+
+fun Any.mainThread(func: () -> Unit) {
+    AndroidSchedulers.mainThread().scheduleDirect { func.invoke() }
 }
 
 fun Any.isAPI(value: Int) = Build.VERSION.SDK_INT == value
@@ -31,6 +36,13 @@ fun Resources.Theme.getColorStateList(context: Context, @AttrRes id: Int): Color
     context.theme.resolveAttribute(id, typedValue, false)
     return ContextCompat.getColorStateList(context, typedValue.data)
 }
+
+fun Resources.Theme.getColor(context: Context, @AttrRes id: Int): Int {
+    val typedValue = TypedValue()
+    context.theme.resolveAttribute(id, typedValue, false)
+    return ContextCompat.getColor(context, typedValue.data)
+}
+
 
 fun Context.isLightTheme(): Boolean {
     val typedValue = TypedValue()

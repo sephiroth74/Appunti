@@ -23,4 +23,6 @@
     <string name="sort_by">Sort By...</string>
     <string name="share">Share</string>
     <string name="add_new_note">Add New Note</string>
+
+    <string name="title_activity_categories">Edit Categories</string>
 </resources>

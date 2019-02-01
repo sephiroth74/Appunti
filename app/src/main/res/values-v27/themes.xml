@@ -14,4 +14,18 @@
         <item name="android:statusBarColor">?android:attr/windowBackground</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
+
+    <style name="Theme.Appunti.Light.NoActionbar" parent="Theme.Appunti.Light.Base.NoActionbar">
+        <item name="android:navigationBarColor">?android:attr/windowBackground</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:statusBarColor">?android:attr/windowBackground</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="Theme.Appunti.Dark.NoActionbar" parent="Theme.Appunti.Dark.Base.NoActionbar">
+        <item name="android:navigationBarColor">?android:attr/windowBackground</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:statusBarColor">?android:attr/windowBackground</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
 </resources>

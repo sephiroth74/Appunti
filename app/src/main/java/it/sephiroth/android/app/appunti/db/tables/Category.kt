@@ -12,7 +12,7 @@ class Category : BaseRXModel() {
     var categoryID: Int = 0
 
     @Column(defaultValue = "")
-    @Unique(unique = true, onUniqueConflict = ConflictAction.ROLLBACK)
+    @Unique(unique = true, onUniqueConflict = ConflictAction.ABORT)
     var categoryTitle: String? = null
 
     var categoryColorIndex: Int = 0

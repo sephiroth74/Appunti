@@ -23,22 +23,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     val entries: LiveData<List<Entry>> = MutableLiveData<List<Entry>>()
-
     val category: LiveData<Category?> = MutableLiveData()
 
-    var currentCategoryID: Int by Delegates.observable(0) { prop, oldValue, newValue ->
-        Timber.i("currentCategoryID = $newValue")
-
-        if (newValue > 0) {
-            val cat = categories.value?.firstOrNull { it.categoryID == newValue }
-            (category as MutableLiveData).postValue(cat)
-        }
-
+    var currentCategory by Delegates.observable<Category?>(null) { prop, oldValue, newValue ->
         fetchEntries(newValue) { result -> (entries as MutableLiveData).postValue(result) }
+        (category as MutableLiveData).value = newValue
     }
 
     val displayAsList: LiveData<Boolean> = MutableLiveData<Boolean>()
     val settingsManager = SettingsManager.getInstance(application)
+
+
+    fun findCategoryByName(name: String): Category? {
+        return categories.value?.firstOrNull { it.categoryTitle.equals(name) }
+    }
+
 
 //
 //    var category: String? by Delegates.observable<String?>(null) { prop, oldValue, newValue ->
@@ -57,14 +56,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }.subscribeOn(Schedulers.io()).subscribe()
     }
 
-    private fun fetchEntries(categoryID: Int, action: (List<Entry>) -> Unit) {
-        Timber.i("fetchEntries(categoryID=$categoryID)")
+    private fun fetchEntries(category: Category?, action: (List<Entry>) -> Unit) {
+        Timber.i("fetchEntries(categoryID=${category?.categoryTitle})")
         select().from(Entry::class)
                 .run {
-                    if (categoryID > 0) {
-                        return@run where(Entry_Table.category_categoryID.eq(categoryID)) as Transformable<Entry>
-                    } else {
-                        return@run this as Transformable<Entry>
+                    category?.let {
+                        return@run where(Entry_Table.category_categoryID.eq(it.categoryID)) as Transformable<Entry>
+                    } ?: run {
+                        this as Transformable<Entry>
                     }
 
                 }.run {
@@ -95,7 +94,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 //    }
 
     init {
-//        category = null
+        currentCategory = null
         (displayAsList as MutableLiveData).value = settingsManager.displayAsList
         settingsManager.doOnDisplayAsListChanged { value: Boolean -> displayAsList.value = value }
     }
