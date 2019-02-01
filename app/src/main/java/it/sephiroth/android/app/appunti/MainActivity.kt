@@ -16,11 +16,13 @@ import androidx.cardview.widget.CardView
 import androidx.core.view.children
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.dbflow5.structure.save
 import com.lapism.searchview.Search
 import it.sephiroth.android.app.appunti.db.tables.Category
+import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.getColorStateList
 import it.sephiroth.android.app.appunti.ext.isAPI
 import it.sephiroth.android.app.appunti.ext.isLightTheme
@@ -55,34 +57,22 @@ class MainActivity : AppCompatActivity() {
             toolbar.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
         }
 
-//        adapter = ItemEntryListAdapter(this, arrayListOf())
+        adapter = ItemEntryListAdapter(this, arrayListOf())
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
-
-
-//
-//        queryList.addOnCursorRefreshListener(object : FlowCursorList.OnCursorRefreshListener<Category> {
-//            override fun onCursorRefreshed(cursorList: FlowCursorList<Category>) {
-//                Timber.d("[${currentThread()}] onCursorRefreshed")
-//                Timber.v("[${currentThread()}] now size is: ${cursorList.modelQueriable.flowQueryList.size}")
-//            }
-//        })
-//        itemsRecycler.adapter = adapter
+        itemsRecycler.adapter = adapter
         itemsRecycler.setHasFixedSize(false)
 
         layoutManager = itemsRecycler.layoutManager as StaggeredGridLayoutManager
 
-//        model.entries.observe(this, Observer {
-//            Timber.i("entries category changed")
-//
-//            updateNavigationMenuCheckedItems()
-//
-//            it.removeObservers(this)
-//            it.observe(this, Observer {
-//                Timber.i("entries changed")
-//                adapter.update(it)
-//            })
-//        })
+        model.entries.observe(this, Observer {
+            Timber.i("entries changed")
+            adapter.update(it)
+        })
 
+        model.category.observe(this, Observer {
+            Timber.i("current category changed = $it")
+            updateNavigationMenuCheckedItems()
+        })
 
         searchView.setOnMicClickListener {
             Search.setVoiceSearch(this, "")
@@ -99,13 +89,13 @@ class MainActivity : AppCompatActivity() {
             subMenu.add(0, R.id.navigation_item_label_all, Menu.NONE, R.string.categories_all)
                     .setIcon(R.drawable.outline_label_24)
                     .setCheckable(true)
-//                    .isChecked = model.category.isNullOrEmpty()
+                    .isChecked = model.currentCategoryID == 0
 
             for (category in it) {
                 subMenu.add(1, R.id.navigation_item_label_id, Menu.NONE, category.categoryTitle)
                         .setIcon(R.drawable.outline_label_24)
                         .setCheckable(true)
-//                        .isChecked = model.category.equals(category.categoryTitle)
+                        .isChecked = model.currentCategoryID == category.categoryID
             }
         })
 
@@ -113,22 +103,33 @@ class MainActivity : AppCompatActivity() {
             when (menuItem.itemId) {
                 R.id.navigation_item_category_add -> {
                     val category = Category()
-                    category.categoryTitle = "Test"
-                    category.categoryColorIndex = 2
+                    category.categoryTitle = "Test 2"
+                    category.categoryColorIndex = 6
                     category.save()
                 }
-//                R.id.navigation_item_label_all -> {
-//                    model.category = null
-//                    closeDrawerIfOpened()
-//                }
-//                R.id.navigation_item_label_id -> {
-//                    if (!menuItem.isChecked) {
-//                        model.category = menuItem.title.toString()
-//                    } else {
-//                        model.category = null
-//                    }
-//                    closeDrawerIfOpened()
-//                }
+                R.id.navigation_item_label_all -> {
+                    model.currentCategoryID = 0
+                    closeDrawerIfOpened()
+                }
+
+                R.id.navigation_item_label_id -> {
+                    if (!menuItem.isChecked) {
+                        val result = model.categories.value?.filter { it.categoryTitle.equals(menuItem.title.toString()) }
+                        Timber.v("result=$result")
+                        result?.let {
+                            if (it.isNotEmpty()) {
+                                model.currentCategoryID = it[0].categoryID
+                            } else {
+                                model.currentCategoryID = 0
+                            }
+                        } ?: kotlin.run {
+                            model.currentCategoryID = 0
+                        }
+                    } else {
+                        model.currentCategoryID = 0
+                    }
+                    closeDrawerIfOpened()
+                }
                 else -> {
                 }
             }
@@ -161,13 +162,15 @@ class MainActivity : AppCompatActivity() {
 //                }
 //            }
 //        }
+
+        model.currentCategoryID = 0
     }
 
     private fun updateNavigationMenuCheckedItems() {
         val menu = navigationView.menu.findItem(R.id.navigation_item_labels).subMenu
         for (item in menu.children) {
             when (item.groupId) {
-//                0 -> item.isChecked = model.category.isNullOrEmpty()
+                0 -> item.isChecked = model.currentCategoryID == 0
 //                1 -> item.isChecked = model.category?.equals(item.title) ?: run { false }
             }
         }
@@ -182,27 +185,27 @@ class MainActivity : AppCompatActivity() {
         if (!drawerLayout.isDrawerOpen(navigationView)) drawerLayout.openDrawer(navigationView)
         else drawerLayout.closeDrawer(navigationView)
     }
-//
-//    class EntriesDiffCallback(var oldData: List<EntryWithCategory>,
-//                              var newData: List<EntryWithCategory>) : DiffUtil.Callback() {
-//
-//        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-//            return oldData.get(oldItemPosition).entry.entry_uid == newData.get(newItemPosition).entry.entry_uid
-//        }
-//
-//        override fun getOldListSize(): Int = oldData.size
-//
-//        override fun getNewListSize(): Int = newData.size
-//
-//        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-//            return oldData.get(oldItemPosition).equals(newData.get(newItemPosition))
-//        }
-//
-//    }
+
+    class EntriesDiffCallback(var oldData: List<Entry>,
+                              var newData: List<Entry>) : DiffUtil.Callback() {
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldData.get(oldItemPosition).entryID == newData.get(newItemPosition).entryID
+        }
+
+        override fun getOldListSize(): Int = oldData.size
+
+        override fun getNewListSize(): Int = newData.size
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldData.get(oldItemPosition).equals(newData.get(newItemPosition))
+        }
+
+    }
 
 
     class ItemEntryListAdapter(private val context: Context,
-                               val values: ArrayList<*>) :
+                               val values: ArrayList<Entry>) :
             RecyclerView.Adapter<ItemEntryListAdapter.ViewHolder>() {
 
         private var cardBackgroundColorDefault: ColorStateList? = null
@@ -253,40 +256,47 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-//            val item = getItem(position)
-//            item?.let { entryItem ->
-//                holder.titleTextView.text = entryItem.entry.entry_title
-//                holder.contentTextView.text = entryItem.entry.entryText.substring(0, 100) + "..."
-//                holder.categoryTextView.text = entryItem.category.category_title
-//
-//                if (null == cardBackgroundColorDefault) {
-//                    cardBackgroundColorDefault = holder.cardView.cardBackgroundColor
-//                    textColorDefault = holder.titleTextView.textColors
-//                }
-//
-//                val color = categoryColors[entryItem.category.category_color_index]
-//
-//                if (entryItem.category.category_color_index != 0) {
-//
-//                    holder.cardView.setCardBackgroundColor(color)
-//                    holder.cardView.foreground = cardForegroundNoStroke.constantState.newDrawable()
-//                    holder.categoryTextView.visibility = View.VISIBLE
-//
-//                    // val luminance = ColorUtils.calculateLuminance(color)
-//
-//                } else {
-//                    holder.cardView.setCardBackgroundColor(cardBackgroundColorDefault)
-//                    holder.cardView.foreground = cardForegroundStroke.constantState.newDrawable()
-//                    holder.categoryTextView.visibility = View.GONE
-//                }
-//
-//                with(holder.cardView) {
-//                    tag = entryItem
-//                    setOnClickListener {
-//                        Timber.d("card clicked!")
-//                    }
-//                }
-//            }
+            val item = getItem(position)
+            item?.let { entryItem ->
+                holder.titleTextView.text = entryItem.entryTitle
+                holder.contentTextView.text = entryItem.entryText?.substring(0, 100)
+                holder.categoryTextView.text = entryItem.category?.categoryTitle
+
+                if (null == cardBackgroundColorDefault) {
+                    cardBackgroundColorDefault = holder.cardView.cardBackgroundColor
+                    textColorDefault = holder.titleTextView.textColors
+                }
+
+                var color = 0
+
+                entryItem.category?.let {
+                    if (it.categoryColorIndex != 0) {
+                        color = categoryColors[it.categoryColorIndex]
+                    }
+                }
+
+
+                if (color != 0) {
+
+                    holder.cardView.setCardBackgroundColor(color)
+                    holder.cardView.foreground = cardForegroundNoStroke.constantState.newDrawable()
+                    holder.categoryTextView.visibility = View.VISIBLE
+
+                    // val luminance = ColorUtils.calculateLuminance(color)
+
+                } else {
+                    holder.cardView.setCardBackgroundColor(cardBackgroundColorDefault)
+                    holder.cardView.foreground = cardForegroundStroke.constantState.newDrawable()
+                    holder.categoryTextView.visibility = View.GONE
+                }
+
+                with(holder.cardView) {
+                    tag = entryItem
+                    setOnClickListener {
+                        Timber.d("card clicked!")
+                    }
+                }
+            }
         }
 
         override fun getItemCount(): Int {
@@ -294,29 +304,31 @@ class MainActivity : AppCompatActivity() {
             return 0
         }
 
-//        override fun getItemId(position: Int): Long {
-//            if (position == 0) return -1
-//            return values[position - 1].entry.entry_uid.toLong()
-//        }
-//
-//        fun getItem(position: Int): EntryWithCategory? {
-//            if (position == 0) return null
-//            return values[position - 1]
-//        }
-//
-//        fun update(newData: List<EntryWithCategory>?) {
-//            Timber.i("update: ${newData?.size}")
-//
-//            newData?.let {
-//                val callback = EntriesDiffCallback(values, it)
-//                val result = DiffUtil.calculateDiff(callback, true)
-//                values.clear()
-//                values.addAll(it)
-//                result.dispatchUpdatesTo(this)
-//            } ?: run {
-//                values.clear()
-//            }
-//        }
+        override fun getItemId(position: Int): Long {
+            if (position == 0) return -1
+            return values[position - 1].entryID.toLong()
+        }
+
+        fun getItem(position: Int): Entry? {
+            if (position == 0) return null
+            return values[position - 1]
+        }
+
+        fun update(newData: List<Entry>?) {
+            Timber.i("update: ${newData?.size}")
+
+            newData?.let {
+                val callback = EntriesDiffCallback(values, it)
+                val result = DiffUtil.calculateDiff(callback, true)
+                values.clear()
+                values.addAll(it)
+                result.dispatchUpdatesTo(this)
+
+            } ?: run {
+                values.clear()
+                notifyDataSetChanged()
+            }
+        }
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val titleTextView: TextView by lazy { view.id_title }

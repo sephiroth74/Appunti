@@ -10,8 +10,10 @@ import com.dbflow5.query.list
 import com.dbflow5.query.select
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.insert
+import com.dbflow5.structure.save
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.tables.Category
+import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.ioThread
 import timber.log.Timber
 
@@ -37,34 +39,56 @@ class MainApplication : Application() {
 
 
         ioThread {
+            val size = select().from(Entry::class).list.size
+            val categories = select().from(Category::class).list.toList()
 
-            val category_size = select().from(Category::class).list.size
-            Timber.v("category_size: $category_size")
-            if (category_size < 1) {
+            Timber.d("entries size: $size")
 
-                val database = FlowManager.getDatabase(AppDatabase::class.java)
+            if (size < 20) {
+                for (i in 0..3) {
+                    val entry = Entry()
+                    entry.entryTitle = "Entry ${size + i}"
+                    entry.entryPinned = if (Math.random() > 0.5) 1 else 0
+                    entry.entryPriority = (Math.random() * 10).toInt()
+                    entry.entryText = getString(R.string.lorem_ipsum)
 
-                var category = Category()
-                category.categoryTitle = getString(R.string.category_default)
-                category.categoryColorIndex = 0
-                category.insert()
-
-                Thread.sleep(200)
-
-                category = Category()
-                category.categoryTitle = "Work"
-                category.categoryColorIndex = 1
-                category.insert()
-
-                Thread.sleep(200)
-
-                category = Category()
-                category.categoryTitle = "Personal"
-                category.categoryColorIndex = 2
-                category.insert()
-
-                Timber.v("category_size: $category_size")
+                    val index = (Math.random() * categories.size).toInt()
+                    if (index > 1) {
+                        entry.category = categories[index]
+                    }
+                    entry.save()
+                }
             }
+
+
+//
+//            val category_size = select().from(Category::class).list.size
+//            Timber.v("category_size: $category_size")
+//            if (category_size < 1) {
+//
+//                val database = FlowManager.getDatabase(AppDatabase::class.java)
+//
+//                var category = Category()
+//                category.categoryTitle = getString(R.string.category_default)
+//                category.categoryColorIndex = 0
+//                category.insert()
+//
+//                Thread.sleep(200)
+//
+//                category = Category()
+//                category.categoryTitle = "Work"
+//                category.categoryColorIndex = 1
+//                category.insert()
+//
+//                Thread.sleep(200)
+//
+//                category = Category()
+//                category.categoryTitle = "Personal"
+//                category.categoryColorIndex = 2
+//                category.insert()
+//
+//                Timber.v("category_size: $category_size")
+//            }
         }
 
 //
