@@ -1,10 +1,7 @@
 package it.sephiroth.android.app.appunti.graphics
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.ColorFilter
-import android.graphics.Paint
-import android.graphics.Rect
+import android.graphics.*
 import android.graphics.drawable.ColorDrawable
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.ext.getColor
@@ -27,9 +24,16 @@ class CircularSolidDrawable(context: Context, color: Int) : ColorDrawable(color)
         fillPaint.color = color
     }
 
+    override fun setColorFilter(color: Int, mode: PorterDuff.Mode) {
+        super.setColorFilter(color, mode)
+        fillPaint.color = color
+        invalidateSelf()
+    }
+
     override fun setColorFilter(colorFilter: ColorFilter?) {
         super.setColorFilter(colorFilter)
         fillPaint.colorFilter = colorFilter
+        invalidateSelf()
     }
 
     override fun isStateful(): Boolean {
@@ -49,8 +53,8 @@ class CircularSolidDrawable(context: Context, color: Int) : ColorDrawable(color)
         Timber.i("onStateChange: $stateSet, enabled=$enabled")
 
         strokePaint.color = if (pressed) strokeColorPressed else strokeColorNormal
-        strokePaint.alpha = if(enabled) 255 else 51
-        fillPaint.alpha = if(enabled) 255 else 51
+        strokePaint.alpha = if (enabled) 255 else 51
+        fillPaint.alpha = if (enabled) 255 else 51
 
         return super.onStateChange(stateSet)
     }

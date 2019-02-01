@@ -7,11 +7,7 @@
     android:gravity="center"
     android:orientation="horizontal">
 
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/colorButton"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:background="@drawable/material_background_ripple" />
+    <include layout="@layout/appunti_category_color_button" />
 
     <FrameLayout
         android:layout_width="0dp"

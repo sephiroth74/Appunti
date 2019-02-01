@@ -1,3 +1,8 @@
 <resources>
 
+    <style name="Theme.Appunti.BottomSheetDialog" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+
 </resources>

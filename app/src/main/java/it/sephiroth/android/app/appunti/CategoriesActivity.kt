@@ -16,14 +16,18 @@ import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.query.OrderBy
 import com.dbflow5.query.list
 import com.dbflow5.query.select
+import com.dbflow5.reactivestreams.transaction.asFlowable
 import com.dbflow5.structure.save
 import com.google.android.material.snackbar.Snackbar
+import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.ext.getColorStateList
+import it.sephiroth.android.app.appunti.ext.mainThread
 import it.sephiroth.android.app.appunti.graphics.CircularSolidDrawable
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.activity_categories.*
+import kotlinx.android.synthetic.main.appunti_category_color_button.view.*
 import kotlinx.android.synthetic.main.category_item_list_content.view.*
 import timber.log.Timber
 
@@ -40,10 +44,19 @@ class CategoriesActivity : AppCompatActivity() {
             setDisplayShowHomeEnabled(true)
         }
 
-        val categories = select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
-        val adapter = CategoriesAdapter(this, categories.toMutableList())
+
+        val adapter = CategoriesAdapter(this, mutableListOf())
         categoriesRecycler.adapter = adapter
 
+        val categories = select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).asFlowable { _, query ->
+            mainThread {
+                Timber.v("categories updated!")
+                adapter.values = query.list.toMutableList()
+                adapter.notifyDataSetChanged()
+            }
+        }
+                .subscribeOn(Schedulers.io())
+                .subscribe()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -54,10 +67,10 @@ class CategoriesActivity : AppCompatActivity() {
     }
 
 
-    class CategoriesAdapter(private var context: CategoriesActivity, private var values: MutableList<Category>) : RecyclerView
+    class CategoriesAdapter(private var context: CategoriesActivity, var values: MutableList<Category>) : RecyclerView
     .Adapter<CategoriesAdapter.ViewHolder>() {
 
-        private val categoryColors = ResourceUtils.getCategoryColors(context)
+        private var categoryColors = ResourceUtils.getCategoryColors(context)
         private var currentEditText: EditText? = null
         private val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
 
@@ -88,8 +101,6 @@ class CategoriesActivity : AppCompatActivity() {
 
             holder.isEnabled = item.categoryType == Category.CategoryType.USER
 
-            Timber.v("category title=${item.categoryTitle}, type=${item.categoryType}")
-
             holder.editTextView.setOnFocusChangeListener { v, hasFocus ->
                 holder.editButton.isEnabled = !hasFocus
 
@@ -112,6 +123,17 @@ class CategoriesActivity : AppCompatActivity() {
 
             holder.colorButton.setOnClickListener {
                 removeFocusFromEditText()
+                val sheet = CategoryColorsBottomSheetDialogFragment()
+                sheet.show(context.supportFragmentManager, "category_colors")
+
+                sheet.actionListener = { value ->
+                    Timber.v("clicked: $value")
+
+                    holder.category?.categoryColorIndex = value
+                    holder.category?.save()
+
+                    sheet.dismiss()
+                }
             }
 
             holder.deleteButton.setOnClickListener {

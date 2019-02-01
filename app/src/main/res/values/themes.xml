@@ -19,6 +19,8 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="search_theme">play</item>
         <item name="categoryColors">@array/category_colors_light</item>
+
+        <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
     </style>
 
     <style name="Theme.Appunti.Light.Base.NoActionbar">
@@ -41,6 +43,8 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="search_theme">dark</item>
         <item name="categoryColors">@array/category_colors_dark</item>
+
+        <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
     </style>
 
     <style name="Theme.Appunti.Dark.Base.NoActionbar">

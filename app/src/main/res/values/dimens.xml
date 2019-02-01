@@ -21,7 +21,7 @@
     <dimen name="appunti_main_item_list_margins_horizontal">4dp</dimen>
 
     <!-- stroke size for category circle drawable -->
-    <dimen name="appunti_category_color_drawable_stroke_width">1dp</dimen>
+    <dimen name="appunti_category_color_drawable_stroke_width">0.5dp</dimen>
 
 
     <dimen name="text_size_display_4_material">71sp</dimen>
