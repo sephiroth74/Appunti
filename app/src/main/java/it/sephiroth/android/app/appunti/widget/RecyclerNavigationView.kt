@@ -16,7 +16,7 @@ import com.google.android.material.navigation.NavigationView
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.models.MainViewModel
-import kotlinx.android.synthetic.main.navigation_header.view.*
+import kotlinx.android.synthetic.main.navigation_content.view.*
 import timber.log.Timber
 
 class RecyclerNavigationView @JvmOverloads constructor(

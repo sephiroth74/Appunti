@@ -60,6 +60,8 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
         categoriesRecycler.adapter = adapter
         updateCategories()
 
+        newCategory.setOnClickListener {  }
+
     }
 
     override fun onStart() {
@@ -99,8 +101,8 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
     }
 
 
-    class CategoriesAdapter(private var context: CategoriesActivity, var values: MutableList<Category>) : RecyclerView
-    .Adapter<CategoriesAdapter.ViewHolder>() {
+    class CategoriesAdapter(private var context: CategoriesActivity, var values: MutableList<Category>) :
+            RecyclerView.Adapter<CategoriesAdapter.ViewHolder>() {
 
         private var categoryColors = ResourceUtils.getCategoryColors(context)
         private var currentEditText: EditText? = null

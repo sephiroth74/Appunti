@@ -112,7 +112,7 @@
         android:fitsSystemWindows="false"
         app:itemIconTint="?attr/colorControlNormal">
 
-        <include layout="@layout/navigation_header" />
+        <include layout="@layout/navigation_content" />
 
     </it.sephiroth.android.app.appunti.widget.RecyclerNavigationView>
 
