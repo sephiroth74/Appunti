@@ -19,12 +19,12 @@
     <string name="search_view_hint_text">Cerca negli Appunti...</string>
     <string name="categories_all">All</string>
     <string name="settings">Settings</string>
-    <string name="labels">Labels</string>
+    <string name="categories">Categories</string>
     <string name="sort_by">Sort By...</string>
     <string name="share">Share</string>
     <string name="add_new_note">Add New Note</string>
 
     <string name="title_activity_categories">Edit Categories</string>
-    <string name="new_label">New Label</string>
-    <string name="edit_labels">Edit Labels</string>
+    <string name="edit_categories">Edit Categories</string>
+    <string name="add_new_category">Add New Category</string>
 </resources>

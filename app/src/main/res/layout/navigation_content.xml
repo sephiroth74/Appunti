@@ -20,7 +20,7 @@
         android:layout_marginBottom="8dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:text="@string/labels"
+        android:text="@string/categories"
         android:textAppearance="?attr/textAppearanceBody1"
         android:textColor="?attr/colorControlNormal" />
 
@@ -38,14 +38,14 @@
         android:id="@+id/newLabel"
         style="@style/Theme.Appunti.NavigationItem"
         android:drawableStart="@drawable/sharp_playlist_add_24"
-        android:text="@string/new_label"
+        android:text="@string/add_new_category"
         app:paddingStart="16dp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/editLabels"
         style="@style/Theme.Appunti.NavigationItem"
         android:drawableStart="@drawable/sharp_edit_24"
-        android:text="@string/edit_labels" />
+        android:text="@string/edit_categories" />
 
     <include layout="@layout/design_navigation_item_separator" />
 

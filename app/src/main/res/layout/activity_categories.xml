@@ -36,7 +36,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
             android:drawableStart="@drawable/sharp_add_24"
-            android:text="Add New Category"
+            android:text="@string/add_new_category"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
