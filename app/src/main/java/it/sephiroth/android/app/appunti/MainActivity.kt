@@ -19,7 +19,6 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.dbflow5.structure.save
 import com.lapism.searchview.Search
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.currentThread
@@ -83,11 +82,9 @@ class MainActivity : AppCompatActivity() {
 
         navigationView.setNavigationItemSelectedListener { id ->
             when (id) {
-                R.id.newLabel -> startActivity(Intent(this, CategoriesActivity::class.java))
-                R.id.editLabels -> startActivity(Intent(this, CategoriesActivity::class.java))
+                R.id.newLabel -> startCategoriesEditActivity(true)
+                R.id.editLabels -> startCategoriesEditActivity(false)
                 R.id.settings -> {
-                    model.currentCategory?.categoryColorIndex = 1
-                    model.currentCategory?.save()
                 }
             }
         }
@@ -106,21 +103,13 @@ class MainActivity : AppCompatActivity() {
         bottomAppBar.doOnDisplayAsListChanged { value ->
             model.setDisplayAsList(value)
         }
-//
-//        bottomAppBar.doOnMenuItemClick { view: View ->
-//            when (view.id) {
-//                R.id.buttonDisplayAsList -> model.settingsManager.displayAsList = true
-//                R.id.buttonDisplayAsGrid -> model.settingsManager.displayAsList = false
-//                R.id.buttonNewNote -> {
-//                    SettingsManager.getInstance(this).isLightTheme = !SettingsManager.getInstance(this).isLightTheme
-//                    finish()
-//                    startActivity(Intent(this, this::class.java))
-//                }
-//            }
-//        }
-
     }
 
+    private fun startCategoriesEditActivity(newCategory: Boolean = false) {
+        val intent = Intent(this, CategoriesEditActivity::class.java)
+        if (newCategory) intent.putExtra(CategoriesEditActivity.ASK_NEW_CATEGORY_STARTUP, true)
+        startActivity(intent)
+    }
 
     private fun closeDrawerIfOpened() {
         if (drawerLayout.isDrawerOpen(navigationView))

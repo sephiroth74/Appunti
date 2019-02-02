@@ -21,6 +21,7 @@
         <item name="categoryColors">@array/category_colors_light</item>
 
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
+        <item name="alertDialogTheme">@style/Theme.MaterialComponents.Light.Dialog.MinWidth</item>
     </style>
 
     <style name="Theme.Appunti.Light.Base.NoActionbar">
@@ -45,6 +46,7 @@
         <item name="categoryColors">@array/category_colors_dark</item>
 
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
+        <item name="alertDialogTheme">@style/Theme.MaterialComponents.Dialog.MinWidth</item>
     </style>
 
     <style name="Theme.Appunti.Dark.Base.NoActionbar">

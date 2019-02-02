@@ -28,4 +28,6 @@
     <string name="edit_categories">Edit Categories</string>
     <string name="add_new_category">Add New Category</string>
     <string name="category_title_dialog">Enter Category Name</string>
+    <string name="undo_uppercase">UNDO</string>
+    <string name="category_deleted_snackbar_title">Category Deleted</string>
 </resources>

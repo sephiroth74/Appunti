@@ -19,7 +19,7 @@ import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
 import it.sephiroth.android.app.appunti.ext.mainThread
-import it.sephiroth.android.app.appunti.ext.rxIoThread
+import it.sephiroth.android.app.appunti.ext.rxSingle
 import timber.log.Timber
 import kotlin.properties.Delegates
 
@@ -60,7 +60,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
     private fun fetchEntries(category: Category?): Single<MutableList<Entry>> {
         Timber.i("fetchEntries(category=${category})")
 
-        return rxIoThread {
+        return rxSingle(Schedulers.io()) {
             select().from(Entry::class)
                     .run {
                         category?.let {

@@ -21,10 +21,12 @@ import com.dbflow5.structure.*
 import com.google.android.material.snackbar.Snackbar
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.ext.getColorStateList
-import it.sephiroth.android.app.appunti.ext.rxIoThread
+import it.sephiroth.android.app.appunti.ext.mainThread
+import it.sephiroth.android.app.appunti.ext.rxSingle
 import it.sephiroth.android.app.appunti.graphics.CircularSolidDrawable
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.activity_categories.*
@@ -33,7 +35,7 @@ import kotlinx.android.synthetic.main.category_item_list_content.view.*
 import timber.log.Timber
 
 
-class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelStateChangedListener<Category> {
+class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelStateChangedListener<Category> {
 
     private lateinit var adapter: CategoriesAdapter
 
@@ -49,26 +51,74 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
 
         adapter = CategoriesAdapter(this, mutableListOf())
         categoriesRecycler.adapter = adapter
+
+        newCategory.setOnClickListener { presentNewCategoryDialog() }
         updateCategories()
 
-        newCategory.setOnClickListener {
-            val dialog: AlertDialog
-            dialog = AlertDialog
-                    .Builder(this, R.style.Theme_MaterialComponents_Light_Dialog_MinWidth)
-                    .setNegativeButton(android.R.string.cancel) { dialog, which -> dialog.dismiss() }
-                    .setCancelable(true)
-                    .setTitle(getString(R.string.category_title_dialog))
-                    .setView(R.layout.appunti_alertdialog_category_input)
-                    .create()
-
-            dialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, which ->
-                createCategory(dialog.findViewById<TextView>(android.R.id.text1)?.text.toString())
+        if (intent.hasExtra(ASK_NEW_CATEGORY_STARTUP)) {
+            mainThread {
+                presentNewCategoryDialog()
             }
+        }
+    }
 
-            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
-            dialog.show()
+    private fun presentNewCategoryDialog() {
+        val dialog: AlertDialog = AlertDialog
+                .Builder(this)
+                .setCancelable(true)
+                .setTitle(getString(R.string.category_title_dialog))
+                .setView(R.layout.appunti_alertdialog_category_input)
+                .create()
+
+        dialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, which ->
+            createCategory(dialog.findViewById<TextView>(android.R.id.text1)?.text.toString())
         }
 
+        dialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(android.R.string.cancel)) { dialog, _ ->
+            dialog.dismiss()
+        }
+
+        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+        dialog.show()
+    }
+
+    private fun presentCategoryColorChooser(category: Category?) {
+        if (null != category) {
+            val sheet = CategoryColorsBottomSheetDialogFragment()
+            sheet.show(supportFragmentManager, "category_colors")
+            sheet.actionListener = { value ->
+                category.categoryColorIndex = value
+                category.save()
+                sheet.dismiss()
+            }
+        }
+    }
+
+    private fun deleteCategory(adapterPosition: Int, category: Category?) {
+        if (null != category) {
+            adapter.values.remove(category)
+            adapter.notifyItemRemoved(adapterPosition)
+
+            Snackbar.make(constraintLayout, getString(R.string.category_deleted_snackbar_title), Snackbar.LENGTH_SHORT)
+                    .setAction(getString(R.string.undo_uppercase)) {}
+                    .setActionTextColor(theme.getColorStateList(this, R.attr.colorError))
+                    .addCallback(object : Snackbar.Callback() {
+                        override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                            super.onDismissed(transientBottomBar, event)
+
+                            if (event == DISMISS_EVENT_ACTION) {
+                                Timber.d("must undo the event!")
+                                adapter.values.add(adapterPosition, category)
+                                adapter.notifyItemInserted(adapterPosition)
+
+                            } else {
+                                Timber.d("must consolidate the event!")
+                                category.delete()
+                            }
+                        }
+                    })
+                    .show()
+        }
     }
 
     private fun createCategory(name: String?) {
@@ -118,7 +168,7 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
     }
 
     private fun fetchCategories(): Single<MutableList<Category>> {
-        return rxIoThread {
+        return rxSingle(Schedulers.io()) {
             select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
         }
     }
@@ -130,8 +180,11 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
         return super.onOptionsItemSelected(item)
     }
 
+    companion object {
+        const val ASK_NEW_CATEGORY_STARTUP = "ask_for_new_category_startup"
+    }
 
-    inner class CategoriesAdapter(private var context: CategoriesActivity, var values: MutableList<Category>) :
+    private inner class CategoriesAdapter(private var context: CategoriesEditActivity, var values: MutableList<Category>) :
             RecyclerView.Adapter<CategoriesAdapter.ViewHolder>() {
 
         private var categoryColors = ResourceUtils.getCategoryColors(context)
@@ -199,49 +252,12 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
 
             holder.colorButton.setOnClickListener {
                 removeFocusFromEditText()
-                val sheet = CategoryColorsBottomSheetDialogFragment()
-                sheet.show(context.supportFragmentManager, "category_colors")
-
-                sheet.actionListener = { value ->
-                    Timber.v("clicked: $value")
-                    holder.category?.categoryColorIndex = value
-                    holder.category?.save()
-                    sheet.dismiss()
-                }
+                presentCategoryColorChooser(holder.category)
             }
 
             holder.deleteButton.setOnClickListener {
                 removeFocusFromEditText()
-
-                val index = holder.adapterPosition
-                val category = holder.category!!
-
-                values.remove(category)
-                notifyItemRemoved(index)
-
-                Snackbar.make(context.constraintLayout, "Category Deleted", Snackbar.LENGTH_LONG)
-                        .setAction("UNDO") {
-                            Timber.v("undo clicked!")
-                        }
-                        .setActionTextColor(context.theme.getColorStateList(context, R.attr.colorError))
-                        .addCallback(object : Snackbar.Callback() {
-
-                            override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                                super.onDismissed(transientBottomBar, event)
-
-                                if (event == Snackbar.Callback.DISMISS_EVENT_ACTION) {
-                                    Timber.d("must undo the event!")
-                                    values.add(index, category)
-                                    notifyItemInserted(index)
-
-                                } else {
-                                    Timber.d("must consolidate the event!")
-                                    category.delete()
-                                }
-                            }
-                        })
-                        .show()
-
+                deleteCategory(holder.adapterPosition, holder.category)
             }
 
             holder.editButton.setOnClickListener {

@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.core.content.ContextCompat
+import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -14,14 +15,14 @@ import java.text.DateFormat
 import java.util.*
 
 
-fun <T> Any.rxIoThread(func: () -> T): Single<T> {
+fun <T> Any.rxSingle(thread: Scheduler, func: () -> T): Single<T> {
     return Single.create<T> { emitter ->
         try {
             emitter.onSuccess(func.invoke())
         } catch (error: Throwable) {
             emitter.onError(error)
         }
-    }.subscribeOn(Schedulers.io())
+    }.subscribeOn(thread)
 }
 
 

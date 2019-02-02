@@ -14,7 +14,7 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <activity
-            android:name=".CategoriesActivity"
+            android:name=".CategoriesEditActivity"
             android:label="@string/title_activity_categories" />
         <!-- <provider -->
         <!-- android:name="com.dbflow5.provider.StubContentProvider" -->
