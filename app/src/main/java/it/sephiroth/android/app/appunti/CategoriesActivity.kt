@@ -5,41 +5,32 @@ import android.content.Context
 import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.Adapter
 import android.widget.EditText
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.query.OrderBy
 import com.dbflow5.query.list
 import com.dbflow5.query.select
-import com.dbflow5.reactivestreams.transaction.asFlowable
-import com.dbflow5.structure.delete
-import com.dbflow5.structure.save
+import com.dbflow5.runtime.DirectModelNotifier
+import com.dbflow5.structure.*
 import com.google.android.material.snackbar.Snackbar
-import io.reactivex.schedulers.Schedulers
+import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.ext.getColorStateList
-import it.sephiroth.android.app.appunti.ext.mainThread
+import it.sephiroth.android.app.appunti.ext.rxIoThread
 import it.sephiroth.android.app.appunti.graphics.CircularSolidDrawable
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.activity_categories.*
 import kotlinx.android.synthetic.main.appunti_category_color_button.view.*
 import kotlinx.android.synthetic.main.category_item_list_content.view.*
 import timber.log.Timber
-import com.dbflow5.config.FlowManager
-import com.dbflow5.runtime.DirectModelNotifier
-import com.dbflow5.structure.ChangeAction
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
-import it.sephiroth.android.app.appunti.ext.ioThread
-import it.sephiroth.android.app.appunti.ext.rxIoThread
 
 
 class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelStateChangedListener<Category> {
@@ -60,8 +51,47 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
         categoriesRecycler.adapter = adapter
         updateCategories()
 
-        newCategory.setOnClickListener {  }
+        newCategory.setOnClickListener {
+            val dialog: AlertDialog
+            dialog = AlertDialog
+                    .Builder(this, R.style.Theme_MaterialComponents_Light_Dialog_MinWidth)
+                    .setNegativeButton(android.R.string.cancel) { dialog, which -> dialog.dismiss() }
+                    .setCancelable(true)
+                    .setTitle(getString(R.string.category_title_dialog))
+                    .setView(R.layout.appunti_alertdialog_category_input)
+                    .create()
 
+            dialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, which ->
+                createCategory(dialog.findViewById<TextView>(android.R.id.text1)?.text.toString())
+            }
+
+            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+            dialog.show()
+        }
+
+    }
+
+    private fun createCategory(name: String?) {
+        if (!name.isNullOrEmpty()) {
+            val category = Category()
+            category.categoryTitle = name
+            category.categoryColorIndex = 0
+            category.categoryType = Category.CategoryType.USER
+            category.insert()
+        } else {
+            Timber.w("must specify a name for the category")
+        }
+    }
+
+    private fun updateCategory(item: Category, text: String?) {
+        if (!text.isNullOrEmpty()) {
+            if (text != item.categoryTitle) {
+                item.categoryTitle = text
+                item.update()
+            }
+        } else {
+            Timber.w("must specify a name for the category")
+        }
     }
 
     override fun onStart() {
@@ -101,7 +131,7 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
     }
 
 
-    class CategoriesAdapter(private var context: CategoriesActivity, var values: MutableList<Category>) :
+    inner class CategoriesAdapter(private var context: CategoriesActivity, var values: MutableList<Category>) :
             RecyclerView.Adapter<CategoriesAdapter.ViewHolder>() {
 
         private var categoryColors = ResourceUtils.getCategoryColors(context)
@@ -110,7 +140,9 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(context).inflate(R.layout.category_item_list_content, parent, false)
-            return ViewHolder(view)
+            val holder = ViewHolder(view)
+            holder.editTextView.imeOptions = EditorInfo.IME_ACTION_DONE
+            return holder
         }
 
         override fun getItemCount(): Int {
@@ -135,18 +167,28 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
 
             holder.isEnabled = item.categoryType == Category.CategoryType.USER
 
+            holder.editTextView.setOnEditorActionListener { v, actionId, event ->
+                var result = false
+                when (actionId) {
+                    EditorInfo.IME_ACTION_DONE -> {
+                        removeFocusFromEditText()
+                        updateCategory(item, holder.editTextView.text.toString())
+                        result = true
+                    }
+                }
+                result
+            }
+
             holder.editTextView.setOnFocusChangeListener { v, hasFocus ->
                 holder.editButton.isEnabled = !hasFocus
+
+                Timber.i("focus: $hasFocus")
 
                 if (!hasFocus) {
                     val text = holder.editTextView.text.toString()
                     if (text.isEmpty()) holder.editTextView.setText(item.categoryTitle, TextView.BufferType.EDITABLE)
                     else {
-                        if (text != item.categoryTitle) {
-                            Timber.v("saving new category title....")
-                            item.categoryTitle = text
-                            item.save()
-                        }
+                        updateCategory(item, text)
                     }
                 } else {
                     currentEditText = holder.editTextView
@@ -170,7 +212,6 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
 
             holder.deleteButton.setOnClickListener {
                 removeFocusFromEditText()
-
 
                 val index = holder.adapterPosition
                 val category = holder.category!!
@@ -243,5 +284,4 @@ class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelState
 
         }
     }
-
 }
