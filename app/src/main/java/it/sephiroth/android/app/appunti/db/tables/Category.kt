@@ -6,6 +6,7 @@ import com.dbflow5.annotation.Table
 import com.dbflow5.reactivestreams.structure.BaseRXModel
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.CategoryTypeConverter
+import timber.log.Timber
 
 @Table(database = AppDatabase::class)
 class Category : BaseRXModel() {
@@ -24,6 +25,16 @@ class Category : BaseRXModel() {
 
     override fun toString(): String {
         return "Category(id=$categoryID, title=$categoryTitle, color=$categoryColorIndex)"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        when (other) {
+            is Category -> return categoryID == other.categoryID
+                    && categoryTitle == other.categoryTitle
+                    && categoryColorIndex == other.categoryColorIndex
+                    && categoryType == other.categoryType
+        }
+        return super.equals(other)
     }
 
     enum class CategoryType {

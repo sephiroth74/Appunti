@@ -1,5 +1,6 @@
 package it.sephiroth.android.app.appunti.models
 
+import android.annotation.SuppressLint
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -8,9 +9,10 @@ import com.dbflow5.query.OrderBy
 import com.dbflow5.query.Transformable
 import com.dbflow5.query.list
 import com.dbflow5.query.select
-import com.dbflow5.reactivestreams.transaction.asFlowable
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.ChangeAction
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
@@ -27,15 +29,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
         data
     }
 
-    val entries: LiveData<List<Entry>> = MutableLiveData<List<Entry>>()
+    val entries: LiveData<MutableList<Entry>> = MutableLiveData<MutableList<Entry>>()
+
     val category: LiveData<Category?> = MutableLiveData()
 
     var currentCategory by Delegates.observable<Category?>(null) { _, _, newValue ->
         Timber.i("currentCategory = $newValue")
         (category as MutableLiveData).value = newValue
-        fetchEntries(newValue) { result ->
-            Timber.v("fetchEntries result")
-            (entries as MutableLiveData).postValue(result)
+        fetchEntries(newValue).observeOn(AndroidSchedulers.mainThread()).subscribe {
+            Timber.v("entries returned = ${it.size}")
+            (entries as MutableLiveData).value = it
         }
     }
 
@@ -48,26 +51,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
         action.invoke(list)
     }
 
-    private fun fetchEntries(category: Category?, action: (List<Entry>) -> Unit) {
+    @SuppressLint("CheckResult")
+    private fun fetchEntries(category: Category?): Observable<MutableList<Entry>> {
         Timber.i("fetchEntries(category=${category})")
-        select().from(Entry::class)
-                .run {
-                    category?.let {
-                        return@run where(Entry_Table.category_categoryID.eq(it.categoryID)) as Transformable<Entry>
-                    } ?: run {
-                        this as Transformable<Entry>
-                    }
 
-                }.run {
-                    orderByAll(listOf(
-                            OrderBy(Entry_Table.entryPinned.nameAlias, true),
-                            OrderBy(Entry_Table.entryPriority.nameAlias, false),
-                            OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
-                    ))
-                            .asFlowable { _, query ->
-                                action.invoke(query.list.toList())
-                            }.subscribeOn(Schedulers.io()).subscribe()
-                }
+        return Observable.create<MutableList<Entry>> { emitter ->
+            val result = select().from(Entry::class)
+                    .run {
+                        category?.let {
+                            return@run where(Entry_Table.category_categoryID.eq(it.categoryID)) as Transformable<Entry>
+                        } ?: run {
+                            this as Transformable<Entry>
+                        }
+
+                    }.run {
+                        orderByAll(listOf(
+                                OrderBy(Entry_Table.entryPinned.nameAlias, true),
+                                OrderBy(Entry_Table.entryPriority.nameAlias, false),
+                                OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
+                        )).list
+                    }
+            emitter.onNext(result)
+            emitter.onComplete()
+        }.subscribeOn(Schedulers.io())
+
     }
 
     fun setDisplayAsList(value: Boolean) {
@@ -81,7 +88,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
     }
 
     override fun onModelChanged(model: Category, action: ChangeAction) {
-        Timber.i("onModelChanged")
+        Timber.i("onModelChanged($model, $action)")
         fetchCategories { result ->
             mainThread {
                 (categories as MutableLiveData).value = result

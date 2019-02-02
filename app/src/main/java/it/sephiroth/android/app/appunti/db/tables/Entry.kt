@@ -1,11 +1,13 @@
 package it.sephiroth.android.app.appunti.db.tables
 
+import android.provider.ContactsContract
 import com.dbflow5.annotation.*
 import com.dbflow5.query.select
 import com.dbflow5.reactivestreams.structure.BaseRXModel
 import com.dbflow5.structure.oneToMany
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.EntryTypeConverter
+import timber.log.Timber
 import java.util.*
 
 @Table(database = AppDatabase::class, indexGroups = [
@@ -43,6 +45,23 @@ class Entry : BaseRXModel() {
 
     override fun toString(): String {
         return "Entry(id=$entryID, title=$entryTitle, category=$category)"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        Timber.i("$this equals $other")
+        when (other) {
+            is Entry -> {
+                return (entryID == other.entryID
+                        && entryTitle == other.entryTitle
+                        && entryPriority == other.entryPriority
+                        && entryCreationDate == other.entryCreationDate
+                        && entryModifiedDate == other.entryModifiedDate
+                        && entryPinned == other.entryPinned
+                        && category == other.category
+                        && attachments == other.attachments)
+            }
+        }
+        return super.equals(other)
     }
 
     enum class EntryType {

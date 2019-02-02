@@ -19,13 +19,13 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.dbflow5.runtime.DirectModelNotifier
-import com.dbflow5.structure.ChangeAction
 import com.dbflow5.structure.save
 import com.lapism.searchview.Search
-import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.ext.currentThread
+import it.sephiroth.android.app.appunti.ext.getColorStateList
+import it.sephiroth.android.app.appunti.ext.isAPI
+import it.sephiroth.android.app.appunti.ext.isLightTheme
 import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
@@ -67,9 +67,7 @@ class MainActivity : AppCompatActivity() {
 
         model.entries.observe(this, Observer {
             Timber.i("[${currentThread()}] entries changed")
-            mainThread {
-                adapter.update(it)
-            }
+            adapter.update(it)
         })
 
         searchView.setOnMicClickListener {
@@ -134,8 +132,8 @@ class MainActivity : AppCompatActivity() {
         else drawerLayout.closeDrawer(navigationView)
     }
 
-    class EntriesDiffCallback(private var oldData: List<Entry>,
-                              private var newData: List<Entry>) : DiffUtil.Callback() {
+    class EntriesDiffCallback(private var oldData: List<Entry?>,
+                              private var newData: List<Entry?>) : DiffUtil.Callback() {
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
             return oldData[oldItemPosition] == newData[newItemPosition]
@@ -146,14 +144,17 @@ class MainActivity : AppCompatActivity() {
         override fun getNewListSize(): Int = newData.size
 
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldData[oldItemPosition] == newData[newItemPosition]
+            Timber.i("areContentsTheSame($oldItemPosition, $newItemPosition")
+            val oldItem = oldData[oldItemPosition]
+            val newItem = newData[newItemPosition]
+            return oldItem == newItem
         }
 
     }
 
 
     class ItemEntryListAdapter(private val context: Context,
-                               private var values: List<Entry>) :
+                               private var values: MutableList<Entry?>) :
             RecyclerView.Adapter<ItemEntryListAdapter.ViewHolder>() {
 
         private var cardBackgroundColorDefault: ColorStateList? = null
@@ -181,8 +182,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun getItemViewType(position: Int): Int {
-            if (position == 0) return TYPE_EMPTY
-            return TYPE_REGULAR
+            val item = getItem(position)
+            if (null != item) return TYPE_REGULAR
+            return TYPE_EMPTY
         }
 
         @SuppressLint("PrivateResource")
@@ -205,6 +207,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            Timber.v("onBindViewHolder, position=$position")
             val item = getItem(position)
             item?.let { entryItem ->
                 holder.titleTextView.text = entryItem.entryTitle
@@ -224,9 +227,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-
                 if (color != 0) {
-
                     holder.cardView.setCardBackgroundColor(color)
                     holder.cardView.foreground = cardForegroundNoStroke.constantState?.newDrawable()
                     holder.categoryTextView.visibility = View.VISIBLE
@@ -249,33 +250,35 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun getItemCount(): Int {
-            if (values.isNotEmpty()) return values.size + 1
-            return 0
+            return values.size
         }
 
         override fun getItemId(position: Int): Long {
-            if (position == 0) return -1
-            return values[position - 1].entryID.toLong()
+            val item = getItem(position)
+            return item?.entryID?.toLong() ?: -1L
         }
 
         private fun getItem(position: Int): Entry? {
-            if (position == 0) return null
-            return values[position - 1]
+            return values[position]
         }
 
         fun update(newData: List<Entry>?) {
             Timber.i("update: ${newData?.size}")
 
+            val finalData = mutableListOf<Entry?>(null)
             newData?.let {
-                val callback = EntriesDiffCallback(values, it)
-                val result = DiffUtil.calculateDiff(callback, true)
-                values = it
-                result.dispatchUpdatesTo(this)
-
-            } ?: run {
-                values = listOf()
-                notifyDataSetChanged()
+                finalData.addAll(it)
             }
+
+            val callback = EntriesDiffCallback(values, finalData)
+            val result = DiffUtil.calculateDiff(callback, true)
+
+            Timber.v("diffResult = $result")
+
+            values = finalData
+            result.dispatchUpdatesTo(this)
+
+
         }
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
