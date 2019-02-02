@@ -25,4 +25,6 @@
     <string name="add_new_note">Add New Note</string>
 
     <string name="title_activity_categories">Edit Categories</string>
+    <string name="new_label">New Label</string>
+    <string name="edit_labels">Edit Labels</string>
 </resources>

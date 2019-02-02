@@ -50,7 +50,6 @@ class CircularSolidDrawable(context: Context, color: Int) : ColorDrawable(color)
 
         val pressed = stateSet?.contains(android.R.attr.state_pressed) ?: kotlin.run { false }
         val enabled = stateSet?.contains(android.R.attr.state_enabled) ?: kotlin.run { false }
-        Timber.i("onStateChange: $stateSet, enabled=$enabled")
 
         strokePaint.color = if (pressed) strokeColorPressed else strokeColorNormal
         strokePaint.alpha = if (enabled) 255 else 51

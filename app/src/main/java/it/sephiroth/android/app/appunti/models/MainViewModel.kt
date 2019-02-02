@@ -4,18 +4,23 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.dbflow5.query.*
+import com.dbflow5.query.OrderBy
+import com.dbflow5.query.Transformable
+import com.dbflow5.query.list
+import com.dbflow5.query.select
 import com.dbflow5.reactivestreams.transaction.asFlowable
+import com.dbflow5.runtime.DirectModelNotifier
+import com.dbflow5.structure.ChangeAction
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
+import it.sephiroth.android.app.appunti.ext.mainThread
 import timber.log.Timber
 import kotlin.properties.Delegates
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
-
+class MainViewModel(application: Application) : AndroidViewModel(application), DirectModelNotifier.OnModelStateChangedListener<Category> {
     val categories: LiveData<List<Category>> by lazy {
         val data = MutableLiveData<List<Category>>()
         fetchCategories { result -> data.postValue(result) }
@@ -25,39 +30,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val entries: LiveData<List<Entry>> = MutableLiveData<List<Entry>>()
     val category: LiveData<Category?> = MutableLiveData()
 
-    var currentCategory by Delegates.observable<Category?>(null) { prop, oldValue, newValue ->
-        fetchEntries(newValue) { result -> (entries as MutableLiveData).postValue(result) }
+    var currentCategory by Delegates.observable<Category?>(null) { _, _, newValue ->
+        Timber.i("currentCategory = $newValue")
         (category as MutableLiveData).value = newValue
+        fetchEntries(newValue) { result ->
+            Timber.v("fetchEntries result")
+            (entries as MutableLiveData).postValue(result)
+        }
     }
 
     val displayAsList: LiveData<Boolean> = MutableLiveData<Boolean>()
     val settingsManager = SettingsManager.getInstance(application)
 
 
-    fun findCategoryByName(name: String): Category? {
-        return categories.value?.firstOrNull { it.categoryTitle.equals(name) }
-    }
-
-
-//
-//    var category: String? by Delegates.observable<String?>(null) { prop, oldValue, newValue ->
-//        newValue?.let {
-//            entries.value = getEntriesByCategory(it)
-//        } ?: kotlin.run {
-//            entries.value = getEntriesByCategory(null)
-//        }
-//    }
-
     private fun fetchCategories(action: (List<Category>) -> Unit) {
-        select().from(Category::class)
-                .orderBy(OrderBy(Category_Table.categoryID.nameAlias, true))
-                .asFlowable { _, query ->
-                    action.invoke(query.list.toList())
-                }.subscribeOn(Schedulers.io()).subscribe()
+        val list = select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
+        action.invoke(list)
     }
 
     private fun fetchEntries(category: Category?, action: (List<Entry>) -> Unit) {
-        Timber.i("fetchEntries(categoryID=${category?.categoryTitle})")
+        Timber.i("fetchEntries(category=${category})")
         select().from(Entry::class)
                 .run {
                     category?.let {
@@ -78,26 +70,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
     }
 
-
     fun setDisplayAsList(value: Boolean) {
         settingsManager.displayAsList = value
     }
-//
-//    fun getEntriesByCategory(name: String?): Flowable<MutableList<Entry>> {
-//        return SQLite.select()
-//                .from(Entry::class.java)
-//                .orderBy(OrderBy.fromNameAlias(Entry_Table
-//                        .entryModifiedDate
-//                        .nameAlias)
-//                        .descending())
-//                .rx().observeOnTableChanges().map { it.queryList() }
-//    }
+
+
+    override fun onCleared() {
+        super.onCleared()
+        DirectModelNotifier.get().unregisterForModelStateChanges(Category::class.java, this)
+    }
+
+    override fun onModelChanged(model: Category, action: ChangeAction) {
+        Timber.i("onModelChanged")
+        fetchCategories { result ->
+            mainThread {
+                (categories as MutableLiveData).value = result
+                currentCategory?.let { category ->
+                    val result = result.firstOrNull { it.categoryID == category.categoryID }
+                    if (result == null) {
+                        currentCategory = null
+                    } else {
+                        currentCategory = result
+                    }
+                } ?: run {
+                    currentCategory = null
+                }
+            }
+        }
+    }
 
     init {
         currentCategory = null
         (displayAsList as MutableLiveData).value = settingsManager.displayAsList
         settingsManager.doOnDisplayAsListChanged { value: Boolean -> displayAsList.value = value }
-    }
 
+        DirectModelNotifier.get().registerForModelStateChanges(Category::class.java, this)
+    }
 
 }

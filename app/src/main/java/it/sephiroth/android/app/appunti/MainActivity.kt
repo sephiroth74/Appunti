@@ -7,7 +7,6 @@ import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -15,12 +14,13 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.cardview.widget.CardView
-import androidx.core.view.children
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.dbflow5.runtime.DirectModelNotifier
+import com.dbflow5.structure.ChangeAction
 import com.dbflow5.structure.save
 import com.lapism.searchview.Search
 import it.sephiroth.android.app.appunti.db.tables.Category
@@ -72,59 +72,26 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        model.category.observe(this, Observer {
-            Timber.i("current category changed = $it")
-            updateNavigationMenuCheckedItems()
-        })
-
         searchView.setOnMicClickListener {
             Search.setVoiceSearch(this, "")
         }
         searchView.setOnLogoClickListener { toggleDrawer() }
 
+        navigationView.model = model
+        navigationView.setNavigationCategorySelectedListener { category ->
+            model.currentCategory = category
+            closeDrawerIfOpened()
+        }
 
-        model.categories.observe(this@MainActivity, Observer {
-            val menu = navigationView.menu
-            val subMenu = menu.findItem(R.id.navigation_item_labels).subMenu
-
-            subMenu.clear()
-
-            subMenu.add(0, R.id.navigation_item_label_all, Menu.NONE, R.string.categories_all)
-                    .setIcon(R.drawable.outline_label_24)
-                    .setCheckable(true)
-                    .isChecked = model.category.value == null
-
-            for (category in it) {
-                subMenu.add(1, R.id.navigation_item_label_id, Menu.NONE, category.categoryTitle)
-                        .setIcon(R.drawable.outline_label_24)
-                        .setCheckable(true)
-                        .isChecked = model.category.value?.let { cat -> cat.categoryID == category.categoryID } ?: run { false }
-            }
-        })
-
-        navigationView.setNavigationItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.navigation_item_category_add -> {
-                    startActivity(Intent(this, CategoriesActivity::class.java))
-                }
-                R.id.navigation_item_label_all -> {
-                    model.currentCategory = null
-                    closeDrawerIfOpened()
-                }
-
-                R.id.navigation_item_label_id -> {
-                    if (!menuItem.isChecked) {
-                        val category = model.findCategoryByName(menuItem.title.toString())
-                        model.currentCategory = category
-                    } else {
-                        model.currentCategory = null
-                    }
-                    closeDrawerIfOpened()
-                }
-                else -> {
+        navigationView.setNavigationItemSelectedListener { id ->
+            when (id) {
+                R.id.newLabel -> startActivity(Intent(this, CategoriesActivity::class.java))
+                R.id.editLabels -> startActivity(Intent(this, CategoriesActivity::class.java))
+                R.id.settings -> {
+                    model.currentCategory?.categoryColorIndex = 1
+                    model.currentCategory?.save()
                 }
             }
-            true
         }
 
         model.displayAsList.observe(this, Observer {
@@ -156,15 +123,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun updateNavigationMenuCheckedItems() {
-        val menu = navigationView.menu.findItem(R.id.navigation_item_labels).subMenu
-        for (item in menu.children) {
-            when (item.groupId) {
-                0 -> item.isChecked = model.category.value == null
-                1 -> item.isChecked = model.category.value?.equals(item.title) ?: run { false }
-            }
-        }
-    }
 
     private fun closeDrawerIfOpened() {
         if (drawerLayout.isDrawerOpen(navigationView))
@@ -180,7 +138,7 @@ class MainActivity : AppCompatActivity() {
                               private var newData: List<Entry>) : DiffUtil.Callback() {
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldData[oldItemPosition].entryID == newData[newItemPosition].entryID
+            return oldData[oldItemPosition] == newData[newItemPosition]
         }
 
         override fun getOldListSize(): Int = oldData.size

@@ -3,23 +3,57 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:padding="16dp">
-
-    <androidx.appcompat.widget.AppCompatImageView
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:visibility="gone"
-        app:srcCompat="@mipmap/ic_launcher_round" />
+    android:orientation="vertical">
 
     <androidx.appcompat.widget.AppCompatTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_margin="24dp"
         android:lines="1"
         android:text="@string/app_name_complete"
         android:textAppearance="?attr/textAppearanceHeadline6"
         android:textColor="@color/colorPrimaryDark" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/labels"
+        android:textAppearance="?attr/textAppearanceBody1"
+        android:textColor="?attr/colorControlNormal" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/navigationRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
+
+    </androidx.recyclerview.widget.RecyclerView>
+
+    <include layout="@layout/design_navigation_item_separator" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/newLabel"
+        style="@style/Theme.Appunti.NavigationItem"
+        android:drawableStart="@drawable/sharp_playlist_add_24"
+        android:text="@string/new_label"
+        app:paddingStart="16dp" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/editLabels"
+        style="@style/Theme.Appunti.NavigationItem"
+        android:drawableStart="@drawable/sharp_edit_24"
+        android:text="@string/edit_labels" />
+
+    <include layout="@layout/design_navigation_item_separator" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/settings"
+        style="@style/Theme.Appunti.NavigationItem"
+        android:drawableStart="@drawable/sharp_settings_24"
+        android:text="@string/settings" />
+
 
 </LinearLayout>

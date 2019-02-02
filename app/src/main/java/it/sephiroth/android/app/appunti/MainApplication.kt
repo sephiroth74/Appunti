@@ -38,14 +38,15 @@ class MainApplication : Application() {
 
         ioThread {
             val size = select().from(Entry::class).list.size
-            val categories = select().from(Category::class).list.toList()
+            var categories = select().from(Category::class).list.toList()
 
             Timber.d("entries size: $size")
 
             if (categories.isEmpty()) {
                 var category = Category()
                 category.categoryTitle = getString(R.string.category_default)
-                category.categoryType = Category.CategoryType.SYSTEM
+                category.categoryType = Category.CategoryType.USER
+                category.categoryColorIndex = 0
                 category.insert()
 
                 category = Category()
@@ -57,18 +58,21 @@ class MainApplication : Application() {
                 category = Category()
                 category.categoryTitle = "Work"
                 category.categoryType = Category.CategoryType.USER
-                category.categoryColorIndex = 2
+                category.categoryColorIndex = 4
                 category.insert()
 
                 category = Category()
                 category.categoryTitle = "Todo"
                 category.categoryType = Category.CategoryType.USER
-                category.categoryColorIndex = 5
+                category.categoryColorIndex = 7
                 category.insert()
+
+                categories = select().from(Category::class).list.toList()
             }
 
+
             if (size < 10) {
-                for (i in 0..3) {
+                for (i in 0..10) {
                     val entry = Entry()
                     entry.entryTitle = "Entry ${size + i}"
                     entry.entryPinned = if (Math.random() > 0.5) 1 else 0
@@ -80,8 +84,7 @@ class MainApplication : Application() {
                         entry.category = categories[index]
                     }
 
-                    Thread.sleep(300)
-
+                    Timber.v("adding entry $entry")
                     entry.save()
                 }
             }

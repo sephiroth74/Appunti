@@ -101,42 +101,19 @@
 
         </it.sephiroth.android.app.appunti.widget.BottomAppBar>
 
-        <!--<com.google.android.material.bottomappbar.BottomAppBar-->
-        <!--android:id="@+id/bottomAppBar"-->
-        <!--style="@style/Widget.MaterialComponents.BottomAppBar"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="bottom|center_horizontal"-->
-        <!--app:backgroundTint="?android:attr/windowBackground"-->
-        <!--app:buttonGravity="bottom"-->
-        <!--app:elevation="6dp"-->
-        <!--app:hideOnScroll="true"-->
-        <!--android:gravity="start"-->
-        <!--android:translationZ="6dp"-->
-        <!--app:layout_dodgeInsetEdges="none" />-->
-
-
-        <!--<com.google.android.material.floatingactionbutton.FloatingActionButton-->
-        <!--android:id="@+id/fab"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="bottom|center_horizontal"-->
-        <!--app:elevation="6dp"-->
-        <!--app:fabSize="normal"-->
-        <!--app:layout_anchor="@id/bottomAppBar"-->
-        <!--app:layout_behavior="@string/appbar_scrolling_view_behavior"-->
-        <!--app:srcCompat="@drawable/sharp_add_24" />-->
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-    <com.google.android.material.navigation.NavigationView
+    <it.sephiroth.android.app.appunti.widget.RecyclerNavigationView
         android:id="@+id/navigationView"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_gravity="start|left"
-        app:itemIconTint="?attr/colorControlNormal"
+        android:layout_gravity="start"
         android:fitsSystemWindows="false"
-        app:headerLayout="@layout/navigation_header"
-        app:menu="@menu/navigation_menu" />
+        app:itemIconTint="?attr/colorControlNormal">
+
+        <include layout="@layout/navigation_header" />
+
+    </it.sephiroth.android.app.appunti.widget.RecyclerNavigationView>
 
 </androidx.drawerlayout.widget.DrawerLayout>
