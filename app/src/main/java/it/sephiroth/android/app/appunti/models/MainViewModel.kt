@@ -11,7 +11,7 @@ import com.dbflow5.query.list
 import com.dbflow5.query.select
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.ChangeAction
-import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Category
@@ -19,6 +19,7 @@ import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
 import it.sephiroth.android.app.appunti.ext.mainThread
+import it.sephiroth.android.app.appunti.ext.rxIoThread
 import timber.log.Timber
 import kotlin.properties.Delegates
 
@@ -36,9 +37,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
     var currentCategory by Delegates.observable<Category?>(null) { _, _, newValue ->
         Timber.i("currentCategory = $newValue")
         (category as MutableLiveData).value = newValue
-        fetchEntries(newValue).observeOn(AndroidSchedulers.mainThread()).subscribe {
-            Timber.v("entries returned = ${it.size}")
-            (entries as MutableLiveData).value = it
+        fetchEntries(newValue).observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
+            Timber.v("entries returned = ${result.size}")
+            (entries as MutableLiveData).value = result
+
+            error?.let {
+                Timber.e("error = $error")
+            }
         }
     }
 
@@ -52,11 +57,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
     }
 
     @SuppressLint("CheckResult")
-    private fun fetchEntries(category: Category?): Observable<MutableList<Entry>> {
+    private fun fetchEntries(category: Category?): Single<MutableList<Entry>> {
         Timber.i("fetchEntries(category=${category})")
 
-        return Observable.create<MutableList<Entry>> { emitter ->
-            val result = select().from(Entry::class)
+        return rxIoThread {
+            select().from(Entry::class)
                     .run {
                         category?.let {
                             return@run where(Entry_Table.category_categoryID.eq(it.categoryID)) as Transformable<Entry>
@@ -71,10 +76,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
                                 OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
                         )).list
                     }
-            emitter.onNext(result)
-            emitter.onComplete()
-        }.subscribeOn(Schedulers.io())
-
+        }
     }
 
     fun setDisplayAsList(value: Boolean) {

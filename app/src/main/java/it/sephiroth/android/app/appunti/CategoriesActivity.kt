@@ -1,5 +1,6 @@
 package it.sephiroth.android.app.appunti
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
@@ -9,6 +10,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.Adapter
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -32,10 +34,17 @@ import kotlinx.android.synthetic.main.appunti_category_color_button.view.*
 import kotlinx.android.synthetic.main.category_item_list_content.view.*
 import timber.log.Timber
 import com.dbflow5.config.FlowManager
+import com.dbflow5.runtime.DirectModelNotifier
+import com.dbflow5.structure.ChangeAction
+import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.ext.ioThread
+import it.sephiroth.android.app.appunti.ext.rxIoThread
 
 
-class CategoriesActivity : AppCompatActivity() {
+class CategoriesActivity : AppCompatActivity(), DirectModelNotifier.OnModelStateChangedListener<Category> {
+
+    private lateinit var adapter: CategoriesAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,18 +56,39 @@ class CategoriesActivity : AppCompatActivity() {
             setDisplayShowHomeEnabled(true)
         }
 
-
-        val adapter = CategoriesAdapter(this, mutableListOf())
+        adapter = CategoriesAdapter(this, mutableListOf())
         categoriesRecycler.adapter = adapter
+        updateCategories()
 
-        ioThread {
-            val values = select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
-            mainThread {
-                adapter.values = values
-                adapter.notifyDataSetChanged()
-            }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        DirectModelNotifier.get().registerForModelStateChanges(Category::class.java, this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        DirectModelNotifier.get().unregisterForModelStateChanges(Category::class.java, this)
+    }
+
+    override fun onModelChanged(model: Category, action: ChangeAction) {
+        Timber.i("onModelChanged($model, $action)")
+        updateCategories()
+    }
+
+    @SuppressLint("CheckResult")
+    private fun updateCategories() {
+        fetchCategories().observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
+            adapter.values = result
+            adapter.notifyDataSetChanged()
         }
+    }
 
+    private fun fetchCategories(): Single<MutableList<Category>> {
+        return rxIoThread {
+            select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
