@@ -57,8 +57,6 @@ class MainActivity : AppCompatActivity() {
 
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
-
-
         adapter = ItemEntryListAdapter(this, arrayListOf())
         itemsRecycler.adapter = adapter
         itemsRecycler.setHasFixedSize(false)
@@ -193,7 +191,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            Timber.v("onBindViewHolder, position=$position")
             val item = getItem(position)
             item?.let { entryItem ->
                 holder.titleTextView.text = entryItem.entryTitle
@@ -212,6 +209,9 @@ class MainActivity : AppCompatActivity() {
                         color = categoryColors[it.categoryColorIndex]
                     }
                 }
+
+                Timber.v("onBindViewHolder, position=$position, colorIndex=${entryItem.category?.categoryColorIndex}, " +
+                        "color=${color.toString(16)}")
 
                 if (color != 0) {
                     holder.cardView.setCardBackgroundColor(color)

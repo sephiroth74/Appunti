@@ -47,13 +47,15 @@
 
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
         <item name="alertDialogTheme">@style/Theme.MaterialComponents.Dialog.MinWidth</item>
+
+        <!-- temporary -->
+        <item name="android:windowBackground">@android:color/black</item>
     </style>
 
     <style name="Theme.Appunti.Dark.Base.NoActionbar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
-
 
 
     <style name="Theme.Appunti.Light" parent="Theme.Appunti.Light.Base" />
@@ -70,10 +72,9 @@
 
 
     <!-- default theme -->
-    <style name="Theme.Appunti.Default" parent="Theme.Appunti.Light" />
+    <style name="Theme.Appunti.Default" parent="Theme.Appunti.Dark" />
 
-    <style name="Theme.Appunti.Default.NoActionbar" parent="Theme.Appunti.Light.NoActionbar" />
-
+    <style name="Theme.Appunti.Default.NoActionbar" parent="Theme.Appunti.Dark.NoActionbar" />
 
 
     <style name="Theme.Appunti.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">

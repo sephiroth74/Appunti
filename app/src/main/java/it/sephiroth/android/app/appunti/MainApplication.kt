@@ -10,7 +10,6 @@ import com.dbflow5.query.list
 import com.dbflow5.query.select
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.insert
-import com.dbflow5.structure.save
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -43,49 +42,34 @@ class MainApplication : Application() {
             Timber.d("entries size: $size")
 
             if (categories.isEmpty()) {
-                var category = Category()
-                category.categoryTitle = getString(R.string.category_default)
-                category.categoryType = Category.CategoryType.USER
-                category.categoryColorIndex = 0
-                category.insert()
+                for (i in 0..16) {
+                    val category = Category()
+                    category.categoryTitle = "Category $i"
+                    category.categoryType = Category.CategoryType.USER
+                    category.categoryColorIndex = i
+                    val id =
+                            category.insert()
 
-                category = Category()
-                category.categoryTitle = "Personal"
-                category.categoryType = Category.CategoryType.USER
-                category.categoryColorIndex = 1
-                category.insert()
-
-                category = Category()
-                category.categoryTitle = "Work"
-                category.categoryType = Category.CategoryType.USER
-                category.categoryColorIndex = 4
-                category.insert()
-
-                category = Category()
-                category.categoryTitle = "Todo"
-                category.categoryType = Category.CategoryType.USER
-                category.categoryColorIndex = 7
-                category.insert()
+                    Timber.v("added category = $id")
+                }
 
                 categories = select().from(Category::class).list.toList()
             }
 
 
             if (size < 10) {
-                for (i in 0..10) {
+                for (i in 0..16) {
                     val entry = Entry()
                     entry.entryTitle = "Entry ${size + i}"
-                    entry.entryPinned = if (Math.random() > 0.5) 1 else 0
-                    entry.entryPriority = (Math.random() * 10).toInt()
+                    entry.entryPinned = 0
+                    entry.entryPriority = 0
+//                    entry.entryPinned = if (Math.random() > 0.5) 1 else 0
+//                    entry.entryPriority = (Math.random() * 10).toInt()
                     entry.entryText = getString(R.string.lorem_ipsum)
+                    entry.category = categories[i]
+                    val id = entry.insert()
 
-                    val index = (Math.random() * categories.size).toInt()
-                    if (index > 1) {
-                        entry.category = categories[index]
-                    }
-
-                    Timber.v("adding entry $entry")
-                    entry.save()
+                    Timber.v("added entry = $id")
                 }
             }
 

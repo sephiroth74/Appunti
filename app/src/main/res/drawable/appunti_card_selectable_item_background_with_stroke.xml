@@ -29,7 +29,7 @@
                     <corners android:radius="@dimen/material_cardview_cornerRadius" />
                     <stroke
                         android:width="@dimen/appunti_card_stroke_width"
-                        android:color="?attr/colorControlNormal" />
+                        android:color="?attr/colorButtonNormal" />
                 </shape>
             </item>
         </selector>

@@ -2,26 +2,30 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <integer-array name="category_colors_dark">
-        <item>0xFF2A2A2A</item>
-        <item>0xFF6F3D2D</item>
-        <item>0xFF694C20</item>
-        <item>0xFF695820</item>
-        <item>0xFF6F6933</item>
-        <item>0xFF4F5329</item>
-        <item>0xFF3D4B2D</item>
-        <item>0xFF365337</item>
-        <item>0xFF245550</item>
-        <item>0xFF1D4E54</item>
-        <item>0xFF1B4254</item>
-        <item>0xFF233F56</item>
-        <item>0xFF303650</item>
-        <item>0xFF42335B</item>
-        <item>0xFF562F5D</item>
-        <item>0xFF6F2D43</item>
-        <item>0xFF643232</item>
+        <item>0xff2A2A2A</item>
+        <item>0xffa65a42</item>
+        <item>0xffa67732</item>
+        <item>0xff99802f</item>
+        <item>0xff999146</item>
+        <item>0xff91994e</item>
+        <item>0xff7d995d</item>
+        <item>0xff639966</item>
+        <item>0xff409990</item>
+        <item>0xff348d99</item>
+        <item>0xff317899</item>
+        <item>0xff3f7099</item>
+        <item>0xff5c6699</item>
+        <item>0xff6f5799</item>
+        <item>0xff8e5099</item>
+        <item>0xff993f5d</item>
+        <item>0xff994d4d</item>
     </integer-array>
 
     <!-- override default SearchView background color in dark mode -->
-    <color name="search_dark_background" tools:override="true">#3E3E3E</color>
+    <color name="search_dark_background" tools:override="true">#1A1A1A</color>
+
+    <color name="background_floating_material_dark" tools:override="true">#0E0E0E</color>
+
 
 </resources>
+
