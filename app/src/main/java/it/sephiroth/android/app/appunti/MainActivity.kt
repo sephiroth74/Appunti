@@ -24,6 +24,10 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.dbflow5.structure.save
 import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.applyNoActionBarTheme
 import it.sephiroth.android.app.appunti.ext.currentThread
@@ -35,6 +39,7 @@ import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.main_activity.*
 import kotlinx.android.synthetic.main.main_item_list_content.view.*
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
@@ -65,39 +70,8 @@ class MainActivity : AppCompatActivity() {
             adapter.update(it)
         })
 
-        searchView.setOnMicClickListener {
-            Search.setVoiceSearch(this, "")
-        }
-        searchView.setOnLogoClickListener { toggleDrawer() }
-        searchView.setOnQueryTextListener(object : Search.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: CharSequence?): Boolean {
-                Timber.i("onQueryTextSubmit($query)")
-                searchView.close()
-                return false
-            }
-
-            override fun onQueryTextChange(newText: CharSequence?) {
-                Timber.i("onQueryTextChange: $newText")
-                adapter.filter(newText.toString())
-            }
-
-        })
-
-        navigationView.model = model
-        navigationView.setNavigationCategorySelectedListener { category ->
-            model.currentCategory = category
-            closeDrawerIfOpened()
-        }
-
-        navigationView.setNavigationItemSelectedListener { id ->
-            when (id) {
-                R.id.newLabel -> startCategoriesEditActivity(true)
-                R.id.editLabels -> startCategoriesEditActivity(false)
-                R.id.settings -> {
-                    startActivity(Intent(this, PreferencesActivity::class.java))
-                }
-            }
-        }
+        setupSearchView()
+        seupNavigationView()
 
         model.displayAsList.observe(this, Observer {
             Timber.i("displayAsList -> $it")
@@ -113,6 +87,65 @@ class MainActivity : AppCompatActivity() {
         bottomAppBar.doOnDisplayAsListChanged { value ->
             model.setDisplayAsList(value)
         }
+    }
+
+    private fun seupNavigationView() {
+        navigationView.model = model
+        navigationView.setNavigationCategorySelectedListener { category ->
+            model.currentCategory = category
+            closeDrawerIfOpened()
+        }
+
+        navigationView.setNavigationItemSelectedListener { id ->
+            when (id) {
+                R.id.newLabel -> startCategoriesEditActivity(true)
+                R.id.editLabels -> startCategoriesEditActivity(false)
+                R.id.settings -> {
+                    startActivity(Intent(this, PreferencesActivity::class.java))
+                }
+            }
+        }
+    }
+
+    private fun setupSearchView() {
+        searchView.setOnMicClickListener {
+            Search.setVoiceSearch(this, "")
+        }
+
+        searchView.setOnLogoClickListener { toggleDrawer() }
+        searchView.setOnQueryTextListener(object : Search.OnQueryTextListener {
+
+            var timer: Disposable? = null
+
+            override fun onQueryTextSubmit(query: CharSequence?): Boolean {
+                Timber.i("onQueryTextSubmit($query)")
+                searchView.close()
+                return true
+            }
+
+            override fun onQueryTextChange(newText: CharSequence?) {
+                Timber.i("onQueryTextChange: $newText")
+
+                timer?.dispose()
+                timer = Observable.timer(200, TimeUnit.MILLISECONDS, Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe {
+                            adapter.filter(newText.toString())
+                        }
+            }
+
+        })
+
+        searchView.setOnOpenCloseListener(object : Search.OnOpenCloseListener {
+            override fun onOpen() {
+                Timber.i("onOpen")
+            }
+
+            override fun onClose() {
+                Timber.i("onClose")
+            }
+
+        })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
