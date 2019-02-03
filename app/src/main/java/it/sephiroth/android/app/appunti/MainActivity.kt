@@ -21,10 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.lapism.searchview.Search
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.currentThread
-import it.sephiroth.android.app.appunti.ext.getColorStateList
-import it.sephiroth.android.app.appunti.ext.isAPI
-import it.sephiroth.android.app.appunti.ext.isLightTheme
+import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
@@ -39,20 +36,15 @@ class MainActivity : AppCompatActivity() {
     lateinit var adapter: ItemEntryListAdapter
     lateinit var layoutManager: StaggeredGridLayoutManager
 
-    private var lightTheme = false
+    private var darkTheme = false
 
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        lightTheme = SettingsManager.getInstance(this).isLightTheme
-        setTheme(if (lightTheme) R.style.Theme_Appunti_Light_NoActionbar else R.style.Theme_Appunti_Dark_NoActionbar)
-
-        setContentView(R.layout.main_activity)
-        setSupportActionBar(toolbar)
-
-        if (lightTheme && isAPI(26)) {
-            toolbar.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        applyNoActionBarTheme {
+            setContentView(R.layout.main_activity)
+            setSupportActionBar(toolbar)
         }
 
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
@@ -83,6 +75,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.newLabel -> startCategoriesEditActivity(true)
                 R.id.editLabels -> startCategoriesEditActivity(false)
                 R.id.settings -> {
+                    startActivity(Intent(this, PreferencesActivity::class.java))
                 }
             }
         }

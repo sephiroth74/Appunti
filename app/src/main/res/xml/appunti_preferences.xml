@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory android:title="Style">
+
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:key="main.isDarkTheme"
+            app:title="Dark Theme" />
+
+    </PreferenceCategory>
+</PreferenceScreen>

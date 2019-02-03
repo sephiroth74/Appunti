@@ -30,4 +30,10 @@
     <string name="category_title_dialog">Enter Category Name</string>
     <string name="undo_uppercase">UNDO</string>
     <string name="category_deleted_snackbar_title">Category Deleted</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="restart_required">Restart Required</string>
+    <string name="restart_required_body">You need to restart the app in order to apply the changes</string>
+    <string name="restart">Restart</string>
 </resources>

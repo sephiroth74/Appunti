@@ -8,11 +8,15 @@ import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.AttrRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import it.sephiroth.android.app.appunti.R
+import it.sephiroth.android.app.appunti.models.SettingsManager
+import kotlinx.android.synthetic.main.main_activity.*
 import java.text.DateFormat
 import java.util.*
 
@@ -79,7 +83,13 @@ fun View.showSoftInput() {
 fun View.hideSoftInput() {
     val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
     inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
+}
 
+fun AppCompatActivity.applyNoActionBarTheme(func: () -> Unit) {
+    val darkTheme = SettingsManager.getInstance(this).darkTheme
+    setTheme(if (darkTheme) R.style.Theme_Appunti_Dark_NoActionbar else R.style.Theme_Appunti_Light_NoActionbar)
+    func.invoke()
+    if(!darkTheme && isAPI(26)) toolbar.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
 }
 
 object ExtensionUtils {

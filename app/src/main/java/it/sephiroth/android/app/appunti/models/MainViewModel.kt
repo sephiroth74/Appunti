@@ -5,7 +5,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.dbflow5.config.FlowManager
 import com.dbflow5.query.OrderBy
 import com.dbflow5.query.Transformable
 import com.dbflow5.query.list
@@ -112,7 +111,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
     init {
         currentCategory = null
         (displayAsList as MutableLiveData).value = settingsManager.displayAsList
-        settingsManager.doOnDisplayAsListChanged { value: Boolean -> displayAsList.value = value }
+        settingsManager.setOnDisplayAsListChanged { value: Boolean -> displayAsList.value = value }
 
         DirectModelNotifier.get().registerForModelStateChanges(Category::class.java, this)
     }

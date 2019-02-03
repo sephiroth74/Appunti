@@ -42,7 +42,7 @@ class MainApplication : Application() {
             Timber.d("entries size: $size")
 
             if (categories.isEmpty()) {
-                for (i in 0..16) {
+                for (i in 0..10) {
                     val category = Category()
                     category.categoryTitle = "Category $i"
                     category.categoryType = Category.CategoryType.USER
@@ -58,7 +58,7 @@ class MainApplication : Application() {
 
 
             if (size < 10) {
-                for (i in 0..16) {
+                for (i in 0..10) {
                     val entry = Entry()
                     entry.entryTitle = "Entry ${size + i}"
                     entry.entryPinned = 0
