@@ -124,21 +124,18 @@ class MainActivity : AppCompatActivity() {
     class EntriesDiffCallback(private var oldData: List<Entry?>,
                               private var newData: List<Entry?>) : DiffUtil.Callback() {
 
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldData[oldItemPosition] == newData[newItemPosition]
-        }
-
         override fun getOldListSize(): Int = oldData.size
-
         override fun getNewListSize(): Int = newData.size
 
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldData[oldItemPosition]?.entryID == newData[newItemPosition]?.entryID
+        }
+
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            Timber.i("areContentsTheSame($oldItemPosition, $newItemPosition")
             val oldItem = oldData[oldItemPosition]
             val newItem = newData[newItemPosition]
             return oldItem == newItem
         }
-
     }
 
 

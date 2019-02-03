@@ -22,6 +22,12 @@ class CategoryColorsBottomSheetDialogFragment : BottomSheetDialogFragment() {
             actionListener?.invoke(colorIndex)
         }
 
+        if (arguments?.containsKey(BUNDLE_KEY_COLOR_INDEX) == true) {
+            colorChooser.selectedColorIndex = arguments?.getInt(BUNDLE_KEY_COLOR_INDEX) ?: -1
+        }
+    }
 
+    companion object {
+        const val BUNDLE_KEY_COLOR_INDEX = "key_color_index"
     }
 }

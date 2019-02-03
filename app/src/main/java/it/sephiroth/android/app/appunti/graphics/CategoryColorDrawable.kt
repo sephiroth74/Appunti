@@ -6,8 +6,7 @@ import android.graphics.drawable.ColorDrawable
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.ext.getColor
 
-class CircularSolidDrawable(context: Context, color: Int) : ColorDrawable(color) {
-
+class CategoryColorDrawable(context: Context, color: Int) : ColorDrawable(color) {
     val strokeColorNormal = context.theme.getColor(context, R.attr.colorControlNormal)
     val strokeColorPressed = context.theme.getColor(context, R.attr.colorControlActivated)
     val strokeWidth = context.resources.getDimension(R.dimen.appunti_category_color_drawable_stroke_width)

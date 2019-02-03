@@ -7,7 +7,7 @@ import android.view.LayoutInflater
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import it.sephiroth.android.app.appunti.R
-import it.sephiroth.android.app.appunti.graphics.CircularSolidDrawable
+import it.sephiroth.android.app.appunti.graphics.CategoryColorDrawable
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.appunti_category_color_button_checkable.view.*
 import timber.log.Timber
@@ -82,7 +82,7 @@ class HorizontalColorChooser @JvmOverloads constructor(
                 params.marginEnd = buttonPaddingRight
             }
 
-            val drawable = CircularSolidDrawable(context!!, color)
+            val drawable = CategoryColorDrawable(context!!, color)
             view.colorButton.setImageDrawable(drawable)
             linearLayout.addView(view)
 

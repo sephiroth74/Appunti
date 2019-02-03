@@ -5,6 +5,8 @@ import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.os.Build
 import android.util.TypedValue
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.annotation.AttrRes
 import androidx.core.content.ContextCompat
 import io.reactivex.Scheduler
@@ -24,7 +26,6 @@ fun <T> Any.rxSingle(thread: Scheduler, func: () -> T): Single<T> {
         }
     }.subscribeOn(thread)
 }
-
 
 fun Any.ioThread(func: () -> Unit) {
     Schedulers.io().scheduleDirect {
@@ -68,6 +69,17 @@ fun Resources.Theme.resolveAttribute(@AttrRes id: Int): Int {
     val typedValue = TypedValue()
     resolveAttribute(id, typedValue, false)
     return typedValue.data
+}
+
+fun View.showSoftInput() {
+    val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
+    inputMethodManager?.showSoftInput(this, 0)
+}
+
+fun View.hideSoftInput() {
+    val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
+    inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
+
 }
 
 object ExtensionUtils {

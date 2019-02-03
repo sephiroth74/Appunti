@@ -9,7 +9,14 @@ import it.sephiroth.android.app.appunti.db.CategoryTypeConverter
 import timber.log.Timber
 
 @Table(database = AppDatabase::class)
-class Category : BaseRXModel() {
+class Category() : BaseRXModel() {
+
+    constructor(other: Category) : this() {
+        categoryID = other.categoryID
+        categoryTitle = other.categoryTitle
+        categoryColorIndex = other.categoryColorIndex
+        categoryType = other.categoryType
+    }
 
     @PrimaryKey(autoincrement = true)
     var categoryID: Int = 0
@@ -29,10 +36,11 @@ class Category : BaseRXModel() {
 
     override fun equals(other: Any?): Boolean {
         when (other) {
-            is Category -> return categoryID == other.categoryID
-                    && categoryTitle == other.categoryTitle
-                    && categoryColorIndex == other.categoryColorIndex
-                    && categoryType == other.categoryType
+            is Category ->
+                return categoryID == other.categoryID
+                        && categoryTitle == other.categoryTitle
+                        && categoryColorIndex == other.categoryColorIndex
+                        && categoryType == other.categoryType
         }
         return super.equals(other)
     }
