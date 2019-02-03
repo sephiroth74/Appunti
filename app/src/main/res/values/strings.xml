@@ -36,4 +36,6 @@
     <string name="restart_required">Restart Required</string>
     <string name="restart_required_body">You need to restart the app in order to apply the changes</string>
     <string name="restart">Restart</string>
+    <string name="pinned">Pinned</string>
+    <string name="others">Others</string>
 </resources>

@@ -1,11 +1,13 @@
 package it.sephiroth.android.app.appunti
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,11 +21,16 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.dbflow5.structure.save
 import com.lapism.searchview.Search
+import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.ext.applyNoActionBarTheme
+import it.sephiroth.android.app.appunti.ext.currentThread
+import it.sephiroth.android.app.appunti.ext.getColorStateList
+import it.sephiroth.android.app.appunti.ext.isLightTheme
 import it.sephiroth.android.app.appunti.models.MainViewModel
-import it.sephiroth.android.app.appunti.models.SettingsManager
+import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.main_activity.*
 import kotlinx.android.synthetic.main.main_item_list_content.view.*
@@ -35,8 +42,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var model: MainViewModel
     lateinit var adapter: ItemEntryListAdapter
     lateinit var layoutManager: StaggeredGridLayoutManager
-
-    private var darkTheme = false
 
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
         adapter = ItemEntryListAdapter(this, arrayListOf())
+
         itemsRecycler.adapter = adapter
         itemsRecycler.setHasFixedSize(false)
         layoutManager = itemsRecycler.layoutManager as StaggeredGridLayoutManager
@@ -63,6 +69,19 @@ class MainActivity : AppCompatActivity() {
             Search.setVoiceSearch(this, "")
         }
         searchView.setOnLogoClickListener { toggleDrawer() }
+        searchView.setOnQueryTextListener(object : Search.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: CharSequence?): Boolean {
+                Timber.i("onQueryTextSubmit($query)")
+                searchView.close()
+                return false
+            }
+
+            override fun onQueryTextChange(newText: CharSequence?) {
+                Timber.i("onQueryTextChange: $newText")
+                adapter.filter(newText.toString())
+            }
+
+        })
 
         navigationView.model = model
         navigationView.setNavigationCategorySelectedListener { category ->
@@ -96,6 +115,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == SPEECH_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+
+                if (data?.hasExtra(RecognizerIntent.EXTRA_RESULTS) == true) {
+                    val results = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                    Timber.v("results: $results")
+                    searchView.setText(results[0])
+                }
+            }
+        }
+    }
+
+
     private fun startCategoriesEditActivity(newCategory: Boolean = false) {
         val intent = Intent(this, CategoriesEditActivity::class.java)
         if (newCategory) intent.putExtra(CategoriesEditActivity.ASK_NEW_CATEGORY_STARTUP, true)
@@ -112,26 +147,8 @@ class MainActivity : AppCompatActivity() {
         else drawerLayout.closeDrawer(navigationView)
     }
 
-    class EntriesDiffCallback(private var oldData: List<Entry?>,
-                              private var newData: List<Entry?>) : DiffUtil.Callback() {
-
-        override fun getOldListSize(): Int = oldData.size
-        override fun getNewListSize(): Int = newData.size
-
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldData[oldItemPosition]?.entryID == newData[newItemPosition]?.entryID
-        }
-
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            val oldItem = oldData[oldItemPosition]
-            val newItem = newData[newItemPosition]
-            return oldItem == newItem
-        }
-    }
-
-
-    class ItemEntryListAdapter(private val context: Context,
-                               private var values: MutableList<Entry?>) :
+    inner class ItemEntryListAdapter(private val context: Context,
+                                     private var values: MutableList<Item>) :
             RecyclerView.Adapter<ItemEntryListAdapter.ViewHolder>() {
 
         private var cardBackgroundColorDefault: ColorStateList? = null
@@ -142,12 +159,18 @@ class MainActivity : AppCompatActivity() {
         private var cardForegroundStroke: Drawable
         private var cardForegroundNoStroke: Drawable
 
-        companion object {
-            const val TYPE_EMPTY = 0
-            const val TYPE_REGULAR = 1
-        }
+        //        companion object {
+        val TYPE_EMPTY = Item.ItemType.EMPTY.ordinal
+        val TYPE_ENTRY = Item.ItemType.ENTRY.ordinal
+        val TYPE_PINNED = Item.ItemType.PINNED.ordinal
+        val TYPE_NON_PINNED = Item.ItemType.NON_PINNED.ordinal
+//        }
+
+        private var valuesCopy: MutableList<Item>
 
         init {
+            valuesCopy = ArrayList(values)
+
             val isLightTheme = context.isLightTheme()
             textColorInverse =
                     context.theme.getColorStateList(context, if (isLightTheme) android.R.attr.textColorPrimaryInverse else android.R.attr.textColorPrimary)
@@ -160,8 +183,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun getItemViewType(position: Int): Int {
             val item = getItem(position)
-            if (null != item) return TYPE_REGULAR
-            return TYPE_EMPTY
+            return item.type.ordinal
         }
 
         @SuppressLint("PrivateResource")
@@ -177,6 +199,12 @@ class MainActivity : AppCompatActivity() {
                         StaggeredGridLayoutManager.LayoutParams(MATCH_PARENT, searchViewHeight + searchViewTopMargin * 2)
                 params.isFullSpan = true
                 view.layoutParams = params
+            } else if (viewType == TYPE_PINNED) {
+                view = LayoutInflater.from(context).inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
+                (view as TextView).text = getString(R.string.pinned)
+            } else if (viewType == TYPE_NON_PINNED) {
+                view = LayoutInflater.from(context).inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
+                (view as TextView).text = getString(R.string.others)
             } else {
                 view = LayoutInflater.from(parent.context).inflate(R.layout.main_item_list_content, parent, false)
             }
@@ -185,7 +213,12 @@ class MainActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = getItem(position)
-            item?.let { entryItem ->
+
+            Timber.i("entry: $item")
+
+            if (holder.itemViewType == TYPE_ENTRY) {
+                val entryItem = item.entry!!
+
                 holder.titleTextView.text = entryItem.entryTitle
                 holder.contentTextView.text = entryItem.entryText?.substring(0, 100)
                 holder.categoryTextView.text = entryItem.category?.categoryTitle
@@ -203,9 +236,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                Timber.v("onBindViewHolder, position=$position, colorIndex=${entryItem.category?.categoryColorIndex}, " +
-                        "color=${color.toString(16)}")
-
                 if (color != 0) {
                     holder.cardView.setCardBackgroundColor(color)
                     holder.cardView.foreground = cardForegroundNoStroke.constantState?.newDrawable()
@@ -219,10 +249,14 @@ class MainActivity : AppCompatActivity() {
                     holder.categoryTextView.visibility = View.GONE
                 }
 
-                with(holder.cardView) {
+                with(holder.itemView) {
                     tag = entryItem
                     setOnClickListener {
                         Timber.d("card clicked!")
+
+                        val newEntry = Entry(entryItem)
+                        newEntry.entryPinned = if (newEntry.entryPinned == 1) 0 else 1
+                        newEntry.save()
                     }
                 }
             }
@@ -234,19 +268,34 @@ class MainActivity : AppCompatActivity() {
 
         override fun getItemId(position: Int): Long {
             val item = getItem(position)
-            return item?.entryID?.toLong() ?: -1L
+            return when (item.type) {
+                Item.ItemType.ENTRY -> item.entry!!.entryID.toLong()
+                Item.ItemType.EMPTY -> -1
+                Item.ItemType.PINNED -> -2
+                Item.ItemType.NON_PINNED -> -3
+            }
         }
 
-        private fun getItem(position: Int): Entry? {
+        private fun getItem(position: Int): Item {
             return values[position]
         }
 
         fun update(newData: List<Entry>?) {
             Timber.i("update: ${newData?.size}")
 
-            val finalData = mutableListOf<Entry?>(null)
-            newData?.let {
-                finalData.addAll(it)
+            val finalData = mutableListOf(Item(null, Item.ItemType.EMPTY))
+
+            newData?.let { array ->
+                finalData.addAll(array.map { Item(it, Item.ItemType.ENTRY) })
+            }
+
+            var firstNonPinned: Int
+            val firstPinned: Int = finalData.indexOfFirst { it.entry?.entryPinned == 1 }
+
+            if (firstPinned > -1) {
+                finalData.add(firstPinned, Item(null, Item.ItemType.PINNED))
+                firstNonPinned = finalData.indexOfFirst { it.entry?.entryPinned == 0 }
+                if (firstNonPinned > -1) finalData.add(firstNonPinned, Item(null, Item.ItemType.NON_PINNED))
             }
 
             val callback = EntriesDiffCallback(values, finalData)
@@ -255,7 +304,25 @@ class MainActivity : AppCompatActivity() {
             Timber.v("diffResult = $result")
 
             values = finalData
+            valuesCopy = ArrayList(finalData)
             result.dispatchUpdatesTo(this)
+        }
+
+        fun filter(text: String?) {
+            Timber.i("filter($text)")
+            if (text.isNullOrEmpty()) {
+                values = ArrayList(valuesCopy)
+            } else {
+                val result = valuesCopy.filter { value ->
+                    if (value.type == Item.ItemType.ENTRY) {
+                        value.entry!!.entryTitle!!.toLowerCase().indexOf(text) > -1
+                    } else {
+                        true
+                    }
+                }
+                values = ArrayList(result)
+            }
+            notifyDataSetChanged()
         }
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -266,5 +333,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    class Item(val entry: Entry?, val type: ItemType) {
+        enum class ItemType { ENTRY, EMPTY, PINNED, NON_PINNED }
+
+        override fun equals(other: Any?): Boolean {
+            if (other is Item) {
+                if (other.type != type) return false
+                return when (type) {
+                    ItemType.ENTRY -> entry == other.entry
+                    else -> true
+                }
+            }
+            return false
+        }
+    }
 }
 

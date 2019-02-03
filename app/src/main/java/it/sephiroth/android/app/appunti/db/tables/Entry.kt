@@ -13,7 +13,21 @@ import java.util.*
 @Table(database = AppDatabase::class, indexGroups = [
     IndexGroup(number = 1, name = "firstIndex")
 ])
-class Entry : BaseRXModel() {
+class Entry() : BaseRXModel() {
+
+    constructor(other: Entry) : this() {
+        entryID = other.entryID
+        entryTitle = other.entryTitle
+        entryPriority = other.entryPriority
+        category = other.category
+        entryCreationDate = other.entryCreationDate
+        entryText = other.entryText
+        entryType = other.entryType
+        entryPinned = other.entryPinned
+        entryModifiedDate = other.entryModifiedDate
+        attachments = other.attachments
+    }
+
     @PrimaryKey(autoincrement = true)
     @Index(indexGroups = [1])
     var entryID: Int = 0
@@ -44,7 +58,7 @@ class Entry : BaseRXModel() {
     var attachments by oneToMany { select from Attachment::class where (Attachment_Table.attachmentEntryID_entryID.eq(entryID)) }
 
     override fun toString(): String {
-        return "Entry(id=$entryID, title=$entryTitle, category=$category)"
+        return "Entry(id=$entryID, title=$entryTitle, category=$category, pinned=$entryPinned, priority=$entryPriority)"
     }
 
     override fun equals(other: Any?): Boolean {

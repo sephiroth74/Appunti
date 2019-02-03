@@ -20,7 +20,6 @@ import kotlinx.android.synthetic.main.main_activity.*
 import java.text.DateFormat
 import java.util.*
 
-
 fun <T> Any.rxSingle(thread: Scheduler, func: () -> T): Single<T> {
     return Single.create<T> { emitter ->
         try {
@@ -89,7 +88,7 @@ fun AppCompatActivity.applyNoActionBarTheme(func: () -> Unit) {
     val darkTheme = SettingsManager.getInstance(this).darkTheme
     setTheme(if (darkTheme) R.style.Theme_Appunti_Dark_NoActionbar else R.style.Theme_Appunti_Light_NoActionbar)
     func.invoke()
-    if(!darkTheme && isAPI(26)) toolbar.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+    if (!darkTheme && isAPI(26)) toolbar.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
 }
 
 object ExtensionUtils {

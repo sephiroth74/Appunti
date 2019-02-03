@@ -9,6 +9,7 @@ import com.dbflow5.query.OrderBy
 import com.dbflow5.query.Transformable
 import com.dbflow5.query.list
 import com.dbflow5.query.select
+import com.dbflow5.reactivestreams.structure.BaseRXModel
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.ChangeAction
 import io.reactivex.Single
@@ -23,7 +24,7 @@ import it.sephiroth.android.app.appunti.ext.rxSingle
 import timber.log.Timber
 import kotlin.properties.Delegates
 
-class MainViewModel(application: Application) : AndroidViewModel(application), DirectModelNotifier.OnModelStateChangedListener<Category> {
+class MainViewModel(application: Application) : AndroidViewModel(application), DirectModelNotifier.OnModelStateChangedListener<BaseRXModel> {
     val categories: LiveData<List<Category>> by lazy {
         val data = MutableLiveData<List<Category>>()
         fetchCategories { result -> data.postValue(result) }
@@ -71,7 +72,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
 
                     }.run {
                         orderByAll(listOf(
-                                OrderBy(Entry_Table.entryPinned.nameAlias, true),
+                                OrderBy(Entry_Table.entryPinned.nameAlias, false),
                                 OrderBy(Entry_Table.entryPriority.nameAlias, false),
                                 OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
                         )).list
@@ -87,24 +88,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
     override fun onCleared() {
         super.onCleared()
         DirectModelNotifier.get().unregisterForModelStateChanges(Category::class.java, this)
+        DirectModelNotifier.get().unregisterForModelStateChanges(Entry::class.java, this)
     }
 
-    override fun onModelChanged(model: Category, action: ChangeAction) {
+    override fun onModelChanged(model: BaseRXModel, action: ChangeAction) {
         Timber.i("onModelChanged($model, $action)")
-        fetchCategories { result ->
-            mainThread {
-                (categories as MutableLiveData).value = result
-                currentCategory?.let { category ->
-                    val result = result.firstOrNull { it.categoryID == category.categoryID }
-                    if (result == null) {
+
+        if (model is Category) {
+            fetchCategories { result ->
+                mainThread {
+                    (categories as MutableLiveData).value = result
+                    currentCategory?.let { category ->
+                        val result = result.firstOrNull { it.categoryID == category.categoryID }
+                        if (result == null) {
+                            currentCategory = null
+                        } else {
+                            currentCategory = result
+                        }
+                    } ?: run {
                         currentCategory = null
-                    } else {
-                        currentCategory = result
                     }
-                } ?: run {
-                    currentCategory = null
                 }
             }
+        } else {
+            currentCategory = currentCategory
         }
     }
 
@@ -114,6 +121,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
         settingsManager.setOnDisplayAsListChanged { value: Boolean -> displayAsList.value = value }
 
         DirectModelNotifier.get().registerForModelStateChanges(Category::class.java, this)
+        DirectModelNotifier.get().registerForModelStateChanges(Entry::class.java, this)
     }
 
 }

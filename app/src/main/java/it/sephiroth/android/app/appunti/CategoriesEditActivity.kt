@@ -27,6 +27,7 @@ import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.graphics.CategoryColorDrawable
+import it.sephiroth.android.app.appunti.utils.CategoriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import it.sephiroth.android.app.appunti.widget.HorizontalColorChooser
 import kotlinx.android.synthetic.main.activity_categories.*
@@ -201,24 +202,6 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
 
     companion object {
         const val ASK_NEW_CATEGORY_STARTUP = "ask_for_new_category_startup"
-    }
-
-
-    private class CategoriesDiffCallback(private var oldData: List<Category>, private var newData: List<Category>) : DiffUtil.Callback() {
-        override fun getOldListSize(): Int = oldData.size
-        override fun getNewListSize(): Int = newData.size
-
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldData[oldItemPosition].categoryID == newData[newItemPosition].categoryID
-        }
-
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            val oldItem = oldData[oldItemPosition]
-            val newItem = newData[newItemPosition]
-            Timber.v("areContentsTheSame($oldItem, $newItem, ${oldItem == newItem})")
-            return oldItem == newItem
-        }
-
     }
 
     private inner class CategoriesAdapter(
