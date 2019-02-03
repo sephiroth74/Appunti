@@ -11,6 +11,12 @@ import timber.log.Timber
 @Table(database = AppDatabase::class)
 class Category() : BaseRXModel() {
 
+    constructor(title: String?, colorIndex: Int = 0, type: CategoryType = CategoryType.USER) : this() {
+        categoryTitle = title
+        categoryColorIndex = colorIndex
+        categoryType = type
+    }
+
     constructor(other: Category) : this() {
         categoryID = other.categoryID
         categoryTitle = other.categoryTitle

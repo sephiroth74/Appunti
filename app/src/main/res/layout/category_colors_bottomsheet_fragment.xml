@@ -14,8 +14,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        app:appunti_color_padding_left="8dp"
-        app:appunti_color_padding_right="8dp"
+        app:appunti_color_padding_left="4dp"
+        app:appunti_color_padding_right="4dp"
         app:appunti_colors="?attr/categoryColors"
         app:appunti_selectedColorIndex="0" />
 

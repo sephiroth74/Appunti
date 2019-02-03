@@ -28,6 +28,7 @@ import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.graphics.CategoryColorDrawable
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
+import it.sephiroth.android.app.appunti.widget.HorizontalColorChooser
 import kotlinx.android.synthetic.main.activity_categories.*
 import kotlinx.android.synthetic.main.appunti_category_color_button_checkable.view.*
 import kotlinx.android.synthetic.main.category_item_list_content.view.*
@@ -36,7 +37,8 @@ import timber.log.Timber
 
 class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelStateChangedListener<Category> {
 
-    private lateinit var adapter: CategoriesAdapter
+    private lateinit var mAdapter: CategoriesAdapter
+    private var mSnackbar: Snackbar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,8 +50,8 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
             setDisplayShowHomeEnabled(true)
         }
 
-        adapter = CategoriesAdapter(this, mutableListOf())
-        categoriesRecycler.adapter = adapter
+        mAdapter = CategoriesAdapter(this, mutableListOf())
+        categoriesRecycler.adapter = mAdapter
 
         newCategory.setOnClickListener { presentNewCategoryDialog() }
         updateCategories()
@@ -70,7 +72,9 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
                 .create()
 
         alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, _ ->
-            createCategory(alertDialog.findViewById<TextView>(android.R.id.text1)?.text.toString())
+            val title = alertDialog.findViewById<TextView>(android.R.id.text1)?.text.toString()
+            val colorIndex = alertDialog.findViewById<HorizontalColorChooser>(R.id.colorChooser)?.selectedColorIndex
+            createCategory(title, colorIndex ?: 0)
         }
 
         alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(android.R.string.cancel)) { dialog, _ ->
@@ -104,20 +108,28 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
 
     private fun deleteCategory(adapterPosition: Int, category: Category?) {
         if (null != category) {
-            adapter.values.remove(category)
-            adapter.notifyItemRemoved(adapterPosition)
 
-            Snackbar.make(constraintLayout, getString(R.string.category_deleted_snackbar_title), Snackbar.LENGTH_SHORT)
+            if (mSnackbar != null) {
+                mSnackbar!!.dismiss()
+                mSnackbar = null
+            }
+
+            mAdapter.values.remove(category)
+            mAdapter.notifyItemRemoved(adapterPosition)
+
+            mSnackbar = Snackbar.make(constraintLayout, getString(R.string.category_deleted_snackbar_title), Snackbar.LENGTH_SHORT)
                     .setAction(getString(R.string.undo_uppercase)) {}
                     .setActionTextColor(theme.getColorStateList(this, R.attr.colorError))
                     .addCallback(object : Snackbar.Callback() {
                         override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                             super.onDismissed(transientBottomBar, event)
 
+                            mSnackbar = null
+
                             if (event == DISMISS_EVENT_ACTION) {
                                 Timber.d("must undo the event!")
-                                adapter.values.add(adapterPosition, category)
-                                adapter.notifyItemInserted(adapterPosition)
+                                mAdapter.values.add(adapterPosition, category)
+                                mAdapter.notifyItemInserted(adapterPosition)
 
                             } else {
                                 Timber.d("must consolidate the event!")
@@ -125,16 +137,14 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
                             }
                         }
                     })
-                    .show()
+
+            mSnackbar?.show()
         }
     }
 
-    private fun createCategory(name: String?) {
+    private fun createCategory(name: String?, colorIndex: Int) {
         if (!name.isNullOrEmpty()) {
-            val category = Category()
-            category.categoryTitle = name
-            category.categoryColorIndex = 0
-            category.categoryType = Category.CategoryType.USER
+            val category = Category(name, colorIndex, Category.CategoryType.USER)
             category.insert()
         } else {
             Timber.w("must specify a name for the category")
@@ -144,8 +154,9 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
     private fun updateCategory(item: Category, text: String?) {
         if (!text.isNullOrEmpty()) {
             if (text != item.categoryTitle) {
-                item.categoryTitle = text
-                item.update()
+                val copy = Category(item)
+                copy.categoryTitle = text
+                copy.update()
             }
         } else {
             Timber.w("must specify a name for the category")
@@ -174,7 +185,7 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
         }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { result, _ ->
-                    adapter.update(result)
+                    mAdapter.update(result)
                 }
     }
 

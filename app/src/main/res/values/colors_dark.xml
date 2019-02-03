@@ -3,14 +3,22 @@
 
     <integer-array name="category_colors_dark">
         <item>0xFF2A2A2A</item>
-        <item>0xFF9C3413</item>
-        <item>0xFFB37F00</item>
-        <item>0xFF7A8121</item>
-        <item>0xFF275E2A</item>
-        <item>0xFF00646F</item>
-        <item>0xFF273276</item>
-        <item>0xFF6C1B81</item>
-        <item>0xFF88113C</item>
+        <item>0xFF6F3D2D</item>
+        <item>0xFF694C20</item>
+        <item>0xFF695820</item>
+        <item>0xFF6F6933</item>
+        <item>0xFF4F5329</item>
+        <item>0xFF3D4B2D</item>
+        <item>0xFF365337</item>
+        <item>0xFF245550</item>
+        <item>0xFF1D4E54</item>
+        <item>0xFF1B4254</item>
+        <item>0xFF233F56</item>
+        <item>0xFF303650</item>
+        <item>0xFF42335B</item>
+        <item>0xFF562F5D</item>
+        <item>0xFF6F2D43</item>
+        <item>0xFF643232</item>
     </integer-array>
 
     <!-- override default SearchView background color in dark mode -->
