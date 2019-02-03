@@ -5,7 +5,6 @@ import android.graphics.*
 import android.graphics.drawable.ColorDrawable
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.ext.getColor
-import timber.log.Timber
 
 class CircularSolidDrawable(context: Context, color: Int) : ColorDrawable(color) {
 
@@ -16,6 +15,9 @@ class CircularSolidDrawable(context: Context, color: Int) : ColorDrawable(color)
     val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG)
     val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     val dstBounds: Rect = Rect()
+
+    private val mark = context.getDrawable(R.drawable.sharp_done_24)
+    private var mChecked: Boolean = false
 
     init {
         strokePaint.style = Paint.Style.STROKE
@@ -44,12 +46,17 @@ class CircularSolidDrawable(context: Context, color: Int) : ColorDrawable(color)
         super.onBoundsChange(bounds)
         dstBounds.set(bounds)
         dstBounds.inset(strokeWidth.toInt(), strokeWidth.toInt())
+
+        val markBounds = Rect(dstBounds)
+        markBounds.inset(strokeWidth.toInt() * 2, strokeWidth.toInt() * 2)
+        mark?.bounds = markBounds
     }
 
-    override fun onStateChange(stateSet: IntArray?): Boolean {
 
+    override fun onStateChange(stateSet: IntArray?): Boolean {
         val pressed = stateSet?.contains(android.R.attr.state_pressed) ?: kotlin.run { false }
         val enabled = stateSet?.contains(android.R.attr.state_enabled) ?: kotlin.run { false }
+        mChecked = stateSet?.contains(android.R.attr.state_checked) ?: kotlin.run { false }
 
         strokePaint.color = if (pressed) strokeColorPressed else strokeColorNormal
         strokePaint.alpha = if (enabled) 255 else 51
@@ -61,5 +68,9 @@ class CircularSolidDrawable(context: Context, color: Int) : ColorDrawable(color)
     override fun draw(canvas: Canvas) {
         canvas.drawCircle(dstBounds.centerX().toFloat(), dstBounds.centerY().toFloat(), (dstBounds.width() / 2).toFloat(), fillPaint)
         canvas.drawCircle(dstBounds.centerX().toFloat(), dstBounds.centerY().toFloat(), (dstBounds.width() / 2).toFloat(), strokePaint)
+
+        if (mChecked) {
+            mark?.draw(canvas)
+        }
     }
 }

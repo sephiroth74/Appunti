@@ -266,8 +266,6 @@ class MainActivity : AppCompatActivity() {
 
             values = finalData
             result.dispatchUpdatesTo(this)
-
-
         }
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {

@@ -12,10 +12,9 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.dbflow5.query.OrderBy
-import com.dbflow5.query.list
-import com.dbflow5.query.select
+import com.dbflow5.query.*
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.*
 import com.google.android.material.snackbar.Snackbar
@@ -24,13 +23,14 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
+import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.getColorStateList
 import it.sephiroth.android.app.appunti.ext.mainThread
 import it.sephiroth.android.app.appunti.ext.rxSingle
 import it.sephiroth.android.app.appunti.graphics.CircularSolidDrawable
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.activity_categories.*
-import kotlinx.android.synthetic.main.appunti_category_color_button.view.*
+import kotlinx.android.synthetic.main.appunti_category_color_button_checkable.view.*
 import kotlinx.android.synthetic.main.category_item_list_content.view.*
 import timber.log.Timber
 
@@ -70,7 +70,7 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
                 .setView(R.layout.appunti_alertdialog_category_input)
                 .create()
 
-        dialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, which ->
+        dialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, _ ->
             createCategory(dialog.findViewById<TextView>(android.R.id.text1)?.text.toString())
         }
 
@@ -161,16 +161,13 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
 
     @SuppressLint("CheckResult")
     private fun updateCategories() {
-        fetchCategories().observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
-            adapter.values = result
-            adapter.notifyDataSetChanged()
-        }
-    }
-
-    private fun fetchCategories(): Single<MutableList<Category>> {
-        return rxSingle(Schedulers.io()) {
+        rxSingle(Schedulers.io()) {
             select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
         }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { result, _ ->
+                    adapter.update(result)
+                }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -184,7 +181,28 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
         const val ASK_NEW_CATEGORY_STARTUP = "ask_for_new_category_startup"
     }
 
-    private inner class CategoriesAdapter(private var context: CategoriesEditActivity, var values: MutableList<Category>) :
+
+    private class CategoriesDiffCallback(private var oldData: List<Category>, private var newData: List<Category>) : DiffUtil.Callback() {
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldData[oldItemPosition] == newData[newItemPosition]
+        }
+
+        override fun getOldListSize(): Int = oldData.size
+
+        override fun getNewListSize(): Int = newData.size
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            val oldItem = oldData[oldItemPosition]
+            val newItem = newData[newItemPosition]
+            return oldItem == newItem
+        }
+
+    }
+
+    private inner class CategoriesAdapter(
+            var context: CategoriesEditActivity,
+            var values: MutableList<Category>) :
             RecyclerView.Adapter<CategoriesAdapter.ViewHolder>() {
 
         private var categoryColors = ResourceUtils.getCategoryColors(context)
@@ -193,9 +211,25 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(context).inflate(R.layout.category_item_list_content, parent, false)
+            view.colorButton.allowUserToggle = false
+
             val holder = ViewHolder(view)
             holder.editTextView.imeOptions = EditorInfo.IME_ACTION_DONE
             return holder
+        }
+
+        fun update(newData: MutableList<Category>?) {
+            Timber.i("update: ${newData?.size}")
+
+            newData?.let {
+                val callback = CategoriesDiffCallback(values, it)
+                val result = DiffUtil.calculateDiff(callback, true)
+                values = it
+                result.dispatchUpdatesTo(this)
+            } ?: run {
+                values.clear()
+                notifyDataSetChanged()
+            }
         }
 
         override fun getItemCount(): Int {

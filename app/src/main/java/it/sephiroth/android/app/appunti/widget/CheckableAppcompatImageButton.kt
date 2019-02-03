@@ -3,16 +3,24 @@ package it.sephiroth.android.app.appunti.widget
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.Checkable
-import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.appcompat.widget.AppCompatImageButton
+import it.sephiroth.android.app.appunti.R
 
-class CheckableAppcompatImageButton(context: Context?, attrs: AttributeSet?) : AppCompatImageButton(context, attrs), Checkable {
+class CheckableAppcompatImageButton(context: Context, attrs: AttributeSet?) : AppCompatImageButton(context, attrs), Checkable {
 
     private var mChecked: Boolean = false
     private var mBroadcasting = false
 
+    var allowUserToggle: Boolean = true
 
     private var checkedChangedListener: ((checked: Boolean) -> Unit)? = null
+
+    init {
+        val array = context.theme.obtainStyledAttributes(attrs, R.styleable.CheckableAppcompatImageButton, 0, 0)
+        allowUserToggle = array.getBoolean(R.styleable.CheckableAppcompatImageButton_appunti_toggle_enabled, true)
+        array.recycle()
+    }
+
 
     fun doOnCheckedChanged(action: (checked: Boolean) -> Unit) {
         checkedChangedListener = action
@@ -26,6 +34,7 @@ class CheckableAppcompatImageButton(context: Context?, attrs: AttributeSet?) : A
         if (mChecked != value) {
             mChecked = value
             refreshDrawableState()
+            postInvalidate()
 
             if (mBroadcasting) return
 
@@ -36,7 +45,7 @@ class CheckableAppcompatImageButton(context: Context?, attrs: AttributeSet?) : A
     }
 
     override fun toggle() {
-        isChecked = !isChecked
+        if (allowUserToggle) isChecked = !isChecked
     }
 
     override fun performClick(): Boolean {

@@ -9,19 +9,15 @@
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
     tools:showIn="@layout/activity_categories">
 
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    <it.sephiroth.android.app.appunti.widget.HorizontalColorChooser
+        android:id="@+id/colorChooser"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        app:appunti_color_padding_left="8dp"
+        app:appunti_color_padding_right="8dp"
+        app:appunti_colors="?attr/categoryColors"
+        app:appunti_selectedColorIndex="0" />
 
-        <LinearLayout
-            android:id="@+id/categoryColorsContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="16dp">
-
-        </LinearLayout>
-    </HorizontalScrollView>
 
 </LinearLayout>
