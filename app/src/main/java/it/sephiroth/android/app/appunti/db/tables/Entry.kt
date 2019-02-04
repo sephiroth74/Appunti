@@ -1,8 +1,6 @@
 package it.sephiroth.android.app.appunti.db.tables
 
 import android.os.Parcel
-import android.os.Parcelable
-import android.provider.ContactsContract
 import com.dbflow5.annotation.*
 import com.dbflow5.query.select
 import com.dbflow5.reactivestreams.structure.BaseRXModel
@@ -15,7 +13,7 @@ import java.util.*
 @Table(database = AppDatabase::class, indexGroups = [
     IndexGroup(number = 1, name = "firstIndex")
 ])
-class Entry() : BaseRXModel(), Parcelable {
+class Entry() : BaseRXModel() {
 
     constructor(other: Entry) : this() {
         entryID = other.entryID
@@ -90,27 +88,5 @@ class Entry() : BaseRXModel(), Parcelable {
 
     enum class EntryType {
         TEXT, LIST
-    }
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(entryID)
-        parcel.writeString(entryTitle)
-        parcel.writeInt(entryPriority)
-        parcel.writeString(entryText)
-        parcel.writeInt(entryPinned)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<Entry> {
-        override fun createFromParcel(parcel: Parcel): Entry {
-            return Entry(parcel)
-        }
-
-        override fun newArray(size: Int): Array<Entry?> {
-            return arrayOfNulls(size)
-        }
     }
 }

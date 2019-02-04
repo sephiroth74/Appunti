@@ -11,6 +11,7 @@
     <item
         android:id="@+id/action_pin"
         android:checkable="true"
+        android:checked="true"
         android:icon="@drawable/appunti_sharp_favourite_24_selector"
         android:title="Pin"
         app:showAsAction="ifRoom" />

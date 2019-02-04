@@ -15,6 +15,7 @@ import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.selection.*
@@ -47,7 +48,6 @@ class MainActivity : AppuntiActivity() {
 
     private lateinit var model: MainViewModel
     private lateinit var layoutManager: StaggeredGridLayoutManager
-    private lateinit var tracker: SelectionTracker<Entry>
     private var mActionMode: ActionMode? = null
 
     @SuppressLint("CheckResult")
@@ -61,18 +61,6 @@ class MainActivity : AppuntiActivity() {
         itemsRecycler.setHasFixedSize(false)
 
         layoutManager = itemsRecycler.layoutManager as StaggeredGridLayoutManager
-
-        tracker = SelectionTracker
-                .Builder<Entry>(
-                        "mySelection",
-                        itemsRecycler,
-                        adapter.KeyProvider(),
-                        EntryItemDetailsLookup(itemsRecycler),
-                        StorageStrategy.createParcelableStorage<Entry>(Entry::class.java))
-                .withSelectionPredicate(SelectionPredicates.createSelectAnything())
-                .build()
-
-        tracker.addObserver(mSelectionObserver)
 
         model.entries.observe(this, Observer {
             Timber.i("[${currentThread()}] entries changed")
@@ -195,40 +183,33 @@ class MainActivity : AppuntiActivity() {
 
     // selection tracker
 
-    private var mSelectionObserver = object : SelectionTracker.SelectionObserver<Long>() {
-        override fun onSelectionChanged() {
-            super.onSelectionChanged()
-
-            val size = tracker.selection.size()
-            if (size < 1) {
-                mActionMode?.finish()
-            } else {
-                mActionMode?.title = "$size Selected"
-            }
-        }
-    }
 
     // actionmode callback
 
     private var mActionModeCallback = object : ActionMode.Callback {
 
-        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem): Boolean {
             Timber.i("onActionItemClicked: ${item?.itemId}")
             return true
         }
 
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            menuInflater.inflate(R.menu.appunti_main_actionmode, menu)
+            Timber.i("onCreateActionMode")
+            menuInflater.inflate(R.menu.appunti_main_actionmode_menu, menu)
+            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+            toolbar.animate().alpha(0f).start()
             return true
         }
 
         override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+            Timber.i("onPrepareActionMode")
             return true
         }
 
         override fun onDestroyActionMode(mode: ActionMode?) {
             Timber.i("onDestroyActionMode")
-            tracker.clearSelection()
+            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+            toolbar.animate().alpha(1f).start()
             mActionMode = null
         }
     }
@@ -330,7 +311,7 @@ class MainActivity : AppuntiActivity() {
             if (holder.itemViewType == TYPE_ENTRY) {
                 val entryItem = item.entry!!
 
-                holder.bind(entryItem, tracker.isSelected(entryItem))
+                holder.bind(entryItem, false)
 
                 if (null == cardBackgroundColorDefault) {
                     cardBackgroundColorDefault = holder.cardView.cardBackgroundColor
@@ -361,14 +342,11 @@ class MainActivity : AppuntiActivity() {
                 with(holder.itemView) {
                     tag = entryItem
                     setOnClickListener {
-                        Timber.d("card clicked!")
+                        Timber.d("card clicked! actionMode=$mActionMode")
 
                         mActionMode?.let {
-                            if (tracker.isSelected(entryItem)) {
-                                tracker.deselect(entryItem)
-                            } else {
-                                tracker.select(entryItem)
-                            }
+                            holder.itemView.postInvalidate()
+
                         } ?: run {
                             val newEntry = Entry(entryItem)
                             newEntry.entryPinned = if (newEntry.entryPinned == 1) 0 else 1
@@ -378,6 +356,7 @@ class MainActivity : AppuntiActivity() {
                     }
 
                     setOnLongClickListener {
+                        Timber.i("onLongClick. actionMode=$mActionMode")
                         if (mActionMode == null) {
                             mActionMode = startSupportActionMode(mActionModeCallback)
                         }

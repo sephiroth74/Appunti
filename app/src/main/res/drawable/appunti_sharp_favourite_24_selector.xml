@@ -7,10 +7,11 @@
     <item android:drawable="@drawable/sharp_favorite_border_24_pressed" android:state_checked="false"
         android:state_pressed="true" />
 
-    <item android:drawable="@drawable/sharp_favorite_24_disabled" android:state_checked="true" android:state_enabled="false" />
-    <item android:drawable="@drawable/sharp_favorite_border_24_disabled" android:state_checked="false"
-        android:state_enabled="false" />
+    <item android:drawable="@drawable/sharp_favorite_24_disabled" android:state_checked="true" android:state_enabled="false"
+        android:state_pressed="false" />
+    <item android:drawable="@drawable/sharp_favorite_border_24_disabled" android:state_checked="false" android:state_enabled="false"
+        android:state_pressed="false" />
 
-    <item android:drawable="@drawable/sharp_favorite_24" android:state_checked="true" />
-    <item android:drawable="@drawable/sharp_favorite_border_24" android:state_checked="false" />
+    <item android:drawable="@drawable/sharp_favorite_24" android:state_checked="true" android:state_pressed="false" />
+    <item android:drawable="@drawable/sharp_favorite_border_24" android:state_checked="false" android:state_pressed="false" />
 </selector>
