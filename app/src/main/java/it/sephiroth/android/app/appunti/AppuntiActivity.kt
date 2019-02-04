@@ -1,5 +1,6 @@
 package it.sephiroth.android.app.appunti
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.LayoutRes
@@ -10,6 +11,7 @@ import it.sephiroth.android.app.appunti.models.SettingsManager
 
 abstract class AppuntiActivity : AppCompatActivity() {
 
+    @SuppressLint("InlinedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -18,13 +20,13 @@ abstract class AppuntiActivity : AppCompatActivity() {
 
         setContentView(getContentLayout())
 
-        getToolbar()?.let { setSupportActionBar(getToolbar()) }
-
-        if (!darkTheme && isAPI(26)) {
-            getToolbar()?.let {
-                it.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        getToolbar()?.let { toolbar ->
+            setSupportActionBar(toolbar)
+            if (!darkTheme && isAPI(26)) {
+                toolbar.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
             }
         }
+
     }
 
     abstract fun getToolbar(): Toolbar?

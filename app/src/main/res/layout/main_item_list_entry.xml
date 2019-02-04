@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<it.sephiroth.android.app.appunti.widget.CheckableCircularRevealCardView android:id="@+id/id_card"
+<com.google.android.material.circularreveal.cardview.CircularRevealCardView android:id="@+id/id_card"
     style="@style/Widget.MaterialComponents.CardView"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -60,4 +60,4 @@
 
 
     </LinearLayout>
-</it.sephiroth.android.app.appunti.widget.CheckableCircularRevealCardView>
+</com.google.android.material.circularreveal.cardview.CircularRevealCardView>

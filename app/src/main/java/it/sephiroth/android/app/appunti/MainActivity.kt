@@ -8,16 +8,16 @@ import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.speech.RecognizerIntent
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.TextView
+import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.selection.*
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -36,16 +36,19 @@ import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.main_activity.*
-import kotlinx.android.synthetic.main.main_item_list_content.view.*
+import kotlinx.android.synthetic.main.main_item_list_entry.view.*
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppuntiActivity() {
 
-    lateinit var model: MainViewModel
     lateinit var adapter: ItemEntryListAdapter
-    lateinit var layoutManager: StaggeredGridLayoutManager
+
+    private lateinit var model: MainViewModel
+    private lateinit var layoutManager: StaggeredGridLayoutManager
+    private lateinit var tracker: SelectionTracker<Entry>
+    private var mActionMode: ActionMode? = null
 
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +59,20 @@ class MainActivity : AppuntiActivity() {
 
         itemsRecycler.adapter = adapter
         itemsRecycler.setHasFixedSize(false)
+
         layoutManager = itemsRecycler.layoutManager as StaggeredGridLayoutManager
+
+        tracker = SelectionTracker
+                .Builder<Entry>(
+                        "mySelection",
+                        itemsRecycler,
+                        adapter.KeyProvider(),
+                        EntryItemDetailsLookup(itemsRecycler),
+                        StorageStrategy.createParcelableStorage<Entry>(Entry::class.java))
+                .withSelectionPredicate(SelectionPredicates.createSelectAnything())
+                .build()
+
+        tracker.addObserver(mSelectionObserver)
 
         model.entries.observe(this, Observer {
             Timber.i("[${currentThread()}] entries changed")
@@ -82,13 +98,9 @@ class MainActivity : AppuntiActivity() {
         }
     }
 
-    override fun getToolbar(): Toolbar? {
-        return toolbar
-    }
+    override fun getToolbar(): Toolbar? = toolbar
 
-    override fun getContentLayout(): Int {
-        return R.layout.main_activity
-    }
+    override fun getContentLayout(): Int = R.layout.main_activity
 
     private fun seupNavigationView() {
         navigationView.model = model
@@ -181,6 +193,59 @@ class MainActivity : AppuntiActivity() {
         else drawerLayout.closeDrawer(navigationView)
     }
 
+    // selection tracker
+
+    private var mSelectionObserver = object : SelectionTracker.SelectionObserver<Long>() {
+        override fun onSelectionChanged() {
+            super.onSelectionChanged()
+
+            val size = tracker.selection.size()
+            if (size < 1) {
+                mActionMode?.finish()
+            } else {
+                mActionMode?.title = "$size Selected"
+            }
+        }
+    }
+
+    // actionmode callback
+
+    private var mActionModeCallback = object : ActionMode.Callback {
+
+        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+            Timber.i("onActionItemClicked: ${item?.itemId}")
+            return true
+        }
+
+        override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+            menuInflater.inflate(R.menu.appunti_main_actionmode, menu)
+            return true
+        }
+
+        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+            return true
+        }
+
+        override fun onDestroyActionMode(mode: ActionMode?) {
+            Timber.i("onDestroyActionMode")
+            tracker.clearSelection()
+            mActionMode = null
+        }
+    }
+
+
+    class EntryItemDetailsLookup(private val recyclerView: RecyclerView) : ItemDetailsLookup<Entry>() {
+
+        override fun getItemDetails(event: MotionEvent): ItemDetails<Entry>? {
+            val view = recyclerView.findChildViewUnder(event.x, event.y)
+            if (view != null) {
+                return (recyclerView.getChildViewHolder(view) as ItemEntryListAdapter.ViewHolder).getItemDetails()
+            }
+            return null
+        }
+    }
+
+
     inner class ItemEntryListAdapter(private val context: Context,
                                      private var values: MutableList<Item>) :
             RecyclerView.Adapter<ItemEntryListAdapter.ViewHolder>() {
@@ -193,14 +258,25 @@ class MainActivity : AppuntiActivity() {
         private var cardForegroundStroke: Drawable
         private var cardForegroundNoStroke: Drawable
 
-        //        companion object {
-        val TYPE_EMPTY = Item.ItemType.EMPTY.ordinal
-        val TYPE_ENTRY = Item.ItemType.ENTRY.ordinal
-        val TYPE_PINNED = Item.ItemType.PINNED.ordinal
-        val TYPE_NON_PINNED = Item.ItemType.NON_PINNED.ordinal
-//        }
+        private val TYPE_EMPTY = Item.ItemType.EMPTY.ordinal
+        private val TYPE_ENTRY = Item.ItemType.ENTRY.ordinal
+        private val TYPE_PINNED = Item.ItemType.PINNED.ordinal
+        private val TYPE_NON_PINNED = Item.ItemType.NON_PINNED.ordinal
 
         private var valuesCopy: MutableList<Item>
+
+        inner class KeyProvider : ItemKeyProvider<Entry>(SCOPE_MAPPED) {
+            override fun getKey(position: Int): Entry? {
+                Timber.i("getKey($position)")
+                return getItem(position).entry
+            }
+
+            override fun getPosition(key: Entry): Int {
+                Timber.i("getPosition($key)")
+                return values.indexOfFirst { it.entry == key }
+            }
+
+        }
 
         init {
             valuesCopy = ArrayList(values)
@@ -240,22 +316,21 @@ class MainActivity : AppuntiActivity() {
                 view = LayoutInflater.from(context).inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
                 (view as TextView).text = getString(R.string.others)
             } else {
-                view = LayoutInflater.from(parent.context).inflate(R.layout.main_item_list_content, parent, false)
+                view = LayoutInflater.from(parent.context).inflate(R.layout.main_item_list_entry, parent, false)
             }
             return ViewHolder(view)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = getItem(position)
+            val itemId = getItemId(position)
 
             Timber.i("entry: $item")
 
             if (holder.itemViewType == TYPE_ENTRY) {
                 val entryItem = item.entry!!
 
-                holder.titleTextView.text = entryItem.entryTitle
-                holder.contentTextView.text = entryItem.entryText?.substring(0, 100)
-                holder.categoryTextView.text = entryItem.category?.categoryTitle
+                holder.bind(entryItem, tracker.isSelected(entryItem))
 
                 if (null == cardBackgroundColorDefault) {
                     cardBackgroundColorDefault = holder.cardView.cardBackgroundColor
@@ -288,9 +363,25 @@ class MainActivity : AppuntiActivity() {
                     setOnClickListener {
                         Timber.d("card clicked!")
 
-                        val newEntry = Entry(entryItem)
-                        newEntry.entryPinned = if (newEntry.entryPinned == 1) 0 else 1
-                        newEntry.save()
+                        mActionMode?.let {
+                            if (tracker.isSelected(entryItem)) {
+                                tracker.deselect(entryItem)
+                            } else {
+                                tracker.select(entryItem)
+                            }
+                        } ?: run {
+                            val newEntry = Entry(entryItem)
+                            newEntry.entryPinned = if (newEntry.entryPinned == 1) 0 else 1
+                            newEntry.save()
+                        }
+
+                    }
+
+                    setOnLongClickListener {
+                        if (mActionMode == null) {
+                            mActionMode = startSupportActionMode(mActionModeCallback)
+                        }
+                        true
                     }
                 }
             }
@@ -360,10 +451,27 @@ class MainActivity : AppuntiActivity() {
         }
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            private var entry: Entry? = null
+
             val titleTextView: TextView by lazy { view.id_title }
             val contentTextView: TextView by lazy { view.id_content }
             val categoryTextView: AppCompatTextView by lazy { view.chip }
             val cardView: CardView by lazy { view.id_card }
+
+            fun getItemDetails(): ItemDetailsLookup.ItemDetails<Entry> =
+                    object : ItemDetailsLookup.ItemDetails<Entry>() {
+                        override fun getPosition(): Int = adapterPosition
+                        override fun getSelectionKey(): Entry? = entry
+                    }
+
+
+            fun bind(entry: Entry, isActivated: Boolean = false) {
+                this.entry = entry
+                itemView.isActivated = isActivated
+                titleTextView.text = entry.entryTitle
+                contentTextView.text = entry.entryText?.substring(0, 100)
+                categoryTextView.text = entry.category?.categoryTitle
+            }
         }
     }
 
