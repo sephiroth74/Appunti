@@ -8,7 +8,7 @@ class PreferencesActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        applyNoActionBarTheme {
+        applyNoActionBarTheme(null) {
             setContentView(R.layout.appunti_activity_preferences)
         }
 

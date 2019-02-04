@@ -9,6 +9,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.AttrRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import io.reactivex.Scheduler
 import io.reactivex.Single
@@ -84,11 +85,18 @@ fun View.hideSoftInput() {
     inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
 }
 
-fun AppCompatActivity.applyNoActionBarTheme(func: () -> Unit) {
+fun AppCompatActivity.applyNoActionBarTheme(toolbar: Toolbar?, func: () -> Unit) {
     val darkTheme = SettingsManager.getInstance(this).darkTheme
     setTheme(if (darkTheme) R.style.Theme_Appunti_Dark_NoActionbar else R.style.Theme_Appunti_Light_NoActionbar)
     func.invoke()
-    if (!darkTheme && isAPI(26)) toolbar.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+
+    toolbar?.let { setSupportActionBar(toolbar) }
+
+    if (!darkTheme && isAPI(26)) {
+        toolbar?.let {
+            it.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        }
+    }
 }
 
 object ExtensionUtils {

@@ -52,9 +52,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        applyNoActionBarTheme {
+        applyNoActionBarTheme(toolbar) {
             setContentView(R.layout.main_activity)
-            setSupportActionBar(toolbar)
         }
 
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
