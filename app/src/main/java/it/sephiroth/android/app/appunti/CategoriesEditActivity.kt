@@ -44,9 +44,8 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        applyNoActionBarTheme {
+        applyNoActionBarTheme(toolbar) {
             setContentView(R.layout.activity_categories)
-            setSupportActionBar(toolbar)
         }
 
         supportActionBar?.apply {
@@ -118,8 +117,9 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
                 mSnackbar = null
             }
 
-            mAdapter.values.remove(category)
-            mAdapter.notifyItemRemoved(adapterPosition)
+            mAdapter.trash(category)
+//            mAdapter.values.remove(category)
+//            mAdapter.notifyItemRemoved(adapterPosition)
 
             mSnackbar = Snackbar.make(constraintLayout, getString(R.string.category_deleted_snackbar_title), Snackbar.LENGTH_SHORT)
                     .setAction(getString(R.string.undo_uppercase)) {}
@@ -132,8 +132,9 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
 
                             if (event == DISMISS_EVENT_ACTION) {
                                 Timber.d("must undo the event!")
-                                mAdapter.values.add(adapterPosition, category)
-                                mAdapter.notifyItemInserted(adapterPosition)
+                                mAdapter.restore(category)
+//                                mAdapter.values.add(adapterPosition, category)
+//                                mAdapter.notifyItemInserted(adapterPosition)
 
                             } else {
                                 Timber.d("must consolidate the event!")
@@ -177,6 +178,11 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
         DirectModelNotifier.get().unregisterForModelStateChanges(Category::class.java, this)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        mAdapter.emptyTrash()
+    }
+
     override fun onModelChanged(model: Category, action: ChangeAction) {
         Timber.i("onModelChanged($model, $action)")
         updateCategories()
@@ -211,7 +217,29 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
 
         private var categoryColors = ResourceUtils.getCategoryColors(context)
         private var currentEditText: EditText? = null
-        // private val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
+        private var deletedQueue = mutableListOf<Category>()
+        private var originalValues = ArrayList(values)
+
+        init {
+
+        }
+
+        internal fun trash(category: Category) {
+            if (!deletedQueue.contains(category)) {
+                deletedQueue.add(category)
+                update(originalValues)
+            }
+        }
+
+        internal fun restore(category: Category) {
+            deletedQueue.remove(category)
+            originalValues.add(category)
+            update(originalValues)
+        }
+
+        internal fun emptyTrash() {
+            deletedQueue.clear()
+        }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(context).inflate(R.layout.category_item_list_content, parent, false)
@@ -226,12 +254,16 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
             Timber.i("update: ${newData?.size}")
 
             newData?.let {
-                val callback = CategoriesDiffCallback(values, it)
+                val filteredData = it.filter { item -> !deletedQueue.contains(item) }
+
+                val callback = CategoriesDiffCallback(values, filteredData)
                 val result = DiffUtil.calculateDiff(callback, true)
-                values = it
+                values = filteredData.toMutableList()
+                originalValues = ArrayList(values)
                 result.dispatchUpdatesTo(this)
             } ?: run {
                 values.clear()
+                originalValues = ArrayList(values)
                 notifyDataSetChanged()
             }
         }
