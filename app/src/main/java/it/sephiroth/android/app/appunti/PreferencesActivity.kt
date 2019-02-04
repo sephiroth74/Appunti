@@ -1,15 +1,17 @@
 package it.sephiroth.android.app.appunti
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import it.sephiroth.android.app.appunti.ext.applyNoActionBarTheme
+import android.view.MenuItem
+import androidx.appcompat.widget.Toolbar
+import kotlinx.android.synthetic.main.appunti_activity_preferences.*
 
-class PreferencesActivity : AppCompatActivity() {
+class PreferencesActivity : AppuntiActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        applyNoActionBarTheme(null) {
-            setContentView(R.layout.appunti_activity_preferences)
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setDisplayShowHomeEnabled(true)
         }
 
         supportFragmentManager
@@ -17,4 +19,14 @@ class PreferencesActivity : AppCompatActivity() {
                 .replace(R.id.preferencesContainer, PreferencesFragment())
                 .commit()
     }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            android.R.id.home -> onBackPressed()
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    override fun getToolbar(): Toolbar? = toolbar
+    override fun getContentLayout(): Int = R.layout.appunti_activity_preferences
 }

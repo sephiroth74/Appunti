@@ -13,8 +13,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -29,7 +29,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.applyNoActionBarTheme
 import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.ext.getColorStateList
 import it.sephiroth.android.app.appunti.ext.isLightTheme
@@ -42,7 +41,7 @@ import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppuntiActivity() {
 
     lateinit var model: MainViewModel
     lateinit var adapter: ItemEntryListAdapter
@@ -52,12 +51,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        applyNoActionBarTheme(toolbar) {
-            setContentView(R.layout.main_activity)
-        }
-
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
-
         adapter = ItemEntryListAdapter(this, arrayListOf())
 
         itemsRecycler.adapter = adapter
@@ -86,6 +80,14 @@ class MainActivity : AppCompatActivity() {
         bottomAppBar.doOnDisplayAsListChanged { value ->
             model.setDisplayAsList(value)
         }
+    }
+
+    override fun getToolbar(): Toolbar? {
+        return toolbar
+    }
+
+    override fun getContentLayout(): Int {
+        return R.layout.main_activity
     }
 
     private fun seupNavigationView() {
@@ -266,19 +268,19 @@ class MainActivity : AppCompatActivity() {
                     if (it.categoryColorIndex != 0) {
                         color = categoryColors[it.categoryColorIndex]
                     }
+                    holder.categoryTextView.visibility = View.VISIBLE
+                } ?: run {
+                    holder.categoryTextView.visibility = View.GONE
                 }
 
                 if (color != 0) {
                     holder.cardView.setCardBackgroundColor(color)
                     holder.cardView.foreground = cardForegroundNoStroke.constantState?.newDrawable()
-                    holder.categoryTextView.visibility = View.VISIBLE
-
                     // val luminance = ColorUtils.calculateLuminance(color)
 
                 } else {
                     holder.cardView.setCardBackgroundColor(cardBackgroundColorDefault)
                     holder.cardView.foreground = cardForegroundStroke.constantState?.newDrawable()
-                    holder.categoryTextView.visibility = View.GONE
                 }
 
                 with(holder.itemView) {

@@ -9,7 +9,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.query.OrderBy
@@ -36,17 +36,13 @@ import kotlinx.android.synthetic.main.category_item_list_content.view.*
 import timber.log.Timber
 
 
-class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelStateChangedListener<Category> {
+class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelStateChangedListener<Category> {
 
     private lateinit var mAdapter: CategoriesAdapter
     private var mSnackbar: Snackbar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        applyNoActionBarTheme(toolbar) {
-            setContentView(R.layout.activity_categories)
-        }
 
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
@@ -65,6 +61,9 @@ class CategoriesEditActivity : AppCompatActivity(), DirectModelNotifier.OnModelS
             }
         }
     }
+
+    override fun getToolbar(): Toolbar? = toolbar
+    override fun getContentLayout(): Int = R.layout.activity_categories
 
     private fun presentNewCategoryDialog() {
         val alertDialog: AlertDialog = AlertDialog

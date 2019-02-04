@@ -85,20 +85,6 @@ fun View.hideSoftInput() {
     inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
 }
 
-fun AppCompatActivity.applyNoActionBarTheme(toolbar: Toolbar?, func: () -> Unit) {
-    val darkTheme = SettingsManager.getInstance(this).darkTheme
-    setTheme(if (darkTheme) R.style.Theme_Appunti_Dark_NoActionbar else R.style.Theme_Appunti_Light_NoActionbar)
-    func.invoke()
-
-    toolbar?.let { setSupportActionBar(toolbar) }
-
-    if (!darkTheme && isAPI(26)) {
-        toolbar?.let {
-            it.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-        }
-    }
-}
-
 object ExtensionUtils {
     val dateformat: DateFormat = java.text.DateFormat.getDateTimeInstance()
 }

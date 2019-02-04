@@ -19,7 +19,6 @@ import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
-import it.sephiroth.android.app.appunti.ext.mainThread
 import it.sephiroth.android.app.appunti.ext.rxSingle
 import timber.log.Timber
 import kotlin.properties.Delegates
@@ -27,7 +26,9 @@ import kotlin.properties.Delegates
 class MainViewModel(application: Application) : AndroidViewModel(application), DirectModelNotifier.OnModelStateChangedListener<BaseRXModel> {
     val categories: LiveData<List<Category>> by lazy {
         val data = MutableLiveData<List<Category>>()
-        fetchCategories { result -> data.postValue(result) }
+        fetchCategories().subscribe { result, error ->
+            data.postValue(result)
+        }
         data
     }
 
@@ -52,9 +53,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
     val settingsManager = SettingsManager.getInstance(application)
 
 
-    private fun fetchCategories(action: (List<Category>) -> Unit) {
-        val list = select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
-        action.invoke(list)
+    private fun fetchCategories(): Single<MutableList<Category>> {
+        return rxSingle(Schedulers.io()) {
+            select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
+        }
     }
 
     @SuppressLint("CheckResult")
@@ -91,23 +93,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
         DirectModelNotifier.get().unregisterForModelStateChanges(Entry::class.java, this)
     }
 
+    @SuppressLint("CheckResult")
     override fun onModelChanged(model: BaseRXModel, action: ChangeAction) {
         Timber.i("onModelChanged($model, $action)")
 
         if (model is Category) {
-            fetchCategories { result ->
-                mainThread {
-                    (categories as MutableLiveData).value = result
-                    currentCategory?.let { category ->
-                        val result = result.firstOrNull { it.categoryID == category.categoryID }
-                        if (result == null) {
-                            currentCategory = null
-                        } else {
-                            currentCategory = result
-                        }
-                    } ?: run {
-                        currentCategory = null
-                    }
+            fetchCategories().observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
+                (categories as MutableLiveData).value = result
+                currentCategory?.let { category ->
+                    val categoryResult = result.firstOrNull { it.categoryID == category.categoryID }
+                    currentCategory = categoryResult
+                } ?: run {
+                    currentCategory = null
                 }
             }
         } else {
