@@ -14,11 +14,9 @@ import android.widget.TextView
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
-import androidx.cardview.widget.CardView
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.recyclerview.selection.*
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -49,6 +47,7 @@ class MainActivity : AppuntiActivity() {
     private lateinit var model: MainViewModel
     private lateinit var layoutManager: StaggeredGridLayoutManager
     private var mActionMode: ActionMode? = null
+    private var tracker: MultichoiceHelper<Entry>? = null
 
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +63,7 @@ class MainActivity : AppuntiActivity() {
 
         model.entries.observe(this, Observer {
             Timber.i("[${currentThread()}] entries changed")
+            tracker?.clearSelection()
             adapter.update(it)
         })
 
@@ -183,13 +183,96 @@ class MainActivity : AppuntiActivity() {
 
     // selection tracker
 
+    class MultichoiceHelper<T>(val adapter: RecyclerView.Adapter<*>) {
+        private val selectedPositions = hashMapOf<Long, T>()
+        private var listener: (() -> Unit)? = null
+
+        fun setListener(action: (() -> Unit)?) {
+            listener = action
+        }
+
+        var selection: HashMap<Long, T>
+            get() = selectedPositions
+            private set(value) {}
+
+        private fun notifyPosition(position: Long) {
+            Timber.i("notifyPosition($position)")
+            adapter.notifyItemChanged(position.toInt())
+            listener?.invoke()
+        }
+
+        fun clearSelection() {
+            if (selectedPositions.size > 0) {
+                selectedPositions.clear()
+                listener?.invoke()
+                adapter.notifyDataSetChanged()
+            }
+        }
+
+        fun select(position: Long, value: T) {
+            if (!isSelected(position)) {
+                selectedPositions[position] = value
+                notifyPosition(position)
+                Timber.v("select(position=$position), isSelected=${isSelected(position)}")
+            }
+        }
+
+        fun deselect(position: Long): T? {
+            var result: T? = null
+            if (isSelected(position)) {
+                result = selectedPositions.remove(position)
+                notifyPosition(position)
+            }
+            return result
+        }
+
+        fun isSelected(position: Long): Boolean {
+            return selectedPositions.containsKey(position)
+        }
+    }
 
     // actionmode callback
 
-    private var mActionModeCallback = object : ActionMode.Callback {
+    private var mActionModeCallback: ActionMode.Callback = object : ActionMode.Callback {
+
+        private fun onTrackerSelectionChanged(selection: HashMap<Long, Entry>, actionMode: ActionMode?) {
+            Timber.i("onTrackerSelectionChanged()")
+            actionMode?.let { actionMode ->
+                if (selection.isEmpty()) {
+                    actionMode.finish()
+                } else {
+                    actionMode.title = "${selection.size} Selected"
+
+                    val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > -1
+                    val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > -1
+
+                    val menu = actionMode.menu
+                    val menuItem = menu.findItem(R.id.action_pin)
+
+                    Timber.v("pinned=$pinned, unpinned=$unpinned")
+
+                    if(pinned && unpinned) {
+                        menuItem.setIcon(R.drawable.sharp_favorite_border_24)
+                    } else if(pinned) {
+                        menuItem.setIcon(R.drawable.sharp_favorite_24)
+                    } else {
+                        menuItem.setIcon(R.drawable.sharp_favorite_border_24)
+                    }
+
+                }
+            }
+        }
 
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem): Boolean {
             Timber.i("onActionItemClicked: ${item?.itemId}")
+
+            when (item.itemId) {
+                R.id.action_pin -> {
+                    item.isChecked = !item.isChecked
+                    item.setIcon(if (item.isChecked) R.drawable.sharp_favorite_24 else R.drawable.sharp_favorite_border_24)
+                }
+            }
+
             return true
         }
 
@@ -198,16 +281,27 @@ class MainActivity : AppuntiActivity() {
             menuInflater.inflate(R.menu.appunti_main_actionmode_menu, menu)
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
             toolbar.animate().alpha(0f).start()
+
+            tracker?.let { tracker ->
+                tracker.setListener {
+                    onTrackerSelectionChanged(tracker.selection, mode)
+                }
+            }
+
             return true
         }
 
         override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
             Timber.i("onPrepareActionMode")
+            onTrackerSelectionChanged(tracker?.selection ?: hashMapOf(), mode)
             return true
         }
 
         override fun onDestroyActionMode(mode: ActionMode?) {
             Timber.i("onDestroyActionMode")
+            tracker?.clearSelection()
+            tracker = null
+
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
             toolbar.animate().alpha(1f).start()
             mActionMode = null
@@ -215,21 +309,9 @@ class MainActivity : AppuntiActivity() {
     }
 
 
-    class EntryItemDetailsLookup(private val recyclerView: RecyclerView) : ItemDetailsLookup<Entry>() {
-
-        override fun getItemDetails(event: MotionEvent): ItemDetails<Entry>? {
-            val view = recyclerView.findChildViewUnder(event.x, event.y)
-            if (view != null) {
-                return (recyclerView.getChildViewHolder(view) as ItemEntryListAdapter.ViewHolder).getItemDetails()
-            }
-            return null
-        }
-    }
-
-
     inner class ItemEntryListAdapter(private val context: Context,
                                      private var values: MutableList<Item>) :
-            RecyclerView.Adapter<ItemEntryListAdapter.ViewHolder>() {
+            RecyclerView.Adapter<ItemEntryListAdapter.BaseViewHolder>() {
 
         private var cardBackgroundColorDefault: ColorStateList? = null
         private var textColorDefault: ColorStateList? = null
@@ -245,19 +327,6 @@ class MainActivity : AppuntiActivity() {
         private val TYPE_NON_PINNED = Item.ItemType.NON_PINNED.ordinal
 
         private var valuesCopy: MutableList<Item>
-
-        inner class KeyProvider : ItemKeyProvider<Entry>(SCOPE_MAPPED) {
-            override fun getKey(position: Int): Entry? {
-                Timber.i("getKey($position)")
-                return getItem(position).entry
-            }
-
-            override fun getPosition(key: Entry): Int {
-                Timber.i("getPosition($key)")
-                return values.indexOfFirst { it.entry == key }
-            }
-
-        }
 
         init {
             valuesCopy = ArrayList(values)
@@ -278,8 +347,9 @@ class MainActivity : AppuntiActivity() {
         }
 
         @SuppressLint("PrivateResource")
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
             val view: View
+            val holder: BaseViewHolder
 
             if (viewType == TYPE_EMPTY) {
                 view = LayoutInflater.from(context).inflate(R.layout.item_list_empty, parent, false)
@@ -290,28 +360,32 @@ class MainActivity : AppuntiActivity() {
                         StaggeredGridLayoutManager.LayoutParams(MATCH_PARENT, searchViewHeight + searchViewTopMargin * 2)
                 params.isFullSpan = true
                 view.layoutParams = params
+                holder = BaseViewHolder(view)
             } else if (viewType == TYPE_PINNED) {
                 view = LayoutInflater.from(context).inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
                 (view as TextView).text = getString(R.string.pinned)
+                holder = BaseViewHolder(view)
             } else if (viewType == TYPE_NON_PINNED) {
                 view = LayoutInflater.from(context).inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
                 (view as TextView).text = getString(R.string.others)
+                holder = BaseViewHolder(view)
             } else {
                 view = LayoutInflater.from(parent.context).inflate(R.layout.main_item_list_entry, parent, false)
+                holder = EntryViewHolder(view)
             }
-            return ViewHolder(view)
+            return holder
         }
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        override fun onBindViewHolder(baseHolder: BaseViewHolder, position: Int) {
             val item = getItem(position)
-            val itemId = getItemId(position)
 
-            Timber.i("entry: $item")
+            Timber.i("onBindViewHolder($position, $item)")
 
-            if (holder.itemViewType == TYPE_ENTRY) {
+            if (baseHolder.itemViewType == TYPE_ENTRY) {
+                val holder = baseHolder as EntryViewHolder
                 val entryItem = item.entry!!
 
-                holder.bind(entryItem, false)
+                holder.bind(entryItem, tracker?.isSelected(position.toLong()) ?: false)
 
                 if (null == cardBackgroundColorDefault) {
                     cardBackgroundColorDefault = holder.cardView.cardBackgroundColor
@@ -345,8 +419,13 @@ class MainActivity : AppuntiActivity() {
                         Timber.d("card clicked! actionMode=$mActionMode")
 
                         mActionMode?.let {
-                            holder.itemView.postInvalidate()
-
+                            tracker?.let { tracker ->
+                                if (tracker.isSelected(holder.adapterPosition.toLong())) {
+                                    tracker.deselect(holder.adapterPosition.toLong())
+                                } else {
+                                    tracker.select(holder.adapterPosition.toLong(), entryItem)
+                                }
+                            }
                         } ?: run {
                             val newEntry = Entry(entryItem)
                             newEntry.entryPinned = if (newEntry.entryPinned == 1) 0 else 1
@@ -358,9 +437,13 @@ class MainActivity : AppuntiActivity() {
                     setOnLongClickListener {
                         Timber.i("onLongClick. actionMode=$mActionMode")
                         if (mActionMode == null) {
+                            tracker = MultichoiceHelper(this@ItemEntryListAdapter)
+                            tracker?.select(holder.adapterPosition.toLong(), entryItem)
                             mActionMode = startSupportActionMode(mActionModeCallback)
+                            true
+                        } else {
+                            false
                         }
-                        true
                     }
                 }
             }
@@ -429,22 +512,18 @@ class MainActivity : AppuntiActivity() {
             notifyDataSetChanged()
         }
 
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        open inner class BaseViewHolder(view: View) : RecyclerView.ViewHolder(view)
+
+        inner class EntryViewHolder(view: View) : BaseViewHolder(view) {
             private var entry: Entry? = null
 
             val titleTextView: TextView by lazy { view.id_title }
             val contentTextView: TextView by lazy { view.id_content }
             val categoryTextView: AppCompatTextView by lazy { view.chip }
-            val cardView: CardView by lazy { view.id_card }
-
-            fun getItemDetails(): ItemDetailsLookup.ItemDetails<Entry> =
-                    object : ItemDetailsLookup.ItemDetails<Entry>() {
-                        override fun getPosition(): Int = adapterPosition
-                        override fun getSelectionKey(): Entry? = entry
-                    }
-
+            val cardView by lazy { view.id_card }
 
             fun bind(entry: Entry, isActivated: Boolean = false) {
+                Timber.v("bind($entry, isActivated=$isActivated)")
                 this.entry = entry
                 itemView.isActivated = isActivated
                 titleTextView.text = entry.entryTitle
@@ -453,6 +532,7 @@ class MainActivity : AppuntiActivity() {
             }
         }
     }
+
 
     class Item(val entry: Entry?, val type: ItemType) {
         enum class ItemType { ENTRY, EMPTY, PINNED, NON_PINNED }
