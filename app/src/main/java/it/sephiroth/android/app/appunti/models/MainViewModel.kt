@@ -6,10 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.dbflow5.config.FlowManager
-import com.dbflow5.query.OrderBy
-import com.dbflow5.query.Transformable
-import com.dbflow5.query.list
-import com.dbflow5.query.select
+import com.dbflow5.query.*
 import com.dbflow5.reactivestreams.structure.BaseRXModel
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.runtime.OnTableChangedListener
@@ -32,7 +29,8 @@ import kotlin.properties.Delegates
 class MainViewModel(application: Application) : AndroidViewModel(application),
         DirectModelNotifier.OnModelStateChangedListener<BaseRXModel>, OnTableChangedListener {
     override fun onTableChanged(table: Class<*>?, action: ChangeAction) {
-        Timber.i("onTableChange: $action")
+        Timber.i("onTableChange: $action, $table")
+        updateEntries()
     }
 
     val categories: LiveData<List<Category>> by lazy {
@@ -58,6 +56,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
             (category as MutableLiveData).postValue(newValue)
         }
 
+        updateEntries(newValue)
+    }
+
+    val displayAsList: LiveData<Boolean> = MutableLiveData<Boolean>()
+    val settingsManager = SettingsManager.getInstance(application)
+
+
+    @SuppressLint("CheckResult")
+    private fun updateEntries(newValue: Category?) {
         fetchEntries(newValue).observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
             Timber.v("[${currentThread()}] entries returned = ${result.size}")
             (entries as MutableLiveData).value = result
@@ -68,9 +75,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         }
     }
 
-    val displayAsList: LiveData<Boolean> = MutableLiveData<Boolean>()
-    val settingsManager = SettingsManager.getInstance(application)
-
+    fun updateEntries() {
+        updateEntries(currentCategory)
+    }
 
     private fun fetchCategories(): Single<MutableList<Category>> {
         return rxSingle(Schedulers.io()) {
@@ -134,19 +141,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     fun batchPinEntries(values: MutableCollection<Entry>, pin: Boolean) {
         Timber.i("batchPinEntries($pin)")
 
+        val pinnedValue = if (pin) 1 else 0
 
         // TODO: this sucks!
 
         ioThread {
-            val pinnedValue = if (pin) 1 else 0
-            val array = values.map { it.entryID }.joinToString(",", "(", ")")
-            val query =
-                    "UPDATE Entry SET ${Entry_Table.entryPinned.nameAlias.name()}=$pinnedValue WHERE ${Entry_Table.entryID.nameAlias.name()} in ${array}"
-
-            FlowManager.getDatabase(AppDatabase::class.java).rawQuery(query, null)
-            currentCategory = currentCategory
+            //            val array = values.map { it.entryID }.joinToString(",", "(", ")")
+//            val query =
+//                    "UPDATE Entry SET ${Entry_Table.entryPinned.nameAlias.name()}=$pinnedValue WHERE ${Entry_Table.entryID.nameAlias.name()} in ${array}"
+//
+//            FlowManager.getDatabase(AppDatabase::class.java).rawQuery(query, null)
+//            currentCategory = currentCategory
         }
 
+        val statement = update(Entry::class)
+            .set(Entry_Table.entryPinned.eq(pinnedValue))
+            .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
+            .execute(FlowManager.getDatabase(AppDatabase::class.java))
+
+        Timber.v("statement=$statement")
+
+//        updateEntries()
 
 //        val transaction = FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
 //            for (item in values) {

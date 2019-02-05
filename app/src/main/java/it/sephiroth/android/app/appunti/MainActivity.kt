@@ -293,7 +293,6 @@ class MainActivity : AppuntiActivity() {
         }
 
         override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            Timber.i("onPrepareActionMode")
             onTrackerSelectionChanged(tracker?.selection ?: hashMapOf(), mode)
             return true
         }
@@ -379,8 +378,6 @@ class MainActivity : AppuntiActivity() {
 
         override fun onBindViewHolder(baseHolder: BaseViewHolder, position: Int) {
             val item = getItem(position)
-
-            Timber.i("onBindViewHolder($position, $item)")
 
             if (baseHolder.itemViewType == TYPE_ENTRY) {
                 val holder = baseHolder as EntryViewHolder
@@ -524,7 +521,6 @@ class MainActivity : AppuntiActivity() {
             val cardView by lazy { view.id_card }
 
             fun bind(entry: Entry, isActivated: Boolean = false) {
-                Timber.v("bind($entry, isActivated=$isActivated)")
                 this.entry = entry
                 itemView.isActivated = isActivated
                 titleTextView.text = entry.entryTitle
