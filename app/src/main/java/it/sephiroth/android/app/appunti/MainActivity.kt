@@ -247,7 +247,7 @@ class MainActivity : AppuntiActivity() {
                     val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > -1
 
                     Timber.v("pinned=$pinned, unpinned=$unpinned")
-                    updatePinnedMenuItem(actionMode.menu, pinned || (pinned && unpinned))
+                    updatePinnedMenuItem(actionMode.menu, pinned && (pinned && !unpinned))
                 }
             }
         }
@@ -260,11 +260,17 @@ class MainActivity : AppuntiActivity() {
             }
         }
 
-        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem): Boolean {
-            Timber.i("onActionItemClicked: ${item?.itemId}")
+        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+            Timber.i("onActionItemClicked: ${item.itemId}")
 
             when (item.itemId) {
                 R.id.menu_action_pin -> {
+                    tracker?.let { tracker ->
+                        val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > -1
+                        val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > -1
+                        model.batchPinEntries(tracker.selection.values, !(pinned && (pinned && !unpinned)))
+                    }
+
                 }
             }
 

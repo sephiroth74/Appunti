@@ -5,25 +5,36 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.dbflow5.config.FlowManager
 import com.dbflow5.query.OrderBy
 import com.dbflow5.query.Transformable
 import com.dbflow5.query.list
 import com.dbflow5.query.select
 import com.dbflow5.reactivestreams.structure.BaseRXModel
 import com.dbflow5.runtime.DirectModelNotifier
+import com.dbflow5.runtime.OnTableChangedListener
 import com.dbflow5.structure.ChangeAction
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
+import it.sephiroth.android.app.appunti.ext.currentThread
+import it.sephiroth.android.app.appunti.ext.executeIfMainThread
+import it.sephiroth.android.app.appunti.ext.ioThread
 import it.sephiroth.android.app.appunti.ext.rxSingle
 import timber.log.Timber
 import kotlin.properties.Delegates
 
-class MainViewModel(application: Application) : AndroidViewModel(application), DirectModelNotifier.OnModelStateChangedListener<BaseRXModel> {
+class MainViewModel(application: Application) : AndroidViewModel(application),
+        DirectModelNotifier.OnModelStateChangedListener<BaseRXModel>, OnTableChangedListener {
+    override fun onTableChanged(table: Class<*>?, action: ChangeAction) {
+        Timber.i("onTableChange: $action")
+    }
+
     val categories: LiveData<List<Category>> by lazy {
         val data = MutableLiveData<List<Category>>()
         fetchCategories().subscribe { result, error ->
@@ -37,10 +48,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
     val category: LiveData<Category?> = MutableLiveData()
 
     var currentCategory by Delegates.observable<Category?>(null) { _, _, newValue ->
-        Timber.i("currentCategory = $newValue")
-        (category as MutableLiveData).value = newValue
+        Timber.i("[${currentThread()}] currentCategory = $newValue")
+
+        executeIfMainThread {
+            Timber.v("executing on maun thread")
+            (category as MutableLiveData).value = newValue
+        } ?: run {
+            Timber.v("current is not the main thread")
+            (category as MutableLiveData).postValue(newValue)
+        }
+
         fetchEntries(newValue).observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
-            Timber.v("entries returned = ${result.size}")
+            Timber.v("[${currentThread()}] entries returned = ${result.size}")
             (entries as MutableLiveData).value = result
 
             error?.let {
@@ -65,20 +84,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
 
         return rxSingle(Schedulers.io()) {
             select().from(Entry::class)
-                    .run {
-                        category?.let {
-                            return@run where(Entry_Table.category_categoryID.eq(it.categoryID)) as Transformable<Entry>
-                        } ?: run {
-                            this as Transformable<Entry>
-                        }
-
-                    }.run {
-                        orderByAll(listOf(
-                                OrderBy(Entry_Table.entryPinned.nameAlias, false),
-                                OrderBy(Entry_Table.entryPriority.nameAlias, false),
-                                OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
-                        )).list
+                .run {
+                    category?.let {
+                        return@run where(Entry_Table.category_categoryID.eq(it.categoryID)) as Transformable<Entry>
+                    } ?: run {
+                        this as Transformable<Entry>
                     }
+
+                }.run {
+                    orderByAll(listOf(
+                            OrderBy(Entry_Table.entryPinned.nameAlias, false),
+                            OrderBy(Entry_Table.entryPriority.nameAlias, false),
+                            OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
+                                     )).list
+                }
         }
     }
 
@@ -112,6 +131,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
         }
     }
 
+    fun batchPinEntries(values: MutableCollection<Entry>, pin: Boolean) {
+        Timber.i("batchPinEntries($pin)")
+
+
+        // TODO: this sucks!
+
+        ioThread {
+            val pinnedValue = if (pin) 1 else 0
+            val array = values.map { it.entryID }.joinToString(",", "(", ")")
+            val query =
+                    "UPDATE Entry SET ${Entry_Table.entryPinned.nameAlias.name()}=$pinnedValue WHERE ${Entry_Table.entryID.nameAlias.name()} in ${array}"
+
+            FlowManager.getDatabase(AppDatabase::class.java).rawQuery(query, null)
+            currentCategory = currentCategory
+        }
+
+
+//        val transaction = FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
+//            for (item in values) {
+//                item.entryPinned = if (pin) 1 else 0
+//                item.update()
+//            }
+//        }.success { transaction, unit ->
+//            Timber.i("transaction completed!")
+//        }.error { transaction, throwable ->
+//            Timber.e("transaction error: $throwable")
+//        }.build()
+//
+//        transaction.execute()
+
+    }
+
     init {
         currentCategory = null
         (displayAsList as MutableLiveData).value = settingsManager.displayAsList
@@ -119,6 +170,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), D
 
         DirectModelNotifier.get().registerForModelStateChanges(Category::class.java, this)
         DirectModelNotifier.get().registerForModelStateChanges(Entry::class.java, this)
+        DirectModelNotifier.get().registerForTableChanges(Entry::class.java, this)
     }
 
 }

@@ -30,6 +30,7 @@ class Entry() : BaseRXModel() {
 
     @PrimaryKey(autoincrement = true)
     @Index(indexGroups = [1])
+    @Column
     var entryID: Int = 0
 
     @Column(defaultValue = "")

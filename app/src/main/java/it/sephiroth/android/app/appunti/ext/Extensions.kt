@@ -4,24 +4,20 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.os.Build
+import android.os.Looper
 import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.AttrRes
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import it.sephiroth.android.app.appunti.R
-import it.sephiroth.android.app.appunti.models.SettingsManager
-import kotlinx.android.synthetic.main.main_activity.*
 import java.text.DateFormat
 import java.util.*
 
-fun <T> Any.rxSingle(thread: Scheduler, func: () -> T): Single<T> {
+fun <T> rxSingle(thread: Scheduler, func: () -> T): Single<T> {
     return Single.create<T> { emitter ->
         try {
             emitter.onSuccess(func.invoke())
@@ -31,21 +27,32 @@ fun <T> Any.rxSingle(thread: Scheduler, func: () -> T): Single<T> {
     }.subscribeOn(thread)
 }
 
-fun Any.ioThread(func: () -> Unit) {
+fun ioThread(func: () -> Unit) {
     Schedulers.io().scheduleDirect {
         func.invoke()
     }
 }
 
-fun Any.mainThread(func: () -> Unit) {
+fun mainThread(func: () -> Unit) {
     AndroidSchedulers.mainThread().scheduleDirect { func.invoke() }
 }
 
-fun Any.isAPI(value: Int) = Build.VERSION.SDK_INT == value
+fun isAPI(value: Int) = Build.VERSION.SDK_INT == value
 
-fun Any.isAtLeastAPI(value: Int) = Build.VERSION.SDK_INT >= value
+fun isAtLeastAPI(value: Int) = Build.VERSION.SDK_INT >= value
 
-fun Any.currentThread() = Thread.currentThread()
+fun currentThread() = Thread.currentThread()
+
+fun isMainThread() = Thread.currentThread() == Looper.getMainLooper().thread
+
+inline fun <T> T.executeIfMainThread(func: () -> Unit): T? {
+    return if (isMainThread()) {
+        func.invoke()
+        null
+    } else {
+        this
+    }
+}
 
 fun Date.toUserDate() = ExtensionUtils.dateformat.format(this)
 

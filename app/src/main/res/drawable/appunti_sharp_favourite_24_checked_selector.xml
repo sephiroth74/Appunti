@@ -6,7 +6,7 @@
 
     <item android:drawable="@drawable/sharp_favorite_24_pressed"
           android:state_pressed="true" />
-    
+
     <item android:drawable="@drawable/sharp_favorite_24_disabled"
           android:state_enabled="false"
           android:state_pressed="false" />
