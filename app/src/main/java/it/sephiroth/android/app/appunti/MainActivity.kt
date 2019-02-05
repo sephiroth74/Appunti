@@ -129,10 +129,10 @@ class MainActivity : AppuntiActivity() {
 
                 timer?.dispose()
                 timer = Observable.timer(200, TimeUnit.MILLISECONDS, Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe {
-                            adapter.filter(newText.toString())
-                        }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe {
+                        adapter.filter(newText.toString())
+                    }
             }
 
         })
@@ -246,20 +246,17 @@ class MainActivity : AppuntiActivity() {
                     val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > -1
                     val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > -1
 
-                    val menu = actionMode.menu
-                    val menuItem = menu.findItem(R.id.action_pin)
-
                     Timber.v("pinned=$pinned, unpinned=$unpinned")
-
-                    if(pinned && unpinned) {
-                        menuItem.setIcon(R.drawable.sharp_favorite_border_24)
-                    } else if(pinned) {
-                        menuItem.setIcon(R.drawable.sharp_favorite_24)
-                    } else {
-                        menuItem.setIcon(R.drawable.sharp_favorite_border_24)
-                    }
-
+                    updatePinnedMenuItem(actionMode.menu, pinned || (pinned && unpinned))
                 }
+            }
+        }
+
+        private fun updatePinnedMenuItem(menu: Menu?, checked: Boolean) {
+            menu?.let { menu ->
+                val menuItem = menu.findItem(R.id.menu_action_pin)
+                if (checked) menuItem.setIcon(R.drawable.appunti_sharp_favourite_24_checked_selector)
+                else menuItem.setIcon(R.drawable.appunti_sharp_favourite_24_unchecked_selector)
             }
         }
 
@@ -267,9 +264,7 @@ class MainActivity : AppuntiActivity() {
             Timber.i("onActionItemClicked: ${item?.itemId}")
 
             when (item.itemId) {
-                R.id.action_pin -> {
-                    item.isChecked = !item.isChecked
-                    item.setIcon(if (item.isChecked) R.drawable.sharp_favorite_24 else R.drawable.sharp_favorite_border_24)
+                R.id.menu_action_pin -> {
                 }
             }
 

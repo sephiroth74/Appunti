@@ -3,15 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_delete"
+        android:id="@+id/menu_action_delete"
         android:icon="@drawable/appunti_sharp_delete_24_outline_selector"
         android:title="Delete"
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/action_pin"
+        android:id="@+id/menu_action_pin"
         android:checkable="true"
-        android:icon="@drawable/appunti_sharp_favourite_24_selector"
+        android:icon="@drawable/appunti_sharp_favourite_24_unchecked_selector"
         android:title="Pin"
         app:showAsAction="ifRoom" />
 
