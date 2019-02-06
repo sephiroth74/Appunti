@@ -5,7 +5,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.speech.RecognizerIntent
@@ -15,11 +14,11 @@ import android.widget.TextView
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.doOnLayout
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.dbflow5.structure.save
@@ -52,6 +51,7 @@ class MainActivity : AppuntiActivity() {
     private lateinit var layoutManager: StaggeredGridLayoutManager
     private var mActionMode: ActionMode? = null
     private var tracker: MultichoiceHelper<Entry>? = null
+    private lateinit var itemTouchHelper: ItemTouchHelper
 
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,6 +75,7 @@ class MainActivity : AppuntiActivity() {
 
         setupSearchView()
         seupNavigationView()
+        setupItemTouchHelper()
 
         model.displayAsList.observe(this, Observer {
             Timber.i("displayAsList -> $it")
@@ -112,6 +113,40 @@ class MainActivity : AppuntiActivity() {
                 }
             }
         }
+    }
+
+    private fun setupItemTouchHelper() {
+        itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
+            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+
+                if (null != mActionMode) return makeMovementFlags(0, 0)
+
+                return when (viewHolder.itemViewType) {
+                    Item.ItemType.ENTRY.ordinal -> makeMovementFlags(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT)
+                    else -> makeMovementFlags(0, 0)
+                }
+            }
+
+            override fun onMove(recyclerView: RecyclerView,
+                                viewHolder: RecyclerView.ViewHolder,
+                                target: RecyclerView.ViewHolder): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                if (null != mActionMode) return
+
+                if (viewHolder.itemViewType == Item.ItemType.ENTRY.ordinal) {
+                    val entry = (viewHolder as ItemEntryListAdapter.EntryViewHolder).entry
+                    entry?.let { entry ->
+                        archiveEntries(listOf(entry))
+                    }
+                }
+
+            }
+
+        })
+        itemTouchHelper.attachToRecyclerView(itemsRecycler)
     }
 
     private fun setupSearchView() {
@@ -187,7 +222,7 @@ class MainActivity : AppuntiActivity() {
         else drawerLayout.closeDrawer(navigationView)
     }
 
-    fun onEntriesDeleted(values: List<Entry>) {
+    private fun onEntriesDeleted(values: List<Entry>) {
         val mSnackbar =
                 Snackbar
                     .make(constraintLayout, resources.getQuantityString(R.plurals.entries_deleted_title, values.size, values.size),
@@ -201,7 +236,7 @@ class MainActivity : AppuntiActivity() {
         mSnackbar.show()
     }
 
-    fun onEntriesArchived(values: List<Entry>) {
+    private fun onEntriesArchived(values: List<Entry>) {
         val mSnackbar =
                 Snackbar
                     .make(constraintLayout, resources.getQuantityString(R.plurals.entries_archived_title, values.size, values.size),
@@ -211,6 +246,14 @@ class MainActivity : AppuntiActivity() {
                     }
                     .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
         mSnackbar.show()
+    }
+
+    private fun archiveEntries(entries: List<Entry>) {
+        model.batchArchiveEntries(entries, true) { result -> if (result) onEntriesArchived(entries) }
+    }
+
+    private fun deleteEntries(entries: List<Entry>) {
+        model.batchDeleteEntries(entries, true) { result -> if (result) onEntriesDeleted(entries) }
     }
 
     // selection tracker
@@ -307,14 +350,14 @@ class MainActivity : AppuntiActivity() {
                 R.id.menu_action_delete -> {
                     tracker?.let { tracker ->
                         val entries = tracker.selection.values.toList()
-                        model.batchDeleteEntries(entries, true) { result -> if (result) onEntriesDeleted(entries) }
+                        deleteEntries(entries)
                     }
                 }
 
                 R.id.menu_action_archive -> {
                     tracker?.let { tracker ->
                         val entries = tracker.selection.values.toList()
-                        model.batchArchiveEntries(entries, true) { result -> if (result) onEntriesArchived(entries) }
+                        archiveEntries(entries)
                     }
 
                 }
@@ -367,10 +410,10 @@ class MainActivity : AppuntiActivity() {
         private var cardForegroundStroke: Drawable
         private var cardForegroundNoStroke: Drawable
 
-        private val TYPE_EMPTY = Item.ItemType.EMPTY.ordinal
-        private val TYPE_ENTRY = Item.ItemType.ENTRY.ordinal
-        private val TYPE_PINNED = Item.ItemType.PINNED.ordinal
-        private val TYPE_NON_PINNED = Item.ItemType.NON_PINNED.ordinal
+        internal val TYPE_EMPTY = Item.ItemType.EMPTY.ordinal
+        internal val TYPE_ENTRY = Item.ItemType.ENTRY.ordinal
+        internal val TYPE_PINNED = Item.ItemType.PINNED.ordinal
+        internal val TYPE_NON_PINNED = Item.ItemType.NON_PINNED.ordinal
 
         private var valuesCopy: MutableList<Item>
 
@@ -562,7 +605,7 @@ class MainActivity : AppuntiActivity() {
         open inner class BaseViewHolder(view: View) : RecyclerView.ViewHolder(view)
 
         inner class EntryViewHolder(view: View) : BaseViewHolder(view) {
-            private var entry: Entry? = null
+            internal var entry: Entry? = null
 
             val titleTextView: TextView by lazy { view.id_title }
             val contentTextView: TextView by lazy { view.id_content }
