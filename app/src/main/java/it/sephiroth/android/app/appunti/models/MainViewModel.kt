@@ -28,10 +28,6 @@ import kotlin.properties.Delegates
 
 class MainViewModel(application: Application) : AndroidViewModel(application),
         DirectModelNotifier.OnModelStateChangedListener<BaseRXModel>, OnTableChangedListener {
-    override fun onTableChanged(table: Class<*>?, action: ChangeAction) {
-        Timber.i("onTableChange: $action, $table")
-        updateEntries()
-    }
 
     val categories: LiveData<List<Category>> by lazy {
         val data = MutableLiveData<List<Category>>()
@@ -62,6 +58,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     val displayAsList: LiveData<Boolean> = MutableLiveData<Boolean>()
     val settingsManager = SettingsManager.getInstance(application)
 
+    fun batchPinEntries(values: MutableCollection<Entry>, pin: Boolean) {
+        Timber.i("batchPinEntries($pin)")
+
+        val pinnedValue = if (pin) 1 else 0
+
+        rxSingle(Schedulers.io()) {
+            update(Entry::class)
+                    .set(Entry_Table.entryPinned.eq(pinnedValue))
+                    .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
+                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
+        }.subscribe()
+    }
+
+    fun updateEntries() {
+        updateEntries(currentCategory)
+    }
+
+    fun setDisplayAsList(value: Boolean) {
+        settingsManager.displayAsList = value
+    }
 
     @SuppressLint("CheckResult")
     private fun updateEntries(newValue: Category?) {
@@ -73,10 +89,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
                 Timber.e("error = $error")
             }
         }
-    }
-
-    fun updateEntries() {
-        updateEntries(currentCategory)
     }
 
     private fun fetchCategories(): Single<MutableList<Category>> {
@@ -91,32 +103,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
         return rxSingle(Schedulers.io()) {
             select().from(Entry::class)
-                .run {
-                    category?.let {
-                        return@run where(Entry_Table.category_categoryID.eq(it.categoryID)) as Transformable<Entry>
-                    } ?: run {
-                        this as Transformable<Entry>
-                    }
+                    .run {
+                        category?.let {
+                            return@run where(Entry_Table.category_categoryID.eq(it.categoryID)) as Transformable<Entry>
+                        } ?: run {
+                            this as Transformable<Entry>
+                        }
 
-                }.run {
-                    orderByAll(listOf(
-                            OrderBy(Entry_Table.entryPinned.nameAlias, false),
-                            OrderBy(Entry_Table.entryPriority.nameAlias, false),
-                            OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
-                                     )).list
-                }
+                    }.run {
+                        orderByAll(listOf(
+                                OrderBy(Entry_Table.entryPinned.nameAlias, false),
+                                OrderBy(Entry_Table.entryPriority.nameAlias, false),
+                                OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
+                        )).list
+                    }
         }
     }
-
-    fun setDisplayAsList(value: Boolean) {
-        settingsManager.displayAsList = value
-    }
-
 
     override fun onCleared() {
         super.onCleared()
         DirectModelNotifier.get().unregisterForModelStateChanges(Category::class.java, this)
         DirectModelNotifier.get().unregisterForModelStateChanges(Entry::class.java, this)
+        DirectModelNotifier.get().unregisterForTableChanges(Entry::class.java, this)
     }
 
     @SuppressLint("CheckResult")
@@ -138,44 +146,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         }
     }
 
-    fun batchPinEntries(values: MutableCollection<Entry>, pin: Boolean) {
-        Timber.i("batchPinEntries($pin)")
-
-        val pinnedValue = if (pin) 1 else 0
-
-        // TODO: this sucks!
-
-        ioThread {
-            //            val array = values.map { it.entryID }.joinToString(",", "(", ")")
-//            val query =
-//                    "UPDATE Entry SET ${Entry_Table.entryPinned.nameAlias.name()}=$pinnedValue WHERE ${Entry_Table.entryID.nameAlias.name()} in ${array}"
-//
-//            FlowManager.getDatabase(AppDatabase::class.java).rawQuery(query, null)
-//            currentCategory = currentCategory
+    override fun onTableChanged(table: Class<*>?, action: ChangeAction) {
+        Timber.i("onTableChange: $action, $table")
+        when (table) {
+            Entry::class.java -> updateEntries()
         }
-
-        val statement = update(Entry::class)
-            .set(Entry_Table.entryPinned.eq(pinnedValue))
-            .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
-            .execute(FlowManager.getDatabase(AppDatabase::class.java))
-
-        Timber.v("statement=$statement")
-
-//        updateEntries()
-
-//        val transaction = FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
-//            for (item in values) {
-//                item.entryPinned = if (pin) 1 else 0
-//                item.update()
-//            }
-//        }.success { transaction, unit ->
-//            Timber.i("transaction completed!")
-//        }.error { transaction, throwable ->
-//            Timber.e("transaction error: $throwable")
-//        }.build()
-//
-//        transaction.execute()
-
     }
 
     init {
