@@ -142,7 +142,6 @@ class MainActivity : AppuntiActivity() {
                         archiveEntries(listOf(entry))
                     }
                 }
-
             }
 
         })
@@ -451,14 +450,13 @@ class MainActivity : AppuntiActivity() {
                 params.isFullSpan = true
                 view.layoutParams = params
                 holder = BaseViewHolder(view)
-            } else if (viewType == TYPE_PINNED) {
+            } else if (viewType == TYPE_PINNED || viewType == TYPE_NON_PINNED) {
                 view = LayoutInflater.from(context).inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
-                (view as TextView).text = getString(R.string.pinned)
+                val params = view.layoutParams as StaggeredGridLayoutManager.LayoutParams
+                params.isFullSpan = true
+                (view as TextView).text = if (viewType == TYPE_PINNED) getString(R.string.pinned) else getString(R.string.others)
                 holder = BaseViewHolder(view)
-            } else if (viewType == TYPE_NON_PINNED) {
-                view = LayoutInflater.from(context).inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
-                (view as TextView).text = getString(R.string.others)
-                holder = BaseViewHolder(view)
+
             } else {
                 view = LayoutInflater.from(parent.context).inflate(R.layout.main_item_list_entry, parent, false)
                 holder = EntryViewHolder(view)
@@ -472,8 +470,6 @@ class MainActivity : AppuntiActivity() {
             if (baseHolder.itemViewType == TYPE_ENTRY) {
                 val holder = baseHolder as EntryViewHolder
                 val entryItem = item.entry !!
-
-                Timber.v("$entryItem")
 
                 holder.bind(entryItem, tracker?.isSelected(position.toLong()) ?: false)
 
