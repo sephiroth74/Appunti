@@ -51,7 +51,7 @@ class Entry() : BaseRXModel() {
 
     var entryPinned: Int = 0
 
-//    var entryArchived: Int = 0
+    var entryArchived: Int = 0
 
     @Index(indexGroups = [1])
     var entryModifiedDate: Date = Date()

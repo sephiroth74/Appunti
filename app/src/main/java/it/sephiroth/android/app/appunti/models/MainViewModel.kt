@@ -178,9 +178,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
             select().from(Entry::class)
                     .run {
                         category?.let {
-                            return@run where(Entry_Table.category_categoryID.eq(it.categoryID)) as Transformable<Entry>
+                            where(Entry_Table.category_categoryID.eq(it.categoryID))
+                                    .and(Entry_Table.entryArchived.eq(0)) as Transformable<Entry>
                         } ?: run {
-                            this as Transformable<Entry>
+                            where(Entry_Table.entryArchived.eq(0)) as Transformable<Entry>
                         }
 
                     }.run {
