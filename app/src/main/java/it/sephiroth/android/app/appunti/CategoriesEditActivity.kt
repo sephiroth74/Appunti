@@ -67,11 +67,11 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
 
     private fun presentNewCategoryDialog() {
         val alertDialog: AlertDialog = AlertDialog
-                .Builder(this)
-                .setCancelable(true)
-                .setTitle(getString(R.string.category_title_dialog))
-                .setView(R.layout.appunti_alertdialog_category_input)
-                .create()
+            .Builder(this)
+            .setCancelable(true)
+            .setTitle(getString(R.string.category_title_dialog))
+            .setView(R.layout.appunti_alertdialog_category_input)
+            .create()
 
         alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, _ ->
             val title = alertDialog.findViewById<TextView>(android.R.id.text1)?.text.toString()
@@ -92,6 +92,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     }
 
     private fun presentCategoryColorChooser(category: Category?) {
+        /*
         if (null != category) {
             val copy = Category(category)
             val sheet = CategoryColorsBottomSheetDialogFragment()
@@ -105,6 +106,27 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
                 copy.update()
                 sheet.dismiss()
             }
+        }*/
+
+        if (null != category) {
+            val alertDialog: AlertDialog = AlertDialog
+                .Builder(this)
+                .setCancelable(true)
+                .setTitle(getString(R.string.category_title_dialog))
+                .setView(R.layout.appunti_alertdialog_color_input)
+                .create()
+
+            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, _ ->
+                val title = alertDialog.findViewById<TextView>(android.R.id.text1)?.text.toString()
+                val colorIndex = alertDialog.findViewById<HorizontalColorChooser>(R.id.colorChooser)?.selectedColorIndex
+                createCategory(title, colorIndex ?: 0)
+            }
+
+            alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(android.R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+            }
+
+            alertDialog.show()
         }
     }
 
@@ -112,38 +134,38 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
         if (null != category) {
 
             if (mSnackbar != null) {
-                mSnackbar!!.dismiss()
+                mSnackbar !!.dismiss()
                 mSnackbar = null
             }
 
             mAdapter.trash(category)
 
             mSnackbar = Snackbar.make(constraintLayout, getString(R.string.category_deleted_snackbar_title), Snackbar.LENGTH_SHORT)
-                    .setAction(getString(R.string.undo_uppercase)) {}
-                    .setActionTextColor(theme.getColorStateList(this, R.attr.colorError))
-                    .addCallback(object : Snackbar.Callback() {
-                        override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                            super.onDismissed(transientBottomBar, event)
+                .setAction(getString(R.string.undo_uppercase)) {}
+                .setActionTextColor(theme.getColorStateList(this, R.attr.colorError))
+                .addCallback(object : Snackbar.Callback() {
+                    override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                        super.onDismissed(transientBottomBar, event)
 
-                            mSnackbar = null
+                        mSnackbar = null
 
-                            if (event == DISMISS_EVENT_ACTION) {
-                                Timber.d("must undo the event!")
-                                mAdapter.restore(category)
+                        if (event == DISMISS_EVENT_ACTION) {
+                            Timber.d("must undo the event!")
+                            mAdapter.restore(category)
 
-                            } else {
-                                Timber.d("must consolidate the event!")
-                                category.delete()
-                            }
+                        } else {
+                            Timber.d("must consolidate the event!")
+                            category.delete()
                         }
-                    })
+                    }
+                })
 
             mSnackbar?.show()
         }
     }
 
     private fun createCategory(name: String?, colorIndex: Int) {
-        if (!name.isNullOrEmpty()) {
+        if (! name.isNullOrEmpty()) {
             val category = Category(name, colorIndex, Category.CategoryType.USER)
             category.insert()
         } else {
@@ -152,7 +174,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     }
 
     private fun updateCategory(item: Category, text: String?) {
-        if (!text.isNullOrEmpty()) {
+        if (! text.isNullOrEmpty()) {
             if (text != item.categoryTitle) {
                 val copy = Category(item)
                 copy.categoryTitle = text
@@ -188,10 +210,10 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
         rxSingle(Schedulers.io()) {
             select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
         }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { result, _ ->
-                    mAdapter.update(result)
-                }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { result, _ ->
+                mAdapter.update(result)
+            }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -220,7 +242,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
         }
 
         internal fun trash(category: Category) {
-            if (!deletedQueue.contains(category)) {
+            if (! deletedQueue.contains(category)) {
                 deletedQueue.add(category)
                 update(originalValues)
             }
@@ -249,7 +271,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
             Timber.i("update: ${newData?.size}")
 
             newData?.let {
-                val filteredData = it.filter { item -> !deletedQueue.contains(item) }
+                val filteredData = it.filter { item -> ! deletedQueue.contains(item) }
 
                 val callback = CategoriesDiffCallback(values, filteredData)
                 val result = DiffUtil.calculateDiff(callback, true)
@@ -298,11 +320,11 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
             }
 
             holder.editTextView.setOnFocusChangeListener { _, hasFocus ->
-                holder.editButton.isEnabled = !hasFocus
+                holder.editButton.isEnabled = ! hasFocus
 
                 Timber.i("focus: $hasFocus")
 
-                if (!hasFocus) {
+                if (! hasFocus) {
                     val text = holder.editTextView.text.toString()
                     if (text.isEmpty()) holder.editTextView.setText(item.categoryTitle, TextView.BufferType.EDITABLE)
                     else {

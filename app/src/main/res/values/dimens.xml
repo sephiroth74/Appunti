@@ -49,4 +49,7 @@
 
     <!-- height of the shadow on top of the bottomappbar -->
     <dimen name="appunti_bottomappbar_shadow_height">3dp</dimen>
+
+    <dimen name="appunti_color_button_large">44dp</dimen>
+    <dimen name="appunti_color_button_large_margin">4dp</dimen>
 </resources>
