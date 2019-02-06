@@ -49,6 +49,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="it.sephiroth.android.app.appunti.MainActivity" />
         </activity>
+
     </application>
 
 </manifest>

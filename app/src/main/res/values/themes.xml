@@ -15,11 +15,11 @@
 
 
         <!-- fonts -->
-        <item name="android:fontFamily">@font/slate_regular</item>
-        <item name="fontFamily">@font/slate_regular</item>
-        <item name="fontFamilyLight">@font/slate_light</item>
-        <item name="fontFamilyThin">@font/slate_thin</item>
-        <item name="fontFamilyBold">@font/slate_bold</item>
+        <!--<item name="android:fontFamily">@font/assistant_extralight</item>-->
+        <!--<item name="fontFamily">@font/product_sans_regular</item>-->
+        <!--<item name="fontFamilyLight">@font/poppins_light</item>-->
+        <!--<item name="fontFamilyThin">@font/product_sans_regular</item>-->
+        <!--<item name="fontFamilyBold">@font/product_sans_regular</item>-->
 
         <!-- default colors -->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
@@ -46,11 +46,11 @@
         <item name="android:statusBarColor">?android:attr/windowBackground</item>
         <item name="android:windowLightStatusBar" tools:ignore="NewApi">false</item>
 
-        <item name="android:fontFamily">@font/slate_regular</item>
-        <item name="fontFamily">@font/slate_regular</item>
-        <item name="fontFamilyLight">@font/slate_light</item>
-        <item name="fontFamilyThin">@font/slate_thin</item>
-        <item name="fontFamilyBold">@font/slate_bold</item>
+        <!--<item name="android:fontFamily">@font/slate_regular</item>-->
+        <!--<item name="fontFamily">@font/slate_regular</item>-->
+        <!--<item name="fontFamilyLight">@font/slate_light</item>-->
+        <!--<item name="fontFamilyThin">@font/slate_thin</item>-->
+        <!--<item name="fontFamilyBold">@font/slate_bold</item>-->
 
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="search_theme">dark</item>

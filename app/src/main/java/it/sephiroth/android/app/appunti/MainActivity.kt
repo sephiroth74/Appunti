@@ -32,6 +32,7 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.currentThread
+import it.sephiroth.android.app.appunti.ext.getColor
 import it.sephiroth.android.app.appunti.ext.getColorStateList
 import it.sephiroth.android.app.appunti.ext.isLightTheme
 import it.sephiroth.android.app.appunti.models.MainViewModel
@@ -64,7 +65,7 @@ class MainActivity : AppuntiActivity() {
 
         layoutManager = itemsRecycler.layoutManager as StaggeredGridLayoutManager
 
-        drawerLayout.setStatusBarBackgroundColor(Color.WHITE)
+        drawerLayout.setStatusBarBackgroundColor(theme.getColor(this, android.R.attr.windowBackground))
 
         model.entries.observe(this, Observer {
             Timber.i("[${currentThread()}] entries changed")

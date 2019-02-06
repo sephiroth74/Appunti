@@ -18,12 +18,10 @@
 
     <style name="Theme.Appunti.TextAppearance" parent="" />
 
-    <style name="Theme.Appunti.TextAppearance.NewNote" parent="@android:style/TextAppearance.Material.Small">
-        <item name="fontFamily">?attr/fontFamilyBold</item>
-        <item name="android:fontFamily">?attr/fontFamilyBold</item>
-        <item name="android:textSize">@dimen/text_size_small_material</item>
-        <!--<item name="android:textColor">?attr/colorControlNormal</item>-->
-        <!--<item name="android:textSize">@dimen/text_size_caption_material</item>-->
+    <style name="Theme.Appunti.TextAppearance.NewNote" parent="@android:style/TextAppearance.Material.Medium">
+        <!--<item name="fontFamily">?attr/fontFamilyBold</item>-->
+        <!--<item name="android:fontFamily">?attr/fontFamilyBold</item>-->
+        <item name="android:textSize">16sp</item>
     </style>
 
 
