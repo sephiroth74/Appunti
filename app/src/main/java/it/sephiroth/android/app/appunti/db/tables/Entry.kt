@@ -51,26 +51,19 @@ class Entry() : BaseRXModel() {
 
     var entryPinned: Int = 0
 
+//    var entryArchived: Int = 0
+
     @Index(indexGroups = [1])
     var entryModifiedDate: Date = Date()
 
     @get:OneToMany
     var attachments by oneToMany { select from Attachment::class where (Attachment_Table.attachmentEntryID_entryID.eq(entryID)) }
 
-    constructor(parcel: Parcel) : this() {
-        entryID = parcel.readInt()
-        entryTitle = parcel.readString()
-        entryPriority = parcel.readInt()
-        entryText = parcel.readString()
-        entryPinned = parcel.readInt()
-    }
-
     override fun toString(): String {
         return "Entry(id=$entryID, title=$entryTitle, category=$category, pinned=$entryPinned, priority=$entryPriority)"
     }
 
     override fun equals(other: Any?): Boolean {
-        Timber.i("$this equals $other")
         when (other) {
             is Entry -> {
                 return (entryID == other.entryID

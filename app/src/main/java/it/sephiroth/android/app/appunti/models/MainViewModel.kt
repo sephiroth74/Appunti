@@ -2,6 +2,8 @@ package it.sephiroth.android.app.appunti.models
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.content.ContentValues
+import android.os.Handler
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -11,8 +13,10 @@ import com.dbflow5.reactivestreams.structure.BaseRXModel
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.runtime.OnTableChangedListener
 import com.dbflow5.structure.ChangeAction
+import com.dbflow5.structure.insert
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.tables.Category
@@ -28,6 +32,16 @@ import kotlin.properties.Delegates
 
 class MainViewModel(application: Application) : AndroidViewModel(application),
         DirectModelNotifier.OnModelStateChangedListener<BaseRXModel>, OnTableChangedListener {
+
+    val handler: Handler = Handler()
+
+    val updateEntriesRunnable = Runnable {
+        updateEntries(currentCategory)
+    }
+
+    val updateCategoriesRunnable = Runnable {
+        updateCategories()
+    }
 
     val categories: LiveData<List<Category>> by lazy {
         val data = MutableLiveData<List<Category>>()
@@ -45,10 +59,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         Timber.i("[${currentThread()}] currentCategory = $newValue")
 
         executeIfMainThread {
-            Timber.v("executing on maun thread")
             (category as MutableLiveData).value = newValue
         } ?: run {
-            Timber.v("current is not the main thread")
             (category as MutableLiveData).postValue(newValue)
         }
 
@@ -58,8 +70,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     val displayAsList: LiveData<Boolean> = MutableLiveData<Boolean>()
     val settingsManager = SettingsManager.getInstance(application)
 
-    fun batchPinEntries(values: MutableCollection<Entry>, pin: Boolean) {
+    fun batchPinEntries(values: List<Entry>, pin: Boolean) {
         Timber.i("batchPinEntries($pin)")
+
+        if (values.isEmpty()) return
 
         val pinnedValue = if (pin) 1 else 0
 
@@ -69,6 +83,52 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
                     .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
                     .execute(FlowManager.getDatabase(AppDatabase::class.java))
         }.subscribe()
+    }
+
+    private var trash = mutableListOf<Entry>()
+
+    fun restoreFromTrash() {
+        Timber.i("restoreFromTrash(${trash.size}")
+        if (trash.isNotEmpty()) {
+
+            FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
+                for (entry in trash) {
+                    entry.insert()
+                }
+            }.success { transaction, unit ->
+                Timber.i("transaction succes!!")
+            }.error { transaction, throwable ->
+                Timber.e("transaction error!")
+            }.build().execute()
+        }
+    }
+
+    fun emptyTrash() {
+        Timber.i("emptyTrash")
+        trash.clear()
+    }
+
+    @SuppressLint("CheckResult")
+    fun batchDeleteEntries(values: List<Entry>, action: ((Boolean) -> Unit)?) {
+        Timber.i("batchDeleteEntries(${values.size})")
+
+        trash.clear()
+
+        if (values.isEmpty()) return
+
+        rxSingle(Schedulers.io()) {
+            delete()
+                    .from(Entry::class)
+                    .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
+                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
+
+        }.subscribe({
+            trash.addAll(values)
+            action?.invoke(true)
+        }, { error ->
+            Timber.e(error)
+            action?.invoke(false)
+        })
     }
 
     fun updateEntries() {
@@ -87,6 +147,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
             error?.let {
                 Timber.e("error = $error")
+            }
+        }
+    }
+
+    @SuppressLint("CheckResult")
+    private fun updateCategories() {
+        fetchCategories().observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
+            (categories as MutableLiveData).value = result
+            currentCategory?.let { category ->
+                val categoryResult = result.firstOrNull { it.categoryID == category.categoryID }
+                currentCategory = categoryResult
+            } ?: run {
+                currentCategory = null
             }
         }
     }
@@ -132,24 +205,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         Timber.i("onModelChanged($model, $action)")
 
         if (model is Category) {
-            fetchCategories().observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
-                (categories as MutableLiveData).value = result
-                currentCategory?.let { category ->
-                    val categoryResult = result.firstOrNull { it.categoryID == category.categoryID }
-                    currentCategory = categoryResult
-                } ?: run {
-                    currentCategory = null
-                }
-            }
-        } else {
-            currentCategory = currentCategory
+            handler.removeCallbacks(updateCategoriesRunnable)
+            handler.post(updateCategoriesRunnable)
+        } else if (model is Entry) {
+            handler.removeCallbacks(updateEntriesRunnable)
+            handler.post(updateEntriesRunnable)
         }
     }
 
     override fun onTableChanged(table: Class<*>?, action: ChangeAction) {
         Timber.i("onTableChange: $action, $table")
         when (table) {
-            Entry::class.java -> updateEntries()
+            Entry::class.java ->
+                when (action) {
+                    ChangeAction.UPDATE, ChangeAction.DELETE -> {
+                        handler.removeCallbacks(updateEntriesRunnable)
+                        handler.post(updateEntriesRunnable)
+                    }
+                    ChangeAction.INSERT, ChangeAction.CHANGE -> {
+
+                    }
+                }
         }
     }
 

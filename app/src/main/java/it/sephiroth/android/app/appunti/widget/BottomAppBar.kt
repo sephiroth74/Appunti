@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
+import com.google.android.material.snackbar.Snackbar
 import it.sephiroth.android.app.appunti.R
 import kotlinx.android.synthetic.main.main_activity.view.*
 import timber.log.Timber
@@ -61,6 +62,7 @@ class BottomAppBar @JvmOverloads constructor(
                 val v: View = var2.next()
                 if ((v.layoutParams as CoordinatorLayout.LayoutParams).anchorId == id) return v
                 if (v is FrameLayout) return v
+                if (v is Snackbar.SnackbarLayout) return v
             }
 
             return null
@@ -74,20 +76,22 @@ class BottomAppBar @JvmOverloads constructor(
     class Behavior(context: Context) : HideBottomViewOnScrollBehavior<BottomAppBar>() {
 
         private var shadowHeight: Int = 0
+        private val snackBarBottomMargin: Int
 
         init {
             shadowHeight = context.resources.getDimensionPixelSize(R.dimen.appunti_bottomappbar_shadow_height)
+            snackBarBottomMargin = context.resources.getDimensionPixelSize(R.dimen.appunti_snackbar_appbar_bottom_margin)
         }
 
         override fun onLayoutChild(parent: CoordinatorLayout, child: BottomAppBar, layoutDirection: Int): Boolean {
-            Timber.i("onLayoutChild(layoutDirection=$layoutDirection)")
+//            Timber.i("onLayoutChild(layoutDirection=$layoutDirection)")
 
             val view = child.findDependent()
-            view?.let {
+            view?.let { view ->
                 val params = view.layoutParams as CoordinatorLayout.LayoutParams
-                Timber.d("found dependent: child.height=${child.height}, bottomMargin=${params.bottomMargin}")
+//                Timber.d("found dependent:$view,  child.height=${child.height}, bottomMargin=${params.bottomMargin}")
                 params.bottomMargin = child.measuredHeight - shadowHeight
-                it.layoutParams = params
+                view.layoutParams = params
             }
 
             parent.onLayoutChild(child, layoutDirection)
@@ -95,45 +99,40 @@ class BottomAppBar @JvmOverloads constructor(
         }
 
         override fun layoutDependsOn(parent: CoordinatorLayout, child: BottomAppBar, dependency: View): Boolean {
-            Timber.i("layoutDependsOn(dependency=$dependency")
+            if (dependency is Snackbar.SnackbarLayout) return true
             return super.layoutDependsOn(parent, child, dependency)
         }
 
         override fun onDependentViewChanged(parent: CoordinatorLayout, child: BottomAppBar, dependency: View): Boolean {
-            Timber.i("onDependentViewChanged(dependency=$dependency)")
+//            Timber.i("onDependentViewChanged($dependency)")
+
+            if (dependency is Snackbar.SnackbarLayout) {
+                val params = dependency.layoutParams as CoordinatorLayout.LayoutParams
+                params.bottomMargin = child.measuredHeight - shadowHeight + snackBarBottomMargin
+                dependency.layoutParams = params
+                return true
+            }
+
             return super.onDependentViewChanged(parent, child, dependency)
         }
 
         override fun onDependentViewRemoved(parent: CoordinatorLayout, child: BottomAppBar, dependency: View) {
-            Timber.i("onDependentViewRemoved(dependency=$dependency)")
+//            Timber.i("onDependentViewRemoved($dependency)")
             super.onDependentViewRemoved(parent, child, dependency)
         }
 
         override fun onStartNestedScroll(coordinatorLayout: CoordinatorLayout, child: BottomAppBar, directTargetChild: View, target: View, axes: Int, type: Int): Boolean {
-            Timber.i("onStartNestedScroll")
             return child.hideOnScroll && super.onStartNestedScroll(coordinatorLayout, child, directTargetChild, target, axes, type)
         }
 
         override fun slideUp(child: BottomAppBar) {
-            Timber.i("slideUp")
+//            Timber.i("slideUp")
             super.slideUp(child)
-//            val fab = child.findDependentFab()
-//            if (fab != null) {
-//                fab.clearAnimation()
-//                fab.animate().translationY(child.getFabTranslationY()).setInterpolator(AnimationUtils.LINEAR_OUT_SLOW_IN_INTERPOLATOR).duration = 225L
-//            }
         }
 
         override fun slideDown(child: BottomAppBar) {
-            Timber.i("slideDown")
+//            Timber.i("slideDown")
             super.slideDown(child)
-//            val fab = child.findDependentFab()
-//            if (fab != null) {
-//                fab.getContentRect(this.fabContentRect)
-//                val fabShadowPadding = (fab.measuredHeight - this.fabContentRect.height()).toFloat()
-//                fab.clearAnimation()
-//                fab.animate().translationY((-fab.paddingBottom).toFloat() + fabShadowPadding).setInterpolator(AnimationUtils.FAST_OUT_LINEAR_IN_INTERPOLATOR).duration = 175L
-//            }
         }
     }
 }

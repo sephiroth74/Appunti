@@ -23,6 +23,9 @@
     <!-- stroke size for category circle drawable -->
     <dimen name="appunti_category_color_drawable_stroke_width">0.5dp</dimen>
 
+    <!-- snackbar bottom margin when linked to bottomappbar -->
+    <dimen name="appunti_snackbar_appbar_bottom_margin">8dp</dimen>
+
 
     <dimen name="text_size_display_4_material">71sp</dimen>
     <dimen name="text_size_display_3_material">44sp</dimen>

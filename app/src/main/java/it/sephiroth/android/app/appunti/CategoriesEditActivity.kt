@@ -117,8 +117,6 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
             }
 
             mAdapter.trash(category)
-//            mAdapter.values.remove(category)
-//            mAdapter.notifyItemRemoved(adapterPosition)
 
             mSnackbar = Snackbar.make(constraintLayout, getString(R.string.category_deleted_snackbar_title), Snackbar.LENGTH_SHORT)
                     .setAction(getString(R.string.undo_uppercase)) {}
@@ -132,8 +130,6 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
                             if (event == DISMISS_EVENT_ACTION) {
                                 Timber.d("must undo the event!")
                                 mAdapter.restore(category)
-//                                mAdapter.values.add(adapterPosition, category)
-//                                mAdapter.notifyItemInserted(adapterPosition)
 
                             } else {
                                 Timber.d("must consolidate the event!")

@@ -17,6 +17,7 @@ import it.sephiroth.android.app.appunti.ext.ioThread
 import timber.log.Timber
 
 
+@Suppress("unused")
 class MainApplication : Application() {
     override fun onCreate() {
         super.onCreate()
@@ -63,8 +64,6 @@ class MainApplication : Application() {
                     entry.entryTitle = "Entry ${size + i}"
                     entry.entryPinned = 0
                     entry.entryPriority = 0
-//                    entry.entryPinned = if (Math.random() > 0.5) 1 else 0
-//                    entry.entryPriority = (Math.random() * 10).toInt()
                     entry.entryText = getString(R.string.lorem_ipsum)
                     entry.category = categories[i]
                     val id = entry.insert()
@@ -73,65 +72,6 @@ class MainApplication : Application() {
                 }
             }
 
-
-//
-//            val category_size = select().from(Category::class).list.size
-//            Timber.v("category_size: $category_size")
-//            if (category_size < 1) {
-//
-//                val database = FlowManager.getDatabase(AppDatabase::class.java)
-//
-//                var category = Category()
-//                category.categoryTitle = getString(R.string.category_default)
-//                category.categoryColorIndex = 0
-//                category.insert()
-//
-//                Thread.sleep(200)
-//
-//                category = Category()
-//                category.categoryTitle = "Work"
-//                category.categoryColorIndex = 1
-//                category.insert()
-//
-//                Thread.sleep(200)
-//
-//                category = Category()
-//                category.categoryTitle = "Personal"
-//                category.categoryColorIndex = 2
-//                category.insert()
-//
-//                Timber.v("category_size: $category_size")
-//            }
-        }
-
-//
-//        FlowManager.init(
-//                FlowConfig
-//                        .builder(this)
-//                        .addDatabaseConfig(
-//                                DatabaseConfig
-//                                        .builder(AppDatabase::class.java)
-//                                        .databaseName(AppDatabase.DATABASE_NAME)
-//                                        .build())
-//                        .build())
-
-        ioThread {
-            //            val model = Category()
-//            model.categoryTitle = getString(R.string.category_default)
-//            model.categoryColorIndex = 0
-//            model.categoryType
-
-//            for (i in 0..10) {
-//                var entry = Entry()
-////                entry.category = model
-//                entry.entryTitle = "Entry Number $i"
-//                entry.entryText = getString(R.string.lorem_ipsum)
-//                entry.save().subscribe { t1, t2 ->
-//                    Timber.d("saved... $t1, $t2")
-//                }
-//
-//                Thread.sleep(500)
-//            }
         }
     }
 }

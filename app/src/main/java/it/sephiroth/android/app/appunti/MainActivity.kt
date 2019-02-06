@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.dbflow5.structure.save
+import com.google.android.material.snackbar.Snackbar
 import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
 import io.reactivex.Observable
@@ -129,10 +130,10 @@ class MainActivity : AppuntiActivity() {
 
                 timer?.dispose()
                 timer = Observable.timer(200, TimeUnit.MILLISECONDS, Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe {
-                        adapter.filter(newText.toString())
-                    }
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe {
+                            adapter.filter(newText.toString())
+                        }
             }
 
         })
@@ -179,6 +180,22 @@ class MainActivity : AppuntiActivity() {
     private fun toggleDrawer() {
         if (!drawerLayout.isDrawerOpen(navigationView)) drawerLayout.openDrawer(navigationView)
         else drawerLayout.closeDrawer(navigationView)
+    }
+
+    fun onEntriesDeleted() {
+        val mSnackbar = Snackbar.make(constraintLayout, getString(R.string.category_deleted_snackbar_title), Snackbar.LENGTH_SHORT)
+                .setAction(getString(R.string.undo_uppercase)) {
+                    model.restoreFromTrash()
+                }
+                .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
+                .addCallback(object : Snackbar.Callback() {
+                    override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                        super.onDismissed(transientBottomBar, event)
+                        model.emptyTrash()
+                    }
+                })
+
+        mSnackbar.show()
     }
 
     // selection tracker
@@ -268,9 +285,15 @@ class MainActivity : AppuntiActivity() {
                     tracker?.let { tracker ->
                         val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > -1
                         val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > -1
-                        model.batchPinEntries(tracker.selection.values, !(pinned && (pinned && !unpinned)))
+                        model.batchPinEntries(tracker.selection.values.toList(), !(pinned && (pinned && !unpinned)))
                     }
+                }
 
+                R.id.menu_action_delete -> {
+                    tracker?.let { tracker ->
+                        val entries = tracker.selection.values.toList()
+                        model.batchDeleteEntries(entries) { result -> if (result) onEntriesDeleted() }
+                    }
                 }
             }
 
@@ -382,6 +405,8 @@ class MainActivity : AppuntiActivity() {
             if (baseHolder.itemViewType == TYPE_ENTRY) {
                 val holder = baseHolder as EntryViewHolder
                 val entryItem = item.entry!!
+
+                Timber.v("$entryItem")
 
                 holder.bind(entryItem, tracker?.isSelected(position.toLong()) ?: false)
 
