@@ -63,7 +63,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="@drawable/shadow_top"
+            android:background="@drawable/appunti_bottomappbar_shadow_top"
             android:elevation="6dp"
             android:gravity="center"
             android:paddingBottom="0dp"

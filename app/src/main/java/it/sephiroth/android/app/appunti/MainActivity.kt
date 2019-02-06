@@ -64,33 +64,7 @@ class MainActivity : AppuntiActivity() {
 
         layoutManager = itemsRecycler.layoutManager as StaggeredGridLayoutManager
 
-//        navigationView.elevation = 30f
-//        navigationView.translationZ = 30f
-//        drawerLayout.elevation = 30f
-
         drawerLayout.setStatusBarBackgroundColor(Color.WHITE)
-
-//        drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
-//            override fun onDrawerStateChanged(newState: Int) {
-//            }
-//
-//            override fun onDrawerClosed(drawerView: View) {
-//                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-//                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-//                window.setStatusBarColor(Color.WHITE)
-//
-//            }
-//
-//            override fun onDrawerOpened(drawerView: View) {
-//            }
-//
-//            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
-//                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-//                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-//                window.setStatusBarColor(0x44ffffff)
-//            }
-//
-//        })
 
         model.entries.observe(this, Observer {
             Timber.i("[${currentThread()}] entries changed")
@@ -208,23 +182,33 @@ class MainActivity : AppuntiActivity() {
     }
 
     private fun toggleDrawer() {
-        if (!drawerLayout.isDrawerOpen(navigationView)) drawerLayout.openDrawer(navigationView)
+        if (! drawerLayout.isDrawerOpen(navigationView)) drawerLayout.openDrawer(navigationView)
         else drawerLayout.closeDrawer(navigationView)
     }
 
-    fun onEntriesDeleted() {
-        val mSnackbar = Snackbar.make(constraintLayout, getString(R.string.category_deleted_snackbar_title), Snackbar.LENGTH_SHORT)
-            .setAction(getString(R.string.undo_uppercase)) {
-                model.restoreFromTrash()
-            }
-            .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
-            .addCallback(object : Snackbar.Callback() {
-                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                    super.onDismissed(transientBottomBar, event)
-                    model.emptyTrash()
-                }
-            })
+    fun onEntriesDeleted(values: List<Entry>) {
+        val mSnackbar =
+                Snackbar
+                    .make(constraintLayout, resources.getQuantityString(R.plurals.entries_deleted_title, values.size, values.size),
+                            Snackbar
+                                .LENGTH_LONG)
+                    .setAction(getString(R.string.undo_uppercase)) {
+                        model.batchDeleteEntries(values, false) {}
+                    }
+                    .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
 
+        mSnackbar.show()
+    }
+
+    fun onEntriesArchived(values: List<Entry>) {
+        val mSnackbar =
+                Snackbar
+                    .make(constraintLayout, resources.getQuantityString(R.plurals.entries_archived_title, values.size, values.size),
+                            Snackbar.LENGTH_LONG)
+                    .setAction(getString(R.string.undo_uppercase)) {
+                        model.batchArchiveEntries(values, false) {}
+                    }
+                    .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
         mSnackbar.show()
     }
 
@@ -257,7 +241,7 @@ class MainActivity : AppuntiActivity() {
         }
 
         fun select(position: Long, value: T) {
-            if (!isSelected(position)) {
+            if (! isSelected(position)) {
                 selectedPositions[position] = value
                 notifyPosition(position)
                 Timber.v("select(position=$position), isSelected=${isSelected(position)}")
@@ -290,11 +274,11 @@ class MainActivity : AppuntiActivity() {
                 } else {
                     actionMode.title = "${selection.size} Selected"
 
-                    val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > -1
-                    val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > -1
+                    val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > - 1
+                    val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > - 1
 
                     Timber.v("pinned=$pinned, unpinned=$unpinned")
-                    updatePinnedMenuItem(actionMode.menu, pinned && (pinned && !unpinned))
+                    updatePinnedMenuItem(actionMode.menu, pinned && (pinned && ! unpinned))
                 }
             }
         }
@@ -313,20 +297,24 @@ class MainActivity : AppuntiActivity() {
             when (item.itemId) {
                 R.id.menu_action_pin -> {
                     tracker?.let { tracker ->
-                        val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > -1
-                        val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > -1
-                        model.batchPinEntries(tracker.selection.values.toList(), !(pinned && (pinned && !unpinned)))
+                        val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > - 1
+                        val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > - 1
+                        model.batchPinEntries(tracker.selection.values.toList(), ! (pinned && (pinned && ! unpinned)))
                     }
                 }
 
                 R.id.menu_action_delete -> {
                     tracker?.let { tracker ->
                         val entries = tracker.selection.values.toList()
-                        model.batchDeleteEntries(entries) { result -> if (result) onEntriesDeleted() }
+                        model.batchDeleteEntries(entries, true) { result -> if (result) onEntriesDeleted(entries) }
                     }
                 }
 
                 R.id.menu_action_archive -> {
+                    tracker?.let { tracker ->
+                        val entries = tracker.selection.values.toList()
+                        model.batchArchiveEntries(entries, true) { result -> if (result) onEntriesArchived(entries) }
+                    }
 
                 }
             }
@@ -390,10 +378,11 @@ class MainActivity : AppuntiActivity() {
 
             val isLightTheme = context.isLightTheme()
             textColorInverse =
-                    context.theme.getColorStateList(context, if (isLightTheme) android.R.attr.textColorPrimaryInverse else android.R.attr.textColorPrimary)
+                    context.theme.getColorStateList(context,
+                            if (isLightTheme) android.R.attr.textColorPrimaryInverse else android.R.attr.textColorPrimary)
 
-            cardForegroundNoStroke = context.getDrawable(R.drawable.appunti_card_selectable_item_background_no_stroke)!!
-            cardForegroundStroke = context.getDrawable(R.drawable.appunti_card_selectable_item_background_with_stroke)!!
+            cardForegroundNoStroke = context.getDrawable(R.drawable.appunti_card_selectable_item_background_no_stroke) !!
+            cardForegroundStroke = context.getDrawable(R.drawable.appunti_card_selectable_item_background_with_stroke) !!
 
             setHasStableIds(true)
         }
@@ -438,7 +427,7 @@ class MainActivity : AppuntiActivity() {
 
             if (baseHolder.itemViewType == TYPE_ENTRY) {
                 val holder = baseHolder as EntryViewHolder
-                val entryItem = item.entry!!
+                val entryItem = item.entry !!
 
                 Timber.v("$entryItem")
 
@@ -513,10 +502,10 @@ class MainActivity : AppuntiActivity() {
         override fun getItemId(position: Int): Long {
             val item = getItem(position)
             return when (item.type) {
-                Item.ItemType.ENTRY -> item.entry!!.entryID.toLong()
-                Item.ItemType.EMPTY -> -1
-                Item.ItemType.PINNED -> -2
-                Item.ItemType.NON_PINNED -> -3
+                Item.ItemType.ENTRY -> item.entry !!.entryID.toLong()
+                Item.ItemType.EMPTY -> - 1
+                Item.ItemType.PINNED -> - 2
+                Item.ItemType.NON_PINNED -> - 3
             }
         }
 
@@ -536,10 +525,10 @@ class MainActivity : AppuntiActivity() {
             var firstNonPinned: Int
             val firstPinned: Int = finalData.indexOfFirst { it.entry?.entryPinned == 1 }
 
-            if (firstPinned > -1) {
+            if (firstPinned > - 1) {
                 finalData.add(firstPinned, Item(null, Item.ItemType.PINNED))
                 firstNonPinned = finalData.indexOfFirst { it.entry?.entryPinned == 0 }
-                if (firstNonPinned > -1) finalData.add(firstNonPinned, Item(null, Item.ItemType.NON_PINNED))
+                if (firstNonPinned > - 1) finalData.add(firstNonPinned, Item(null, Item.ItemType.NON_PINNED))
             }
 
             val callback = EntriesDiffCallback(values, finalData)
@@ -559,7 +548,7 @@ class MainActivity : AppuntiActivity() {
             } else {
                 val result = valuesCopy.filter { value ->
                     if (value.type == Item.ItemType.ENTRY) {
-                        value.entry!!.entryTitle!!.toLowerCase().indexOf(text) > -1
+                        value.entry !!.entryTitle !!.toLowerCase().indexOf(text) > - 1
                     } else {
                         true
                     }

@@ -31,6 +31,16 @@
     <string name="undo_uppercase">UNDO</string>
     <string name="category_deleted_snackbar_title">Category Deleted</string>
 
+    <plurals name="entries_archived_title">
+        <item quantity="one">Entry Archived</item>
+        <item quantity="other">%d Entries Archived</item>
+    </plurals>
+
+    <plurals name="entries_deleted_title">
+        <item quantity="one">Entry Deleted</item>
+        <item quantity="other">%d Entries Deleted</item>
+    </plurals>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="restart_required">Restart Required</string>

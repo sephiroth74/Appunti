@@ -75,55 +75,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
         rxSingle(Schedulers.io()) {
             update(Entry::class)
-                .set(Entry_Table.entryPinned.eq(pinnedValue))
-                .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
-                .execute(FlowManager.getDatabase(AppDatabase::class.java))
+                    .set(Entry_Table.entryPinned.eq(pinnedValue))
+                    .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
+                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
         }.subscribe()
     }
 
-    private var trash = mutableListOf<Entry>()
-
     @SuppressLint("CheckResult")
-    fun restoreFromTrash() {
-        Timber.i("restoreFromTrash(${trash.size}")
-        if (trash.isNotEmpty()) {
-            rxSingle(Schedulers.io()) {
-                update(Entry::class)
-                    .set(Entry_Table.entryDeleted.eq(0), Entry_Table.entryArchived.eq(0))
-                    .where(Entry_Table.entryID.`in`(trash.map { it.entryID }))
-                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
-
-            }.subscribe { success, error ->
-                error?.let {
-                    Timber.e("error=$error")
-                } ?: run {
-                    emptyTrash()
-                }
-            }
-        }
-    }
-
-    fun emptyTrash() {
-        Timber.i("emptyTrash")
-        trash.clear()
-    }
-
-    @SuppressLint("CheckResult")
-    fun batchDeleteEntries(values: List<Entry>, action: ((Boolean) -> Unit)?) {
+    fun batchDeleteEntries(values: List<Entry>, delete: Boolean, action: ((Boolean) -> Unit)?) {
         Timber.i("batchDeleteEntries(${values.size})")
-
-        trash.clear()
 
         if (values.isEmpty()) return
 
         rxSingle(Schedulers.io()) {
             update(Entry::class)
-                .set(Entry_Table.entryDeleted.eq(1), Entry_Table.entryArchived.eq(0))
-                .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
-                .execute(FlowManager.getDatabase(AppDatabase::class.java))
+                    .set(Entry_Table.entryDeleted.eq(if (delete) 1 else 0), Entry_Table.entryArchived.eq(0))
+                    .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
+                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
 
         }.subscribe({
-            trash.addAll(values)
+            action?.invoke(true)
+        }, { error ->
+            Timber.e(error)
+            action?.invoke(false)
+        })
+    }
+
+    @SuppressLint("CheckResult")
+    fun batchArchiveEntries(values: List<Entry>, archive: Boolean, action: ((Boolean) -> Unit)?) {
+        Timber.i("batchArchiveEntries(${values.size})")
+
+        if (values.isEmpty()) return
+
+        rxSingle(Schedulers.io()) {
+            update(Entry::class)
+                    .set(Entry_Table.entryDeleted.eq(0), Entry_Table.entryArchived.eq(if (archive) 1 else 0))
+                    .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
+                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
+
+        }.subscribe({
             action?.invoke(true)
         }, { error ->
             Timber.e(error)
@@ -176,22 +166,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
         return rxSingle(Schedulers.io()) {
             select().from(Entry::class)
-                .run {
-                    category?.let {
-                        where(Entry_Table.category_categoryID.eq(it.categoryID))
-                            .and(Entry_Table.entryArchived.eq(0))
-                            .and(Entry_Table.entryDeleted.eq(0)) as Transformable<Entry>
-                    } ?: run {
-                        where(Entry_Table.entryArchived.eq(0)).and(Entry_Table.entryDeleted.eq(0)) as Transformable<Entry>
-                    }
+                    .run {
+                        category?.let {
+                            where(Entry_Table.category_categoryID.eq(it.categoryID))
+                                    .and(Entry_Table.entryArchived.eq(0))
+                                    .and(Entry_Table.entryDeleted.eq(0)) as Transformable<Entry>
+                        } ?: run {
+                            where(Entry_Table.entryArchived.eq(0)).and(Entry_Table.entryDeleted.eq(0)) as Transformable<Entry>
+                        }
 
-                }.run {
-                    orderByAll(listOf(
-                            OrderBy(Entry_Table.entryPinned.nameAlias, false),
-                            OrderBy(Entry_Table.entryPriority.nameAlias, false),
-                            OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
-                                     )).list
-                }
+                    }.run {
+                        orderByAll(listOf(
+                                OrderBy(Entry_Table.entryPinned.nameAlias, false),
+                                OrderBy(Entry_Table.entryPriority.nameAlias, false),
+                                OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
+                        )).list
+                    }
         }
     }
 
