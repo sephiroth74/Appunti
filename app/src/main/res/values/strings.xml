@@ -39,4 +39,5 @@
     <string name="pinned">Pinned</string>
     <string name="others">Others</string>
     <string name="delete">Delete</string>
+    <string name="archive">Archive</string>
 </resources>

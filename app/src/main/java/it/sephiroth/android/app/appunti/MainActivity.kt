@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.speech.RecognizerIntent
@@ -14,6 +15,7 @@ import android.widget.TextView
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.doOnLayout
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -61,6 +63,34 @@ class MainActivity : AppuntiActivity() {
         itemsRecycler.setHasFixedSize(false)
 
         layoutManager = itemsRecycler.layoutManager as StaggeredGridLayoutManager
+
+//        navigationView.elevation = 30f
+//        navigationView.translationZ = 30f
+//        drawerLayout.elevation = 30f
+
+        drawerLayout.setStatusBarBackgroundColor(Color.WHITE)
+
+//        drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
+//            override fun onDrawerStateChanged(newState: Int) {
+//            }
+//
+//            override fun onDrawerClosed(drawerView: View) {
+//                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+//                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+//                window.setStatusBarColor(Color.WHITE)
+//
+//            }
+//
+//            override fun onDrawerOpened(drawerView: View) {
+//            }
+//
+//            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+//                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+//                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+//                window.setStatusBarColor(0x44ffffff)
+//            }
+//
+//        })
 
         model.entries.observe(this, Observer {
             Timber.i("[${currentThread()}] entries changed")
@@ -130,10 +160,10 @@ class MainActivity : AppuntiActivity() {
 
                 timer?.dispose()
                 timer = Observable.timer(200, TimeUnit.MILLISECONDS, Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe {
-                            adapter.filter(newText.toString())
-                        }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe {
+                        adapter.filter(newText.toString())
+                    }
             }
 
         })
@@ -184,16 +214,16 @@ class MainActivity : AppuntiActivity() {
 
     fun onEntriesDeleted() {
         val mSnackbar = Snackbar.make(constraintLayout, getString(R.string.category_deleted_snackbar_title), Snackbar.LENGTH_SHORT)
-                .setAction(getString(R.string.undo_uppercase)) {
-                    model.restoreFromTrash()
+            .setAction(getString(R.string.undo_uppercase)) {
+                model.restoreFromTrash()
+            }
+            .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
+            .addCallback(object : Snackbar.Callback() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    super.onDismissed(transientBottomBar, event)
+                    model.emptyTrash()
                 }
-                .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
-                .addCallback(object : Snackbar.Callback() {
-                    override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                        super.onDismissed(transientBottomBar, event)
-                        model.emptyTrash()
-                    }
-                })
+            })
 
         mSnackbar.show()
     }
@@ -294,6 +324,10 @@ class MainActivity : AppuntiActivity() {
                         val entries = tracker.selection.values.toList()
                         model.batchDeleteEntries(entries) { result -> if (result) onEntriesDeleted() }
                     }
+                }
+
+                R.id.menu_action_archive -> {
+
                 }
             }
 

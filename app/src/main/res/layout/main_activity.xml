@@ -83,8 +83,7 @@
                 android:gravity="center"
                 android:padding="8dp"
                 android:text="@string/add_new_note"
-                android:textAppearance="?attr/textAppearanceBody1"
-                app:fontFamily="?attr/fontFamily" />
+                android:textAppearance="@style/Theme.Appunti.TextAppearance.NewNote" />
 
             <Space
                 android:layout_width="0dp"
@@ -110,7 +109,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:fitsSystemWindows="false"
+        android:fitsSystemWindows="true"
         app:itemIconTint="?attr/colorControlNormal">
 
         <include layout="@layout/navigation_content" />

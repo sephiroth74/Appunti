@@ -2,7 +2,6 @@ package it.sephiroth.android.app.appunti.models
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.content.ContentValues
 import android.os.Handler
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -13,10 +12,8 @@ import com.dbflow5.reactivestreams.structure.BaseRXModel
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.runtime.OnTableChangedListener
 import com.dbflow5.structure.ChangeAction
-import com.dbflow5.structure.insert
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.tables.Category
@@ -25,7 +22,6 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
 import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.ext.executeIfMainThread
-import it.sephiroth.android.app.appunti.ext.ioThread
 import it.sephiroth.android.app.appunti.ext.rxSingle
 import timber.log.Timber
 import kotlin.properties.Delegates
@@ -79,27 +75,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
         rxSingle(Schedulers.io()) {
             update(Entry::class)
-                    .set(Entry_Table.entryPinned.eq(pinnedValue))
-                    .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
-                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
+                .set(Entry_Table.entryPinned.eq(pinnedValue))
+                .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
+                .execute(FlowManager.getDatabase(AppDatabase::class.java))
         }.subscribe()
     }
 
     private var trash = mutableListOf<Entry>()
 
+    @SuppressLint("CheckResult")
     fun restoreFromTrash() {
         Timber.i("restoreFromTrash(${trash.size}")
         if (trash.isNotEmpty()) {
+            rxSingle(Schedulers.io()) {
+                update(Entry::class)
+                    .set(Entry_Table.entryDeleted.eq(0), Entry_Table.entryArchived.eq(0))
+                    .where(Entry_Table.entryID.`in`(trash.map { it.entryID }))
+                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
 
-            FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
-                for (entry in trash) {
-                    entry.insert()
+            }.subscribe { success, error ->
+                error?.let {
+                    Timber.e("error=$error")
+                } ?: run {
+                    emptyTrash()
                 }
-            }.success { transaction, unit ->
-                Timber.i("transaction succes!!")
-            }.error { transaction, throwable ->
-                Timber.e("transaction error!")
-            }.build().execute()
+            }
         }
     }
 
@@ -117,10 +117,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         if (values.isEmpty()) return
 
         rxSingle(Schedulers.io()) {
-            delete()
-                    .from(Entry::class)
-                    .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
-                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
+            update(Entry::class)
+                .set(Entry_Table.entryDeleted.eq(1), Entry_Table.entryArchived.eq(0))
+                .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
+                .execute(FlowManager.getDatabase(AppDatabase::class.java))
 
         }.subscribe({
             trash.addAll(values)
@@ -176,21 +176,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
         return rxSingle(Schedulers.io()) {
             select().from(Entry::class)
-                    .run {
-                        category?.let {
-                            where(Entry_Table.category_categoryID.eq(it.categoryID))
-                                    .and(Entry_Table.entryArchived.eq(0)) as Transformable<Entry>
-                        } ?: run {
-                            where(Entry_Table.entryArchived.eq(0)) as Transformable<Entry>
-                        }
-
-                    }.run {
-                        orderByAll(listOf(
-                                OrderBy(Entry_Table.entryPinned.nameAlias, false),
-                                OrderBy(Entry_Table.entryPriority.nameAlias, false),
-                                OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
-                        )).list
+                .run {
+                    category?.let {
+                        where(Entry_Table.category_categoryID.eq(it.categoryID))
+                            .and(Entry_Table.entryArchived.eq(0))
+                            .and(Entry_Table.entryDeleted.eq(0)) as Transformable<Entry>
+                    } ?: run {
+                        where(Entry_Table.entryArchived.eq(0)).and(Entry_Table.entryDeleted.eq(0)) as Transformable<Entry>
                     }
+
+                }.run {
+                    orderByAll(listOf(
+                            OrderBy(Entry_Table.entryPinned.nameAlias, false),
+                            OrderBy(Entry_Table.entryPriority.nameAlias, false),
+                            OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
+                                     )).list
+                }
         }
     }
 

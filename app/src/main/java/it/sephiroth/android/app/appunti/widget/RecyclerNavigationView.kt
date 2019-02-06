@@ -2,11 +2,15 @@ package it.sephiroth.android.app.appunti.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.widget.CheckedTextView
+import androidx.core.view.WindowInsetsCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -21,7 +25,7 @@ import timber.log.Timber
 
 class RecyclerNavigationView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : NavigationView(context, attrs, defStyleAttr), LifecycleOwner {
+                                                      ) : NavigationView(context, attrs, defStyleAttr), LifecycleOwner {
 
     private val mLifecycleRegistry = LifecycleRegistry(this)
     private var adapter: NavigationItemsAdapter
@@ -30,10 +34,19 @@ class RecyclerNavigationView @JvmOverloads constructor(
     private var navigationItemSelectedListener: ((Int) -> Unit)? = null
 
 
+    private var statusBarHeight: Int = 0
+
     init {
         Timber.i("init")
         mLifecycleRegistry.markState(Lifecycle.State.INITIALIZED)
         adapter = NavigationItemsAdapter(context, mutableListOf())
+
+        setOnApplyWindowInsetsListener { v, insets ->
+            statusBarHeight = insets.systemWindowInsetTop
+            setPadding(paddingLeft, statusBarHeight, paddingRight, paddingBottom)
+            insets
+        }
+
     }
 
     fun setNavigationItemSelectedListener(action: (Int) -> Unit) {
@@ -75,7 +88,11 @@ class RecyclerNavigationView @JvmOverloads constructor(
         newLabel.setOnClickListener { navigationItemSelectedListener?.invoke(R.id.newLabel) }
         editLabels.setOnClickListener { navigationItemSelectedListener?.invoke(R.id.editLabels) }
         settings.setOnClickListener { navigationItemSelectedListener?.invoke(R.id.settings) }
+    }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        Timber.i("onSizeChanged")
+        super.onSizeChanged(w, h, oldw, oldh)
     }
 
     override fun getLifecycle(): Lifecycle {

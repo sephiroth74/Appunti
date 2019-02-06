@@ -53,6 +53,8 @@ class Entry() : BaseRXModel() {
 
     var entryArchived: Int = 0
 
+    var entryDeleted: Int = 0
+
     @Index(indexGroups = [1])
     var entryModifiedDate: Date = Date()
 
