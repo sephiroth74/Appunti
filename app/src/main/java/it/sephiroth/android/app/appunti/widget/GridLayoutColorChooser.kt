@@ -15,20 +15,13 @@ import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.graphics.CategoryColorDrawable
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.appunti_category_color_button_checkable.view.*
-import timber.log.Timber
+import kotlin.math.min
 
 class GridLayoutColorChooser @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr) {
+                                                      ) : FrameLayout(context, attrs, defStyleAttr) {
 
-    var selectedColorIndex: Int = - 1
-        set(value) {
-            if (value != field) {
-                setSelectedColorIndex(field, false)
-                setSelectedColorIndex(value, true)
-                field = value
-            }
-        }
+    private var mSelectedColorIndex = -1
 
     private var actionListener: ((Int, Int) -> Unit)? = null
     private var recyclerView: RecyclerView = RecyclerView(context)
@@ -39,9 +32,19 @@ class GridLayoutColorChooser @JvmOverloads constructor(
     private var hasFrame: Boolean = false
     private var buttonSize = resources.getDimensionPixelSize(R.dimen.appunti_color_button_large)
     private var buttonPadding = resources.getDimensionPixelSize(R.dimen.appunti_color_button_large_margin)
+    private var adapter: ColorsAdapter? = null
 
     fun setOnColorSelectedListener(action: (index: Int, color: Int) -> Unit) {
         actionListener = action
+    }
+
+    fun getSelectedColorIndex(): Int {
+        return mSelectedColorIndex
+    }
+
+    fun setSelectedColorIndex(value: Int) {
+        mSelectedColorIndex = min(value, categoryColors.size - 1)
+        adapter?.setSelectedIndex(mSelectedColorIndex, false)
     }
 
     init {
@@ -54,7 +57,9 @@ class GridLayoutColorChooser @JvmOverloads constructor(
             ResourceUtils.getCategoryColors(context)
         }
 
-        selectedColorIndex = array.getInteger(R.styleable.HorizontalColorChooser_appunti_selectedColorIndex, - 1)
+        mSelectedColorIndex =
+                min(array.getInteger(R.styleable.HorizontalColorChooser_appunti_selectedColorIndex, -1), categoryColors.size - 1)
+
         buttonPaddingLeft = array.getDimensionPixelSize(R.styleable.HorizontalColorChooser_appunti_color_padding_left, 0)
         buttonPaddingRight = array.getDimensionPixelSize(R.styleable.HorizontalColorChooser_appunti_color_padding_right, 0)
 
@@ -62,27 +67,13 @@ class GridLayoutColorChooser @JvmOverloads constructor(
 
         recyclerView.layoutManager = layoutManager
         addView(recyclerView)
-
-//        if (selectedColorIndex != - 1) {
-//            setSelectedColorIndex(selectedColorIndex, true)
-//        }
-    }
-
-    private fun setSelectedColorIndex(index: Int, checked: Boolean) {
-        Timber.i("setSelectedColorIndex($index, $checked)")
-//        if (index >= 0 && index < linearLayout.childCount) {
-//            val button = linearLayout.getChildAt(index) as CheckableAppcompatImageButton
-//            button.isChecked = checked
-//        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
 
-        Timber.i("onSizeChanged($oldw -> $w)")
-
         if (w > 0) {
-            if (! hasFrame) {
+            if (!hasFrame) {
                 hasFrame = true
                 initialize()
             }
@@ -90,21 +81,41 @@ class GridLayoutColorChooser @JvmOverloads constructor(
     }
 
     private fun initialize() {
-        val row = width / (buttonSize + buttonPadding)
-        layoutManager.spanCount = row
-
-        val adapter = ColorsAdapter(context, categoryColors, selectedColorIndex)
-        recyclerView.adapter = adapter
+        if (null == adapter) {
+            val row = width / (buttonSize + buttonPadding)
+            layoutManager.spanCount = row
+            adapter = ColorsAdapter(context, categoryColors, mSelectedColorIndex)
+            adapter?.actionListener = { index, color ->
+                mSelectedColorIndex = index
+                actionListener?.invoke(index, color)
+            }
+            recyclerView.adapter = adapter
+        }
     }
 
     class ColorsAdapter(val context: Context,
                         val colors: IntArray,
                         initialSelection: Int) : RecyclerView.Adapter<ColorViewHolder>() {
 
-        var selectedColorIndex: Int = initialSelection
-        val layoutInflater = LayoutInflater.from(context)
-        val buttonSize = context.resources.getDimensionPixelSize(R.dimen.appunti_color_button_large)
-        val buttonPadding = context.resources.getDimensionPixelSize(R.dimen.appunti_color_button_large_margin)
+        var selectedColorIndex: Int = min(initialSelection, colors.size - 1)
+            private set
+
+        private val layoutInflater = LayoutInflater.from(context)
+        private val buttonSize = context.resources.getDimensionPixelSize(R.dimen.appunti_color_button_large)
+        private val buttonPadding = context.resources.getDimensionPixelSize(R.dimen.appunti_color_button_large_margin)
+
+        var actionListener: ((Int, Int) -> Unit)? = null
+
+        fun setSelectedIndex(value: Int, fromUser: Boolean) {
+            if (value != selectedColorIndex) {
+                val oldIndex = selectedColorIndex
+                selectedColorIndex = min(value, colors.size - 1)
+
+                if (oldIndex > -1) notifyItemChanged(oldIndex)
+                if (selectedColorIndex > -1) notifyItemChanged(selectedColorIndex)
+                if (fromUser) actionListener?.invoke(selectedColorIndex, colors[selectedColorIndex])
+            }
+        }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ColorViewHolder {
             val view = layoutInflater.inflate(R.layout.appunti_category_color_button_checkable, parent,
@@ -130,11 +141,9 @@ class GridLayoutColorChooser @JvmOverloads constructor(
 
             holder.checkableItemView.isChecked = position == selectedColorIndex
 
-            holder.checkableItemView.doOnCheckedChanged { checked ->
+            holder.checkableItemView.setOnClickListener {
                 if (selectedColorIndex != position) {
-                    val oldPosition = selectedColorIndex
-                    selectedColorIndex = position
-                    notifyDataSetChanged()
+                    setSelectedIndex(position, true)
                 }
             }
         }
