@@ -29,6 +29,7 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.ext.getColor
@@ -217,7 +218,7 @@ class MainActivity : AppuntiActivity() {
     }
 
     private fun toggleDrawer() {
-        if (! drawerLayout.isDrawerOpen(navigationView)) drawerLayout.openDrawer(navigationView)
+        if (!drawerLayout.isDrawerOpen(navigationView)) drawerLayout.openDrawer(navigationView)
         else drawerLayout.closeDrawer(navigationView)
     }
 
@@ -227,9 +228,7 @@ class MainActivity : AppuntiActivity() {
                     .make(constraintLayout, resources.getQuantityString(R.plurals.entries_deleted_title, values.size, values.size),
                             Snackbar
                                 .LENGTH_LONG)
-                    .setAction(getString(R.string.undo_uppercase)) {
-                        model.batchDeleteEntries(values, false) {}
-                    }
+                    .setAction(getString(R.string.undo_uppercase)) { restoreDeletedEntries(values) }
                     .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
 
         mSnackbar.show()
@@ -240,19 +239,47 @@ class MainActivity : AppuntiActivity() {
                 Snackbar
                     .make(constraintLayout, resources.getQuantityString(R.plurals.entries_archived_title, values.size, values.size),
                             Snackbar.LENGTH_LONG)
-                    .setAction(getString(R.string.undo_uppercase)) {
-                        model.batchArchiveEntries(values, false) {}
-                    }
+                    .setAction(getString(R.string.undo_uppercase)) { DatabaseHelper.setEntriesArchived(values, false).subscribe() }
                     .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
         mSnackbar.show()
     }
 
+    @SuppressLint("CheckResult")
     private fun archiveEntries(entries: List<Entry>) {
-        model.batchArchiveEntries(entries, true) { result -> if (result) onEntriesArchived(entries) }
+        DatabaseHelper
+            .setEntriesArchived(entries, true)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { result, error ->
+                error?.let {
+                    Timber.e(error)
+                } ?: run {
+                    onEntriesArchived(entries)
+                }
+            }
     }
 
+    @SuppressLint("CheckResult")
     private fun deleteEntries(entries: List<Entry>) {
-        model.batchDeleteEntries(entries, true) { result -> if (result) onEntriesDeleted(entries) }
+        DatabaseHelper.setEntriesDeleted(entries, true)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { success, error ->
+                error?.let {
+                    Timber.e("error=$error")
+                } ?: run {
+                    onEntriesDeleted(entries)
+                }
+            }
+    }
+
+    @SuppressLint("CheckResult")
+    private fun restoreDeletedEntries(entries: List<Entry>) {
+        DatabaseHelper.setEntriesDeleted(entries, false)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { success, error ->
+                error?.let {
+                    Timber.e("error=$error")
+                }
+            }
     }
 
     // selection tracker
@@ -284,7 +311,7 @@ class MainActivity : AppuntiActivity() {
         }
 
         fun select(position: Long, value: T) {
-            if (! isSelected(position)) {
+            if (!isSelected(position)) {
                 selectedPositions[position] = value
                 notifyPosition(position)
                 Timber.v("select(position=$position), isSelected=${isSelected(position)}")
@@ -317,11 +344,11 @@ class MainActivity : AppuntiActivity() {
                 } else {
                     actionMode.title = "${selection.size} Selected"
 
-                    val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > - 1
-                    val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > - 1
+                    val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > -1
+                    val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > -1
 
                     Timber.v("pinned=$pinned, unpinned=$unpinned")
-                    updatePinnedMenuItem(actionMode.menu, pinned && (pinned && ! unpinned))
+                    updatePinnedMenuItem(actionMode.menu, pinned && (pinned && !unpinned))
                 }
             }
         }
@@ -340,9 +367,10 @@ class MainActivity : AppuntiActivity() {
             when (item.itemId) {
                 R.id.menu_action_pin -> {
                     tracker?.let { tracker ->
-                        val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > - 1
-                        val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > - 1
-                        model.batchPinEntries(tracker.selection.values.toList(), ! (pinned && (pinned && ! unpinned)))
+                        val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > -1
+                        val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > -1
+                        DatabaseHelper.setEntriesPinned(tracker.selection.values.toList(), !(pinned && (pinned && !unpinned)))
+                            .subscribe()
                     }
                 }
 
@@ -424,8 +452,8 @@ class MainActivity : AppuntiActivity() {
                     context.theme.getColorStateList(context,
                             if (isLightTheme) android.R.attr.textColorPrimaryInverse else android.R.attr.textColorPrimary)
 
-            cardForegroundNoStroke = context.getDrawable(R.drawable.appunti_card_selectable_item_background_no_stroke) !!
-            cardForegroundStroke = context.getDrawable(R.drawable.appunti_card_selectable_item_background_with_stroke) !!
+            cardForegroundNoStroke = context.getDrawable(R.drawable.appunti_card_selectable_item_background_no_stroke)!!
+            cardForegroundStroke = context.getDrawable(R.drawable.appunti_card_selectable_item_background_with_stroke)!!
 
             setHasStableIds(true)
         }
@@ -469,7 +497,7 @@ class MainActivity : AppuntiActivity() {
 
             if (baseHolder.itemViewType == TYPE_ENTRY) {
                 val holder = baseHolder as EntryViewHolder
-                val entryItem = item.entry !!
+                val entryItem = item.entry!!
 
                 holder.bind(entryItem, tracker?.isSelected(position.toLong()) ?: false)
 
@@ -542,10 +570,10 @@ class MainActivity : AppuntiActivity() {
         override fun getItemId(position: Int): Long {
             val item = getItem(position)
             return when (item.type) {
-                Item.ItemType.ENTRY -> item.entry !!.entryID.toLong()
-                Item.ItemType.EMPTY -> - 1
-                Item.ItemType.PINNED -> - 2
-                Item.ItemType.NON_PINNED -> - 3
+                Item.ItemType.ENTRY -> item.entry!!.entryID.toLong()
+                Item.ItemType.EMPTY -> -1
+                Item.ItemType.PINNED -> -2
+                Item.ItemType.NON_PINNED -> -3
             }
         }
 
@@ -565,10 +593,10 @@ class MainActivity : AppuntiActivity() {
             var firstNonPinned: Int
             val firstPinned: Int = finalData.indexOfFirst { it.entry?.entryPinned == 1 }
 
-            if (firstPinned > - 1) {
+            if (firstPinned > -1) {
                 finalData.add(firstPinned, Item(null, Item.ItemType.PINNED))
                 firstNonPinned = finalData.indexOfFirst { it.entry?.entryPinned == 0 }
-                if (firstNonPinned > - 1) finalData.add(firstNonPinned, Item(null, Item.ItemType.NON_PINNED))
+                if (firstNonPinned > -1) finalData.add(firstNonPinned, Item(null, Item.ItemType.NON_PINNED))
             }
 
             val callback = EntriesDiffCallback(values, finalData)
@@ -588,7 +616,7 @@ class MainActivity : AppuntiActivity() {
             } else {
                 val result = valuesCopy.filter { value ->
                     if (value.type == Item.ItemType.ENTRY) {
-                        value.entry !!.entryTitle !!.toLowerCase().indexOf(text) > - 1
+                        value.entry!!.entryTitle!!.toLowerCase().indexOf(text) > -1
                     } else {
                         true
                     }
