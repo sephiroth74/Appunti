@@ -186,8 +186,16 @@ class MainActivity : AppuntiActivity() {
             override fun onClose() {
                 Timber.i("onClose")
             }
-
         })
+
+        val textEdit = searchView.findViewById<TextView>(R.id.search_searchEditText)
+        textEdit.isFocusable = false
+        textEdit.isFocusableInTouchMode = false
+
+        searchView.findViewById<View>(R.id.search_searchEditText).setOnClickListener {
+            Timber.i("onClick!!!")
+            startActivity(Intent(this, SearchableActivity::class.java))
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
