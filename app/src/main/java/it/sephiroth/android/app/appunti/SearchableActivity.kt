@@ -55,8 +55,8 @@ class SearchableActivity : AppuntiActivity() {
                 .where(Entry_Table.entryText.like("%$text%"))
                 .or(Entry_Table.entryTitle.like("%$text%"))
                 .orderByAll(listOf(
-                        OrderBy(Entry_Table.entryArchived.nameAlias, true),
-                        OrderBy(Entry_Table.entryDeleted.nameAlias, true),
+                        OrderBy(Entry_Table.entryArchived.nameAlias, false),
+                        OrderBy(Entry_Table.entryDeleted.nameAlias, false),
                         OrderBy(Entry_Table.entryPinned.nameAlias, false),
                         OrderBy(Entry_Table.entryPriority.nameAlias, false),
                         OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)))
