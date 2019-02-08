@@ -7,7 +7,6 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.core.view.setPadding
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,24 +14,23 @@ import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.graphics.CategoryColorDrawable
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.appunti_category_color_button_checkable.view.*
+import timber.log.Timber
+import kotlin.math.ceil
 import kotlin.math.min
 
-class GridLayoutColorChooser @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-                                                      ) : FrameLayout(context, attrs, defStyleAttr) {
+
+class GridLayoutColorChooser @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+        RecyclerView(context, attrs, defStyleAttr) {
 
     private var mSelectedColorIndex = -1
 
+    var colors: IntArray
+        private set
+
     private var actionListener: ((Int, Int) -> Unit)? = null
-    private var recyclerView: RecyclerView = RecyclerView(context)
-    private var layoutManager = GridLayoutManager(context, 10)
-    private var categoryColors: IntArray
-    private var buttonPaddingLeft: Int
-    private var buttonPaddingRight: Int
+    private var buttonPadding: Int
     private var hasFrame: Boolean = false
-    private var buttonSize = resources.getDimensionPixelSize(R.dimen.appunti_color_button_large)
-    private var buttonPadding = resources.getDimensionPixelSize(R.dimen.appunti_color_button_large_margin)
-    private var adapter: ColorsAdapter? = null
+    private var buttonSize: Int
 
     fun setOnColorSelectedListener(action: (index: Int, color: Int) -> Unit) {
         actionListener = action
@@ -43,34 +41,41 @@ class GridLayoutColorChooser @JvmOverloads constructor(
     }
 
     fun setSelectedColorIndex(value: Int) {
-        mSelectedColorIndex = min(value, categoryColors.size - 1)
-        adapter?.setSelectedIndex(mSelectedColorIndex, false)
+        mSelectedColorIndex = min(value, colors.size - 1)
+
+        if (adapter is ColorsAdapter) {
+            (adapter as ColorsAdapter).setSelectedIndex(mSelectedColorIndex, false)
+        }
     }
 
     init {
-        val array = context.theme.obtainStyledAttributes(attrs, R.styleable.HorizontalColorChooser, 0, 0)
-        val colorsResId = array.getResourceId(R.styleable.HorizontalColorChooser_appunti_colors, 0)
+        val array = context.theme.obtainStyledAttributes(attrs, R.styleable.GridLayoutColorChooser, 0, 0)
+        val colorsResId = array.getResourceId(R.styleable.GridLayoutColorChooser_appunti_colors, 0)
 
-        categoryColors = if (colorsResId > 0) {
+        colors = if (colorsResId > 0) {
             context.resources.getIntArray(colorsResId)
         } else {
             ResourceUtils.getCategoryColors(context)
         }
 
         mSelectedColorIndex =
-                min(array.getInteger(R.styleable.HorizontalColorChooser_appunti_selectedColorIndex, -1), categoryColors.size - 1)
+                min(array.getInteger(R.styleable.GridLayoutColorChooser_appunti_selectedColorIndex, -1), colors.size - 1)
 
-        buttonPaddingLeft = array.getDimensionPixelSize(R.styleable.HorizontalColorChooser_appunti_color_padding_left, 0)
-        buttonPaddingRight = array.getDimensionPixelSize(R.styleable.HorizontalColorChooser_appunti_color_padding_right, 0)
+        buttonPadding = array.getDimensionPixelSize(R.styleable.GridLayoutColorChooser_appunti_color_padding, 0)
+        buttonSize =
+                array.getDimensionPixelSize(R.styleable.GridLayoutColorChooser_appunti_colorButtonSize, context.resources.getDimensionPixelSize(R.dimen.appunti_color_button_large))
+
 
         array.recycle()
 
-        recyclerView.layoutManager = layoutManager
-        addView(recyclerView)
+        minimumHeight = buttonSize + buttonPadding
+        layoutManager = GridLayoutManager(context, 10)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
+
+        Timber.i("onSizeChanged($w, $h)")
 
         if (w > 0) {
             if (!hasFrame) {
@@ -80,40 +85,53 @@ class GridLayoutColorChooser @JvmOverloads constructor(
         }
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val wmode = View.MeasureSpec.getMode(widthMeasureSpec)
+        val hmode = View.MeasureSpec.getMode(heightMeasureSpec)
+        var wsize = View.MeasureSpec.getSize(widthMeasureSpec)
+        var hsize = View.MeasureSpec.getSize(heightMeasureSpec)
+
+        Timber.i("onMeasure(${MeasureSpec.toString(widthMeasureSpec)}, ${MeasureSpec.toString(heightMeasureSpec)})")
+
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
+        when (hmode) {
+            MeasureSpec.AT_MOST -> {
+                val rows = wsize / (buttonSize + buttonPadding)
+                val cols = ceil(colors.size.toFloat() / rows).toInt()
+                hsize = cols * (buttonSize + buttonPadding)
+            }
+
+            MeasureSpec.EXACTLY -> {
+            }
+
+            MeasureSpec.UNSPECIFIED -> {
+            }
+        }
+
+        setMeasuredDimension(wsize, hsize)
+    }
+
     private fun initialize() {
         if (null == adapter) {
-            val row = width / (buttonSize + buttonPadding)
-            layoutManager.spanCount = row
-            adapter = ColorsAdapter(context, categoryColors, mSelectedColorIndex)
-            adapter?.actionListener = { index, color ->
-                mSelectedColorIndex = index
-                actionListener?.invoke(index, color)
-            }
-            recyclerView.adapter = adapter
+            val cols = width / (buttonSize + buttonPadding)
+            Timber.v("cols: $cols")
+            (layoutManager as GridLayoutManager).spanCount = cols
+            adapter = ColorsAdapter()
         }
     }
 
-    class ColorsAdapter(val context: Context,
-                        val colors: IntArray,
-                        initialSelection: Int) : RecyclerView.Adapter<ColorViewHolder>() {
-
-        var selectedColorIndex: Int = min(initialSelection, colors.size - 1)
-            private set
-
+    inner class ColorsAdapter : RecyclerView.Adapter<ColorViewHolder>() {
         private val layoutInflater = LayoutInflater.from(context)
-        private val buttonSize = context.resources.getDimensionPixelSize(R.dimen.appunti_color_button_large)
-        private val buttonPadding = context.resources.getDimensionPixelSize(R.dimen.appunti_color_button_large_margin)
-
-        var actionListener: ((Int, Int) -> Unit)? = null
 
         fun setSelectedIndex(value: Int, fromUser: Boolean) {
-            if (value != selectedColorIndex) {
-                val oldIndex = selectedColorIndex
-                selectedColorIndex = min(value, colors.size - 1)
+            if (value != mSelectedColorIndex) {
+                val oldIndex = mSelectedColorIndex
+                mSelectedColorIndex = min(value, colors.size - 1)
 
                 if (oldIndex > -1) notifyItemChanged(oldIndex)
-                if (selectedColorIndex > -1) notifyItemChanged(selectedColorIndex)
-                if (fromUser) actionListener?.invoke(selectedColorIndex, colors[selectedColorIndex])
+                if (mSelectedColorIndex > -1) notifyItemChanged(mSelectedColorIndex)
+                if (fromUser) actionListener?.invoke(mSelectedColorIndex, colors[mSelectedColorIndex])
             }
         }
 
@@ -122,8 +140,12 @@ class GridLayoutColorChooser @JvmOverloads constructor(
                     false) as CheckableAppcompatImageButton
             view.setPadding(buttonPadding)
             view.allowUserToggle = false
-            view.layoutParams.width = (buttonSize + buttonPadding)
-            view.layoutParams.height = (buttonSize + buttonPadding)
+
+            val params = view.layoutParams
+            params.width = (buttonSize + buttonPadding)
+            params.height = (buttonSize + buttonPadding)
+
+            view.layoutParams = params
 
             val drawable = CategoryColorDrawable(context, Color.WHITE)
             view.colorButton.setImageDrawable(drawable)
@@ -139,10 +161,10 @@ class GridLayoutColorChooser @JvmOverloads constructor(
             val drawable = (holder.itemView.colorButton.drawable as CategoryColorDrawable)
             drawable.setColorFilter(colors[position], PorterDuff.Mode.DST)
 
-            holder.checkableItemView.isChecked = position == selectedColorIndex
+            holder.checkableItemView.isChecked = position == mSelectedColorIndex
 
             holder.checkableItemView.setOnClickListener {
-                if (selectedColorIndex != position) {
+                if (mSelectedColorIndex != position) {
                     setSelectedIndex(position, true)
                 }
             }

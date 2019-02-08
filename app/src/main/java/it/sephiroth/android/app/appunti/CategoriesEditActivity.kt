@@ -8,6 +8,7 @@ import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.DiffUtil
@@ -30,7 +31,6 @@ import it.sephiroth.android.app.appunti.graphics.CategoryColorDrawable
 import it.sephiroth.android.app.appunti.utils.CategoriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import it.sephiroth.android.app.appunti.widget.GridLayoutColorChooser
-import it.sephiroth.android.app.appunti.widget.HorizontalColorChooser
 import kotlinx.android.synthetic.main.activity_categories.*
 import kotlinx.android.synthetic.main.appunti_category_color_button_checkable.view.*
 import kotlinx.android.synthetic.main.category_item_list_content.view.*
@@ -76,7 +76,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
 
         alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, _ ->
             val title = alertDialog.findViewById<TextView>(android.R.id.text1)?.text.toString()
-            val colorIndex = alertDialog.findViewById<HorizontalColorChooser>(R.id.colorChooser)?.selectedColorIndex
+            val colorIndex = alertDialog.findViewById<GridLayoutColorChooser>(R.id.colorChooser)?.getSelectedColorIndex()
             createCategory(title, colorIndex ?: 0)
         }
 
@@ -183,7 +183,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
             val category = Category(name, colorIndex, Category.CategoryType.USER)
             category.insert()
         } else {
-            Timber.w("must specify a name for the category")
+            Toast.makeText(this, "Invalid Category title", Toast.LENGTH_SHORT).show()
         }
     }
 

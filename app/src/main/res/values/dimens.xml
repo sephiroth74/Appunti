@@ -52,4 +52,7 @@
 
     <dimen name="appunti_color_button_large">44dp</dimen>
     <dimen name="appunti_color_button_large_margin">4dp</dimen>
+
+    <dimen name="appunti_color_button_small">22dp</dimen>
+    <dimen name="appunti_color_button_small_margin">2dp</dimen>
 </resources>

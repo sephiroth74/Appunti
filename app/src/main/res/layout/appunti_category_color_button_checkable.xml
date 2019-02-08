@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<it.sephiroth.android.app.appunti.widget.CheckableAppcompatImageButton android:id="@+id/colorButton"
+<it.sephiroth.android.app.appunti.widget.CheckableAppcompatImageButton
+    android:id="@+id/colorButton"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="24dp"

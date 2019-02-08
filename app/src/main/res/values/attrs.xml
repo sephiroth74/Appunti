@@ -2,7 +2,8 @@
 <resources>
 
     <!-- reference to the colors array for the note category -->
-    <attr name="categoryColors" format="reference" />
+    <attr name="categoryColors"
+          format="reference" />
 
     <!--<attr name="fontFamilyThin" format="reference" />-->
     <!--<attr name="fontFamilyLight" format="reference" />-->
@@ -11,14 +12,28 @@
 
 
     <declare-styleable name="HorizontalColorChooser">
-        <attr name="appunti_colors" format="reference" />
-        <attr name="appunti_selectedColorIndex" format="integer" />
-        <attr name="appunti_color_padding_left" format="dimension" />
-        <attr name="appunti_color_padding_right" format="dimension" />
+        <attr name="appunti_colors"
+              format="reference" />
+        <attr name="appunti_selectedColorIndex"
+              format="integer" />
+        <attr name="appunti_color_padding_left"
+              format="dimension" />
+        <attr name="appunti_color_padding_right"
+              format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="GridLayoutColorChooser">
+        <attr name="appunti_colors" />
+        <attr name="appunti_selectedColorIndex" />
+        <attr name="appunti_color_padding"
+              format="dimension" />
+        <attr name="appunti_colorButtonSize"
+              format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="CheckableAppcompatImageButton">
-        <attr name="appunti_toggle_enabled" format="boolean" />
+        <attr name="appunti_toggle_enabled"
+              format="boolean" />
     </declare-styleable>
 
 </resources>
