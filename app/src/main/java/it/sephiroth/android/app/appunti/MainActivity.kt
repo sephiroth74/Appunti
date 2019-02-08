@@ -5,8 +5,9 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognizerIntent
-import android.view.*
-import android.widget.TextView
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
@@ -195,6 +196,7 @@ class MainActivity : AppuntiActivity() {
         }
 
         searchView.setOnLogoClickListener { toggleDrawer() }
+
         searchView.setOnQueryTextListener(object : Search.OnQueryTextListener {
 
             var timer: Disposable? = null
@@ -228,11 +230,11 @@ class MainActivity : AppuntiActivity() {
             }
         })
 
-        val textEdit = searchView.findViewById<TextView>(R.id.search_searchEditText)
+        val textEdit = searchView.findViewById<View>(R.id.search_imageView_image)
         textEdit.isFocusable = false
         textEdit.isFocusableInTouchMode = false
 
-        searchView.findViewById<View>(R.id.search_searchEditText).setOnClickListener {
+        textEdit.setOnClickListener {
             Timber.i("onClick!!!")
             startActivity(Intent(this, SearchableActivity::class.java))
         }
@@ -241,13 +243,19 @@ class MainActivity : AppuntiActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
+        Timber.i("onActivityResult(requestCode=$requestCode, resultCode=$resultCode)")
+
         if (requestCode == SPEECH_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
 
                 if (data?.hasExtra(RecognizerIntent.EXTRA_RESULTS) == true) {
-                    val results = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                    Timber.v("results: $results")
-                    searchView.setText(results[0])
+                    val results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+
+                    val intent = Intent(this, SearchableActivity::class.java)
+                    intent.action = Intent.ACTION_SEARCH
+                    intent.putExtra("query", results[0])
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    startActivity(intent)
                 }
             }
         }

@@ -36,14 +36,16 @@ class SearchableActivity : AppuntiActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        setupSearchView()
+        setupRecyclerView()
+
         if (Intent.ACTION_SEARCH == intent.action) {
             intent.getStringExtra(SearchManager.QUERY)?.also { query ->
                 Timber.i("QUERY: $query")
+                searchView.setText(query)
             }
         }
 
-        setupSearchView()
-        setupRecyclerView()
     }
 
 

@@ -227,7 +227,6 @@ class ItemEntryListAdapter(private val context: Context,
 
         if (firstPinned > - 1 || firstArchived > - 1 || firstDeleted > - 1) {
             val firstIndex = max(firstPinned, max(firstArchived, firstDeleted))
-            Timber.v("firstIndex=$firstIndex")
             val subList = finalData.subList(firstIndex, finalData.size)
 
             firstNonPinned = if (firstPinned > firstArchived && firstPinned > firstDeleted) {
