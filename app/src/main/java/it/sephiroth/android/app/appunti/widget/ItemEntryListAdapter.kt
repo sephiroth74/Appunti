@@ -317,5 +317,11 @@ class ItemEntryListAdapter(private val context: Context,
             }
             return false
         }
+
+        override fun hashCode(): Int {
+            var result = entry?.hashCode() ?: 0
+            result = 31 * result + type.hashCode()
+            return result
+        }
     }
 }

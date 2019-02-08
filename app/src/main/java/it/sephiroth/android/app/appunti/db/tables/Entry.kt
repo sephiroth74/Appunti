@@ -82,6 +82,22 @@ class Entry() : BaseRXModel() {
         return super.equals(other)
     }
 
+    override fun hashCode(): Int {
+        Timber.w("Entry.hashCode")
+        var result = entryID
+        result = 31 * result + (entryTitle?.hashCode() ?: 0)
+        result = 31 * result + entryPriority
+        result = 31 * result + (category?.hashCode() ?: 0)
+        result = 31 * result + (entryText?.hashCode() ?: 0)
+        result = 31 * result + entryType.hashCode()
+        result = 31 * result + entryPinned
+        result = 31 * result + entryArchived
+        result = 31 * result + entryDeleted
+        result = 31 * result + entryCreationDate.hashCode()
+        result = 31 * result + entryModifiedDate.hashCode()
+        return result
+    }
+
     enum class EntryType {
         TEXT, LIST
     }

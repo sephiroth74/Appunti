@@ -51,6 +51,14 @@ class Category() : BaseRXModel() {
         return super.equals(other)
     }
 
+    override fun hashCode(): Int {
+        var result = categoryID
+        result = 31 * result + (categoryTitle?.hashCode() ?: 0)
+        result = 31 * result + categoryColorIndex
+        result = 31 * result + categoryType.hashCode()
+        return result
+    }
+
     enum class CategoryType {
         SYSTEM, USER
     }
