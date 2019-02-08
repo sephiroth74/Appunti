@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.widget.Toolbar
 import com.lapism.searchview.Search
-import kotlinx.android.synthetic.main.searchable_activity.*
+import kotlinx.android.synthetic.main.appunti_search_view_toolbar.*
 import timber.log.Timber
 
 class SearchableActivity : AppuntiActivity() {

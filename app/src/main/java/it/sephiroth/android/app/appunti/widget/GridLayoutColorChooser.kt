@@ -23,7 +23,7 @@ import kotlin.math.min
 class GridLayoutColorChooser @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
         RecyclerView(context, attrs, defStyleAttr) {
 
-    private var mSelectedColorIndex = -1
+    private var mSelectedColorIndex = - 1
 
     var colors: IntArray
         private set
@@ -44,7 +44,7 @@ class GridLayoutColorChooser @JvmOverloads constructor(context: Context, attrs: 
     fun setSelectedColorIndex(value: Int) {
         Timber.i("setSelectedColorIndex($value)")
 
-        val clampled = max(-1, min(value, colors.size - 1))
+        val clampled = max(- 1, min(value, colors.size - 1))
 
         if (adapter is ColorsAdapter) {
             (adapter as ColorsAdapter).setSelectedIndex(clampled, false)
@@ -64,11 +64,12 @@ class GridLayoutColorChooser @JvmOverloads constructor(context: Context, attrs: 
         }
 
         mSelectedColorIndex =
-                min(array.getInteger(R.styleable.GridLayoutColorChooser_appunti_selectedColorIndex, -1), colors.size - 1)
+                min(array.getInteger(R.styleable.GridLayoutColorChooser_appunti_selectedColorIndex, - 1), colors.size - 1)
 
         buttonPadding = array.getDimensionPixelSize(R.styleable.GridLayoutColorChooser_appunti_color_padding, 0)
         buttonSize =
-                array.getDimensionPixelSize(R.styleable.GridLayoutColorChooser_appunti_colorButtonSize, context.resources.getDimensionPixelSize(R.dimen.appunti_color_button_large))
+                array.getDimensionPixelSize(R.styleable.GridLayoutColorChooser_appunti_colorButtonSize,
+                        context.resources.getDimensionPixelSize(R.dimen.appunti_color_button_large))
 
 
         array.recycle()
@@ -86,7 +87,7 @@ class GridLayoutColorChooser @JvmOverloads constructor(context: Context, attrs: 
         Timber.i("onSizeChanged($w, $h)")
 
         if (w > 0) {
-            if (!hasFrame) {
+            if (! hasFrame) {
                 hasFrame = true
                 initialize()
             }
@@ -138,8 +139,8 @@ class GridLayoutColorChooser @JvmOverloads constructor(context: Context, attrs: 
                 val oldIndex = mSelectedColorIndex
                 mSelectedColorIndex = min(value, colors.size - 1)
 
-                if (oldIndex > -1) notifyItemChanged(oldIndex)
-                if (mSelectedColorIndex > -1) notifyItemChanged(mSelectedColorIndex)
+                if (oldIndex > - 1) notifyItemChanged(oldIndex)
+                if (mSelectedColorIndex > - 1) notifyItemChanged(mSelectedColorIndex)
                 if (fromUser) actionListener?.invoke(mSelectedColorIndex, colors[mSelectedColorIndex])
             }
         }
