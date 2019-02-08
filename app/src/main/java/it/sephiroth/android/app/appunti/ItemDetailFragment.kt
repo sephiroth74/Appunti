@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment
 import io.reactivex.Maybe
 
 /**
- * A fragment representing a single Item detail screen.
+ * A fragment representing a single EntryItem detail screen.
  * This fragment is either contained in a [MainActivity]
  * in two-pane mode (on tablets) or a [ItemDetailActivity]
  * on handsets.

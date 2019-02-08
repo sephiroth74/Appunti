@@ -3,8 +3,8 @@ package it.sephiroth.android.app.appunti.utils
 import androidx.recyclerview.widget.DiffUtil
 import it.sephiroth.android.app.appunti.MainActivity
 
-class EntriesDiffCallback(private var oldData: List<MainActivity.Item>,
-                          private var newData: List<MainActivity.Item>) : DiffUtil.Callback() {
+class EntriesDiffCallback(private var oldData: List<MainActivity.ItemEntryListAdapter.EntryItem>,
+                          private var newData: List<MainActivity.ItemEntryListAdapter.EntryItem>) : DiffUtil.Callback() {
 
     override fun getOldListSize(): Int = oldData.size
     override fun getNewListSize(): Int = newData.size
@@ -15,7 +15,7 @@ class EntriesDiffCallback(private var oldData: List<MainActivity.Item>,
 
         if (newItem.type == oldItem.type) {
             return when (newItem.type) {
-                MainActivity.Item.ItemType.ENTRY -> newItem.entry!!.entryID == oldItem.entry!!.entryID
+                MainActivity.ItemEntryListAdapter.EntryItem.ItemType.ENTRY -> newItem.entry !!.entryID == oldItem.entry !!.entryID
                 else -> true
             }
         }
