@@ -28,11 +28,27 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/navigationRecycler"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_weight="1"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
 
     </androidx.recyclerview.widget.RecyclerView>
+
+    <include layout="@layout/design_navigation_item_separator" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/entriesArchived"
+        style="@style/Theme.Appunti.NavigationItem"
+        android:drawableStart="@drawable/outline_archive_24"
+        android:text="@string/archived"
+        app:paddingStart="16dp" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/entriesDeleted"
+        style="@style/Theme.Appunti.NavigationItem"
+        android:drawableStart="@drawable/sharp_delete_outline_24"
+        android:text="@string/deleted"
+        app:paddingStart="16dp" />
 
     <include layout="@layout/design_navigation_item_separator" />
 

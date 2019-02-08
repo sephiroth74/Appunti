@@ -62,7 +62,8 @@ class Entry() : BaseRXModel() {
     var attachments by oneToMany { select from Attachment::class where (Attachment_Table.attachmentEntryID_entryID.eq(entryID)) }
 
     override fun toString(): String {
-        return "Entry(id=$entryID, title=$entryTitle, category=$category, pinned=$entryPinned, priority=$entryPriority)"
+        return "Entry(id=$entryID, title=$entryTitle, category=$category, pinned=$entryPinned, archived=$entryArchived, " +
+                "deleted=$entryDeleted, priority=$entryPriority)"
     }
 
     override fun equals(other: Any?): Boolean {

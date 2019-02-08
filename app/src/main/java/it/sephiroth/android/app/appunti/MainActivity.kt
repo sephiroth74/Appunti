@@ -3,10 +3,12 @@ package it.sephiroth.android.app.appunti
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Canvas
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
@@ -14,6 +16,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_SWIPE
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.dbflow5.structure.save
@@ -150,6 +153,10 @@ class MainActivity : AppuntiActivity() {
             when (id) {
                 R.id.newLabel -> startCategoriesEditActivity(true)
                 R.id.editLabels -> startCategoriesEditActivity(false)
+                R.id.entriesArchived -> {
+                }
+                R.id.entriesDeleted -> {
+                }
                 R.id.settings -> {
                     startActivity(Intent(this, PreferencesActivity::class.java))
                 }
@@ -159,14 +166,46 @@ class MainActivity : AppuntiActivity() {
 
     private fun setupItemTouchHelper() {
         itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
-            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
 
+            private var swipeBack = false
+
+            private fun isSwipeEnabled(viewHolder: RecyclerView.ViewHolder): Boolean {
+                when (viewHolder.itemViewType) {
+                    ItemEntryListAdapter.TYPE_ENTRY -> {
+                        val entry = (viewHolder as ItemEntryListAdapter.EntryViewHolder).entry
+                        entry?.let { entry ->
+                            if (entry.entryDeleted == 1 || entry.entryArchived == 1) return false
+                            return true
+                        } ?: run {
+                            return false
+                        }
+                    }
+                    else -> return false
+                }
+            }
+
+            private fun isValidEntry(viewHolder: RecyclerView.ViewHolder): Boolean {
+                when (viewHolder.itemViewType) {
+                    ItemEntryListAdapter.TYPE_ENTRY -> {
+                        val entry = (viewHolder as ItemEntryListAdapter.EntryViewHolder).entry
+                        entry?.let { entry ->
+                            return true
+                        } ?: run {
+                            return false
+                        }
+                    }
+                    else -> return false
+                }
+            }
+
+
+            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                 if (null != mActionMode) return makeMovementFlags(0, 0)
 
-                return when (viewHolder.itemViewType) {
-                    ItemEntryListAdapter.TYPE_ENTRY -> makeMovementFlags(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT)
-                    else -> makeMovementFlags(0, 0)
-                }
+                return if (isValidEntry(viewHolder))
+                    makeMovementFlags(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT)
+                else
+                    makeMovementFlags(0, 0)
             }
 
             override fun onMove(recyclerView: RecyclerView,
@@ -184,6 +223,46 @@ class MainActivity : AppuntiActivity() {
                         archiveEntries(listOf(entry))
                     }
                 }
+            }
+
+
+            @SuppressLint("ClickableViewAccessibility")
+            override fun onChildDraw(c: Canvas,
+                                     recyclerView: RecyclerView,
+                                     viewHolder: RecyclerView.ViewHolder,
+                                     dX: Float,
+                                     dY: Float,
+                                     actionState: Int,
+                                     isCurrentlyActive: Boolean) {
+
+                if (actionState == ACTION_STATE_SWIPE) {
+                    setTouchListener(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+                }
+
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            }
+
+            @SuppressLint("ClickableViewAccessibility")
+            private fun setTouchListener(c: Canvas,
+                                         recyclerView: RecyclerView,
+                                         viewHolder: RecyclerView.ViewHolder,
+                                         dX: Float, dY: Float,
+                                         actionState: Int, isCurrentlyActive: Boolean) {
+
+                recyclerView.setOnTouchListener { v, event ->
+                    swipeBack = ! isSwipeEnabled(viewHolder)
+                    Timber.v("isSwipeEnabled=$swipeBack")
+//                    swipeBack = event.action == MotionEvent.ACTION_CANCEL || event.action == MotionEvent.ACTION_UP
+                    false
+                }
+            }
+
+            override fun convertToAbsoluteDirection(flags: Int, layoutDirection: Int): Int {
+                if (swipeBack) {
+                    swipeBack = false
+                    return 0
+                }
+                return super.convertToAbsoluteDirection(flags, layoutDirection)
             }
 
         })
@@ -281,7 +360,8 @@ class MainActivity : AppuntiActivity() {
     private fun onEntriesDeleted(values: List<Entry>) {
         val mSnackbar =
                 Snackbar
-                    .make(constraintLayout, resources.getQuantityString(R.plurals.entries_deleted_title, values.size, values.size),
+                    .make(constraintLayout,
+                            resources.getQuantityString(R.plurals.entries_deleted_title, values.size, values.size),
                             Snackbar
                                 .LENGTH_LONG)
                     .setAction(getString(R.string.undo_uppercase)) { restoreDeletedEntries(values) }
@@ -293,9 +373,12 @@ class MainActivity : AppuntiActivity() {
     private fun onEntriesArchived(values: List<Entry>) {
         val mSnackbar =
                 Snackbar
-                    .make(constraintLayout, resources.getQuantityString(R.plurals.entries_archived_title, values.size, values.size),
+                    .make(constraintLayout,
+                            resources.getQuantityString(R.plurals.entries_archived_title, values.size, values.size),
                             Snackbar.LENGTH_LONG)
-                    .setAction(getString(R.string.undo_uppercase)) { DatabaseHelper.setEntriesArchived(values, false).subscribe() }
+                    .setAction(getString(R.string.undo_uppercase)) {
+                        DatabaseHelper.setEntriesArchived(values, false).subscribe()
+                    }
                     .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
         mSnackbar.show()
     }

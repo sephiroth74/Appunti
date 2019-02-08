@@ -187,6 +187,8 @@ class ItemEntryListAdapter(private val context: Context,
         return values[position]
     }
 
+    data class SearchIndex(val index: Int, val type: EntryItem.ItemType)
+
     fun update(newData: List<Entry>?) {
         Timber.i("[${currentThread()}] update: ${newData?.size}")
 
@@ -199,51 +201,58 @@ class ItemEntryListAdapter(private val context: Context,
             })
         }
 
-        var firstNonPinned: Int
-        val firstPinned: Int = finalData.indexOfFirst {
-            it.entry?.entryPinned == 1 && it.entry?.entryDeleted == 0 && it.entry?.entryArchived == 0
+        newData?.forEach {
+            Timber.v(it.toString())
         }
 
-        val firstArchived: Int = finalData.indexOfFirst { it.entry?.entryArchived == 1 && it.entry?.entryDeleted == 0 }
-        val firstDeleted: Int = finalData.indexOfFirst { it.entry?.entryDeleted == 1 }
+        val firstPinned = SearchIndex(finalData.indexOfFirst {
+            it.entry?.entryPinned == 1 && it.entry.entryDeleted == 0 && it.entry.entryArchived == 0
+        }, EntryItem.ItemType.PINNED)
+
+        val firstArchived = SearchIndex(finalData.indexOfFirst { it.entry?.entryArchived == 1 && it.entry?.entryDeleted == 0 },
+                EntryItem.ItemType.ARCHIVED)
+
+        val firstDeleted = SearchIndex(finalData.indexOfFirst { it.entry?.entryDeleted == 1 }, EntryItem.ItemType.DELETED)
+
+        var arrayIndex = arrayOf(firstPinned, firstArchived, firstDeleted)
+        arrayIndex.sortBy { searchIndex -> searchIndex.index }
+
+        Timber.v("arrayIndex: $arrayIndex")
+
         var addedCount = 0
 
-        if (firstPinned > - 1) {
-            finalData.add(firstPinned, EntryItem(null, EntryItem.ItemType.PINNED))
-            addedCount ++
-        }
+        for (item in arrayIndex) {
+            val index = item.index
+            val type = item.type
 
-        if (firstArchived > - 1) {
-            finalData.add(firstArchived, EntryItem(null, EntryItem.ItemType.ARCHIVED))
-            addedCount ++
-        }
+            Timber.v("index=$index, type=$type")
 
-        if (firstDeleted > - 1) {
-            finalData.add(firstDeleted, EntryItem(null, EntryItem.ItemType.DELETED))
-            addedCount ++
+            if (index > - 1) {
+                finalData.add(index + addedCount, EntryItem(null, type))
+                addedCount ++
+            }
         }
 
         Timber.v("firstPinned=$firstPinned, firstArchived=$firstArchived, firstDeleted=$firstDeleted")
+        Timber.v("added count: $addedCount")
 
-        if (firstPinned > - 1 || firstArchived > - 1 || firstDeleted > - 1) {
-            val firstIndex = max(firstPinned, max(firstArchived, firstDeleted))
+        if (addedCount > 0) {
+            val firstIndex = arrayIndex.last().index + addedCount
+            Timber.v("firstIndex=$firstIndex")
+
             val subList = finalData.subList(firstIndex, finalData.size)
 
-            firstNonPinned = if (firstPinned > firstArchived && firstPinned > firstDeleted) {
-                // pinned
-                subList.indexOfFirst { it.entry?.entryPinned == 0 }
-            } else if (firstArchived > firstDeleted) {
-                // archived
-                subList.indexOfFirst { it.entry?.entryArchived == 0 }
-            } else {
-                // deleted
-                subList.indexOfFirst { it.entry?.entryDeleted == 0 }
+            val firstNonPinned = when (arrayIndex.last().type) {
+                EntryItem.ItemType.PINNED -> subList.indexOfFirst { it.entry?.entryPinned == 0 }
+                EntryItem.ItemType.ARCHIVED -> subList.indexOfFirst { it.entry?.entryArchived == 0 }
+                EntryItem.ItemType.DELETED -> subList.indexOfFirst { it.entry?.entryDeleted == 0 }
+                else -> - 1
             }
 
-            Timber.v("firstNonPinned=$firstNonPinned, final=${firstNonPinned + firstIndex + addedCount}")
+            Timber.v("firstNonPinned=$firstNonPinned, final=${firstNonPinned + addedCount}")
 
             if (firstNonPinned > - 1) {
-                finalData.add(firstNonPinned + firstIndex + addedCount, EntryItem(null, EntryItem.ItemType.OTHERS))
+                finalData.add(firstNonPinned + firstIndex, EntryItem(null, EntryItem.ItemType.OTHERS))
             }
         }
 

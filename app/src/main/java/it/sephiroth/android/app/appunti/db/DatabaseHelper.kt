@@ -9,6 +9,7 @@ import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
 import it.sephiroth.android.app.appunti.ext.rxSingle
+import timber.log.Timber
 
 object DatabaseHelper {
 
@@ -40,6 +41,7 @@ object DatabaseHelper {
     }
 
     fun setEntriesArchived(values: List<Entry>, archive: Boolean): Single<Unit> {
+        Timber.i("setEntriesArchived($archive, $values")
         return rxSingle(Schedulers.io()) {
             update(Entry::class)
                 .set(Entry_Table.entryDeleted.eq(0), Entry_Table.entryArchived.eq(if (archive) 1 else 0))
@@ -63,6 +65,22 @@ object DatabaseHelper {
 
                 }.run {
                     orderByAll(listOf(
+                            OrderBy(Entry_Table.entryPinned.nameAlias, false),
+                            OrderBy(Entry_Table.entryPriority.nameAlias, false),
+                            OrderBy(Entry_Table.entryModifiedDate.nameAlias, false))).list
+                }
+        }
+    }
+
+    fun getEntries(func: From<Entry>.() -> Transformable<Entry>): Single<MutableList<Entry>> {
+        return rxSingle(Schedulers.io()) {
+            select().from(Entry::class)
+                .run {
+                    this.func()
+                }.run {
+                    orderByAll(listOf(
+                            OrderBy(Entry_Table.entryArchived.nameAlias, false),
+                            OrderBy(Entry_Table.entryDeleted.nameAlias, false),
                             OrderBy(Entry_Table.entryPinned.nameAlias, false),
                             OrderBy(Entry_Table.entryPriority.nameAlias, false),
                             OrderBy(Entry_Table.entryModifiedDate.nameAlias, false))).list

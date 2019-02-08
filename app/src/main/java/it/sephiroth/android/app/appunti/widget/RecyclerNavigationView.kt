@@ -25,7 +25,7 @@ import timber.log.Timber
 
 class RecyclerNavigationView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-                                                      ) : NavigationView(context, attrs, defStyleAttr), LifecycleOwner {
+) : NavigationView(context, attrs, defStyleAttr), LifecycleOwner {
 
     private val mLifecycleRegistry = LifecycleRegistry(this)
     private var adapter: NavigationItemsAdapter
@@ -85,6 +85,8 @@ class RecyclerNavigationView @JvmOverloads constructor(
         mLifecycleRegistry.markState(Lifecycle.State.CREATED)
         navigationRecycler.adapter = adapter
 
+        entriesArchived.setOnClickListener { navigationItemSelectedListener?.invoke(R.id.entriesArchived) }
+        entriesDeleted.setOnClickListener { navigationItemSelectedListener?.invoke(R.id.entriesDeleted) }
         newLabel.setOnClickListener { navigationItemSelectedListener?.invoke(R.id.newLabel) }
         editLabels.setOnClickListener { navigationItemSelectedListener?.invoke(R.id.editLabels) }
         settings.setOnClickListener { navigationItemSelectedListener?.invoke(R.id.settings) }
@@ -133,7 +135,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
         override fun getItemId(position: Int): Long {
             val item = getItem(position)
-            item?.let { return it.categoryID.toLong() } ?: kotlin.run { return -1 }
+            item?.let { return it.categoryID.toLong() } ?: kotlin.run { return - 1 }
         }
 
         private fun getItem(position: Int): Category? {
