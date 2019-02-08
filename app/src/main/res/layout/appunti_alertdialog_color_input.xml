@@ -16,7 +16,7 @@
         app:appunti_colorButtonSize="@dimen/appunti_color_button_large"
         app:appunti_color_padding="@dimen/appunti_color_button_large_margin"
         app:appunti_colors="?attr/categoryColors"
-        app:appunti_selectedColorIndex="0" />
+        app:appunti_selectedColorIndex="-1" />
 
 
 </FrameLayout>

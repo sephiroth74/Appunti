@@ -16,6 +16,7 @@ import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.appunti_category_color_button_checkable.view.*
 import timber.log.Timber
 import kotlin.math.ceil
+import kotlin.math.max
 import kotlin.math.min
 
 
@@ -41,10 +42,14 @@ class GridLayoutColorChooser @JvmOverloads constructor(context: Context, attrs: 
     }
 
     fun setSelectedColorIndex(value: Int) {
-        mSelectedColorIndex = min(value, colors.size - 1)
+        Timber.i("setSelectedColorIndex($value)")
+
+        val clampled = max(-1, min(value, colors.size - 1))
 
         if (adapter is ColorsAdapter) {
-            (adapter as ColorsAdapter).setSelectedIndex(mSelectedColorIndex, false)
+            (adapter as ColorsAdapter).setSelectedIndex(clampled, false)
+        } else {
+            mSelectedColorIndex = clampled
         }
     }
 
@@ -70,6 +75,9 @@ class GridLayoutColorChooser @JvmOverloads constructor(context: Context, attrs: 
 
         minimumHeight = buttonSize + buttonPadding
         layoutManager = GridLayoutManager(context, 10)
+
+        Timber.v("init done")
+        Timber.v("colors size: ${colors.size}")
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -86,12 +94,12 @@ class GridLayoutColorChooser @JvmOverloads constructor(context: Context, attrs: 
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        // Timber.i("onMeasure(${MeasureSpec.toString(widthMeasureSpec)}, ${MeasureSpec.toString(heightMeasureSpec)})")
+
         val wmode = View.MeasureSpec.getMode(widthMeasureSpec)
         val hmode = View.MeasureSpec.getMode(heightMeasureSpec)
         var wsize = View.MeasureSpec.getSize(widthMeasureSpec)
         var hsize = View.MeasureSpec.getSize(heightMeasureSpec)
-
-        Timber.i("onMeasure(${MeasureSpec.toString(widthMeasureSpec)}, ${MeasureSpec.toString(heightMeasureSpec)})")
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
@@ -125,6 +133,7 @@ class GridLayoutColorChooser @JvmOverloads constructor(context: Context, attrs: 
         private val layoutInflater = LayoutInflater.from(context)
 
         fun setSelectedIndex(value: Int, fromUser: Boolean) {
+            Timber.i("setSelectedIndex($mSelectedColorIndex --> $value)")
             if (value != mSelectedColorIndex) {
                 val oldIndex = mSelectedColorIndex
                 mSelectedColorIndex = min(value, colors.size - 1)
