@@ -3,12 +3,18 @@ package it.sephiroth.android.app.appunti.widget
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.drawable.Drawable
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.BackgroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.text.set
+import androidx.core.text.toSpannable
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -46,23 +52,19 @@ class ItemEntryListAdapter(private val context: Context,
 
     }
 
-    private var valuesCopy: MutableList<EntryItem>
-
     var itemClickListener: ((BaseViewHolder) -> (Unit))? = null
     var itemLongClickListener: ((ItemEntryListAdapter, BaseViewHolder) -> (Boolean))? = null
 
     init {
-        valuesCopy = ArrayList(values)
-
         val isLightTheme = context.isLightTheme()
         textColorInverse =
                 context.theme.getColorStateList(context,
                         if (isLightTheme) android.R.attr.textColorPrimaryInverse else android.R.attr.textColorPrimary)
 
         cardForegroundNoStroke = context.getDrawable(
-                R.drawable.appunti_card_selectable_item_background_no_stroke) !!
+                R.drawable.appunti_card_selectable_item_background_no_stroke)!!
         cardForegroundStroke = context.getDrawable(
-                R.drawable.appunti_card_selectable_item_background_with_stroke) !!
+                R.drawable.appunti_card_selectable_item_background_with_stroke)!!
 
         setHasStableIds(true)
     }
@@ -79,7 +81,7 @@ class ItemEntryListAdapter(private val context: Context,
         return when (viewType) {
             TYPE_EMPTY -> {
                 view = LayoutInflater.from(context)
-                    .inflate(R.layout.item_list_empty, parent, false)
+                        .inflate(R.layout.item_list_empty, parent, false)
                 val searchViewHeight = context.resources.getDimensionPixelSize(
                         R.dimen.search_height_view)
                 val searchViewTopMargin = context.resources.getDimensionPixelSize(
@@ -87,7 +89,7 @@ class ItemEntryListAdapter(private val context: Context,
 
                 val params =
                         StaggeredGridLayoutManager
-                            .LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, searchViewHeight + searchViewTopMargin * 2)
+                                .LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, searchViewHeight + searchViewTopMargin * 2)
                 params.isFullSpan = true
                 view.layoutParams = params
                 BaseViewHolder(view)
@@ -95,13 +97,13 @@ class ItemEntryListAdapter(private val context: Context,
 
             TYPE_ENTRY -> {
                 view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.main_item_list_entry, parent, false)
+                        .inflate(R.layout.main_item_list_entry, parent, false)
                 EntryViewHolder(view)
             }
 
             else -> {
                 view = LayoutInflater.from(context)
-                    .inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
+                        .inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
                 val params = view.layoutParams as StaggeredGridLayoutManager.LayoutParams
                 params.isFullSpan = true
 
@@ -124,9 +126,9 @@ class ItemEntryListAdapter(private val context: Context,
 
         if (baseHolder.itemViewType == TYPE_ENTRY) {
             val holder = baseHolder as EntryViewHolder
-            val entryItem = item.entry !!
+            val entryItem = item.entry!!
 
-            holder.bind(entryItem, selectionCallback?.invoke(holder, position) ?: false)
+            holder.bind(entryItem, searchText, selectionCallback?.invoke(holder, position) ?: false)
 
             if (null == cardBackgroundColorDefault) {
                 cardBackgroundColorDefault = holder.cardView.cardBackgroundColor
@@ -174,12 +176,12 @@ class ItemEntryListAdapter(private val context: Context,
     override fun getItemId(position: Int): Long {
         val item = getItem(position)
         return when (item.type) {
-            EntryItem.ItemType.ENTRY -> item.entry !!.entryID.toLong()
-            EntryItem.ItemType.EMPTY -> - 1
-            EntryItem.ItemType.PINNED -> - 2
-            EntryItem.ItemType.ARCHIVED -> - 3
-            EntryItem.ItemType.DELETED -> - 4
-            EntryItem.ItemType.OTHERS -> - 5
+            EntryItem.ItemType.ENTRY -> item.entry!!.entryID.toLong()
+            EntryItem.ItemType.EMPTY -> -1
+            EntryItem.ItemType.PINNED -> -2
+            EntryItem.ItemType.ARCHIVED -> -3
+            EntryItem.ItemType.DELETED -> -4
+            EntryItem.ItemType.OTHERS -> -5
         }
     }
 
@@ -187,9 +189,11 @@ class ItemEntryListAdapter(private val context: Context,
         return values[position]
     }
 
+    private var searchText: String? = null
+
     data class SearchIndex(val index: Int, val type: EntryItem.ItemType)
 
-    fun update(newData: List<Entry>?) {
+    fun update(newData: List<Entry>?, searchQuery: String? = null) {
         Timber.i("[${currentThread()}] update: ${newData?.size}")
 
         val finalData = mutableListOf(EntryItem(null,
@@ -227,9 +231,9 @@ class ItemEntryListAdapter(private val context: Context,
 
             Timber.v("index=$index, type=$type")
 
-            if (index > - 1) {
+            if (index > -1) {
                 finalData.add(index + addedCount, EntryItem(null, type))
-                addedCount ++
+                addedCount++
             }
         }
 
@@ -246,12 +250,12 @@ class ItemEntryListAdapter(private val context: Context,
                 EntryItem.ItemType.PINNED -> subList.indexOfFirst { it.entry?.entryPinned == 0 }
                 EntryItem.ItemType.ARCHIVED -> subList.indexOfFirst { it.entry?.entryArchived == 0 }
                 EntryItem.ItemType.DELETED -> subList.indexOfFirst { it.entry?.entryDeleted == 0 }
-                else -> - 1
+                else -> -1
             }
 
             Timber.v("firstNonPinned=$firstNonPinned, final=${firstNonPinned + addedCount}")
 
-            if (firstNonPinned > - 1) {
+            if (firstNonPinned > -1) {
                 finalData.add(firstNonPinned + firstIndex, EntryItem(null, EntryItem.ItemType.OTHERS))
             }
         }
@@ -259,28 +263,14 @@ class ItemEntryListAdapter(private val context: Context,
         val callback = EntriesDiffCallback(values, finalData)
         val result = DiffUtil.calculateDiff(callback, true)
 
-        Timber.v("diffResult = $result")
-
         values = finalData
-        valuesCopy = ArrayList(finalData)
-        result.dispatchUpdatesTo(this)
-    }
 
-    fun filter(text: String?) {
-        Timber.i("filter($text)")
-        if (text.isNullOrEmpty()) {
-            values = ArrayList(valuesCopy)
+        if (searchText != searchQuery) {
+            searchText = searchQuery
+            notifyDataSetChanged()
         } else {
-            val result = valuesCopy.filter { value ->
-                if (value.type == EntryItem.ItemType.ENTRY) {
-                    value.entry !!.entryTitle !!.toLowerCase().indexOf(text) > - 1
-                } else {
-                    true
-                }
-            }
-            values = ArrayList(result)
+            result.dispatchUpdatesTo(this)
         }
-        notifyDataSetChanged()
     }
 
     open class BaseViewHolder(view: View) : RecyclerView.ViewHolder(view)
@@ -293,10 +283,22 @@ class ItemEntryListAdapter(private val context: Context,
         val categoryTextView: AppCompatTextView by lazy { view.chip }
         val cardView by lazy { view.id_card }
 
-        fun bind(entry: Entry, isActivated: Boolean = false) {
+        fun bind(entry: Entry, searchText: String?, isActivated: Boolean = false) {
             this.entry = entry
             itemView.isActivated = isActivated
-            titleTextView.text = entry.entryTitle
+
+            // TODO(maybe execute asyc)
+            val entryTitle = SpannableStringBuilder.valueOf(entry.entryTitle)
+
+            if (!searchText.isNullOrEmpty()) {
+                val index = entry.entryTitle?.toLowerCase()?.indexOf(searchText) ?: -1
+
+                if (index > -1) {
+                    entryTitle[index, index + searchText.length] = BackgroundColorSpan(Color.YELLOW)
+                }
+            }
+
+            titleTextView.text = entryTitle.toSpannable()
             contentTextView.text = entry.entryText?.substring(0, 100)
             categoryTextView.text = entry.category?.categoryTitle
         }

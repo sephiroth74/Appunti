@@ -8,10 +8,10 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.view.Menu
 import android.view.MenuItem
-import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityOptionsCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -23,10 +23,7 @@ import com.dbflow5.structure.save
 import com.google.android.material.snackbar.Snackbar
 import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
-import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.currentThread
@@ -38,7 +35,6 @@ import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
 import kotlinx.android.synthetic.main.appunti_search_view_toolbar.*
 import kotlinx.android.synthetic.main.main_activity.*
 import timber.log.Timber
-import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppuntiActivity() {
@@ -250,7 +246,7 @@ class MainActivity : AppuntiActivity() {
                                          actionState: Int, isCurrentlyActive: Boolean) {
 
                 recyclerView.setOnTouchListener { v, event ->
-                    swipeBack = ! isSwipeEnabled(viewHolder)
+                    swipeBack = !isSwipeEnabled(viewHolder)
                     Timber.v("isSwipeEnabled=$swipeBack")
 //                    swipeBack = event.action == MotionEvent.ACTION_CANCEL || event.action == MotionEvent.ACTION_UP
                     false
@@ -276,46 +272,17 @@ class MainActivity : AppuntiActivity() {
 
         searchView.setOnLogoClickListener { toggleDrawer() }
 
-        searchView.setOnQueryTextListener(object : Search.OnQueryTextListener {
-
-            var timer: Disposable? = null
-
-            override fun onQueryTextSubmit(query: CharSequence?): Boolean {
-                Timber.i("onQueryTextSubmit($query)")
-                searchView.close()
-                return true
-            }
-
-            override fun onQueryTextChange(newText: CharSequence?) {
-                Timber.i("onQueryTextChange: $newText")
-
-                timer?.dispose()
-                timer = Observable.timer(200, TimeUnit.MILLISECONDS, Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe {
-                        adapter.filter(newText.toString())
-                    }
-            }
-
-        })
-
-        searchView.setOnOpenCloseListener(object : Search.OnOpenCloseListener {
-            override fun onOpen() {
-                Timber.i("onOpen")
-            }
-
-            override fun onClose() {
-                Timber.i("onClose")
-            }
-        })
-
         val textEdit = searchView.findViewById<View>(R.id.search_imageView_image)
         textEdit.isFocusable = false
         textEdit.isFocusableInTouchMode = false
 
         textEdit.setOnClickListener {
             Timber.i("onClick!!!")
-            startActivity(Intent(this, SearchableActivity::class.java))
+
+            val intent = Intent(this, SearchableActivity::class.java)
+            val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this, toolbar, "toolbar")
+
+            startActivity(intent, intentOptions.toBundle())
         }
     }
 
@@ -353,19 +320,19 @@ class MainActivity : AppuntiActivity() {
     }
 
     private fun toggleDrawer() {
-        if (! drawerLayout.isDrawerOpen(navigationView)) drawerLayout.openDrawer(navigationView)
+        if (!drawerLayout.isDrawerOpen(navigationView)) drawerLayout.openDrawer(navigationView)
         else drawerLayout.closeDrawer(navigationView)
     }
 
     private fun onEntriesDeleted(values: List<Entry>) {
         val mSnackbar =
                 Snackbar
-                    .make(constraintLayout,
-                            resources.getQuantityString(R.plurals.entries_deleted_title, values.size, values.size),
-                            Snackbar
-                                .LENGTH_LONG)
-                    .setAction(getString(R.string.undo_uppercase)) { restoreDeletedEntries(values) }
-                    .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
+                        .make(constraintLayout,
+                                resources.getQuantityString(R.plurals.entries_deleted_title, values.size, values.size),
+                                Snackbar
+                                        .LENGTH_LONG)
+                        .setAction(getString(R.string.undo_uppercase)) { restoreDeletedEntries(values) }
+                        .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
 
         mSnackbar.show()
     }
@@ -373,52 +340,52 @@ class MainActivity : AppuntiActivity() {
     private fun onEntriesArchived(values: List<Entry>) {
         val mSnackbar =
                 Snackbar
-                    .make(constraintLayout,
-                            resources.getQuantityString(R.plurals.entries_archived_title, values.size, values.size),
-                            Snackbar.LENGTH_LONG)
-                    .setAction(getString(R.string.undo_uppercase)) {
-                        DatabaseHelper.setEntriesArchived(values, false).subscribe()
-                    }
-                    .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
+                        .make(constraintLayout,
+                                resources.getQuantityString(R.plurals.entries_archived_title, values.size, values.size),
+                                Snackbar.LENGTH_LONG)
+                        .setAction(getString(R.string.undo_uppercase)) {
+                            DatabaseHelper.setEntriesArchived(values, false).subscribe()
+                        }
+                        .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
         mSnackbar.show()
     }
 
     @SuppressLint("CheckResult")
     private fun archiveEntries(entries: List<Entry>) {
         DatabaseHelper
-            .setEntriesArchived(entries, true)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { result, error ->
-                error?.let {
-                    Timber.e(error)
-                } ?: run {
-                    onEntriesArchived(entries)
+                .setEntriesArchived(entries, true)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { result, error ->
+                    error?.let {
+                        Timber.e(error)
+                    } ?: run {
+                        onEntriesArchived(entries)
+                    }
                 }
-            }
     }
 
     @SuppressLint("CheckResult")
     private fun deleteEntries(entries: List<Entry>) {
         DatabaseHelper.setEntriesDeleted(entries, true)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { success, error ->
-                error?.let {
-                    Timber.e("error=$error")
-                } ?: run {
-                    onEntriesDeleted(entries)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { success, error ->
+                    error?.let {
+                        Timber.e("error=$error")
+                    } ?: run {
+                        onEntriesDeleted(entries)
+                    }
                 }
-            }
     }
 
     @SuppressLint("CheckResult")
     private fun restoreDeletedEntries(entries: List<Entry>) {
         DatabaseHelper.setEntriesDeleted(entries, false)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { success, error ->
-                error?.let {
-                    Timber.e("error=$error")
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { success, error ->
+                    error?.let {
+                        Timber.e("error=$error")
+                    }
                 }
-            }
     }
 
     // selection tracker
@@ -450,7 +417,7 @@ class MainActivity : AppuntiActivity() {
         }
 
         fun select(position: Long, value: T) {
-            if (! isSelected(position)) {
+            if (!isSelected(position)) {
                 selectedPositions[position] = value
                 notifyPosition(position)
                 Timber.v("select(position=$position), isSelected=${isSelected(position)}")
@@ -483,11 +450,11 @@ class MainActivity : AppuntiActivity() {
                 } else {
                     actionMode.title = "${selection.size} Selected"
 
-                    val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > - 1
-                    val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > - 1
+                    val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > -1
+                    val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > -1
 
                     Timber.v("pinned=$pinned, unpinned=$unpinned")
-                    updatePinnedMenuItem(actionMode.menu, pinned && (pinned && ! unpinned))
+                    updatePinnedMenuItem(actionMode.menu, pinned && (pinned && !unpinned))
                 }
             }
         }
@@ -506,10 +473,10 @@ class MainActivity : AppuntiActivity() {
             when (item.itemId) {
                 R.id.menu_action_pin -> {
                     tracker?.let { tracker ->
-                        val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > - 1
-                        val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > - 1
-                        DatabaseHelper.setEntriesPinned(tracker.selection.values.toList(), ! (pinned && (pinned && ! unpinned)))
-                            .subscribe()
+                        val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > -1
+                        val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > -1
+                        DatabaseHelper.setEntriesPinned(tracker.selection.values.toList(), !(pinned && (pinned && !unpinned)))
+                                .subscribe()
                     }
                 }
 

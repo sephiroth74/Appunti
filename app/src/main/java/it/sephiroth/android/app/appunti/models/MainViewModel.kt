@@ -73,15 +73,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     @SuppressLint("CheckResult")
     private fun updateEntries(newValue: Category?) {
         DatabaseHelper
-            .getEntriesByCategory(newValue)
-            .observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
-                Timber.v("[${currentThread()}] entries returned = ${result.size}")
-                (entries as MutableLiveData).value = result
+                .getEntriesByCategory(newValue)
+                .observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
+                    Timber.v("[${currentThread()}] entries returned = ${result.size}")
+                    (entries as MutableLiveData).value = result
 
-                error?.let {
-                    Timber.e("error = $error")
+                    error?.let {
+                        Timber.e("error = $error")
+                    }
                 }
-            }
     }
 
     @SuppressLint("CheckResult")
