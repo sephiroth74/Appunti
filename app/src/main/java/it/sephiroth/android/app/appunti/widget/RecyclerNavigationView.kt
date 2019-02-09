@@ -65,18 +65,25 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
     private fun onModelChanged(model: MainViewModel?) {
         Timber.i("onModelChanged: $model")
-        model?.let {
-            it.categories.observe(this, Observer {
+        model?.let { model ->
+            model.categories.observe(this, Observer {
                 Timber.v("categories changed")
                 adapter.values = it
                 adapter.notifyDataSetChanged()
             })
 
-            it.category.observe(this, Observer {
-                Timber.v("selected category changed = $it")
+            model.categoryChanged.observe(this, Observer {
+                Timber.v("selected category changed")
                 adapter.notifyItemRangeChanged(0, adapter.itemCount)
+                updateSelectedItems()
             })
         }
+
+    }
+
+    private fun updateSelectedItems() {
+        entriesDeleted.isChecked = model?.group?.isDeleted() ?: false
+        entriesArchived.isChecked = model?.group?.isArchived() ?: false
     }
 
     override fun onFinishInflate() {
@@ -135,7 +142,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
         override fun getItemId(position: Int): Long {
             val item = getItem(position)
-            item?.let { return it.categoryID.toLong() } ?: kotlin.run { return - 1 }
+            item?.let { return it.categoryID.toLong() } ?: kotlin.run { return -1 }
         }
 
         private fun getItem(position: Int): Category? {
@@ -149,10 +156,14 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
             item?.let { category ->
                 holder.textView.text = category.categoryTitle
-                holder.textView.isChecked = category.categoryID == model?.currentCategory?.categoryID
+//                holder.textView.isChecked = category.categoryID == model?.currentCategory?.categoryID
+                holder.textView.isChecked = model?.group?.getCategory()?.categoryID == category.categoryID
             } ?: kotlin.run {
                 holder.textView.text = context.getString(R.string.categories_all)
-                holder.textView.isChecked = model?.currentCategory == null
+//                holder.textView.isChecked = model?.currentCategory == null
+                holder.textView.isChecked = model?.let {
+                    !it.group.isDeleted() && !it.group.isArchived() && it.group.getCategory() == null
+                } ?: false
             }
 
             holder.itemView.setOnClickListener {

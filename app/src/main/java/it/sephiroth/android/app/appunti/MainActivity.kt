@@ -80,6 +80,8 @@ class MainActivity : AppuntiActivity() {
         bottomAppBar.doOnDisplayAsListChanged { value ->
             model.setDisplayAsList(value)
         }
+
+        model.initialize()
     }
 
     override fun getToolbar(): Toolbar? = toolbar
@@ -141,7 +143,8 @@ class MainActivity : AppuntiActivity() {
     private fun seupNavigationView() {
         navigationView.model = model
         navigationView.setNavigationCategorySelectedListener { category ->
-            model.currentCategory = category
+            Timber.i("setNavigationCategorySelectedListener($category)")
+            model.group.setCategory(category)
             closeDrawerIfOpened()
         }
 
@@ -150,8 +153,12 @@ class MainActivity : AppuntiActivity() {
                 R.id.newLabel -> startCategoriesEditActivity(true)
                 R.id.editLabels -> startCategoriesEditActivity(false)
                 R.id.entriesArchived -> {
+                    model.group.setIsArchived(true)
+                    closeDrawerIfOpened()
                 }
                 R.id.entriesDeleted -> {
+                    model.group.setDeleted(true)
+                    closeDrawerIfOpened()
                 }
                 R.id.settings -> {
                     startActivity(Intent(this, PreferencesActivity::class.java))

@@ -6,8 +6,8 @@ import android.os.Handler
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.dbflow5.query.SQLOperator
-import com.dbflow5.query.or
+import com.dbflow5.query.From
+import com.dbflow5.query.Transformable
 import com.dbflow5.reactivestreams.structure.BaseRXModel
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.runtime.OnTableChangedListener
@@ -18,21 +18,92 @@ import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
 import it.sephiroth.android.app.appunti.ext.currentThread
-import it.sephiroth.android.app.appunti.ext.executeIfMainThread
 import timber.log.Timber
-import kotlin.properties.Delegates
 
 class MainViewModel(application: Application) : AndroidViewModel(application),
         DirectModelNotifier.OnModelStateChangedListener<BaseRXModel>, OnTableChangedListener {
 
-    val handler: Handler = Handler()
+    class Group(private val callback: (() -> (Unit))? = null) {
+        private var mCategory: Category? = null
+        private var mArchived: Boolean = false
+        private var mDeleted: Boolean = false
 
-    val updateEntriesRunnable = Runnable {
-        updateEntries(currentCategory)
+        private fun dispatchValue() {
+            callback?.invoke()
+        }
+
+        fun setCategory(category: Category?) {
+            mCategory = category
+            mArchived = false
+            mDeleted = false
+            dispatchValue()
+        }
+
+        fun setIsArchived(value: Boolean) {
+            if (value != mArchived) {
+                mArchived = value
+                mDeleted = if (value) false else mDeleted
+                dispatchValue()
+            }
+        }
+
+        fun setDeleted(value: Boolean) {
+            if (value != mDeleted) {
+                mDeleted = value
+                mArchived = if (value) false else mArchived
+                dispatchValue()
+            }
+        }
+
+        fun isDeleted() = mDeleted
+
+        fun isArchived() = mArchived
+
+        fun getCategory(): Category? {
+            if (!mDeleted && !mArchived) return mCategory
+            return null
+        }
+
+        override fun toString(): String {
+            return "Group(deleted=$mDeleted, archived=$mArchived, category=$mCategory)"
+        }
+
+        fun buildQuery(from: From<Entry>): Transformable<Entry> {
+            Timber.i("buildQuery($this)")
+
+            // prima deleted and archived e poi il resto
+            return if (mDeleted) {
+                from.where(Entry_Table.entryDeleted.eq(1))
+            } else if (mArchived) {
+                from.where(Entry_Table.entryArchived.eq(1))
+                        .and(Entry_Table.entryDeleted.eq(0))
+            } else {
+                mCategory?.let {
+                    return from
+                            .where(Entry_Table.category_categoryID.eq(it.categoryID))
+                            .and(Entry_Table.entryArchived.eq(0))
+                            .and(Entry_Table.entryDeleted.eq(0))
+                } ?: run {
+                    return from
+                            .where(Entry_Table.entryArchived.eq(0))
+                            .and(Entry_Table.entryDeleted.eq(0))
+                }
+            }
+        }
     }
 
-    val updateCategoriesRunnable = Runnable {
-        updateCategories()
+    private val handler: Handler = Handler()
+
+    private val updateEntriesRunnable = Runnable {
+        //        updateEntries(currentCategory)
+        updateEntries()
+    }
+
+    private val updateCategoriesRunnable = Runnable { updateCategories() }
+
+    val group: Group = Group {
+        (categoryChanged as MutableLiveData).value = true
+        updateEntries()
     }
 
     val categories: LiveData<List<Category>> by lazy {
@@ -45,35 +116,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
     val entries: LiveData<MutableList<Entry>> = MutableLiveData<MutableList<Entry>>()
 
-    val category: LiveData<Category?> = MutableLiveData()
+    val categoryChanged: LiveData<Boolean> = MutableLiveData()
 
-    var currentCategory by Delegates.observable<Category?>(null) { _, _, newValue ->
-        Timber.i("[${currentThread()}] currentCategory = $newValue")
 
-        executeIfMainThread {
-            (category as MutableLiveData).value = newValue
-        } ?: run {
-            (category as MutableLiveData).postValue(newValue)
-        }
-
-        updateEntries(newValue)
+    fun initialize() {
+        updateEntries()
     }
+
+//    var currentCategory by Delegates.observable<Category?>(null) { _, _, newValue ->
+//        Timber.i("[${currentThread()}] currentCategory = $newValue")
+//
+//        executeIfMainThread {
+//            (category as MutableLiveData).value = newValue
+//        } ?: run {
+//            (category as MutableLiveData).postValue(newValue)
+//        }
+//
+//        updateEntries(newValue)
+//    }
 
     val displayAsList: LiveData<Boolean> = MutableLiveData<Boolean>()
     val settingsManager = SettingsManager.getInstance(application)
-
-    fun updateEntries() {
-        updateEntries(currentCategory)
-    }
 
     fun setDisplayAsList(value: Boolean) {
         settingsManager.displayAsList = value
     }
 
     @SuppressLint("CheckResult")
-    private fun updateEntries(newValue: Category?) {
+    private fun updateEntries() {
+        Timber.i("updateEntries")
         DatabaseHelper
-                .getEntriesByCategory(newValue)
+                .getEntries { group.buildQuery(this) }
                 .observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
                     Timber.v("[${currentThread()}] entries returned = ${result.size}")
                     (entries as MutableLiveData).value = result
@@ -86,14 +159,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
     @SuppressLint("CheckResult")
     private fun updateCategories() {
+        Timber.i("updateCategories")
         DatabaseHelper.getCategories().observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
             (categories as MutableLiveData).value = result
-            currentCategory?.let { category ->
-                val categoryResult = result.firstOrNull { it.categoryID == category.categoryID }
-                currentCategory = categoryResult
-            } ?: run {
-                currentCategory = null
-            }
+//            currentCategory?.let { category ->
+//                val categoryResult = result.firstOrNull { it.categoryID == category.categoryID }
+//                currentCategory = categoryResult
+//            } ?: run {
+//                currentCategory = null
+//            }
         }
     }
 
@@ -134,7 +208,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     }
 
     init {
-        currentCategory = null
+//        currentCategory = null
         (displayAsList as MutableLiveData).value = settingsManager.displayAsList
         settingsManager.setOnDisplayAsListChanged { value: Boolean -> displayAsList.value = value }
 
