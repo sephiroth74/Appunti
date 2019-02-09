@@ -14,6 +14,14 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <activity
+            android:name=".DetailActivity"
+            android:label="">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="it.sephiroth.android.app.appunti.MainActivity" />
+        </activity>
+
+        <activity
             android:name=".CategoriesEditActivity"
             android:label="@string/title_activity_categories" />
         <activity
@@ -21,7 +29,8 @@
             android:label="@string/settings" />
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -32,7 +41,6 @@
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
         </activity>
-
         <activity android:name=".SearchableActivity">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
@@ -42,15 +50,6 @@
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
         </activity>
-        <activity
-            android:name=".ItemDetailActivity"
-            android:label="@string/title_item_detail"
-            android:parentActivityName=".MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="it.sephiroth.android.app.appunti.MainActivity" />
-        </activity>
-
     </application>
 
 </manifest>

@@ -8,5 +8,11 @@ import it.sephiroth.android.app.appunti.ext.resolveAttribute
 
 
 object ResourceUtils {
-    fun getCategoryColors(context: Context) = context.resources.getIntArray(context.theme.resolveAttribute(R.attr.categoryColors))
+    var categoryColors: IntArray? = null
+
+    fun getCategoryColors(context: Context): IntArray {
+        if (null == categoryColors)
+            categoryColors = context.resources.getIntArray(context.theme.resolveAttribute(R.attr.categoryColors))
+        return categoryColors!!
+    }
 }

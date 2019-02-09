@@ -78,16 +78,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
                 from.where(Entry_Table.entryArchived.eq(1))
                         .and(Entry_Table.entryDeleted.eq(0))
             } else {
-                mCategory?.let {
-                    return from
-                            .where(Entry_Table.category_categoryID.eq(it.categoryID))
-                            .and(Entry_Table.entryArchived.eq(0))
-                            .and(Entry_Table.entryDeleted.eq(0))
-                } ?: run {
-                    return from
-                            .where(Entry_Table.entryArchived.eq(0))
-                            .and(Entry_Table.entryDeleted.eq(0))
-                }
+                return from
+                        .where(Entry_Table.entryArchived.eq(0))
+                        .and(Entry_Table.entryDeleted.eq(0)).also { where ->
+
+                            mCategory?.let { category ->
+                                where.and(Entry_Table.category_categoryID.eq(category.categoryID))
+                            }
+                        }
             }
         }
     }

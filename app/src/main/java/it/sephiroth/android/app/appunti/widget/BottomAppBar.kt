@@ -9,7 +9,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.google.android.material.snackbar.Snackbar
 import it.sephiroth.android.app.appunti.R
-import kotlinx.android.synthetic.main.main_activity.view.*
+import kotlinx.android.synthetic.main.activity_main.view.*
 import timber.log.Timber
 
 

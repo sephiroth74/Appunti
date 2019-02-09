@@ -8,7 +8,7 @@
     android:id="@+id/toolbar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:showIn="@layout/main_activity">
+    tools:showIn="@layout/activity_main">
 
     <com.lapism.searchview.widget.SearchView
         android:id="@+id/searchView"

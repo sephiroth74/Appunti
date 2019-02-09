@@ -21,7 +21,6 @@
     <string name="settings">Settings</string>
     <string name="categories">Categories</string>
     <string name="sort_by">Sort By...</string>
-    <string name="share">Share</string>
     <string name="add_new_note">Add New Note</string>
 
     <string name="title_activity_categories">Edit Categories</string>
@@ -53,4 +52,6 @@
     <string name="pick_a_color">Pick a Color</string>
     <string name="deleted">Deleted</string>
     <string name="archived">Archived</string>
+    <string name="pin">Pin</string>
+    <string name="share">Share</string>
 </resources>

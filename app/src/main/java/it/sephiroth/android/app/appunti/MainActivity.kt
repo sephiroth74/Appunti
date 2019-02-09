@@ -12,6 +12,7 @@ import android.view.View
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.util.Pair
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -19,7 +20,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_SWIPE
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.dbflow5.structure.save
 import com.google.android.material.snackbar.Snackbar
 import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
@@ -31,9 +31,9 @@ import it.sephiroth.android.app.appunti.ext.getColor
 import it.sephiroth.android.app.appunti.ext.getColorStateList
 import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
 import kotlinx.android.synthetic.main.appunti_search_view_toolbar.*
-import kotlinx.android.synthetic.main.main_activity.*
 import timber.log.Timber
 
 
@@ -86,7 +86,7 @@ class MainActivity : AppuntiActivity() {
 
     override fun getToolbar(): Toolbar? = toolbar
 
-    override fun getContentLayout(): Int = R.layout.main_activity
+    override fun getContentLayout(): Int = R.layout.activity_main
 
     private fun setupRecyclerView() {
         adapter = ItemEntryListAdapter(this, arrayListOf()) { holder, position -> tracker?.isSelected(position.toLong()) ?: false }
@@ -109,9 +109,10 @@ class MainActivity : AppuntiActivity() {
                             }
                         }
                     } ?: run {
-                        val newEntry = Entry(entryItem)
-                        newEntry.entryPinned = if (newEntry.entryPinned == 1) 0 else 1
-                        newEntry.save()
+                        startDetailActivity(holder, entryItem)
+//                        val newEntry = Entry(entryItem)
+//                        newEntry.entryPinned = if (newEntry.entryPinned == 1) 0 else 1
+//                        newEntry.save()
                     }
                 }
             }
@@ -314,6 +315,17 @@ class MainActivity : AppuntiActivity() {
         }
     }
 
+    private fun startDetailActivity(holder: ItemEntryListAdapter.EntryViewHolder, entry: Entry) {
+        val intent = Intent(this, DetailActivity::class.java)
+        intent.putExtra("entryID", entry.entryID)
+
+        val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this,
+                Pair<View, String>(holder.titleTextView, "itemTitle"),
+                Pair<View, String>(holder.contentTextView, "itemText")
+
+        )
+        startActivity(intent, intentOptions.toBundle())
+    }
 
     private fun startCategoriesEditActivity(newCategory: Boolean = false) {
         val intent = Intent(this, CategoriesEditActivity::class.java)
