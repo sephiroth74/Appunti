@@ -1,21 +1,21 @@
 package it.sephiroth.android.app.appunti
 
+import android.content.Intent
 import android.os.Bundle
 import android.transition.AutoTransition
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.view.Window
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NavUtils
-import com.dbflow5.query.result
-import com.dbflow5.query.select
-import com.dbflow5.structure.save
-import it.sephiroth.android.app.appunti.db.DatabaseHelper
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import com.google.android.material.snackbar.Snackbar
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.db.tables.Entry_Table
-import it.sephiroth.android.app.appunti.utils.ResourceUtils
+import it.sephiroth.android.app.appunti.models.DetailViewModel
 import kotlinx.android.synthetic.main.activity_detail.*
-import android.content.Intent
+import timber.log.Timber
 
 
 @Suppress("NAME_SHADOWING")
@@ -24,9 +24,9 @@ class DetailActivity : AppuntiActivity() {
 
     override fun getContentLayout(): Int = R.layout.activity_detail
 
-    private lateinit var entry: Entry
+    private lateinit var model: DetailViewModel
     private lateinit var categoryColors: IntArray
-    private var entryColor: Int = 0
+    private var currentEntry: Entry? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS)
@@ -34,37 +34,20 @@ class DetailActivity : AppuntiActivity() {
         window.sharedElementExitTransition = AutoTransition()
         window.sharedElementReenterTransition = AutoTransition()
         window.sharedElementReturnTransition = AutoTransition()
-
         super.onCreate(savedInstanceState)
-
-        categoryColors = ResourceUtils.getCategoryColors(this)
-        entryColor = categoryColors[0]
-
-//        EmojiCompat.init()
-
-        val entryID = intent.getIntExtra("entryID", 0)
-
-        select().from(Entry::class).where(Entry_Table.entryID.eq(entryID)).result?.let {
-            entry = it
-        } ?: run {
-            entry = Entry()
-        }
-
-        entry.let { entry ->
-            entry.category?.let { category ->
-                entryColor = categoryColors[category.categoryColorIndex]
-            }
-            entryTitle.setText(entry.entryTitle)
-            entryText.setText(entry.entryText)
-        }
-
-        window.decorView.setBackgroundColor(entryColor)
-        window.navigationBarColor = entryColor
 
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowHomeEnabled(true)
         }
+
+        model = ViewModelProviders.of(this).get(DetailViewModel::class.java)
+        model.entry.observe(this, Observer { entry ->
+            Timber.i("model.entry changed = $entry")
+            onEntryChanged(entry)
+        })
+
+        handleIntent(intent)
     }
 
     override fun onBackPressed() {
@@ -77,12 +60,12 @@ class DetailActivity : AppuntiActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        updateMenu(menu, entry)
+        Timber.i("onPrepareOptionsMenu")
+        updateMenu(menu)
         return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-
         when (item.itemId) {
             R.id.menu_action_pin -> {
                 onTogglePin()
@@ -97,56 +80,163 @@ class DetailActivity : AppuntiActivity() {
                 onShareEntry()
             }
         }
-
         return super.onOptionsItemSelected(item)
     }
 
-    private fun onTogglePin() {
-        DatabaseHelper.setEntryPinned(entry, entry.entryPinned == 0)
+    private fun handleIntent(intent: Intent?) {
+        Timber.i("handleIntent: $intent")
+        var entryID = 0
+
+        intent?.let { intent ->
+            Timber.v("action=${intent.action}")
+            when (intent.action) {
+                Intent.ACTION_CREATE_DOCUMENT -> {
+                    entryID = 0
+                }
+
+                Intent.ACTION_EDIT -> {
+                    entryID = intent.getIntExtra("entryID", 0)
+                }
+            }
+        }
+
+        Timber.v("entryID=$entryID")
+        model.entryID = entryID
+    }
+
+
+    object EntryDiff {
+        data class Result(
+                var sameID: Boolean,
+                var archivedChanged: Boolean = true,
+                var deletedChanged: Boolean = true,
+                var pinnedChanged: Boolean = true,
+                var titleChanged: Boolean = true,
+                var textChanged: Boolean = true,
+                var categoryChanged: Boolean = true,
+                var priorityChanged: Boolean = true,
+                var modifiedDateChanged: Boolean = true)
+
+        fun calculateDiff(oldValue: Entry?, newValue: Entry?): Result {
+            return if (isSameItem(oldValue, newValue)) {
+                calculateContentDiff(oldValue, newValue)
+            } else {
+                Result(false)
+            }
+        }
+
+        private fun isSameItem(oldValue: Entry?, newValue: Entry?): Boolean {
+            return oldValue?.entryID == newValue?.entryID
+        }
+
+        private fun calculateContentDiff(oldValue: Entry?, newValue: Entry?): Result {
+            return Result(
+                    sameID = true,
+                    archivedChanged = oldValue?.entryArchived != newValue?.entryArchived,
+                    deletedChanged = oldValue?.entryDeleted != newValue?.entryDeleted,
+                    pinnedChanged = oldValue?.entryPinned != newValue?.entryPinned,
+                    titleChanged = oldValue?.entryTitle != newValue?.entryTitle,
+                    textChanged = oldValue?.entryText != newValue?.entryText,
+                    categoryChanged = oldValue?.category != newValue?.category,
+                    priorityChanged = oldValue?.entryPriority != newValue?.entryPriority,
+                    modifiedDateChanged = oldValue?.entryModifiedDate != newValue?.entryModifiedDate
+            )
+
+        }
+    }
+
+
+    private fun onEntryChanged(entry: Entry) {
+        Timber.i("onEntryChanged()")
+
+        val diff = EntryDiff.calculateDiff(currentEntry, entry)
+        Timber.v("diff=$diff")
+
+        currentEntry = entry
+
+        if (diff.titleChanged) entryTitle.setText(entry.entryTitle)
+        if (diff.textChanged) entryText.setText(entry.entryText)
+
+        if (diff.categoryChanged) {
+            entryCategory.text = entry.category?.categoryTitle
+            entryCategory.visibility = if (entry.category == null) View.GONE else View.VISIBLE
+            applyEntryTheme(entry)
+        }
+
         invalidateOptionsMenu()
     }
 
+    private fun applyEntryTheme(entry: Entry) {
+        val color = entry.getColor(this)
+        window.decorView.setBackgroundColor(color)
+        window.navigationBarColor = color
+    }
+
+    private fun onTogglePin() {
+        val currentValue = model.entry.value?.entryPinned == 1
+        val result = model.togglePin()
+
+        if (result) {
+            Snackbar
+                    .make(constraintLayout,
+                            resources.getQuantityString(
+                                    if (currentValue) R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1),
+                            Snackbar.LENGTH_SHORT)
+                    .show()
+        }
+    }
+
     private fun onToggleDelete() {
-        entry.entryDeleted = if (entry.entryDeleted == 1) 0 else 1
+        val result = model.toggleDeleted()
     }
 
     private fun onToggleArchive() {
-
+        val result = model.toggleArchived()
     }
 
     private fun onShareEntry() {
-        val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
-        sharingIntent.type = "text/plain"
-        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, entry.entryTitle)
-        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, entry.entryText)
-        startActivity(Intent.createChooser(sharingIntent, resources.getString(R.string.share)))
+        model.entry.value?.let { entry ->
+            val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
+            sharingIntent.type = "text/plain"
+            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, entry.entryTitle)
+            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, entry.entryText)
+            startActivity(Intent.createChooser(sharingIntent, resources.getString(R.string.share)))
+        }
     }
 
-    private fun updateMenu(menu: Menu?, entry: Entry) {
-        menu?.let { menu ->
-            with(menu.findItem(R.id.menu_action_pin)) {
-                setIcon(
-                        if (entry.entryPinned == 1)
-                            R.drawable.appunti_sharp_favourite_24_checked_selector
-                        else
-                            R.drawable.appunti_sharp_favourite_24_unchecked_selector)
+    private fun updateMenu(menu: Menu?) {
 
+        model.entry.value?.let { entry ->
+            menu?.let { menu ->
+                with(menu.findItem(R.id.menu_action_pin)) {
+                    setIcon(
+                            if (entry.entryPinned == 1)
+                                R.drawable.appunti_sharp_favourite_24_checked_selector
+                            else
+                                R.drawable.appunti_sharp_favourite_24_unchecked_selector)
+
+                }
+
+                with(menu.findItem(R.id.menu_action_archive)) {
+                    setIcon(
+                            if (entry.entryArchived == 1)
+                                R.drawable.appunti_outline_archive_24_checked_selector
+                            else R.drawable.appunti_outline_archive_24_unchecked_selector)
+                }
+
+                with(menu.findItem(R.id.menu_action_delete)) {
+                    setIcon(
+                            if (entry.entryDeleted == 1)
+                                R.drawable.appunti_sharp_restore_from_trash_24_selector
+                            else R.drawable.appunti_sharp_delete_24_outline_selector
+                    )
+
+                    setTitle(
+                            if (entry.entryDeleted == 1) R.string.restore
+                            else R.string.delete
+                    )
+                }
             }
-
-            with(menu.findItem(R.id.menu_action_archive)) {
-                setIcon(
-                        if (entry.entryArchived == 1)
-                            R.drawable.appunti_outline_archive_24_checked_selector
-                        else R.drawable.appunti_outline_archive_24_unchecked_selector)
-            }
-
-            with(menu.findItem(R.id.menu_action_delete)) {
-                setIcon(
-                        if (entry.entryDeleted == 1)
-                            R.drawable.appunti_sharp_restore_from_trash_24_selector
-                        else R.drawable.appunti_sharp_delete_24_outline_selector)
-            }
-
         }
     }
 }

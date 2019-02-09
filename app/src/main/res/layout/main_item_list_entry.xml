@@ -48,7 +48,8 @@
             android:textSize="@dimen/text_size_subhead_material" />
 
         <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/chip"
+            android:transitionName="itemCategory"
+            android:id="@+id/entryCategory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"

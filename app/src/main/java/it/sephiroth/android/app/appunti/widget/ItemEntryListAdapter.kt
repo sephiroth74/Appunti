@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.Drawable
-import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.BackgroundColorSpan
 import android.view.LayoutInflater
@@ -27,7 +26,6 @@ import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.main_item_list_entry.view.*
 import timber.log.Timber
-import kotlin.math.max
 
 class ItemEntryListAdapter(private val context: Context,
                            private var values: MutableList<EntryItem>,
@@ -280,7 +278,7 @@ class ItemEntryListAdapter(private val context: Context,
 
         val titleTextView: TextView by lazy { view.id_title }
         val contentTextView: TextView by lazy { view.id_content }
-        val categoryTextView: AppCompatTextView by lazy { view.chip }
+        val categoryTextView: AppCompatTextView by lazy { view.entryCategory }
         val cardView by lazy { view.id_card }
 
         fun bind(entry: Entry, searchText: String?, isActivated: Boolean = false) {

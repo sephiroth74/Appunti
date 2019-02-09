@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<it.sephiroth.android.app.appunti.widget.BottomAppBar xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/bottomAppBar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:background="@drawable/appunti_bottomappbar_shadow_top"
+    android:elevation="6dp"
+    android:gravity="center"
+    android:paddingBottom="0dp"
+    android:paddingLeft="0dp"
+    android:paddingRight="0dp"
+    android:paddingTop="2dp"
+    android:translationZ="6dp"
+    app:layout_anchorGravity="bottom"
+    tools:showIn="@layout/activity_main">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/buttonNewNote"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_material_background_ripple"
+        android:drawablePadding="8dp"
+        android:drawableStart="@drawable/sharp_add_box_24"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="@string/add_new_note"
+        android:textAppearance="@style/Theme.Appunti.TextAppearance.NewNote" />
+
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" />
+
+    <it.sephiroth.android.app.appunti.widget.CheckableAppcompatImageButton
+        android:id="@+id/buttonDisplayAsList"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_material_background_ripple"
+        android:padding="8dp"
+        android:src="@drawable/background_selector_list_vs_grid" />
+
+
+</it.sephiroth.android.app.appunti.widget.BottomAppBar>

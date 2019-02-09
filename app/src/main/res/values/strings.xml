@@ -40,6 +40,16 @@
         <item quantity="other">%d Entries Deleted</item>
     </plurals>
 
+    <plurals name="entries_pinned_title">
+        <item quantity="one">Entry Pinned</item>
+        <item quantity="other">%d Entries Pinned</item>
+    </plurals>
+
+    <plurals name="entries_unpinned_title">
+        <item quantity="one">Entry Unpinned</item>
+        <item quantity="other">%d Entries Unpinned</item>
+    </plurals>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="restart_required">Restart Required</string>
@@ -54,4 +64,5 @@
     <string name="archived">Archived</string>
     <string name="pin">Pin</string>
     <string name="share">Share</string>
+    <string name="restore">Restore</string>
 </resources>

@@ -1,12 +1,13 @@
 package it.sephiroth.android.app.appunti.db.tables
 
-import android.os.Parcel
+import android.content.Context
 import com.dbflow5.annotation.*
 import com.dbflow5.query.select
 import com.dbflow5.reactivestreams.structure.BaseRXModel
 import com.dbflow5.structure.oneToMany
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.EntryTypeConverter
+import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import timber.log.Timber
 import java.util.*
 
@@ -96,6 +97,14 @@ class Entry() : BaseRXModel() {
         result = 31 * result + entryCreationDate.hashCode()
         result = 31 * result + entryModifiedDate.hashCode()
         return result
+    }
+
+    fun getColor(context: Context): Int {
+        return ResourceUtils.getCategoryColors(context)[category?.categoryColorIndex ?: 0]
+    }
+
+    fun isNew(): Boolean {
+        return entryID == 0
     }
 
     enum class EntryType {

@@ -11,6 +11,7 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
 import it.sephiroth.android.app.appunti.ext.rxSingle
 import timber.log.Timber
+import java.util.*
 
 object DatabaseHelper {
 
@@ -21,9 +22,24 @@ object DatabaseHelper {
         }
     }
 
-    fun setEntryPinned(entry: Entry, pin: Boolean) {
-        entry.entryPinned = if (pin) 1 else 0
-        entry.save()
+    fun setEntryPinned(entry: Entry, value: Boolean): Boolean {
+        entry.entryPinned = if (value) 1 else 0
+        entry.entryModifiedDate = Date()
+        return entry.save()
+    }
+
+    fun setEntryArchived(entry: Entry, value: Boolean): Boolean {
+        entry.entryArchived = if (value) 1 else 0
+        entry.entryModifiedDate = Date()
+        if (value) entry.entryDeleted = 0
+        return entry.save()
+    }
+
+    fun setEntryDeleted(entry: Entry, value: Boolean): Boolean {
+        entry.entryDeleted = if (value) 1 else 0
+        entry.entryModifiedDate = Date()
+        if (value) entry.entryArchived = 0
+        return entry.save()
     }
 
     fun setEntriesPinned(values: List<Entry>, pin: Boolean): Single<Unit> {
@@ -31,7 +47,7 @@ object DatabaseHelper {
 
         return rxSingle(Schedulers.io()) {
             update(Entry::class)
-                    .set(Entry_Table.entryPinned.eq(pinnedValue))
+                    .set(Entry_Table.entryPinned.eq(pinnedValue), Entry_Table.entryModifiedDate.eq(Date()))
                     .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
                     .execute(FlowManager.getDatabase(AppDatabase::class.java))
         }
@@ -40,7 +56,9 @@ object DatabaseHelper {
     fun setEntriesDeleted(values: List<Entry>, delete: Boolean): Single<Unit> {
         return rxSingle(Schedulers.io()) {
             update(Entry::class)
-                    .set(Entry_Table.entryDeleted.eq(if (delete) 1 else 0), Entry_Table.entryArchived.eq(0))
+                    .set(Entry_Table.entryDeleted.eq(if (delete) 1 else 0),
+                            Entry_Table.entryArchived.eq(0),
+                            Entry_Table.entryModifiedDate.eq(Date()))
                     .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
                     .execute(FlowManager.getDatabase(AppDatabase::class.java))
         }
@@ -50,7 +68,9 @@ object DatabaseHelper {
         Timber.i("setEntriesArchived($archive, $values")
         return rxSingle(Schedulers.io()) {
             update(Entry::class)
-                    .set(Entry_Table.entryDeleted.eq(0), Entry_Table.entryArchived.eq(if (archive) 1 else 0))
+                    .set(Entry_Table.entryDeleted.eq(0),
+                            Entry_Table.entryArchived.eq(if (archive) 1 else 0),
+                            Entry_Table.entryModifiedDate.eq(Date()))
                     .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
                     .execute(FlowManager.getDatabase(AppDatabase::class.java))
 
@@ -75,6 +95,12 @@ object DatabaseHelper {
                                 OrderBy(Entry_Table.entryPriority.nameAlias, false),
                                 OrderBy(Entry_Table.entryModifiedDate.nameAlias, false))).list
                     }
+        }
+    }
+
+    fun getEntryById(id: Int): Single<Entry?> {
+        return rxSingle(Schedulers.io()) {
+            select().from(Entry::class).where(Entry_Table.entryID.eq(id)).result
         }
     }
 

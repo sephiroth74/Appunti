@@ -33,6 +33,7 @@ import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
+import kotlinx.android.synthetic.main.appunti_main_bottomappbar.*
 import kotlinx.android.synthetic.main.appunti_search_view_toolbar.*
 import timber.log.Timber
 
@@ -79,6 +80,10 @@ class MainActivity : AppuntiActivity() {
 
         bottomAppBar.doOnDisplayAsListChanged { value ->
             model.setDisplayAsList(value)
+        }
+
+        bottomAppBar.doOnNewNoteClick {
+            startDetailActivity()
         }
 
         model.initialize()
@@ -315,16 +320,26 @@ class MainActivity : AppuntiActivity() {
         }
     }
 
+    private fun startDetailActivity() {
+        val intent = Intent(this, DetailActivity::class.java)
+        intent.action = Intent.ACTION_CREATE_DOCUMENT
+        startDetailActivityFromIntent(intent, null)
+    }
+
     private fun startDetailActivity(holder: ItemEntryListAdapter.EntryViewHolder, entry: Entry) {
         val intent = Intent(this, DetailActivity::class.java)
+        intent.action = Intent.ACTION_EDIT
         intent.putExtra("entryID", entry.entryID)
-
         val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this,
                 Pair<View, String>(holder.titleTextView, "itemTitle"),
-                Pair<View, String>(holder.contentTextView, "itemText")
-
+                Pair<View, String>(holder.contentTextView, "itemText"),
+                Pair<View, String>(holder.categoryTextView, "itemCategory")
         )
-        startActivity(intent, intentOptions.toBundle())
+        startDetailActivityFromIntent(intent, intentOptions)
+    }
+
+    private fun startDetailActivityFromIntent(intent: Intent, intentOptions: ActivityOptionsCompat?) {
+        startActivity(intent, intentOptions?.toBundle())
     }
 
     private fun startCategoriesEditActivity(newCategory: Boolean = false) {
