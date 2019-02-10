@@ -9,6 +9,8 @@ import android.view.View
 import android.view.Window
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NavUtils
+import androidx.core.transition.doOnEnd
+import androidx.core.transition.doOnStart
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.snackbar.Snackbar
@@ -48,6 +50,17 @@ class DetailActivity : AppuntiActivity() {
         })
 
         handleIntent(intent)
+
+
+        // shared elements transitions adjustments
+        val sharedElementEnterTransition = window.sharedElementEnterTransition
+
+        sharedElementEnterTransition.doOnEnd {
+            entryCategory.visibility = if (model.entry.value?.category == null) View.INVISIBLE else View.VISIBLE
+        }
+        sharedElementEnterTransition.doOnStart {
+            entryCategory.visibility = if (model.entry.value?.category == null) View.INVISIBLE else View.VISIBLE
+        }
     }
 
     override fun onBackPressed() {
@@ -159,7 +172,7 @@ class DetailActivity : AppuntiActivity() {
 
         if (diff.categoryChanged) {
             entryCategory.text = entry.category?.categoryTitle
-            entryCategory.visibility = if (entry.category == null) View.GONE else View.VISIBLE
+            entryCategory.visibility = if (entry.category == null) View.INVISIBLE else View.VISIBLE
             applyEntryTheme(entry)
         }
 

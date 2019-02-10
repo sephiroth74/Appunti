@@ -330,11 +330,17 @@ class MainActivity : AppuntiActivity() {
         val intent = Intent(this, DetailActivity::class.java)
         intent.action = Intent.ACTION_EDIT
         intent.putExtra("entryID", entry.entryID)
-        val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this,
-                Pair<View, String>(holder.titleTextView, "itemTitle"),
-                Pair<View, String>(holder.contentTextView, "itemText"),
-                Pair<View, String>(holder.categoryTextView, "itemCategory")
-        )
+
+        val elementsArray = arrayListOf<Pair<View, String>>(
+                Pair(holder.titleTextView, "itemTitle"),
+                Pair(holder.contentTextView, "itemText"))
+
+        if (entry.category != null) {
+            elementsArray.add(Pair(holder.categoryTextView, "itemCategory"))
+        }
+
+        val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this, *(elementsArray.toTypedArray()))
+
         startDetailActivityFromIntent(intent, intentOptions)
     }
 
