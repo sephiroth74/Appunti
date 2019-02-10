@@ -1,22 +1,25 @@
 package it.sephiroth.android.app.appunti
 
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.transition.AutoTransition
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.Window
+import android.view.*
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NavUtils
 import androidx.core.transition.doOnEnd
 import androidx.core.transition.doOnStart
+import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import kotlinx.android.synthetic.main.activity_detail.*
+import kotlinx.android.synthetic.main.activity_detail.view.*
 import timber.log.Timber
 
 
@@ -27,7 +30,6 @@ class DetailActivity : AppuntiActivity() {
     override fun getContentLayout(): Int = R.layout.activity_detail
 
     private lateinit var model: DetailViewModel
-    private lateinit var categoryColors: IntArray
     private var currentEntry: Entry? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,8 +51,40 @@ class DetailActivity : AppuntiActivity() {
             onEntryChanged(entry)
         })
 
+        val behavior = BottomSheetBehavior.from(bottomSheet)
+        behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+
+        behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onSlide(p0: View, p1: Float) {
+            }
+
+            override fun onStateChanged(p0: View, state: Int) {
+                Timber.i("onStateChanged($state)")
+                bottomSheet.background.alpha = if (state == BottomSheetBehavior.STATE_EXPANDED) 255 else 0
+            }
+
+        })
+
         handleIntent(intent)
 
+        entryCategory.setOnClickListener {
+        }
+
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            Timber.i("menuItem: $menuItem")
+            true
+        }
+
+        bottomAppBar.navigationIcon.setOnClickListener {
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+            navigationView.bringToFront()
+        }
+
+        bottomAppBar.doOnPreDraw {
+            if (navigationView.layoutParams is ViewGroup.MarginLayoutParams) {
+                (navigationView.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = it.height
+            }
+        }
 
         // shared elements transitions adjustments
         val sharedElementEnterTransition = window.sharedElementEnterTransition
@@ -183,6 +217,17 @@ class DetailActivity : AppuntiActivity() {
         val color = entry.getColor(this)
         window.decorView.setBackgroundColor(color)
         window.navigationBarColor = color
+
+        if (bottomAppBar.background is ColorDrawable) {
+            bottomAppBar.background.setTint(color)
+        }
+
+        if (navigationView.background is ColorDrawable) {
+            bottomAppBar.background.setTint(color)
+        } else if (navigationView.background is LayerDrawable) {
+            val drawable: Drawable? = (navigationView.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
+            drawable?.setTint(color)
+        }
     }
 
     private fun onTogglePin() {
@@ -190,12 +235,12 @@ class DetailActivity : AppuntiActivity() {
         val result = model.togglePin()
 
         if (result) {
-            Snackbar
-                    .make(constraintLayout,
-                            resources.getQuantityString(
-                                    if (currentValue) R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1),
-                            Snackbar.LENGTH_SHORT)
-                    .show()
+//            Snackbar
+//                    .make(coordinator,
+//                            resources.getQuantityString(
+//                                    if (currentValue) R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1),
+//                            Snackbar.LENGTH_SHORT)
+//                    .show()
         }
     }
 

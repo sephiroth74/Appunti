@@ -11,6 +11,7 @@
     android:layout_marginRight="@dimen/appunti_main_item_list_margins_horizontal"
     android:layout_marginTop="4dp"
     android:clickable="true"
+    android:descendantFocusability="blocksDescendants"
     android:focusable="true"
     android:foreground="@drawable/appunti_card_selectable_item_background_with_stroke"
     android:orientation="horizontal"
@@ -31,33 +32,33 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/id_title"
-            android:transitionName="itemTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?attr/textAppearanceListItem"
             android:textSize="@dimen/text_size_headline_material"
+            android:transitionName="itemTitle"
             app:fontFamily="?attr/fontFamily" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/id_content"
-            android:transitionName="itemText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textAppearance="?attr/textAppearanceListItemSmall"
-            android:textSize="@dimen/text_size_subhead_material" />
+            android:textSize="@dimen/text_size_subhead_material"
+            android:transitionName="itemText" />
 
         <androidx.appcompat.widget.AppCompatTextView
-            android:transitionName="itemCategory"
             android:id="@+id/entryCategory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:background="@drawable/category_chip_background"
-            android:checkable="false"
+            android:background="@drawable/category_chip_background_no_ripple"
+            android:clickable="false"
             android:padding="8dp"
             android:textAppearance="?attr/textAppearanceListItemSmall"
-            android:textSize="@dimen/text_size_caption_material" />
+            android:textSize="@dimen/text_size_caption_material"
+            android:transitionName="itemCategory" />
 
 
     </LinearLayout>
