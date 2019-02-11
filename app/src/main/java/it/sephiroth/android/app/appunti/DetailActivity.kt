@@ -1,7 +1,7 @@
 package it.sephiroth.android.app.appunti
 
+import android.annotation.SuppressLint
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
@@ -56,11 +56,25 @@ class DetailActivity : AppuntiActivity() {
 
         behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(p0: View, p1: Float) {
+                bottomSheetModealBackground.background.alpha = (p1 * 255).toInt()
             }
 
+            @SuppressLint("SwitchIntDef")
             override fun onStateChanged(p0: View, state: Int) {
                 Timber.i("onStateChanged($state)")
-                bottomSheet.background.alpha = if (state == BottomSheetBehavior.STATE_EXPANDED) 255 else 0
+
+                when (state) {
+                    BottomSheetBehavior.STATE_SETTLING,
+                    BottomSheetBehavior.STATE_DRAGGING,
+                    BottomSheetBehavior.STATE_EXPANDED -> {
+                        bottomSheetModealBackground.visibility = View.VISIBLE
+                    }
+
+                    BottomSheetBehavior.STATE_COLLAPSED,
+                    BottomSheetBehavior.STATE_HIDDEN -> {
+                        bottomSheetModealBackground.visibility = View.INVISIBLE
+                    }
+                }
             }
 
         })
@@ -76,8 +90,12 @@ class DetailActivity : AppuntiActivity() {
         }
 
         bottomAppBar.navigationIcon.setOnClickListener {
-            behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            navigationView.bringToFront()
+            if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+                behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            } else {
+                behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                navigationView.bringToFront()
+            }
         }
 
         bottomAppBar.doOnPreDraw {

@@ -93,12 +93,23 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <View
+        android:fitsSystemWindows="true"
+        android:id="@+id/bottomSheetModealBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#33000000"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:visibility="invisible" />
+
+
     <FrameLayout
         android:id="@+id/bottomSheet"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="bottom"
-        android:background="#33000000"
         android:clickable="true"
         android:elevation="0dp"
         android:focusable="true"
@@ -117,6 +128,7 @@
             android:focusable="true"
             android:foregroundGravity="bottom"
             app:menu="@menu/appunti_detail_menu" />
+
     </FrameLayout>
 
     <it.sephiroth.android.app.appunti.widget.DetailBottomAppBar
