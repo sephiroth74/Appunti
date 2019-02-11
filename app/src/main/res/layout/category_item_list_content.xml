@@ -2,14 +2,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="14dp"
-    android:layout_marginTop="14dp"
+    android:background="@drawable/appunti_material_control_background_selector"
     android:gravity="center"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:padding="14dp">
 
     <include layout="@layout/appunti_category_color_button_checkable" />
 
     <FrameLayout
+        android:id="@+id/frameLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
@@ -26,6 +27,18 @@
             android:maxEms="100"
             android:textSize="@dimen/text_size_body_1_material"
             android:visibility="visible" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/titleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:lines="1"
+            android:textSize="@dimen/text_size_body_1_material"
+            android:visibility="gone" />
 
     </FrameLayout>
 

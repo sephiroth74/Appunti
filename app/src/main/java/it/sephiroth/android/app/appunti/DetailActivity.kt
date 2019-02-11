@@ -16,7 +16,9 @@ import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
+import it.sephiroth.android.app.appunti.ext.hideSoftInput
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
@@ -56,7 +58,7 @@ class DetailActivity : AppuntiActivity() {
 
         behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(p0: View, p1: Float) {
-                bottomSheetModealBackground.background.alpha = (p1 * 255).toInt()
+                bottomSheetModalBackground.background.alpha = (p1 * 255).toInt()
             }
 
             @SuppressLint("SwitchIntDef")
@@ -67,12 +69,14 @@ class DetailActivity : AppuntiActivity() {
                     BottomSheetBehavior.STATE_SETTLING,
                     BottomSheetBehavior.STATE_DRAGGING,
                     BottomSheetBehavior.STATE_EXPANDED -> {
-                        bottomSheetModealBackground.visibility = View.VISIBLE
+                        bottomSheetModalBackground.visibility = View.VISIBLE
+                        bottomSheetModalBackground.requestFocus()
+                        bottomSheetModalBackground.hideSoftInput()
                     }
 
                     BottomSheetBehavior.STATE_COLLAPSED,
                     BottomSheetBehavior.STATE_HIDDEN -> {
-                        bottomSheetModealBackground.visibility = View.INVISIBLE
+                        bottomSheetModalBackground.visibility = View.INVISIBLE
                     }
                 }
             }
@@ -82,6 +86,10 @@ class DetailActivity : AppuntiActivity() {
         handleIntent(intent)
 
         entryCategory.setOnClickListener {
+            val intent = Intent(this, CategoriesEditActivity::class.java)
+            intent.action = Intent.ACTION_PICK
+            intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: - 1)
+            startActivityForResult(intent, CATEGORY_PICK_REQUEST, null)
         }
 
         navigationView.setNavigationItemSelectedListener { menuItem ->
@@ -96,6 +104,10 @@ class DetailActivity : AppuntiActivity() {
                 behavior.state = BottomSheetBehavior.STATE_EXPANDED
                 navigationView.bringToFront()
             }
+        }
+
+        bottomSheetModalBackground.setOnClickListener {
+            behavior.state = BottomSheetBehavior.STATE_COLLAPSED
         }
 
         bottomAppBar.doOnPreDraw {
@@ -113,6 +125,22 @@ class DetailActivity : AppuntiActivity() {
         sharedElementEnterTransition.doOnStart {
             entryCategory.visibility = if (model.entry.value?.category == null) View.INVISIBLE else View.VISIBLE
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == CATEGORY_PICK_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                data?.let { data ->
+                    val categoryID = data.getIntExtra("categoryID", - 1)
+                    DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
+                        model.setEntryCategory(category)
+                    }
+                }
+            }
+        }
+
+
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onBackPressed() {
@@ -169,45 +197,8 @@ class DetailActivity : AppuntiActivity() {
         model.entryID = entryID
     }
 
-
-    object EntryDiff {
-        data class Result(
-                var sameID: Boolean,
-                var archivedChanged: Boolean = true,
-                var deletedChanged: Boolean = true,
-                var pinnedChanged: Boolean = true,
-                var titleChanged: Boolean = true,
-                var textChanged: Boolean = true,
-                var categoryChanged: Boolean = true,
-                var priorityChanged: Boolean = true,
-                var modifiedDateChanged: Boolean = true)
-
-        fun calculateDiff(oldValue: Entry?, newValue: Entry?): Result {
-            return if (isSameItem(oldValue, newValue)) {
-                calculateContentDiff(oldValue, newValue)
-            } else {
-                Result(false)
-            }
-        }
-
-        private fun isSameItem(oldValue: Entry?, newValue: Entry?): Boolean {
-            return oldValue?.entryID == newValue?.entryID
-        }
-
-        private fun calculateContentDiff(oldValue: Entry?, newValue: Entry?): Result {
-            return Result(
-                    sameID = true,
-                    archivedChanged = oldValue?.entryArchived != newValue?.entryArchived,
-                    deletedChanged = oldValue?.entryDeleted != newValue?.entryDeleted,
-                    pinnedChanged = oldValue?.entryPinned != newValue?.entryPinned,
-                    titleChanged = oldValue?.entryTitle != newValue?.entryTitle,
-                    textChanged = oldValue?.entryText != newValue?.entryText,
-                    categoryChanged = oldValue?.category != newValue?.category,
-                    priorityChanged = oldValue?.entryPriority != newValue?.entryPriority,
-                    modifiedDateChanged = oldValue?.entryModifiedDate != newValue?.entryModifiedDate
-            )
-
-        }
+    companion object {
+        const val CATEGORY_PICK_REQUEST = 1
     }
 
 
@@ -313,6 +304,46 @@ class DetailActivity : AppuntiActivity() {
                     )
                 }
             }
+        }
+    }
+
+    object EntryDiff {
+        data class Result(
+                var sameID: Boolean,
+                var archivedChanged: Boolean = true,
+                var deletedChanged: Boolean = true,
+                var pinnedChanged: Boolean = true,
+                var titleChanged: Boolean = true,
+                var textChanged: Boolean = true,
+                var categoryChanged: Boolean = true,
+                var priorityChanged: Boolean = true,
+                var modifiedDateChanged: Boolean = true)
+
+        fun calculateDiff(oldValue: Entry?, newValue: Entry?): Result {
+            return if (isSameItem(oldValue, newValue)) {
+                calculateContentDiff(oldValue, newValue)
+            } else {
+                Result(false)
+            }
+        }
+
+        private fun isSameItem(oldValue: Entry?, newValue: Entry?): Boolean {
+            return oldValue?.entryID == newValue?.entryID
+        }
+
+        private fun calculateContentDiff(oldValue: Entry?, newValue: Entry?): Result {
+            return Result(
+                    sameID = true,
+                    archivedChanged = oldValue?.entryArchived != newValue?.entryArchived,
+                    deletedChanged = oldValue?.entryDeleted != newValue?.entryDeleted,
+                    pinnedChanged = oldValue?.entryPinned != newValue?.entryPinned,
+                    titleChanged = oldValue?.entryTitle != newValue?.entryTitle,
+                    textChanged = oldValue?.entryText != newValue?.entryText,
+                    categoryChanged = oldValue?.category != newValue?.category,
+                    priorityChanged = oldValue?.entryPriority != newValue?.entryPriority,
+                    modifiedDateChanged = oldValue?.entryModifiedDate != newValue?.entryModifiedDate
+            )
+
         }
     }
 }

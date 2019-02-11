@@ -1,9 +1,12 @@
 package it.sephiroth.android.app.appunti
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
 import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.text.InputType
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -42,6 +45,9 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     private lateinit var mAdapter: CategoriesAdapter
     private var mSnackbar: Snackbar? = null
 
+    private var mPickCategory = false
+    private var mPickCategorySelection: Int = - 1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -50,13 +56,29 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
             setDisplayShowHomeEnabled(true)
         }
 
-        mAdapter = CategoriesAdapter(this, mutableListOf())
+        intent?.let { intent ->
+            mPickCategory = intent.action == Intent.ACTION_PICK
+            mPickCategorySelection = intent.getIntExtra(SELECTED_CATEGORY_ID, - 1)
+        }
+
+        mAdapter = CategoriesAdapter(this, mPickCategory, mPickCategorySelection, mutableListOf())
+
+        if (mPickCategory) {
+            mAdapter.categorySelectedListener = { category ->
+                Timber.i("categorySelectedListener = $category")
+                val newIntent = Intent(intent)
+                newIntent.putExtra("categoryID", category.categoryID)
+                setResult(Activity.RESULT_OK, newIntent)
+                finish()
+            }
+        }
+
         categoriesRecycler.adapter = mAdapter
 
         newCategory.setOnClickListener { presentNewCategoryDialog() }
         updateCategories()
 
-        if (intent.hasExtra(ASK_NEW_CATEGORY_STARTUP)) {
+        if (intent != null && intent.action != Intent.ACTION_PICK && intent.hasExtra(ASK_NEW_CATEGORY_STARTUP)) {
             mainThread {
                 presentNewCategoryDialog()
             }
@@ -93,22 +115,6 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     }
 
     private fun presentCategoryColorChooser(category: Category?) {
-        /*
-        if (null != category) {
-            val copy = Category(category)
-            val sheet = CategoryColorsBottomSheetDialogFragment()
-            val arguments = Bundle()
-            arguments.putInt(CategoryColorsBottomSheetDialogFragment.BUNDLE_KEY_COLOR_INDEX, copy.categoryColorIndex)
-            sheet.arguments = arguments
-
-            sheet.show(supportFragmentManager, "category_colors")
-            sheet.actionListener = { value ->
-                copy.categoryColorIndex = value
-                copy.update()
-                sheet.dismiss()
-            }
-        }*/
-
         if (null != category) {
             val categoryCopy = Category(category)
 
@@ -148,7 +154,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
         if (null != category) {
 
             if (mSnackbar != null) {
-                mSnackbar!!.dismiss()
+                mSnackbar !!.dismiss()
                 mSnackbar = null
             }
 
@@ -179,7 +185,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     }
 
     private fun createCategory(name: String?, colorIndex: Int) {
-        if (!name.isNullOrEmpty()) {
+        if (! name.isNullOrEmpty()) {
             val category = Category(name, colorIndex, Category.CategoryType.USER)
             category.insert()
         } else {
@@ -188,7 +194,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     }
 
     private fun updateCategory(item: Category, text: String?) {
-        if (!text.isNullOrEmpty()) {
+        if (! text.isNullOrEmpty()) {
             if (text != item.categoryTitle) {
                 val copy = Category(item)
                 copy.categoryTitle = text
@@ -239,10 +245,13 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
 
     companion object {
         const val ASK_NEW_CATEGORY_STARTUP = "ask_for_new_category_startup"
+        const val SELECTED_CATEGORY_ID = "selected_category_id"
     }
 
     private inner class CategoriesAdapter(
             var context: CategoriesEditActivity,
+            val pickCategory: Boolean,
+            val selectedCategoryID: Int,
             var values: MutableList<Category>) :
             RecyclerView.Adapter<CategoriesAdapter.ViewHolder>() {
 
@@ -251,12 +260,14 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
         private var deletedQueue = mutableListOf<Category>()
         private var originalValues = ArrayList(values)
 
+        var categorySelectedListener: ((Category) -> (Unit))? = null
+
         init {
 
         }
 
         internal fun trash(category: Category) {
-            if (!deletedQueue.contains(category)) {
+            if (! deletedQueue.contains(category)) {
                 deletedQueue.add(category)
                 update(originalValues)
             }
@@ -285,7 +296,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
             Timber.i("update: ${newData?.size}")
 
             newData?.let {
-                val filteredData = it.filter { item -> !deletedQueue.contains(item) }
+                val filteredData = it.filter { item -> ! deletedQueue.contains(item) }
 
                 val callback = CategoriesDiffCallback(values, filteredData)
                 val result = DiffUtil.calculateDiff(callback, true)
@@ -307,7 +318,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
             val item = values[position]
 
             holder.category = item
-            holder.editTextView.setText(item.categoryTitle, TextView.BufferType.EDITABLE)
+
 
             val color = categoryColors[item.categoryColorIndex]
             var drawable: Drawable? = holder.colorButton.drawable
@@ -321,49 +332,67 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
 
             holder.isEnabled = item.categoryType == Category.CategoryType.USER
 
-            holder.editTextView.setOnEditorActionListener { _, actionId, _ ->
-                var result = false
-                when (actionId) {
-                    EditorInfo.IME_ACTION_DONE -> {
-                        removeFocusFromEditText()
-                        updateCategory(item, holder.editTextView.text.toString())
-                        result = true
+            if (pickCategory) {
+                holder.titleTextVew.text = item.categoryTitle
+                holder.isSelected = item.categoryID == selectedCategoryID
+                holder.editTextView.visibility = View.INVISIBLE
+                holder.titleTextVew.visibility = View.VISIBLE
+                holder.editButton.visibility = View.INVISIBLE
+                holder.deleteButton.visibility = View.INVISIBLE
+                holder.colorButton.isClickable = false
+                holder.colorButton.isFocusable = false
+                holder.colorButton.isFocusableInTouchMode = false
+
+                holder.itemView.setOnClickListener {
+                    Timber.i("item.setOnClickListener")
+                    categorySelectedListener?.invoke(item)
+                }
+            } else {
+                holder.editTextView.setText(item.categoryTitle, TextView.BufferType.EDITABLE)
+                holder.editTextView.setOnEditorActionListener { _, actionId, _ ->
+                    var result = false
+                    when (actionId) {
+                        EditorInfo.IME_ACTION_DONE -> {
+                            removeFocusFromEditText()
+                            updateCategory(item, holder.editTextView.text.toString())
+                            result = true
+                        }
+                    }
+                    result
+                }
+
+                holder.editTextView.setOnFocusChangeListener { _, hasFocus ->
+                    holder.editButton.isEnabled = ! hasFocus
+
+                    Timber.i("focus: $hasFocus")
+
+                    if (! hasFocus) {
+                        val text = holder.editTextView.text.toString()
+                        if (text.isEmpty()) holder.editTextView.setText(item.categoryTitle, TextView.BufferType.EDITABLE)
+                        else {
+                            updateCategory(item, text)
+                        }
+                    } else {
+                        currentEditText = holder.editTextView
+                        holder.editTextView.showSoftInput()
                     }
                 }
-                result
-            }
 
-            holder.editTextView.setOnFocusChangeListener { _, hasFocus ->
-                holder.editButton.isEnabled = !hasFocus
-
-                Timber.i("focus: $hasFocus")
-
-                if (!hasFocus) {
-                    val text = holder.editTextView.text.toString()
-                    if (text.isEmpty()) holder.editTextView.setText(item.categoryTitle, TextView.BufferType.EDITABLE)
-                    else {
-                        updateCategory(item, text)
-                    }
-                } else {
-                    currentEditText = holder.editTextView
-                    holder.editTextView.showSoftInput()
+                holder.colorButton.setOnClickListener {
+                    removeFocusFromEditText()
+                    presentCategoryColorChooser(holder.category)
                 }
-            }
 
-            holder.colorButton.setOnClickListener {
-                removeFocusFromEditText()
-                presentCategoryColorChooser(holder.category)
-            }
+                holder.deleteButton.setOnClickListener {
+                    removeFocusFromEditText()
+                    deleteCategory(holder.adapterPosition, holder.category)
+                }
 
-            holder.deleteButton.setOnClickListener {
-                removeFocusFromEditText()
-                deleteCategory(holder.adapterPosition, holder.category)
-            }
-
-            holder.editButton.setOnClickListener {
-                holder.editTextView.requestFocus()
-                val selection = holder.editTextView.text?.length ?: 0
-                holder.editTextView.setSelection(selection)
+                holder.editButton.setOnClickListener {
+                    holder.editTextView.requestFocus()
+                    val selection = holder.editTextView.text?.length ?: 0
+                    holder.editTextView.setSelection(selection)
+                }
             }
         }
 
@@ -380,6 +409,8 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
             val colorButton = view.colorButton
             val editButton = view.editButton
             val deleteButton = view.deleteButton
+            val titleTextVew = view.titleText
+            val frameLayout = view.frameLayout
 
             var isEnabled: Boolean
                 get() = itemView.isEnabled
@@ -397,6 +428,12 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
                     }
 
                 }
+
+            var isSelected: Boolean
+                set(value) {
+                    itemView.isSelected = value
+                }
+                get() = itemView.isSelected
 
         }
     }

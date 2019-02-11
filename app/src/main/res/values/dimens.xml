@@ -5,6 +5,9 @@
     <dimen name="item_width">200dp</dimen>
     <dimen name="material_cardview_cornerRadius">8dp</dimen>
 
+    <!-- corner radius for background selectors -->
+    <dimen name="appunti_material_selector_cornerRadius">12dp</dimen>
+
     <!-- stroke width for the main list card background -->
     <dimen name="appunti_card_stroke_width">0.5dp</dimen>
 

@@ -94,14 +94,14 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <View
-        android:fitsSystemWindows="true"
-        android:id="@+id/bottomSheetModealBackground"
+        android:id="@+id/bottomSheetModalBackground"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#33000000"
-        android:clickable="false"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
+        android:clickable="true"
+        android:fitsSystemWindows="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:visibility="invisible" />
 
 
@@ -110,9 +110,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="bottom"
-        android:clickable="true"
         android:elevation="0dp"
-        android:focusable="true"
         app:behavior_hideable="false"
         app:behavior_peekHeight="0dp"
         app:layout_behavior="@string/bottom_sheet_behavior"

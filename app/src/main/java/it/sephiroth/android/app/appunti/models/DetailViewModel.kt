@@ -9,6 +9,7 @@ import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.ChangeAction
 import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
+import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import timber.log.Timber
 
@@ -20,15 +21,15 @@ class DetailViewModel(application: Application) : AndroidViewModel(application),
         @SuppressLint("CheckResult")
         set(value) {
             DatabaseHelper
-                    .getEntryById(value)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { result, error ->
-                        result?.let {
-                            setEntry(it)
-                        } ?: run {
-                            setEntry(Entry())
-                        }
+                .getEntryById(value)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { result, error ->
+                    result?.let {
+                        setEntry(it)
+                    } ?: run {
+                        setEntry(Entry())
                     }
+                }
         }
         get() {
             return entry.value?.entryID ?: 0
@@ -76,6 +77,12 @@ class DetailViewModel(application: Application) : AndroidViewModel(application),
     fun toggleDeleted(): Boolean {
         entry.value?.let {
             return DatabaseHelper.setEntryDeleted(it, it.entryDeleted == 0)
+        } ?: run { return false }
+    }
+
+    fun setEntryCategory(category: Category?): Boolean {
+        entry.value?.let {
+            return DatabaseHelper.setEntryCategory(Entry(it), category)
         } ?: run { return false }
     }
 

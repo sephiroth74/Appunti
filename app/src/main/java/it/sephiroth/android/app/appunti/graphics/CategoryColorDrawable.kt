@@ -56,6 +56,7 @@ class CategoryColorDrawable(context: Context, color: Int) : ColorDrawable(color)
         val pressed = stateSet?.contains(android.R.attr.state_pressed) ?: kotlin.run { false }
         val enabled = stateSet?.contains(android.R.attr.state_enabled) ?: kotlin.run { false }
         mChecked = stateSet?.contains(android.R.attr.state_checked) ?: kotlin.run { false }
+        mChecked = mChecked or (stateSet?.contains(android.R.attr.state_selected) ?: kotlin.run { false })
 
         strokePaint.color = if (pressed) strokeColorPressed else strokeColorNormal
         strokePaint.alpha = if (enabled) 255 else 51
@@ -65,8 +66,10 @@ class CategoryColorDrawable(context: Context, color: Int) : ColorDrawable(color)
     }
 
     override fun draw(canvas: Canvas) {
-        canvas.drawCircle(dstBounds.centerX().toFloat(), dstBounds.centerY().toFloat(), (dstBounds.width() / 2).toFloat(), fillPaint)
-        canvas.drawCircle(dstBounds.centerX().toFloat(), dstBounds.centerY().toFloat(), (dstBounds.width() / 2).toFloat(), strokePaint)
+        canvas
+            .drawCircle(dstBounds.centerX().toFloat(), dstBounds.centerY().toFloat(), (dstBounds.width() / 2).toFloat(), fillPaint)
+        canvas.drawCircle(dstBounds.centerX().toFloat(), dstBounds.centerY().toFloat(), (dstBounds.width() / 2).toFloat(),
+                strokePaint)
 
         if (mChecked) {
             mark?.draw(canvas)
