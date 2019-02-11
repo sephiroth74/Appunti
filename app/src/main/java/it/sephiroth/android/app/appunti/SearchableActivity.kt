@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityOptionsCompat
+import androidx.core.util.Pair
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.dbflow5.isNotNullOrEmpty
 import com.dbflow5.query.OrderBy
@@ -109,7 +111,38 @@ class SearchableActivity : AppuntiActivity() {
 
         itemsRecycler.adapter = adapter
         itemsRecycler.setHasFixedSize(false)
+
+        adapter.itemClickListener = { holder ->
+            if (holder.itemViewType == ItemEntryListAdapter.TYPE_ENTRY) {
+                val entryItem = (holder as ItemEntryListAdapter.EntryViewHolder).entry
+                if (entryItem != null) {
+                    startDetailActivity(holder, entryItem)
+                }
+            }
+        }
     }
+
+    private fun startDetailActivity(holder: ItemEntryListAdapter.EntryViewHolder, entry: Entry) {
+        val intent = Intent(this, DetailActivity::class.java)
+        intent.action = Intent.ACTION_EDIT
+        intent.putExtra("entryID", entry.entryID)
+
+        val elementsArray = arrayListOf<Pair<View, String>>(
+                Pair(holder.titleTextView, "itemTitle"),
+                Pair(holder.contentTextView, "itemText"))
+
+        if (entry.category != null) {
+            elementsArray.add(Pair(holder.categoryTextView, "itemCategory"))
+        }
+
+        val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this, *(elementsArray.toTypedArray()))
+        startDetailActivityFromIntent(intent, intentOptions)
+    }
+
+    private fun startDetailActivityFromIntent(intent: Intent, intentOptions: ActivityOptionsCompat?) {
+        startActivity(intent, intentOptions?.toBundle())
+    }
+
 
     private fun setupSearchView() {
         searchView.setOnQueryTextListener(object : Search.OnQueryTextListener {

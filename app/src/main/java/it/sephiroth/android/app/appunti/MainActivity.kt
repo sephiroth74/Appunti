@@ -333,14 +333,14 @@ class MainActivity : AppuntiActivity() {
 
         val elementsArray = arrayListOf<Pair<View, String>>(
                 Pair(holder.titleTextView, "itemTitle"),
-                Pair(holder.contentTextView, "itemText"))
+                Pair(holder.contentTextView, "itemText"),
+                Pair(bottomAppBar, "bottomAppBar"))
 
         if (entry.category != null) {
             elementsArray.add(Pair(holder.categoryTextView, "itemCategory"))
         }
 
         val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this, *(elementsArray.toTypedArray()))
-
         startDetailActivityFromIntent(intent, intentOptions)
     }
 
