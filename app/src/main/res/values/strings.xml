@@ -59,10 +59,14 @@
     <string name="others">Others</string>
     <string name="delete">Delete</string>
     <string name="archive">Archive</string>
+    <string name="unarchive">Unarchive</string>
     <string name="pick_a_color">Pick a Color</string>
     <string name="deleted">Deleted</string>
     <string name="archived">Archived</string>
     <string name="pin">Pin</string>
     <string name="share">Share</string>
     <string name="restore">Restore</string>
+    <string name="category">Category</string>
+    <string name="title">Title</string>
+    <string name="content_here">Content Here...</string>
 </resources>

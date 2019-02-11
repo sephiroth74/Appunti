@@ -3,18 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/menu_action_pin"
+        android:id="@+id/menu_action_delete"
         android:checkable="false"
-        android:icon="@drawable/appunti_sharp_favourite_24_unchecked_selector"
-        android:title="@string/pin"
-        app:showAsAction="always" />
-
-    <item
-        android:id="@+id/menu_action_archive"
-        android:checkable="false"
-        android:icon="@drawable/appunti_outline_archive_24_unchecked_selector"
-        android:title="@string/archive"
-        app:showAsAction="always" />
+        android:icon="@drawable/appunti_sharp_delete_24_outline_selector"
+        android:title="@string/delete"
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/menu_action_share"
@@ -23,5 +16,12 @@
         android:title="@string/share"
         app:showAsAction="always" />
 
+
+    <item
+        android:id="@+id/menu_action_category"
+        android:checkable="false"
+        android:icon="@drawable/outline_label_24"
+        android:title="@string/category"
+        app:showAsAction="always" />
 
 </menu>

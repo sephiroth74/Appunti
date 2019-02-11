@@ -26,6 +26,8 @@ class Entry() : BaseRXModel() {
         entryType = other.entryType
         entryPinned = other.entryPinned
         entryModifiedDate = other.entryModifiedDate
+        entryDeleted = other.entryDeleted
+        entryArchived = other.entryArchived
         attachments = other.attachments
     }
 
@@ -103,9 +105,10 @@ class Entry() : BaseRXModel() {
         return ResourceUtils.getCategoryColors(context)[category?.categoryColorIndex ?: 0]
     }
 
-    fun isNew(): Boolean {
-        return entryID == 0
-    }
+    fun isNew() = entryID == 0
+    fun isDeleted() = entryDeleted == 1
+    fun isArchived() = entryArchived == 1
+    fun isPinned() = entryPinned == 1
 
     enum class EntryType {
         TEXT, LIST

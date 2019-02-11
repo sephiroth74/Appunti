@@ -1,5 +1,6 @@
 package it.sephiroth.android.app.appunti
 
+import android.animation.Animator
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
@@ -8,21 +9,30 @@ import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.transition.AutoTransition
 import android.view.*
+import android.view.animation.Animation
+import android.widget.FrameLayout
 import androidx.appcompat.widget.Toolbar
+import androidx.core.animation.doOnEnd
 import androidx.core.app.NavUtils
 import androidx.core.transition.doOnEnd
 import androidx.core.transition.doOnStart
+import androidx.core.view.doOnLayout
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.dbflow5.structure.save
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import io.reactivex.disposables.Disposable
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
+import it.sephiroth.android.app.appunti.ext.doOnTextChanged
 import it.sephiroth.android.app.appunti.ext.hideSoftInput
+import it.sephiroth.android.app.appunti.ext.rxTimer
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
 
 @Suppress("NAME_SHADOWING")
@@ -31,8 +41,11 @@ class DetailActivity : AppuntiActivity() {
 
     override fun getContentLayout(): Int = R.layout.activity_detail
 
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<FrameLayout>
     private lateinit var model: DetailViewModel
     private var currentEntry: Entry? = null
+    private var changeTimer: Disposable? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS)
@@ -53,18 +66,16 @@ class DetailActivity : AppuntiActivity() {
             onEntryChanged(entry)
         })
 
-        val behavior = BottomSheetBehavior.from(bottomSheet)
-        behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
 
-        behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+        bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(p0: View, p1: Float) {
                 bottomSheetModalBackground.background.alpha = (p1 * 255).toInt()
             }
 
             @SuppressLint("SwitchIntDef")
             override fun onStateChanged(p0: View, state: Int) {
-                Timber.i("onStateChanged($state)")
-
                 when (state) {
                     BottomSheetBehavior.STATE_SETTLING,
                     BottomSheetBehavior.STATE_DRAGGING,
@@ -85,29 +96,47 @@ class DetailActivity : AppuntiActivity() {
 
         handleIntent(intent)
 
-        entryCategory.setOnClickListener {
-            val intent = Intent(this, CategoriesEditActivity::class.java)
-            intent.action = Intent.ACTION_PICK
-            intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: - 1)
-            startActivityForResult(intent, CATEGORY_PICK_REQUEST, null)
+        entryCategory.setOnClickListener { pickCategory() }
+
+        entryTitle.doOnTextChanged { s, start, count, after ->
+
+            changeTimer = rxTimer(changeTimer, 300, TimeUnit.MILLISECONDS) {
+                currentEntry?.entryTitle = s?.toString() ?: ""
+                currentEntry?.save()
+            }
+
         }
 
         navigationView.setNavigationItemSelectedListener { menuItem ->
             Timber.i("menuItem: $menuItem")
+            when (menuItem.itemId) {
+                R.id.menu_action_category -> {
+                    pickCategory()
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                }
+
+                R.id.menu_action_delete -> {
+                    onToggleDelete()
+                }
+
+                R.id.menu_action_share -> {
+                    onShareEntry()
+                }
+            }
             true
         }
 
         bottomAppBar.navigationIcon.setOnClickListener {
-            if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) {
-                behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
             } else {
-                behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
                 navigationView.bringToFront()
             }
         }
 
         bottomSheetModalBackground.setOnClickListener {
-            behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
         }
 
         bottomAppBar.doOnPreDraw {
@@ -155,6 +184,7 @@ class DetailActivity : AppuntiActivity() {
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         Timber.i("onPrepareOptionsMenu")
         updateMenu(menu)
+        updateMenu(navigationView.menu)
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -162,9 +192,6 @@ class DetailActivity : AppuntiActivity() {
         when (item.itemId) {
             R.id.menu_action_pin -> {
                 onTogglePin()
-            }
-            R.id.menu_action_delete -> {
-                onToggleDelete()
             }
             R.id.menu_action_archive -> {
                 onToggleArchive()
@@ -197,6 +224,13 @@ class DetailActivity : AppuntiActivity() {
         model.entryID = entryID
     }
 
+    private fun pickCategory() {
+        val intent = Intent(this, CategoriesEditActivity::class.java)
+        intent.action = Intent.ACTION_PICK
+        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: - 1)
+        startActivityForResult(intent, CATEGORY_PICK_REQUEST, null)
+    }
+
     companion object {
         const val CATEGORY_PICK_REQUEST = 1
     }
@@ -208,7 +242,7 @@ class DetailActivity : AppuntiActivity() {
         val diff = EntryDiff.calculateDiff(currentEntry, entry)
         Timber.v("diff=$diff")
 
-        currentEntry = entry
+        currentEntry = Entry(entry)
 
         if (diff.titleChanged) entryTitle.setText(entry.entryTitle)
         if (diff.textChanged) entryText.setText(entry.entryText)
@@ -240,7 +274,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun onTogglePin() {
-        val currentValue = model.entry.value?.entryPinned == 1
+        val currentValue = model.entry.value?.isPinned()
         val result = model.togglePin()
 
         if (result) {
@@ -275,33 +309,35 @@ class DetailActivity : AppuntiActivity() {
 
         model.entry.value?.let { entry ->
             menu?.let { menu ->
-                with(menu.findItem(R.id.menu_action_pin)) {
+                var menuItem = menu.findItem(R.id.menu_action_pin)
+                menuItem?.apply {
                     setIcon(
-                            if (entry.entryPinned == 1)
+                            if (entry.isPinned())
                                 R.drawable.appunti_sharp_favourite_24_checked_selector
                             else
                                 R.drawable.appunti_sharp_favourite_24_unchecked_selector)
 
                 }
 
-                with(menu.findItem(R.id.menu_action_archive)) {
+                menuItem = menu.findItem(R.id.menu_action_archive)
+                menuItem?.apply {
                     setIcon(
-                            if (entry.entryArchived == 1)
+                            if (entry.isArchived())
                                 R.drawable.appunti_outline_archive_24_checked_selector
                             else R.drawable.appunti_outline_archive_24_unchecked_selector)
+
+                    setTitle(if (entry.isArchived()) R.string.unarchive else R.string.archive)
                 }
 
-                with(menu.findItem(R.id.menu_action_delete)) {
+                menuItem = menu.findItem(R.id.menu_action_delete)
+                menuItem?.apply {
                     setIcon(
-                            if (entry.entryDeleted == 1)
+                            if (entry.isDeleted())
                                 R.drawable.appunti_sharp_restore_from_trash_24_selector
                             else R.drawable.appunti_sharp_delete_24_outline_selector
                     )
 
-                    setTitle(
-                            if (entry.entryDeleted == 1) R.string.restore
-                            else R.string.delete
-                    )
+                    setTitle(if (entry.isDeleted()) R.string.restore else R.string.delete)
                 }
             }
         }

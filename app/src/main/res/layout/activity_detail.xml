@@ -58,6 +58,7 @@
                 android:layout_weight="0"
                 android:background="@null"
                 android:gravity="top|start"
+                android:hint="@string/title"
                 android:lines="1"
                 android:text="Titolo"
                 android:textAppearance="?attr/textAppearanceHeadline5"
@@ -72,6 +73,7 @@
                 android:layout_weight="1"
                 android:background="@null"
                 android:gravity="top|start"
+                android:hint="@string/content_here"
                 android:text="Testo"
                 android:textAppearance="?attr/textAppearanceBody1"
                 android:transitionName="itemText" />
@@ -125,7 +127,7 @@
             android:clickable="true"
             android:focusable="true"
             android:foregroundGravity="bottom"
-            app:menu="@menu/appunti_detail_menu" />
+            app:menu="@menu/appunti_detail_extra_menu" />
 
     </FrameLayout>
 
