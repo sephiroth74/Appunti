@@ -1,22 +1,20 @@
 package it.sephiroth.android.app.appunti
 
-import android.animation.Animator
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
+import android.text.method.LinkMovementMethod
 import android.transition.AutoTransition
 import android.view.*
-import android.view.animation.Animation
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
-import androidx.core.animation.doOnEnd
 import androidx.core.app.NavUtils
 import androidx.core.transition.doOnEnd
 import androidx.core.transition.doOnStart
-import androidx.core.view.doOnLayout
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -67,7 +65,7 @@ class DetailActivity : AppuntiActivity() {
         })
 
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        closeBottomSheet()
 
         bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(p0: View, p1: Float) {
@@ -99,44 +97,49 @@ class DetailActivity : AppuntiActivity() {
         entryCategory.setOnClickListener { pickCategory() }
 
         entryTitle.doOnTextChanged { s, start, count, after ->
-
             changeTimer = rxTimer(changeTimer, 300, TimeUnit.MILLISECONDS) {
                 currentEntry?.entryTitle = s?.toString() ?: ""
                 currentEntry?.save()
             }
-
         }
+
+        entryText.doOnTextChanged { s, start, count, after ->
+            changeTimer = rxTimer(changeTimer, 1, TimeUnit.SECONDS) {
+                currentEntry?.entryText = s?.toString() ?: ""
+                currentEntry?.save()
+            }
+        }
+
+        entryText.movementMethod = LinkMovementMethod.getInstance()
+
 
         navigationView.setNavigationItemSelectedListener { menuItem ->
             Timber.i("menuItem: $menuItem")
             when (menuItem.itemId) {
                 R.id.menu_action_category -> {
                     pickCategory()
-                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                    closeBottomSheet()
                 }
 
                 R.id.menu_action_delete -> {
                     onToggleDelete()
+                    closeBottomSheet()
                 }
 
                 R.id.menu_action_share -> {
                     onShareEntry()
+                    closeBottomSheet()
                 }
             }
             true
         }
 
         bottomAppBar.navigationIcon.setOnClickListener {
-            if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
-                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-            } else {
-                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-                navigationView.bringToFront()
-            }
+            openOrCloseBottomsheet()
         }
 
         bottomSheetModalBackground.setOnClickListener {
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            closeBottomSheet()
         }
 
         bottomAppBar.doOnPreDraw {
@@ -231,6 +234,23 @@ class DetailActivity : AppuntiActivity() {
         startActivityForResult(intent, CATEGORY_PICK_REQUEST, null)
     }
 
+    private fun closeBottomSheet() {
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+    }
+
+    private fun openBottomSheet() {
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+    }
+
+    private fun openOrCloseBottomsheet() {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+            closeBottomSheet()
+        } else {
+            openBottomSheet()
+            navigationView.bringToFront()
+        }
+    }
+
     companion object {
         const val CATEGORY_PICK_REQUEST = 1
     }
@@ -278,21 +298,34 @@ class DetailActivity : AppuntiActivity() {
         val result = model.togglePin()
 
         if (result) {
-//            Snackbar
-//                    .make(coordinator,
-//                            resources.getQuantityString(
-//                                    if (currentValue) R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1),
-//                            Snackbar.LENGTH_SHORT)
-//                    .show()
+            Toast.makeText(this,
+                    resources.getQuantityString(
+                            if (currentValue == true)
+                                R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1),
+                    Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun onToggleDelete() {
-        val result = model.toggleDeleted()
+        val currentValue = model.entry.value?.isDeleted()
+        if (model.toggleDeleted()) {
+            Toast.makeText(this,
+                    resources.getQuantityString(
+                            if (currentValue == true)
+                                R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1),
+                    Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun onToggleArchive() {
-        val result = model.toggleArchived()
+        val currentValue = model.entry.value?.isArchived()
+        if (model.toggleArchived()) {
+            Toast.makeText(this,
+                    resources.getQuantityString(
+                            if (currentValue == true)
+                                R.plurals.entries_unarchived_title else R.plurals.entries_archived_title, 1, 1),
+                    Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun onShareEntry() {

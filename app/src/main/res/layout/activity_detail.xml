@@ -60,7 +60,6 @@
                 android:gravity="top|start"
                 android:hint="@string/title"
                 android:lines="1"
-                android:text="Titolo"
                 android:textAppearance="?attr/textAppearanceHeadline5"
                 android:transitionName="itemTitle"
                 app:fontFamily="?attr/fontFamily" />
@@ -71,12 +70,14 @@
                 android:layout_height="0dp"
                 android:layout_marginTop="16dp"
                 android:layout_weight="1"
+                android:autoLink="all"
                 android:background="@null"
                 android:gravity="top|start"
                 android:hint="@string/content_here"
-                android:text="Testo"
+                android:linksClickable="true"
                 android:textAppearance="?attr/textAppearanceBody1"
-                android:transitionName="itemText" />
+                android:transitionName="itemText"
+                tools:ignore="HardcodedText" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/entryCategory"

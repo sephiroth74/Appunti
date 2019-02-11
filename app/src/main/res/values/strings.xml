@@ -35,9 +35,19 @@
         <item quantity="other">%d Entries Archived</item>
     </plurals>
 
+    <plurals name="entries_unarchived_title">
+        <item quantity="one">Entry Unarchived</item>
+        <item quantity="other">%d Entries Unarchived</item>
+    </plurals>
+
     <plurals name="entries_deleted_title">
         <item quantity="one">Entry Deleted</item>
         <item quantity="other">%d Entries Deleted</item>
+    </plurals>
+
+    <plurals name="entries_restored_title">
+        <item quantity="one">Entry Restored</item>
+        <item quantity="other">%d Entries Restored</item>
     </plurals>
 
     <plurals name="entries_pinned_title">

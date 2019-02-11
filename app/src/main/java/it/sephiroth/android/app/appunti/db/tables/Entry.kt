@@ -74,6 +74,7 @@ class Entry() : BaseRXModel() {
             is Entry -> {
                 return (entryID == other.entryID
                         && entryTitle == other.entryTitle
+                        && entryText == other.entryText
                         && entryPriority == other.entryPriority
                         && entryCreationDate == other.entryCreationDate
                         && entryModifiedDate == other.entryModifiedDate
@@ -89,9 +90,9 @@ class Entry() : BaseRXModel() {
         Timber.w("Entry.hashCode")
         var result = entryID
         result = 31 * result + (entryTitle?.hashCode() ?: 0)
+        result = 31 * result + (entryText?.hashCode() ?: 0)
         result = 31 * result + entryPriority
         result = 31 * result + (category?.hashCode() ?: 0)
-        result = 31 * result + (entryText?.hashCode() ?: 0)
         result = 31 * result + entryType.hashCode()
         result = 31 * result + entryPinned
         result = 31 * result + entryArchived

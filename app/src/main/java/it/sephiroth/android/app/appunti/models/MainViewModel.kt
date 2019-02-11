@@ -60,7 +60,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         fun isArchived() = mArchived
 
         fun getCategory(): Category? {
-            if (!mDeleted && !mArchived) return mCategory
+            if (! mDeleted && ! mArchived) return mCategory
             return null
         }
 
@@ -76,16 +76,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
                 from.where(Entry_Table.entryDeleted.eq(1))
             } else if (mArchived) {
                 from.where(Entry_Table.entryArchived.eq(1))
-                        .and(Entry_Table.entryDeleted.eq(0))
+                    .and(Entry_Table.entryDeleted.eq(0))
             } else {
                 return from
-                        .where(Entry_Table.entryArchived.eq(0))
-                        .and(Entry_Table.entryDeleted.eq(0)).also { where ->
+                    .where(Entry_Table.entryArchived.eq(0))
+                    .and(Entry_Table.entryDeleted.eq(0)).also { where ->
 
-                            mCategory?.let { category ->
-                                where.and(Entry_Table.category_categoryID.eq(category.categoryID))
-                            }
+                        mCategory?.let { category ->
+                            where.and(Entry_Table.category_categoryID.eq(category.categoryID))
                         }
+                    }
             }
         }
     }
@@ -144,15 +144,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     private fun updateEntries() {
         Timber.i("updateEntries")
         DatabaseHelper
-                .getEntries { group.buildQuery(this) }
-                .observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
-                    Timber.v("[${currentThread()}] entries returned = ${result.size}")
-                    (entries as MutableLiveData).value = result
+            .getEntries { group.buildQuery(this) }
+            .observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
+                Timber.v("[${currentThread()}] entries returned = ${result.size}")
+                (entries as MutableLiveData).value = result
 
-                    error?.let {
-                        Timber.e("error = $error")
-                    }
+                error?.let {
+                    Timber.e("error = $error")
                 }
+            }
     }
 
     @SuppressLint("CheckResult")
@@ -160,12 +160,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         Timber.i("updateCategories")
         DatabaseHelper.getCategories().observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
             (categories as MutableLiveData).value = result
-//            currentCategory?.let { category ->
-//                val categoryResult = result.firstOrNull { it.categoryID == category.categoryID }
-//                currentCategory = categoryResult
-//            } ?: run {
-//                currentCategory = null
-//            }
         }
     }
 
@@ -183,6 +177,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         if (model is Category) {
             handler.removeCallbacks(updateCategoriesRunnable)
             handler.post(updateCategoriesRunnable)
+
+            if (action in arrayOf(ChangeAction.UPDATE, ChangeAction.DELETE)) {
+                handler.removeCallbacks(updateEntriesRunnable)
+                handler.post(updateEntriesRunnable)
+            }
+
         } else if (model is Entry) {
             handler.removeCallbacks(updateEntriesRunnable)
             handler.post(updateEntriesRunnable)
