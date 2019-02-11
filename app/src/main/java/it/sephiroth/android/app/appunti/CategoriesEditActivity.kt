@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.text.InputType
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -65,11 +64,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
 
         if (mPickCategory) {
             mAdapter.categorySelectedListener = { category ->
-                Timber.i("categorySelectedListener = $category")
-                val newIntent = Intent(intent)
-                newIntent.putExtra("categoryID", category.categoryID)
-                setResult(Activity.RESULT_OK, newIntent)
-                finish()
+                setResultAndFinish(category)
             }
         }
 
@@ -87,6 +82,14 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
 
     override fun getToolbar(): Toolbar? = toolbar
     override fun getContentLayout(): Int = R.layout.activity_categories
+
+    private fun setResultAndFinish(category: Category) {
+        Timber.i("categorySelectedListener = $category")
+        val newIntent = Intent(intent)
+        newIntent.putExtra("categoryID", category.categoryID)
+        setResult(Activity.RESULT_OK, newIntent)
+        finish()
+    }
 
     private fun presentNewCategoryDialog() {
         val alertDialog: AlertDialog = AlertDialog
@@ -188,6 +191,12 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
         if (! name.isNullOrEmpty()) {
             val category = Category(name, colorIndex, Category.CategoryType.USER)
             category.insert()
+
+            if (mPickCategory) {
+                setResultAndFinish(category)
+            }
+
+
         } else {
             Toast.makeText(this, "Invalid Category title", Toast.LENGTH_SHORT).show()
         }
