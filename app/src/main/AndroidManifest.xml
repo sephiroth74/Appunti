@@ -24,7 +24,7 @@
             android:name=".DetailActivity"
             android:label=""
             android:launchMode="singleTop"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName="it.sephiroth.android.app.appunti.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="it.sephiroth.android.app.appunti.MainActivity" />
@@ -33,9 +33,11 @@
         <activity
             android:name=".CategoriesEditActivity"
             android:label="@string/title_activity_categories" />
+
         <activity
             android:name=".PreferencesActivity"
             android:label="@string/settings" />
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -50,6 +52,7 @@
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
         </activity>
+
         <activity android:name=".SearchableActivity">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />

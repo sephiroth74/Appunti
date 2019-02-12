@@ -81,7 +81,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 enableLights(true)
                 lightColor = Color.YELLOW
             }
-            // Register the channel with the system
+
             val notificationManager: NotificationManager = context
                     .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -95,7 +95,7 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        const val ENTRY_ALARM_CHANNEL_ID = "entry_channel"
-        const val DEFAULT_CHANNEL_GROUP = "default.channel.group"
+        const val ENTRY_ALARM_CHANNEL_ID = "entry_channel_id"
+        const val DEFAULT_CHANNEL_GROUP = "appunti.default.channel.group"
     }
 }

@@ -14,6 +14,7 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NavUtils
+import androidx.core.app.TaskStackBuilder
 import androidx.core.transition.doOnEnd
 import androidx.core.transition.doOnStart
 import androidx.core.view.doOnPreDraw
@@ -181,8 +182,32 @@ class DetailActivity : AppuntiActivity() {
     }
 
     override fun onBackPressed() {
-        // TODO: verify this
-        NavUtils.navigateUpFromSameTask(this)
+        Timber.i("onBackPressed")
+
+        if (NavUtils.shouldUpRecreateTask(this, intent)) {
+            Timber.v("shouldUpRecreateTask($intent")
+            // This activity is NOT part of this app's task, so
+            // create a new task when navigating up, with a
+            // synthesized back stack.
+            TaskStackBuilder.create(this)
+                    .addNextIntentWithParentStack(intent)
+                    .startActivities()
+        } else {
+            Timber.v("navigateUpTo($intent)")
+
+            val upIntent = NavUtils.getParentActivityIntent(this)
+            Timber.v("upIntent: $upIntent")
+
+            upIntent?.let { upIntent ->
+                upIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                startActivity(upIntent)
+            } ?: run {
+                super.onBackPressed()
+            }
+
+            // This doesn't seem to work
+//            NavUtils.navigateUpTo(this, intent)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
