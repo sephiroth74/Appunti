@@ -12,9 +12,10 @@ import com.wdullaer.materialdatetimepicker.time.TimePickerDialog
 import it.sephiroth.android.app.appunti.ext.getColor
 import it.sephiroth.android.app.appunti.ext.isAPI
 import it.sephiroth.android.app.appunti.models.SettingsManager
+import org.threeten.bp.Instant
+import org.threeten.bp.LocalDateTime
 import org.threeten.bp.ZonedDateTime
 import timber.log.Timber
-import java.util.*
 
 abstract class AppuntiActivity : AppCompatActivity() {
 
@@ -41,10 +42,9 @@ abstract class AppuntiActivity : AppCompatActivity() {
     abstract fun getContentLayout(): Int
 
 
-    fun pickDateTime(currentDateTime: ZonedDateTime, action: (() -> (Unit))?) {
+    fun pickDateTime(currentDateTime: ZonedDateTime, action: ((ZonedDateTime) -> (Unit))?) {
 
-        val calendar = Calendar.getInstance()
-        calendar.set(currentDateTime.year, currentDateTime.monthValue, currentDateTime.dayOfMonth, currentDateTime.hour, currentDateTime.minute, currentDateTime.second)
+        Timber.i("pickDateTime($currentDateTime)")
 
         val dpd = DatePickerDialog.newInstance(
                 { view, year, monthOfYear, dayOfMonth ->
@@ -54,7 +54,15 @@ abstract class AppuntiActivity : AppCompatActivity() {
                                                                 second ->
                         Timber.v("time selection = $hourOfDay:$minute:$second")
 
-                        action?.invoke()
+                        val result = currentDateTime
+                                .withYear(year)
+                                .withMonth(monthOfYear + 1)
+                                .withDayOfMonth(dayOfMonth)
+                                .withHour(hourOfDay)
+                                .withMinute(minute)
+                                .withSecond(second)
+
+                        action?.invoke(result)
 
                     }, true)
 
@@ -67,12 +75,12 @@ abstract class AppuntiActivity : AppCompatActivity() {
 
                 },
                 currentDateTime.year,
-                currentDateTime.monthValue,
+                currentDateTime.monthValue - 1,
                 currentDateTime.dayOfMonth)
 
         dpd.version = DatePickerDialog.Version.VERSION_2
         dpd.accentColor = ResourcesCompat.getColor(resources, R.color.colorPrimary, theme)
-        dpd.minDate = calendar
+//        dpd.minDate = calendar
         dpd.vibrate(false)
         dpd.setOkColor(theme.getColor(this, android.R.attr.textColorSecondary))
         dpd.setCancelColor(theme.getColor(this, android.R.attr.textColorSecondary))

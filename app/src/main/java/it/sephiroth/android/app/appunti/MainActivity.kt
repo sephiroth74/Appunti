@@ -12,7 +12,6 @@ import android.view.View
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityOptionsCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.util.Pair
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
@@ -24,8 +23,6 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
-import com.wdullaer.materialdatetimepicker.date.DatePickerDialog
-import com.wdullaer.materialdatetimepicker.time.TimePickerDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -95,7 +92,9 @@ class MainActivity : AppuntiActivity() {
 
             Timber.v("date = $date")
 
-            pickDateTime(date) { Timber.v("date time picker!") }
+            pickDateTime(date) { result ->
+                Timber.v("date time picker! $result")
+            }
 
 //            startDetailActivity()
         }

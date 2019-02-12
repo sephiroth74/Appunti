@@ -10,9 +10,7 @@ import it.sephiroth.android.app.appunti.db.EntryTypeConverter
 import it.sephiroth.android.app.appunti.db.InstantTypeConverter
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import org.threeten.bp.Instant
-import org.threeten.bp.ZoneId
 import timber.log.Timber
-import java.util.*
 
 @Table(database = AppDatabase::class, indexGroups = [
     IndexGroup(number = 1, name = "firstIndex")
@@ -71,7 +69,7 @@ class Entry() : BaseRXModel() {
 
     override fun toString(): String {
         return "Entry(id=$entryID, title=$entryTitle, category=$category, pinned=$entryPinned, archived=$entryArchived, " +
-                "deleted=$entryDeleted, priority=$entryPriority, modified=${entryModifiedDate.atZone(ZoneId.systemDefault())})"
+                "deleted=$entryDeleted, priority=$entryPriority, modified=${entryModifiedDate.toEpochMilli()})"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -99,9 +97,11 @@ class Entry() : BaseRXModel() {
         result = 31 * result + entryPriority
         result = 31 * result + (category?.hashCode() ?: 0)
         result = 31 * result + entryType.hashCode()
-        result = 31 * result + entryPinned
-        result = 31 * result + entryArchived
-        result = 31 * result + entryDeleted
+//        result = 31 * result + entryPinned
+//        result = 31 * result + entryArchived
+//        result = 31 * result + entryDeleted
+
+        result = 31 * result + ((entryPinned shl 1) or (entryArchived shl 2) or (entryDeleted shl 3))
         result = 31 * result + entryCreationDate.hashCode()
         result = 31 * result + entryModifiedDate.hashCode()
         return result
