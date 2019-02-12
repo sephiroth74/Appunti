@@ -4,6 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
 
     <application
         android:name=".MainApplication"
@@ -16,8 +18,14 @@
         android:theme="@style/Theme.Appunti.Default.NoActionbar"
         tools:ignore="GoogleAppIndexingWarning">
 
-        <receiver android:name=".AlarmReceiver">
+        <!-- reminders receiver -->
+        <receiver android:name=".AlarmReceiver" />
 
+        <!-- device reboot receiver -->
+        <receiver android:name=".BootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
         </receiver>
 
         <activity

@@ -346,7 +346,7 @@ class DetailActivity : AppuntiActivity() {
                     .setCancelable(true)
                     .setTitle("Edit Remonder")
                     .setMessage("This Note has a reminder set to\n${dateFormatted}.\nDo you want to change or remove it?")
-                    .setPositiveButton("Change") { dialog, which ->
+                    .setPositiveButton("Change") { dialog, _ ->
                         dialog.dismiss()
                         pickDateTime(date) { result ->
                             if (model.addReminder(result)) {
