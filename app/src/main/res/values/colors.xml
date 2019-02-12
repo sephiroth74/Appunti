@@ -2,7 +2,7 @@
 <resources>
     <color name="colorPrimary">#FFA726</color>
     <color name="colorPrimaryDark">#FFC400</color>
-    <color name="colorAccent">#304FFE</color>
+    <color name="colorAccent">#FFA726</color>
 
 
     <!-- colors for categories -->

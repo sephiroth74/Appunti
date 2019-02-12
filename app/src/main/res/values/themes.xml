@@ -8,7 +8,9 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="windowActionModeOverlay">true</item>
 
-        <item name="android:navigationBarColor">?android:attr/windowBackground</item>
+        <item name="android:windowBackground">@android:color/white</item>
+        <!--<item name="android:navigationBarColor">?android:attr/windowBackground</item>-->
+        <item name="android:navigationBarColor">@android:color/white</item>
         <item name="android:windowLightNavigationBar" tools:ignore="NewApi">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar" tools:ignore="NewApi">true</item>

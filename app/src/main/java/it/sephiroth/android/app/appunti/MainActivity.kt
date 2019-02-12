@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Canvas
+import android.graphics.Color
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.view.Menu
@@ -12,6 +13,7 @@ import android.view.View
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.util.Pair
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
@@ -23,6 +25,8 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
+import com.wdullaer.materialdatetimepicker.date.DatePickerDialog
+import com.wdullaer.materialdatetimepicker.time.TimePickerDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -36,6 +40,7 @@ import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
 import kotlinx.android.synthetic.main.appunti_main_bottomappbar.*
 import kotlinx.android.synthetic.main.appunti_search_view_toolbar.*
 import timber.log.Timber
+import java.util.*
 
 
 class MainActivity : AppuntiActivity() {
@@ -83,7 +88,39 @@ class MainActivity : AppuntiActivity() {
         }
 
         bottomAppBar.doOnNewNoteClick {
-            startDetailActivity()
+            val now = Calendar.getInstance()
+            val dpd = DatePickerDialog.newInstance(
+                    { view, year, monthOfYear, dayOfMonth ->
+
+                        val dialog = TimePickerDialog.newInstance({ view, hourOfDay, minute,
+                                                                    second ->
+
+                        }, true)
+
+                        dialog.version = TimePickerDialog.Version.VERSION_2
+                        dialog.accentColor = ResourcesCompat.getColor(resources, R.color.colorPrimary, theme)
+                        dialog.setOkColor(theme.getColor(this, android.R.attr.textColorSecondary))
+                        dialog.setCancelColor(theme.getColor(this, android.R.attr.textColorSecondary))
+                        dialog.vibrate(false)
+                        dialog.show(supportFragmentManager, "TimePickerDialog")
+
+                    },
+                    now.get(Calendar.YEAR), // Initial year selection
+                    now.get(Calendar.MONTH), // Initial month selection
+                    now.get(Calendar.DAY_OF_MONTH) // Inital day selection
+
+
+            )
+
+            dpd.version = DatePickerDialog.Version.VERSION_2
+            dpd.accentColor = ResourcesCompat.getColor(resources, R.color.colorPrimary, theme)
+            dpd.minDate = now
+            dpd.vibrate(false)
+            dpd.setOkColor(theme.getColor(this, android.R.attr.textColorSecondary))
+            dpd.setCancelColor(theme.getColor(this, android.R.attr.textColorSecondary))
+            dpd.show(supportFragmentManager, "Datepickerdialog")
+
+//            startDetailActivity()
         }
 
         model.initialize()
