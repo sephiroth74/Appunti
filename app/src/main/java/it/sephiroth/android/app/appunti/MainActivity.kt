@@ -89,7 +89,13 @@ class MainActivity : AppuntiActivity() {
         }
 
         bottomAppBar.doOnNewNoteClick {
-            pickDateTime(Instant.now().atZone(ZoneId.systemDefault())) { Timber.v("date time picker!") }
+            val now = Instant.now()
+            Timber.v("now = $now")
+            val date = now.atZone(ZoneId.systemDefault())
+
+            Timber.v("date = $date")
+
+            pickDateTime(date) { Timber.v("date time picker!") }
 
 //            startDetailActivity()
         }

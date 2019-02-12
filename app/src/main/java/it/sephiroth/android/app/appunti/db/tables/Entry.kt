@@ -7,7 +7,10 @@ import com.dbflow5.reactivestreams.structure.BaseRXModel
 import com.dbflow5.structure.oneToMany
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.EntryTypeConverter
+import it.sephiroth.android.app.appunti.db.InstantTypeConverter
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
+import org.threeten.bp.Instant
+import org.threeten.bp.ZoneId
 import timber.log.Timber
 import java.util.*
 
@@ -44,7 +47,8 @@ class Entry() : BaseRXModel() {
     var category: Category? = null
 
     @Index(indexGroups = [1])
-    var entryCreationDate: Date = Date()
+    @Column(typeConverter = InstantTypeConverter::class)
+    var entryCreationDate: Instant = Instant.now()
 
     @Column(defaultValue = "")
     var entryText: String? = null
@@ -59,14 +63,15 @@ class Entry() : BaseRXModel() {
     var entryDeleted: Int = 0
 
     @Index(indexGroups = [1])
-    var entryModifiedDate: Date = Date()
+    @Column(typeConverter = InstantTypeConverter::class)
+    var entryModifiedDate: Instant = Instant.now()
 
     @get:OneToMany
     var attachments by oneToMany { select from Attachment::class where (Attachment_Table.attachmentEntryID_entryID.eq(entryID)) }
 
     override fun toString(): String {
         return "Entry(id=$entryID, title=$entryTitle, category=$category, pinned=$entryPinned, archived=$entryArchived, " +
-                "deleted=$entryDeleted, priority=$entryPriority)"
+                "deleted=$entryDeleted, priority=$entryPriority, modified=${entryModifiedDate.atZone(ZoneId.systemDefault())})"
     }
 
     override fun equals(other: Any?): Boolean {

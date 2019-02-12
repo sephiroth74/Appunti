@@ -30,6 +30,10 @@ import it.sephiroth.android.app.appunti.ext.rxTimer
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
+import org.threeten.bp.Instant
+import org.threeten.bp.ZoneId
+import org.threeten.bp.format.DateTimeFormatter
+import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -273,6 +277,9 @@ class DetailActivity : AppuntiActivity() {
             entryCategory.visibility = if (entry.category == null) View.INVISIBLE else View.VISIBLE
             applyEntryTheme(entry)
         }
+
+        val time = entry.entryModifiedDate.atZone(ZoneId.systemDefault())
+        lastModified.text = time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM))
 
         invalidateOptionsMenu()
     }

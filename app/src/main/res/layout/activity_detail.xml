@@ -146,21 +146,22 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:navigationIcon="@drawable/sharp_arrow_upward_24">
 
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/lastModified"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:textAppearance="?attr/textAppearanceListItemSmall" />
+
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/navigationIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/material_background_ripple"
             app:srcCompat="@drawable/sharp_more_vert_24" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:gravity="center"
-            android:text="Last Modified: Just Now"
-            android:textAppearance="?attr/textAppearanceListItemSmall" />
-
 
     </it.sephiroth.android.app.appunti.widget.DetailBottomAppBar>
 
