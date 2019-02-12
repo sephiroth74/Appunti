@@ -2,6 +2,8 @@ package it.sephiroth.android.app.appunti
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Intent
 import android.graphics.Canvas
 import android.os.Bundle
@@ -12,6 +14,7 @@ import android.view.View
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.app.AlarmManagerCompat
 import androidx.core.util.Pair
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
@@ -94,6 +97,23 @@ class MainActivity : AppuntiActivity() {
 
             pickDateTime(date) { result ->
                 Timber.v("date time picker! $result")
+                val utc = result.withZoneSameInstant(ZoneId.of("UTC"))
+                val millis = utc.toEpochSecond() * 1000
+                Timber.v("millis = $millis")
+                Timber.v("millis = ${System.currentTimeMillis()}")
+
+                Timber.v("utc = $utc")
+
+                val alarmIntent = Intent(this, AlarmReceiver::class.java).let { intent ->
+                    PendingIntent.getBroadcast(this, 0, intent, 0)
+                }
+
+                val alarmManager = getSystemService(Activity.ALARM_SERVICE) as AlarmManager
+                AlarmManagerCompat.setExactAndAllowWhileIdle(alarmManager,
+                        AlarmManager.RTC_WAKEUP,
+                        System.currentTimeMillis() + 5000,
+                        alarmIntent)
+
             }
 
 //            startDetailActivity()

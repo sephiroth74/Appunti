@@ -3,9 +3,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
+        android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -13,10 +16,15 @@
         android:theme="@style/Theme.Appunti.Default.NoActionbar"
         tools:ignore="GoogleAppIndexingWarning">
 
+        <receiver android:name=".AlarmReceiver">
+
+        </receiver>
+
         <activity
             android:name=".DetailActivity"
+            android:label=""
             android:launchMode="singleTop"
-            android:label="">
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="it.sephiroth.android.app.appunti.MainActivity" />

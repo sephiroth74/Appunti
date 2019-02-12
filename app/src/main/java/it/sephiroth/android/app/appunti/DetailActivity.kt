@@ -181,6 +181,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     override fun onBackPressed() {
+        // TODO: verify this
         NavUtils.navigateUpFromSameTask(this)
     }
 

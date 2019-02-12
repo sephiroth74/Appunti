@@ -79,4 +79,6 @@
     <string name="category">Category</string>
     <string name="title">Title</string>
     <string name="content_here">Content Here...</string>
+    <string name="channel_name">Note</string>
+    <string name="channel_description">Alarm from a Note</string>
 </resources>
