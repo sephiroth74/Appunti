@@ -17,10 +17,10 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/menu_action_share"
+        android:id="@+id/menu_action_alarm"
         android:checkable="false"
-        android:icon="@drawable/appunti_sharp_share_24_selector"
-        android:title="@string/share"
+        android:icon="@drawable/sharp_alarm_add_24"
+        android:title="@string/add_reminder"
         app:showAsAction="always" />
 
 

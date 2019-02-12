@@ -37,6 +37,7 @@
             android:textAppearance="?attr/textAppearanceListItem"
             android:textSize="@dimen/text_size_headline_material"
             android:transitionName="itemTitle"
+            android:drawablePadding="8dp"
             app:fontFamily="?attr/fontFamily" />
 
         <androidx.appcompat.widget.AppCompatTextView

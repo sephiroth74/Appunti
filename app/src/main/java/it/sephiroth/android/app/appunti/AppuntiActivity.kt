@@ -1,6 +1,8 @@
 package it.sephiroth.android.app.appunti
 
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.LayoutRes
@@ -30,7 +32,7 @@ abstract class AppuntiActivity : AppCompatActivity() {
 
         getToolbar()?.let { toolbar ->
             setSupportActionBar(toolbar)
-            if (!darkTheme && isAPI(26)) {
+            if (! darkTheme && isAPI(26)) {
                 toolbar.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
             }
         }
@@ -46,28 +48,29 @@ abstract class AppuntiActivity : AppCompatActivity() {
 
         Timber.i("pickDateTime($currentDateTime)")
 
+        val color = ResourcesCompat.getColor(resources, R.color.colorPrimary, theme)
+
         val dpd = DatePickerDialog.newInstance(
                 { view, year, monthOfYear, dayOfMonth ->
                     Timber.v("date selection: $dayOfMonth/$monthOfYear/$year")
 
-                    val dialog = TimePickerDialog.newInstance({ view, hourOfDay, minute,
-                                                                second ->
+                    val dialog = TimePickerDialog.newInstance({ view, hourOfDay, minute, second ->
                         Timber.v("time selection = $hourOfDay:$minute:$second")
 
                         val result = currentDateTime
-                                .withYear(year)
-                                .withMonth(monthOfYear + 1)
-                                .withDayOfMonth(dayOfMonth)
-                                .withHour(hourOfDay)
-                                .withMinute(minute)
-                                .withSecond(second)
+                            .withYear(year)
+                            .withMonth(monthOfYear + 1)
+                            .withDayOfMonth(dayOfMonth)
+                            .withHour(hourOfDay)
+                            .withMinute(minute)
+                            .withSecond(second)
 
                         action?.invoke(result)
 
                     }, true)
 
                     dialog.version = TimePickerDialog.Version.VERSION_2
-                    dialog.accentColor = ResourcesCompat.getColor(resources, R.color.colorPrimary, theme)
+                    dialog.accentColor = color
                     dialog.setOkColor(theme.getColor(this, android.R.attr.textColorSecondary))
                     dialog.setCancelColor(theme.getColor(this, android.R.attr.textColorSecondary))
                     dialog.vibrate(false)
@@ -79,8 +82,7 @@ abstract class AppuntiActivity : AppCompatActivity() {
                 currentDateTime.dayOfMonth)
 
         dpd.version = DatePickerDialog.Version.VERSION_2
-        dpd.accentColor = ResourcesCompat.getColor(resources, R.color.colorPrimary, theme)
-//        dpd.minDate = calendar
+        dpd.accentColor = color
         dpd.vibrate(false)
         dpd.setOkColor(theme.getColor(this, android.R.attr.textColorSecondary))
         dpd.setCancelColor(theme.getColor(this, android.R.attr.textColorSecondary))

@@ -81,4 +81,6 @@
     <string name="content_here">Content Here...</string>
     <string name="channel_name">Note</string>
     <string name="channel_description">Alarm from a Note</string>
+    <string name="add_reminder">Add Reminder</string>
+    <string name="remove_reminder">Remove Reminder</string>
 </resources>

@@ -23,50 +23,62 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         Timber.i("onReceive($intent")
 
-        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        val wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Appunti:AlarmReceiver")
-        wl.acquire(2000)
+        intent?.let { intent ->
+            when (intent.action) {
+                ACTION_ENTRY_REMINDER -> onEntryReminderRecived(context, intent)
+            }
+        }
+    }
 
-        val entryID = 3
+    private fun onEntryReminderRecived(context: Context, intent: Intent) {
+        intent.data?.let { data ->
+            val entryID = data.lastPathSegment?.toInt()
+            entryID?.let { entryID ->
+                Timber.i("entryID=$entryID")
 
-        DatabaseHelper.getEntryById(entryID).subscribe { entry, error ->
-            entry?.let {
+                val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                val wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
+                wakeLock.acquire(1000)
 
-                createNotificationChannel(context)
+                DatabaseHelper.getEntryById(entryID).subscribe { entry, error ->
+                    if (null != error) {
+                        Timber.e(error)
+                    } else if (entry != null) {
+                        createNotificationChannel(context)
 
-                val myIntent = Intent(context, DetailActivity::class.java).apply {
-                    action = Intent.ACTION_EDIT
-                    putExtra("entryID", entry.entryID)
-                }
+                        val myIntent = Intent(context, DetailActivity::class.java).apply {
+                            action = Intent.ACTION_EDIT
+                            putExtra(DetailActivity.KEY_ENTRY_ID, entry.entryID)
+                        }
 
-                val pendingIntent = TaskStackBuilder.create(context)
-                        .addParentStack(DetailActivity::class.java)
-                        .addNextIntent(myIntent)
-                        .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+                        val pendingIntent = TaskStackBuilder.create(context)
+                            .addParentStack(DetailActivity::class.java)
+                            .addNextIntent(myIntent)
+                            .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
 
-//                val pendingIntent = PendingIntent.getActivity(context, 0, myIntent, 0)
-
-                val builder = NotificationCompat
-                        .Builder(context, ENTRY_ALARM_CHANNEL_ID)
-                        .setSmallIcon(R.drawable.sharp_favorite_24)
-                        .setContentTitle(entry.entryTitle ?: "")
-                        .setContentText(entry.entryText ?: "")
-                        .setColor(entry.getColor(context))
-                        .setTicker(entry.entryTitle ?: "")
-                        .setContentIntent(pendingIntent)
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        .setStyle(NotificationCompat.BigTextStyle()
+                        val builder = NotificationCompat
+                            .Builder(context, ENTRY_ALARM_CHANNEL_ID)
+                            .setSmallIcon(R.drawable.sharp_favorite_24)
+                            .setContentTitle(entry.entryTitle ?: "")
+                            .setContentText(entry.entryText ?: "")
+                            .setColor(entry.getColor(context))
+                            .setTicker(entry.entryTitle ?: "")
+                            .setContentIntent(pendingIntent)
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setStyle(NotificationCompat.BigTextStyle()
                                 .bigText(entry.entryText ?: ""))
-                        .setAutoCancel(true)
+                            .setAutoCancel(true)
 
-                with(NotificationManagerCompat.from(context)) {
-                    notify((System.currentTimeMillis() / 1000).toInt(), builder.build())
+                        with(NotificationManagerCompat.from(context)) {
+                            notify((System.currentTimeMillis() / 1000).toInt(), builder.build())
+                        }
+
+                        wakeLock.release()
+                    }
                 }
 
             }
         }
-
-        wl.release()
     }
 
     private fun createNotificationChannel(context: Context) {
@@ -83,7 +95,7 @@ class AlarmReceiver : BroadcastReceiver() {
             }
 
             val notificationManager: NotificationManager = context
-                    .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             val group = NotificationChannelGroup(DEFAULT_CHANNEL_GROUP, "Default")
             notificationManager.createNotificationChannelGroup(group)
@@ -95,7 +107,13 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     companion object {
+        // notification
         const val ENTRY_ALARM_CHANNEL_ID = "entry_channel_id"
         const val DEFAULT_CHANNEL_GROUP = "appunti.default.channel.group"
+
+        // intent action
+        const val ACTION_ENTRY_REMINDER = "appunti.entry.reminder"
+
+        private const val WAKE_LOCK_TAG = "Appunti:AlarmReceiver"
     }
 }

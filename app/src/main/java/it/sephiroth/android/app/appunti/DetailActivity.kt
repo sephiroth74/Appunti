@@ -12,9 +12,8 @@ import android.transition.AutoTransition
 import android.view.*
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
-import androidx.core.app.NavUtils
-import androidx.core.app.TaskStackBuilder
 import androidx.core.transition.doOnEnd
 import androidx.core.transition.doOnStart
 import androidx.core.view.doOnPreDraw
@@ -103,21 +102,24 @@ class DetailActivity : AppuntiActivity() {
         entryCategory.setOnClickListener { pickCategory() }
 
         entryTitle.doOnTextChanged { s, start, count, after ->
-            changeTimer = rxTimer(changeTimer, 300, TimeUnit.MILLISECONDS) {
-                currentEntry?.entryTitle = s?.toString() ?: ""
-                currentEntry?.save()
+            if (currentFocus == entryTitle) {
+                changeTimer = rxTimer(changeTimer, 300, TimeUnit.MILLISECONDS) {
+                    currentEntry?.entryTitle = s?.toString() ?: ""
+                    currentEntry?.save()
+                }
             }
         }
 
         entryText.doOnTextChanged { s, start, count, after ->
-            changeTimer = rxTimer(changeTimer, 1, TimeUnit.SECONDS) {
-                currentEntry?.entryText = s?.toString() ?: ""
-                currentEntry?.save()
+            if (currentFocus == entryText) {
+                changeTimer = rxTimer(changeTimer, 1, TimeUnit.SECONDS) {
+                    currentEntry?.entryText = s?.toString() ?: ""
+                    currentEntry?.save()
+                }
             }
         }
 
         entryText.movementMethod = LinkMovementMethod.getInstance()
-
 
         navigationView.setNavigationItemSelectedListener { menuItem ->
             Timber.i("menuItem: $menuItem")
@@ -169,7 +171,7 @@ class DetailActivity : AppuntiActivity() {
         if (requestCode == CATEGORY_PICK_REQUEST) {
             if (resultCode == RESULT_OK) {
                 data?.let { data ->
-                    val categoryID = data.getIntExtra("categoryID", -1)
+                    val categoryID = data.getIntExtra("categoryID", - 1)
                     DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
                         model.setEntryCategory(category)
                     }
@@ -179,35 +181,6 @@ class DetailActivity : AppuntiActivity() {
 
 
         super.onActivityResult(requestCode, resultCode, data)
-    }
-
-    override fun onBackPressed() {
-        Timber.i("onBackPressed")
-
-        if (NavUtils.shouldUpRecreateTask(this, intent)) {
-            Timber.v("shouldUpRecreateTask($intent")
-            // This activity is NOT part of this app's task, so
-            // create a new task when navigating up, with a
-            // synthesized back stack.
-            TaskStackBuilder.create(this)
-                    .addNextIntentWithParentStack(intent)
-                    .startActivities()
-        } else {
-            Timber.v("navigateUpTo($intent)")
-
-            val upIntent = NavUtils.getParentActivityIntent(this)
-            Timber.v("upIntent: $upIntent")
-
-            upIntent?.let { upIntent ->
-                upIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                startActivity(upIntent)
-            } ?: run {
-                super.onBackPressed()
-            }
-
-            // This doesn't seem to work
-//            NavUtils.navigateUpTo(this, intent)
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -230,8 +203,8 @@ class DetailActivity : AppuntiActivity() {
             R.id.menu_action_archive -> {
                 onToggleArchive()
             }
-            R.id.menu_action_share -> {
-                onShareEntry()
+            R.id.menu_action_alarm -> {
+                onToggleReminder()
             }
         }
         return super.onOptionsItemSelected(item)
@@ -261,7 +234,7 @@ class DetailActivity : AppuntiActivity() {
     private fun pickCategory() {
         val intent = Intent(this, CategoriesEditActivity::class.java)
         intent.action = Intent.ACTION_PICK
-        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: -1)
+        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: - 1)
         startActivityForResult(intent, CATEGORY_PICK_REQUEST, null)
     }
 
@@ -281,11 +254,6 @@ class DetailActivity : AppuntiActivity() {
             navigationView.bringToFront()
         }
     }
-
-    companion object {
-        const val CATEGORY_PICK_REQUEST = 1
-    }
-
 
     private fun onEntryChanged(entry: Entry) {
         Timber.i("onEntryChanged()")
@@ -334,33 +302,77 @@ class DetailActivity : AppuntiActivity() {
         val result = model.togglePin()
 
         if (result) {
-            Toast.makeText(this,
+            showConfirmation(
                     resources.getQuantityString(
                             if (currentValue == true)
-                                R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1),
-                    Toast.LENGTH_SHORT).show()
+                                R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1))
+
         }
     }
 
     private fun onToggleDelete() {
         val currentValue = model.entry.value?.isDeleted()
         if (model.toggleDeleted()) {
-            Toast.makeText(this,
+            showConfirmation(
                     resources.getQuantityString(
                             if (currentValue == true)
-                                R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1),
-                    Toast.LENGTH_SHORT).show()
+                                R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1))
+
+            if (currentValue == false) {
+                onBackPressed()
+            }
         }
     }
 
     private fun onToggleArchive() {
         val currentValue = model.entry.value?.isArchived()
         if (model.toggleArchived()) {
-            Toast.makeText(this,
+            showConfirmation(
                     resources.getQuantityString(
                             if (currentValue == true)
-                                R.plurals.entries_unarchived_title else R.plurals.entries_archived_title, 1, 1),
-                    Toast.LENGTH_SHORT).show()
+                                R.plurals.entries_unarchived_title else R.plurals.entries_archived_title, 1, 1))
+        }
+    }
+
+    private fun onToggleReminder() {
+
+        model.entry.value?.let { entry ->
+            if (! entry.isAlarmExpired()) {
+                val date = entry.entryAlarm !!.atZone(ZoneId.systemDefault())
+                val dateFormatted = date.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL))
+
+                AlertDialog
+                    .Builder(this)
+                    .setCancelable(true)
+                    .setTitle("Edit Remonder")
+                    .setMessage("This Note has a reminder set to\n${dateFormatted}.\nDo you want to change or remove it?")
+                    .setPositiveButton("Change") { dialog, which ->
+                        dialog.dismiss()
+                        pickDateTime(date) { result ->
+                            if (model.addReminder(result)) {
+                                showConfirmation("Reminder Set")
+                            }
+                        }
+                    }
+                    .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
+                    .setNeutralButton("Remove") { dialog, _ ->
+                        dialog.dismiss()
+                        if (model.removeReminder()) {
+                            showConfirmation("Reminder Removed")
+                        }
+                    }
+                    .show()
+            } else {
+                val now = Instant.now()
+                val date = now.atZone(ZoneId.systemDefault())
+                pickDateTime(date) { result ->
+                    Timber.v("date time picker! $result")
+
+                    if (model.addReminder(result)) {
+                        showConfirmation("Reminder Set")
+                    }
+                }
+            }
         }
     }
 
@@ -408,8 +420,29 @@ class DetailActivity : AppuntiActivity() {
 
                     setTitle(if (entry.isDeleted()) R.string.restore else R.string.delete)
                 }
+
+                menuItem = menu.findItem(R.id.menu_action_alarm)
+                menuItem?.apply {
+
+                    if (entry.hasAlarm() && ! entry.isAlarmExpired()) {
+                        setIcon(R.drawable.twotone_alarm_24)
+                        setTitle(R.string.remove_reminder)
+                    } else {
+                        setIcon(R.drawable.sharp_alarm_24)
+                        setTitle(R.string.add_reminder)
+                    }
+                }
             }
         }
+    }
+
+    private fun showConfirmation(text: String) {
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
+    }
+
+    companion object {
+        const val CATEGORY_PICK_REQUEST = 1
+        const val KEY_ENTRY_ID = "entryID"
     }
 
     object EntryDiff {

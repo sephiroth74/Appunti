@@ -12,6 +12,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.recyclerview.widget.DiffUtil
@@ -26,6 +28,7 @@ import it.sephiroth.android.app.appunti.ext.isLightTheme
 import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.main_item_list_entry.view.*
+import org.threeten.bp.Instant
 import timber.log.Timber
 import kotlin.math.min
 
@@ -43,6 +46,8 @@ class ItemEntryListAdapter(private val context: Context,
     private var cardForegroundNoStroke: Drawable
 
     companion object {
+        var NOW = Instant.now()
+
         val TYPE_EMPTY = EntryItem.ItemType.EMPTY.ordinal
         val TYPE_ENTRY = EntryItem.ItemType.ENTRY.ordinal
         val TYPE_PINNED = EntryItem.ItemType.PINNED.ordinal
@@ -270,6 +275,7 @@ class ItemEntryListAdapter(private val context: Context,
         val result = DiffUtil.calculateDiff(callback, true)
 
         values = finalData
+        NOW = Instant.now()
 
         if (searchText != searchQuery) {
             searchText = searchQuery
@@ -294,7 +300,7 @@ class ItemEntryListAdapter(private val context: Context,
             itemView.isActivated = isActivated
 
             // TODO(maybe execute asyc)
-            val entryTitle = SpannableStringBuilder.valueOf(entry.entryTitle)
+            val entryTitle = SpannableStringBuilder.valueOf(entry.entryTitle ?: "")
 
             if (! searchText.isNullOrEmpty()) {
                 val index = entry.entryTitle?.toLowerCase()?.indexOf(searchText) ?: - 1
@@ -307,6 +313,15 @@ class ItemEntryListAdapter(private val context: Context,
             titleTextView.text = entryTitle.toSpannable()
             contentTextView.text = entry.entryText?.substring(0, min(entry.entryText?.length ?: 0, 100))
             categoryTextView.text = entry.category?.categoryTitle
+
+
+            if (! entry.isAlarmExpired(ItemEntryListAdapter.NOW)) {
+                val drawable = ResourcesCompat
+                    .getDrawable(itemView.context.resources, R.drawable.sharp_alarm_24, itemView.context.theme)
+                titleTextView.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, drawable, null)
+            } else {
+                titleTextView.setCompoundDrawables(null, null, null, null)
+            }
         }
     }
 

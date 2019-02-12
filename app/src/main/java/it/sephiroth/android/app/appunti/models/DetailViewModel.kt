@@ -2,15 +2,22 @@ package it.sephiroth.android.app.appunti.models
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.app.PendingIntent
+import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.ChangeAction
 import io.reactivex.android.schedulers.AndroidSchedulers
+import it.sephiroth.android.app.appunti.AlarmReceiver
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
+import org.threeten.bp.Instant
+import org.threeten.bp.ZoneId
+import org.threeten.bp.ZonedDateTime
 import timber.log.Timber
 
 class DetailViewModel(application: Application) : AndroidViewModel(application), DirectModelNotifier.ModelChangedListener<Entry> {
@@ -48,14 +55,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application),
         }
     }
 
-    override fun onTableChanged(table: Class<*>?, action: ChangeAction) {
-        Timber.i("onTableChanged($table, $action)")
-    }
-
-    override fun onCleared() {
-        DirectModelNotifier.get().unregisterForModelChanges(Entry::class.java, this)
-        super.onCleared()
-    }
+    override fun onTableChanged(table: Class<*>?, action: ChangeAction) {}
 
     private fun setEntry(value: Entry) {
         (entry as MutableLiveData).value = value
@@ -63,20 +63,32 @@ class DetailViewModel(application: Application) : AndroidViewModel(application),
 
     fun togglePin(): Boolean {
         entry.value?.let {
-            val copy = Entry(it)
-            return DatabaseHelper.setEntryPinned(copy, copy.entryPinned == 0)
+            return DatabaseHelper.setEntryPinned(Entry(it), it.entryPinned == 0)
         } ?: run { return false }
     }
 
     fun toggleArchived(): Boolean {
         entry.value?.let {
-            return DatabaseHelper.setEntryArchived(it, it.entryArchived == 0)
+            return DatabaseHelper.setEntryArchived(Entry(it), it.entryArchived == 0)
         } ?: run { return false }
     }
 
     fun toggleDeleted(): Boolean {
         entry.value?.let {
-            return DatabaseHelper.setEntryDeleted(it, it.entryDeleted == 0)
+            return DatabaseHelper.setEntryDeleted(Entry(it), it.entryDeleted == 0)
+        } ?: run { return false }
+    }
+
+    fun removeReminder(): Boolean {
+        entry.value?.let {
+            return DatabaseHelper.removeReminder(Entry(it), getApplication())
+        } ?: run { return false }
+    }
+
+    fun addReminder(zone: ZonedDateTime): Boolean {
+        entry.value?.let { entry ->
+            val utc = zone.withZoneSameInstant(ZoneId.of("UTC"))
+            return DatabaseHelper.addReminder(Entry(entry), utc.toInstant(), getApplication())
         } ?: run { return false }
     }
 
@@ -84,6 +96,11 @@ class DetailViewModel(application: Application) : AndroidViewModel(application),
         entry.value?.let {
             return DatabaseHelper.setEntryCategory(Entry(it), category)
         } ?: run { return false }
+    }
+
+    override fun onCleared() {
+        DirectModelNotifier.get().unregisterForModelChanges(Entry::class.java, this)
+        super.onCleared()
     }
 
     init {
