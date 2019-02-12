@@ -2,6 +2,7 @@ package it.sephiroth.android.app.appunti
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
@@ -163,7 +164,7 @@ class DetailActivity : AppuntiActivity() {
         if (requestCode == CATEGORY_PICK_REQUEST) {
             if (resultCode == RESULT_OK) {
                 data?.let { data ->
-                    val categoryID = data.getIntExtra("categoryID", - 1)
+                    val categoryID = data.getIntExtra("categoryID", -1)
                     DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
                         model.setEntryCategory(category)
                     }
@@ -230,7 +231,7 @@ class DetailActivity : AppuntiActivity() {
     private fun pickCategory() {
         val intent = Intent(this, CategoriesEditActivity::class.java)
         intent.action = Intent.ACTION_PICK
-        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: - 1)
+        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: -1)
         startActivityForResult(intent, CATEGORY_PICK_REQUEST, null)
     }
 
@@ -278,15 +279,17 @@ class DetailActivity : AppuntiActivity() {
 
     private fun applyEntryTheme(entry: Entry) {
         val color = entry.getColor(this)
-        window.decorView.setBackgroundColor(color)
+        Timber.i("applyEntryTheme. color=${color.toString(16)}")
+
+        coordinator.backgroundTintList = ColorStateList.valueOf(color)
+
+        window.statusBarColor = color
         window.navigationBarColor = color
 
-        if (bottomAppBar.background is ColorDrawable) {
-            bottomAppBar.background.setTint(color)
-        }
+        bottomAppBar.backgroundTintList = ColorStateList.valueOf(color)
 
         if (navigationView.background is ColorDrawable) {
-            bottomAppBar.background.setTint(color)
+            navigationView.backgroundTintList = ColorStateList.valueOf(color)
         } else if (navigationView.background is LayerDrawable) {
             val drawable: Drawable? = (navigationView.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
             drawable?.setTint(color)

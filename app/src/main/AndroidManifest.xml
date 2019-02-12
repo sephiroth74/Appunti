@@ -15,6 +15,7 @@
 
         <activity
             android:name=".DetailActivity"
+            android:launchMode="singleTop"
             android:label="">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
