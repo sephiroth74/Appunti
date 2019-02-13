@@ -1,7 +1,9 @@
 package it.sephiroth.android.app.appunti
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
@@ -16,6 +18,8 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.core.transition.doOnEnd
@@ -25,7 +29,10 @@ import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.dbflow5.structure.save
+import com.google.android.gms.location.LocationRequest
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.patloew.rxlocation.RxLocation
+import com.tbruyelle.rxpermissions2.RxPermissions
 import io.reactivex.disposables.Disposable
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -105,7 +112,9 @@ class DetailActivity : AppuntiActivity() {
 
         handleIntent(intent)
 
-        entryCategory.setOnClickListener { pickCategory() }
+        entryCategory.setOnClickListener {
+            pickCategory()
+        }
 
         entryTitle.doOnTextChanged { s, start, count, after ->
             if (currentFocus == entryTitle) {
@@ -174,7 +183,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == CATEGORY_PICK_REQUEST) {
+        if (requestCode == CATEGORY_PICK_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 data?.let { data ->
                     val categoryID = data.getIntExtra("categoryID", - 1)
@@ -242,7 +251,7 @@ class DetailActivity : AppuntiActivity() {
         val intent = Intent(this, CategoriesEditActivity::class.java)
         intent.action = Intent.ACTION_PICK
         intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: - 1)
-        startActivityForResult(intent, CATEGORY_PICK_REQUEST, null)
+        startActivityForResult(intent, CATEGORY_PICK_REQUEST_CODE, null)
     }
 
     private fun closeBottomSheet() {
@@ -343,11 +352,14 @@ class DetailActivity : AppuntiActivity() {
                     resources.getQuantityString(
                             if (currentValue == true)
                                 R.plurals.entries_unarchived_title else R.plurals.entries_archived_title, 1, 1))
+
+            if (currentValue == false) {
+                onBackPressed()
+            }
         }
     }
 
     private fun onToggleReminder() {
-
         model.entry.value?.let { entry ->
             if (! entry.isAlarmExpired()) {
                 val date = entry.entryAlarm !!.atZone(ZoneId.systemDefault())
@@ -373,8 +385,8 @@ class DetailActivity : AppuntiActivity() {
                             }
                         }
                     }
-                    .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
-                    .setNeutralButton(getString(R.string.remove)) { dialog, _ ->
+                    .setNeutralButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
+                    .setNegativeButton(getString(R.string.remove)) { dialog, _ ->
                         dialog.dismiss()
                         if (model.removeReminder()) {
                             showConfirmation(getString(R.string.reminder_removed))
@@ -454,15 +466,71 @@ class DetailActivity : AppuntiActivity() {
             }
         }
     }
+//
+//    @SuppressLint("CheckResult")
+//    private fun onToggleLocation() {
+////        ensurePermissions()
+//        val location = RxLocation(this)
+//        val request = LocationRequest
+//            .create()
+//            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+//            .setNumUpdates(1)
+//            .setInterval(500)
+//
+//        location
+//            .location()
+//            .updates(request)
+//            .flatMap {
+//                Timber.v("updated location: $it")
+//                location.geocoding().fromLocation(it).toObservable()
+//            }.subscribe { address ->
+//                Timber.v("address: $address")
+//            }
+//    }
+//
+//    @SuppressLint("CheckResult")
+//    private fun ensurePermissions() {
+//        val permissionName = Manifest.permission.ACCESS_FINE_LOCATION
+//
+//        if (ContextCompat.checkSelfPermission(this, permissionName) == PackageManager.PERMISSION_DENIED) {
+//            Timber.w("permission is denied!")
+//        } else {
+//
+//            val permissions = RxPermissions(this)
+//
+//            if (permissions.isGranted(permissionName)) {
+//                Timber.v("permission is granted")
+//            } else {
+//
+//                if (permissions.isRevoked(permissionName)) {
+//                    Timber.w("permission is revoked")
+//                } else {
+//                    permissions
+//                        .requestEach(permissionName)
+//                        .subscribe { permission ->
+//                            Timber.v("result = $permission, ${permission.name}")
+//                            if (permission.granted) {
+//                                Timber.v("granted")
+//                            } else if (permission.shouldShowRequestPermissionRationale) {
+//                                Timber.w("shouldShowRequestPermissionRationale")
+//                            }
+//                        }
+//                }
+//            }
+//        }
+//
+//    }
 
     private fun showConfirmation(text: String) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }
 
     companion object {
-        const val CATEGORY_PICK_REQUEST = 1
         const val KEY_ENTRY_ID = "entryID"
         const val KEY_REMOVE_ALARM = "removeAlarm"
+
+        const val CATEGORY_PICK_REQUEST_CODE = 1
+        const val LOCATION_PERMISSION_REQUEST_CODE = 10
     }
 
     object EntryDiff {
