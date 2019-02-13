@@ -28,7 +28,7 @@ abstract class AppuntiActivity : AppCompatActivity() {
 
         getToolbar()?.let { toolbar ->
             setSupportActionBar(toolbar)
-            if (!darkTheme && isAPI(26)) {
+            if (! darkTheme && isAPI(26)) {
                 toolbar.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
             }
         }
@@ -54,12 +54,12 @@ abstract class AppuntiActivity : AppCompatActivity() {
                         Timber.v("time selection = $hourOfDay:$minute:$second")
 
                         val result = currentDateTime
-                                .withYear(year)
-                                .withMonth(monthOfYear + 1)
-                                .withDayOfMonth(dayOfMonth)
-                                .withHour(hourOfDay)
-                                .withMinute(minute)
-                                .withSecond(second)
+                            .withYear(year)
+                            .withMonth(monthOfYear + 1)
+                            .withDayOfMonth(dayOfMonth)
+                            .withHour(hourOfDay)
+                            .withMinute(minute)
+                            .withSecond(second)
 
                         action?.invoke(result)
 
@@ -68,8 +68,8 @@ abstract class AppuntiActivity : AppCompatActivity() {
                     timeDialog.isThemeDark = SettingsManager.getInstance(this).darkTheme
                     timeDialog.version = TimePickerDialog.Version.VERSION_2
                     timeDialog.accentColor = color
-//                    timeDialog.setOkColor(theme.getColor(this, android.R.attr.textColorSecondary))
-//                    timeDialog.setCancelColor(theme.getColor(this, android.R.attr.textColorSecondary))
+                    timeDialog.setOkColor(theme.getColor(this, android.R.attr.textColorSecondary))
+                    timeDialog.setCancelColor(theme.getColor(this, android.R.attr.textColorSecondary))
                     timeDialog.vibrate(false)
                     timeDialog.show(supportFragmentManager, "TimePickerDialog")
 
@@ -82,8 +82,8 @@ abstract class AppuntiActivity : AppCompatActivity() {
         dateDialog.version = DatePickerDialog.Version.VERSION_2
         dateDialog.accentColor = color
         dateDialog.vibrate(false)
-//        dateDialog.setOkColor(theme.getColor(this, android.R.attr.textColorSecondary))
-//        dateDialog.setCancelColor(theme.getColor(this, android.R.attr.textColorSecondary))
+        dateDialog.setOkColor(theme.getColor(this, android.R.attr.textColorSecondary))
+        dateDialog.setCancelColor(theme.getColor(this, android.R.attr.textColorSecondary))
         dateDialog.show(supportFragmentManager, "Datepickerdialog")
     }
 }
