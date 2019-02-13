@@ -17,7 +17,6 @@ import it.sephiroth.android.app.appunti.db.EntryTypeConverter
 import it.sephiroth.android.app.appunti.db.InstantTypeConverter
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import org.threeten.bp.Instant
-import org.threeten.bp.ZoneId
 import timber.log.Timber
 
 @Table(database = AppDatabase::class, indexGroups = [
@@ -146,15 +145,23 @@ class Entry() : BaseRXModel() {
 
     fun isAlarmExpired(now: Instant): Boolean {
         if (hasAlarm()) {
-            return entryAlarm !!.isBefore(now)
+            return entryAlarm!!.isBefore(now)
         }
         return true
     }
 
     companion object {
-        fun getReminderPendingIntent(entry: Entry, context: Context): PendingIntent {
+        fun getViewReminderPendingIntent(entry: Entry, context: Context): PendingIntent {
+            return getReminderPendingIntent(entry, context, AlarmReceiver.ACTION_ENTRY_VIEW_REMINDER)
+        }
+
+        fun getDeleteReminderPendingIntent(entry: Entry, context: Context): PendingIntent {
+            return getReminderPendingIntent(entry, context, AlarmReceiver.ACTION_ENTRY_REMOVE_REMINDER)
+        }
+
+        private fun getReminderPendingIntent(entry: Entry, context: Context, action: String): PendingIntent {
             return Intent(context, AlarmReceiver::class.java).let { intent ->
-                intent.action = AlarmReceiver.ACTION_ENTRY_REMINDER
+                intent.action = action
                 intent.data = Uri.withAppendedPath(Uri.EMPTY, "entry/reminder/${entry.entryID}")
                 PendingIntent.getBroadcast(context, 0, intent, 0)
             }
@@ -162,19 +169,25 @@ class Entry() : BaseRXModel() {
 
         fun removeReminder(entry: Entry, context: Context) {
             Timber.i("removeReminder($entry)")
-            val intent = getReminderPendingIntent(entry, context)
+            val intent = getViewReminderPendingIntent(entry, context)
             val alarmManager = context.getSystemService(Activity.ALARM_SERVICE) as AlarmManager
             alarmManager.cancel(intent)
         }
 
         fun addReminder(entry: Entry, context: Context): Boolean {
             if (entry.hasAlarm()) {
-                val alarmManager = context.getSystemService(Activity.ALARM_SERVICE) as AlarmManager
-                val pendingIntent = getReminderPendingIntent(entry, context)
+                val millis = entry.entryAlarm!!.toEpochMilli()
+                return addReminderAt(entry, context, millis)
+            }
+            return false
+        }
 
-                val millis = entry.entryAlarm !!.toEpochMilli()
-                Timber.v("millis=$millis")
-                Timber.v("millis=${System.currentTimeMillis()}")
+        fun addReminderAt(entry: Entry, context: Context, millis: Long): Boolean {
+            if (entry.hasAlarm()) {
+                Timber.i("addReminderAt($entry, $millis)")
+                Timber.v("now=${System.currentTimeMillis()}")
+                val alarmManager = context.getSystemService(Activity.ALARM_SERVICE) as AlarmManager
+                val pendingIntent = getViewReminderPendingIntent(entry, context)
 
                 AlarmManagerCompat.setExactAndAllowWhileIdle(alarmManager,
                         AlarmManager.RTC_WAKEUP,

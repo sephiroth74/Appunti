@@ -93,20 +93,20 @@ object DatabaseHelper {
 
         return rxSingle(Schedulers.io()) {
             update(Entry::class)
-                .set(Entry_Table.entryPinned.eq(pinnedValue), Entry_Table.entryModifiedDate.eq(Instant.now()))
-                .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
-                .execute(FlowManager.getDatabase(AppDatabase::class.java))
+                    .set(Entry_Table.entryPinned.eq(pinnedValue), Entry_Table.entryModifiedDate.eq(Instant.now()))
+                    .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
+                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
         }
     }
 
     fun setEntriesDeleted(values: List<Entry>, delete: Boolean): Single<Unit> {
         return rxSingle(Schedulers.io()) {
             update(Entry::class)
-                .set(Entry_Table.entryDeleted.eq(if (delete) 1 else 0),
-                        Entry_Table.entryArchived.eq(0),
-                        Entry_Table.entryModifiedDate.eq(Instant.now()))
-                .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
-                .execute(FlowManager.getDatabase(AppDatabase::class.java))
+                    .set(Entry_Table.entryDeleted.eq(if (delete) 1 else 0),
+                            Entry_Table.entryArchived.eq(0),
+                            Entry_Table.entryModifiedDate.eq(Instant.now()))
+                    .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
+                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
         }
     }
 
@@ -114,11 +114,11 @@ object DatabaseHelper {
         Timber.i("setEntriesArchived($archive, $values")
         return rxSingle(Schedulers.io()) {
             update(Entry::class)
-                .set(Entry_Table.entryDeleted.eq(0),
-                        Entry_Table.entryArchived.eq(if (archive) 1 else 0),
-                        Entry_Table.entryModifiedDate.eq(Instant.now()))
-                .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
-                .execute(FlowManager.getDatabase(AppDatabase::class.java))
+                    .set(Entry_Table.entryDeleted.eq(0),
+                            Entry_Table.entryArchived.eq(if (archive) 1 else 0),
+                            Entry_Table.entryModifiedDate.eq(Instant.now()))
+                    .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
+                    .execute(FlowManager.getDatabase(AppDatabase::class.java))
 
         }
     }
@@ -126,21 +126,21 @@ object DatabaseHelper {
     fun getEntriesByCategory(category: Category?): Single<MutableList<Entry>> {
         return rxSingle(Schedulers.io()) {
             select().from(Entry::class)
-                .run {
-                    category?.let {
-                        where(Entry_Table.category_categoryID.eq(it.categoryID))
-                            .and(Entry_Table.entryArchived.eq(0))
-                            .and(Entry_Table.entryDeleted.eq(0)) as Transformable<Entry>
-                    } ?: run {
-                        where(Entry_Table.entryArchived.eq(0)).and(Entry_Table.entryDeleted.eq(0)) as Transformable<Entry>
-                    }
+                    .run {
+                        category?.let {
+                            where(Entry_Table.category_categoryID.eq(it.categoryID))
+                                    .and(Entry_Table.entryArchived.eq(0))
+                                    .and(Entry_Table.entryDeleted.eq(0)) as Transformable<Entry>
+                        } ?: run {
+                            where(Entry_Table.entryArchived.eq(0)).and(Entry_Table.entryDeleted.eq(0)) as Transformable<Entry>
+                        }
 
-                }.run {
-                    orderByAll(listOf(
-                            OrderBy(Entry_Table.entryPinned.nameAlias, false),
-                            OrderBy(Entry_Table.entryPriority.nameAlias, false),
-                            OrderBy(Entry_Table.entryModifiedDate.nameAlias, false))).list
-                }
+                    }.run {
+                        orderByAll(listOf(
+                                OrderBy(Entry_Table.entryPinned.nameAlias, false),
+                                OrderBy(Entry_Table.entryPriority.nameAlias, false),
+                                OrderBy(Entry_Table.entryModifiedDate.nameAlias, false))).list
+                    }
         }
     }
 
@@ -153,16 +153,16 @@ object DatabaseHelper {
     fun getEntries(func: From<Entry>.() -> Transformable<Entry>): Single<MutableList<Entry>> {
         return rxSingle(Schedulers.io()) {
             select().from(Entry::class)
-                .run {
-                    this.func()
-                }.run {
-                    orderByAll(listOf(
-                            OrderBy(Entry_Table.entryArchived.nameAlias, false),
-                            OrderBy(Entry_Table.entryDeleted.nameAlias, false),
-                            OrderBy(Entry_Table.entryPinned.nameAlias, false),
-                            OrderBy(Entry_Table.entryPriority.nameAlias, false),
-                            OrderBy(Entry_Table.entryModifiedDate.nameAlias, false))).list
-                }
+                    .run {
+                        this.func()
+                    }.run {
+                        orderByAll(listOf(
+                                OrderBy(Entry_Table.entryArchived.nameAlias, false),
+                                OrderBy(Entry_Table.entryDeleted.nameAlias, false),
+                                OrderBy(Entry_Table.entryPinned.nameAlias, false),
+                                OrderBy(Entry_Table.entryPriority.nameAlias, false),
+                                OrderBy(Entry_Table.entryModifiedDate.nameAlias, false))).list
+                    }
         }
     }
 }

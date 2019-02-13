@@ -19,10 +19,10 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <!-- reminders receiver -->
-        <receiver android:name=".AlarmReceiver" />
+        <receiver android:name=".AlarmReceiver" android:process=":background" />
 
         <!-- device reboot receiver -->
-        <receiver android:name=".BootReceiver">
+        <receiver android:name=".BootReceiver" android:process=":background">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

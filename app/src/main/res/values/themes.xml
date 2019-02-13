@@ -14,7 +14,6 @@
         <item name="android:windowLightNavigationBar" tools:ignore="NewApi">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar" tools:ignore="NewApi">true</item>
-
         <item name="android:windowContentTransitions">true</item>
 
         <!-- specify enter and exit transitions -->
@@ -48,31 +47,24 @@
     </style>
 
     <style name="Theme.Appunti.Dark.Base" parent="Theme.MaterialComponents">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/darkColorPrimary</item>
+        <item name="colorPrimaryDark">@color/darkColorPrimaryDark</item>
+        <item name="colorAccent">@color/darkColorAccent</item>
         <item name="windowActionModeOverlay">true</item>
 
-        <item name="android:navigationBarColor">?android:attr/windowBackground</item>
+        <item name="android:windowBackground">@android:color/black</item>
+        <!--<item name="android:navigationBarColor">?android:attr/windowBackground</item>-->
+        <item name="android:navigationBarColor">@android:color/black</item>
         <item name="android:windowLightNavigationBar" tools:ignore="NewApi">false</item>
-        <item name="android:statusBarColor">?android:attr/windowBackground</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar" tools:ignore="NewApi">false</item>
-
-        <!--<item name="android:fontFamily">@font/slate_regular</item>-->
-        <!--<item name="fontFamily">@font/slate_regular</item>-->
-        <!--<item name="fontFamilyLight">@font/slate_light</item>-->
-        <!--<item name="fontFamilyThin">@font/slate_thin</item>-->
-        <!--<item name="fontFamilyBold">@font/slate_bold</item>-->
-
+        <item name="android:windowContentTransitions">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="search_theme">dark</item>
         <item name="categoryColors">@array/category_colors_dark</item>
 
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
         <item name="alertDialogTheme">@style/Theme.MaterialComponents.Dialog.MinWidth</item>
-
-        <!-- temporary -->
-        <item name="android:windowBackground">@android:color/black</item>
     </style>
 
     <style name="Theme.Appunti.Dark.Base.NoActionbar">

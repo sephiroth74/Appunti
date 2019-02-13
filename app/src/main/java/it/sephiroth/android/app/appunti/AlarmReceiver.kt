@@ -15,9 +15,11 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.TaskStackBuilder
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
+import it.sephiroth.android.app.appunti.db.tables.Entry
 import timber.log.Timber
 
 
+@Suppress("NAME_SHADOWING")
 class AlarmReceiver : BroadcastReceiver() {
     @SuppressLint("CheckResult")
     override fun onReceive(context: Context, intent: Intent?) {
@@ -25,7 +27,32 @@ class AlarmReceiver : BroadcastReceiver() {
 
         intent?.let { intent ->
             when (intent.action) {
-                ACTION_ENTRY_REMINDER -> onEntryReminderRecived(context, intent)
+                ACTION_ENTRY_VIEW_REMINDER -> onEntryReminderRecived(context.applicationContext, intent)
+                ACTION_ENTRY_REMOVE_REMINDER -> onEntryRemoveReminderReceived(context.applicationContext, intent)
+            }
+        }
+    }
+
+    private fun onEntryRemoveReminderReceived(context: Context, intent: Intent) {
+        intent.data?.let { data ->
+            val entryID = data.lastPathSegment?.toInt()
+            entryID?.let { entryID ->
+
+                val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                val wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
+                wakeLock.acquire(1000)
+
+                Timber.i("entryID=$entryID")
+                DatabaseHelper.getEntryById(entryID).subscribe { entry, error ->
+                    error?.let {
+                        Timber.e(error)
+                    }
+
+                    entry?.let { entry ->
+                        DatabaseHelper.removeReminder(entry, context)
+                        wakeLock.release()
+                    }
+                }
             }
         }
     }
@@ -46,28 +73,30 @@ class AlarmReceiver : BroadcastReceiver() {
                     } else if (entry != null) {
                         createNotificationChannel(context)
 
-                        val myIntent = Intent(context, DetailActivity::class.java).apply {
+                        val contentIntent = Intent(context, DetailActivity::class.java).apply {
                             action = Intent.ACTION_EDIT
                             putExtra(DetailActivity.KEY_ENTRY_ID, entry.entryID)
+                            putExtra(DetailActivity.KEY_REMOVE_ALARM, true)
                         }
 
                         val pendingIntent = TaskStackBuilder.create(context)
-                            .addParentStack(DetailActivity::class.java)
-                            .addNextIntent(myIntent)
-                            .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+                                .addParentStack(DetailActivity::class.java)
+                                .addNextIntent(contentIntent)
+                                .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
 
                         val builder = NotificationCompat
-                            .Builder(context, ENTRY_ALARM_CHANNEL_ID)
-                            .setSmallIcon(R.drawable.sharp_favorite_24)
-                            .setContentTitle(entry.entryTitle ?: "")
-                            .setContentText(entry.entryText ?: "")
-                            .setColor(entry.getColor(context))
-                            .setTicker(entry.entryTitle ?: "")
-                            .setContentIntent(pendingIntent)
-                            .setPriority(NotificationCompat.PRIORITY_HIGH)
-                            .setStyle(NotificationCompat.BigTextStyle()
-                                .bigText(entry.entryText ?: ""))
-                            .setAutoCancel(true)
+                                .Builder(context, ENTRY_ALARM_CHANNEL_ID)
+                                .setSmallIcon(R.drawable.sharp_favorite_24)
+                                .setContentTitle(entry.entryTitle ?: "")
+                                .setContentText(entry.entryText ?: "")
+                                .setColor(entry.getColor(context))
+                                .setTicker(entry.entryTitle ?: "")
+                                .setContentIntent(pendingIntent)
+                                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                .setStyle(NotificationCompat.BigTextStyle()
+                                        .bigText(entry.entryText ?: ""))
+                                .setAutoCancel(true)
+                                .setDeleteIntent(Entry.getDeleteReminderPendingIntent(entry, context))
 
                         with(NotificationManagerCompat.from(context)) {
                             notify((System.currentTimeMillis() / 1000).toInt(), builder.build())
@@ -95,7 +124,7 @@ class AlarmReceiver : BroadcastReceiver() {
             }
 
             val notificationManager: NotificationManager = context
-                .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             val group = NotificationChannelGroup(DEFAULT_CHANNEL_GROUP, "Default")
             notificationManager.createNotificationChannelGroup(group)
@@ -112,7 +141,8 @@ class AlarmReceiver : BroadcastReceiver() {
         const val DEFAULT_CHANNEL_GROUP = "appunti.default.channel.group"
 
         // intent action
-        const val ACTION_ENTRY_REMINDER = "appunti.entry.reminder"
+        const val ACTION_ENTRY_VIEW_REMINDER = "appunti.entry.view.reminder"
+        const val ACTION_ENTRY_REMOVE_REMINDER = "appunti.entry.remove.reminder"
 
         private const val WAKE_LOCK_TAG = "Appunti:AlarmReceiver"
     }

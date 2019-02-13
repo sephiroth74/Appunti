@@ -48,6 +48,7 @@ class DetailActivity : AppuntiActivity() {
     private lateinit var model: DetailViewModel
     private var currentEntry: Entry? = null
     private var changeTimer: Disposable? = null
+    private var shouldRemoveAlarm: Boolean = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -171,7 +172,7 @@ class DetailActivity : AppuntiActivity() {
         if (requestCode == CATEGORY_PICK_REQUEST) {
             if (resultCode == RESULT_OK) {
                 data?.let { data ->
-                    val categoryID = data.getIntExtra("categoryID", - 1)
+                    val categoryID = data.getIntExtra("categoryID", -1)
                     DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
                         model.setEntryCategory(category)
                     }
@@ -222,7 +223,8 @@ class DetailActivity : AppuntiActivity() {
                 }
 
                 Intent.ACTION_EDIT -> {
-                    entryID = intent.getIntExtra("entryID", 0)
+                    entryID = intent.getIntExtra(KEY_ENTRY_ID, 0)
+                    shouldRemoveAlarm = intent.getBooleanExtra(KEY_REMOVE_ALARM, false)
                 }
             }
         }
@@ -234,7 +236,7 @@ class DetailActivity : AppuntiActivity() {
     private fun pickCategory() {
         val intent = Intent(this, CategoriesEditActivity::class.java)
         intent.action = Intent.ACTION_PICK
-        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: - 1)
+        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: -1)
         startActivityForResult(intent, CATEGORY_PICK_REQUEST, null)
     }
 
@@ -276,6 +278,11 @@ class DetailActivity : AppuntiActivity() {
         lastModified.text = time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM))
 
         invalidateOptionsMenu()
+
+        if (shouldRemoveAlarm) {
+            model.removeReminder()
+            shouldRemoveAlarm = false
+        }
     }
 
     private fun applyEntryTheme(entry: Entry) {
@@ -337,31 +344,31 @@ class DetailActivity : AppuntiActivity() {
     private fun onToggleReminder() {
 
         model.entry.value?.let { entry ->
-            if (! entry.isAlarmExpired()) {
-                val date = entry.entryAlarm !!.atZone(ZoneId.systemDefault())
+            if (!entry.isAlarmExpired()) {
+                val date = entry.entryAlarm!!.atZone(ZoneId.systemDefault())
                 val dateFormatted = date.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL))
 
                 AlertDialog
-                    .Builder(this)
-                    .setCancelable(true)
-                    .setTitle("Edit Remonder")
-                    .setMessage("This Note has a reminder set to\n${dateFormatted}.\nDo you want to change or remove it?")
-                    .setPositiveButton("Change") { dialog, _ ->
-                        dialog.dismiss()
-                        pickDateTime(date) { result ->
-                            if (model.addReminder(result)) {
-                                showConfirmation("Reminder Set")
+                        .Builder(this)
+                        .setCancelable(true)
+                        .setTitle("Edit Remonder")
+                        .setMessage("This Note has a reminder set to\n${dateFormatted}.\nDo you want to change or remove it?")
+                        .setPositiveButton("Change") { dialog, _ ->
+                            dialog.dismiss()
+                            pickDateTime(date) { result ->
+                                if (model.addReminder(result)) {
+                                    showConfirmation("Reminder Set")
+                                }
                             }
                         }
-                    }
-                    .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
-                    .setNeutralButton("Remove") { dialog, _ ->
-                        dialog.dismiss()
-                        if (model.removeReminder()) {
-                            showConfirmation("Reminder Removed")
+                        .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
+                        .setNeutralButton("Remove") { dialog, _ ->
+                            dialog.dismiss()
+                            if (model.removeReminder()) {
+                                showConfirmation("Reminder Removed")
+                            }
                         }
-                    }
-                    .show()
+                        .show()
             } else {
                 val now = Instant.now()
                 val date = now.atZone(ZoneId.systemDefault())
@@ -424,7 +431,7 @@ class DetailActivity : AppuntiActivity() {
                 menuItem = menu.findItem(R.id.menu_action_alarm)
                 menuItem?.apply {
 
-                    if (entry.hasAlarm() && ! entry.isAlarmExpired()) {
+                    if (entry.hasAlarm() && !entry.isAlarmExpired()) {
                         setIcon(R.drawable.twotone_alarm_24)
                         setTitle(R.string.remove_reminder)
                     } else {
@@ -443,6 +450,7 @@ class DetailActivity : AppuntiActivity() {
     companion object {
         const val CATEGORY_PICK_REQUEST = 1
         const val KEY_ENTRY_ID = "entryID"
+        const val KEY_REMOVE_ALARM = "removeAlarm"
     }
 
     object EntryDiff {
