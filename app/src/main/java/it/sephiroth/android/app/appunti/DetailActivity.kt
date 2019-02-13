@@ -3,20 +3,25 @@ package it.sephiroth.android.app.appunti
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
+import android.text.style.StyleSpan
 import android.transition.AutoTransition
 import android.view.*
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
+import androidx.core.text.set
+import androidx.core.text.toSpannable
 import androidx.core.transition.doOnEnd
 import androidx.core.transition.doOnStart
 import androidx.core.view.doOnPreDraw
+import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.dbflow5.structure.save
@@ -172,7 +177,7 @@ class DetailActivity : AppuntiActivity() {
         if (requestCode == CATEGORY_PICK_REQUEST) {
             if (resultCode == RESULT_OK) {
                 data?.let { data ->
-                    val categoryID = data.getIntExtra("categoryID", -1)
+                    val categoryID = data.getIntExtra("categoryID", - 1)
                     DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
                         model.setEntryCategory(category)
                     }
@@ -236,7 +241,7 @@ class DetailActivity : AppuntiActivity() {
     private fun pickCategory() {
         val intent = Intent(this, CategoriesEditActivity::class.java)
         intent.action = Intent.ACTION_PICK
-        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: -1)
+        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: - 1)
         startActivityForResult(intent, CATEGORY_PICK_REQUEST, null)
     }
 
@@ -344,31 +349,38 @@ class DetailActivity : AppuntiActivity() {
     private fun onToggleReminder() {
 
         model.entry.value?.let { entry ->
-            if (!entry.isAlarmExpired()) {
-                val date = entry.entryAlarm!!.atZone(ZoneId.systemDefault())
+            if (! entry.isAlarmExpired()) {
+                val date = entry.entryAlarm !!.atZone(ZoneId.systemDefault())
                 val dateFormatted = date.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL))
+                val reminderText = getString(R.string.edit_reminder_dialog_text, dateFormatted)
+                val span = SpannableBuilder.valueOf(reminderText)
+                val index = reminderText.indexOf(dateFormatted)
+
+                if (index > - 1) {
+                    span[index, index + dateFormatted.length] = StyleSpan(Typeface.BOLD)
+                }
 
                 AlertDialog
-                        .Builder(this)
-                        .setCancelable(true)
-                        .setTitle("Edit Remonder")
-                        .setMessage("This Note has a reminder set to\n${dateFormatted}.\nDo you want to change or remove it?")
-                        .setPositiveButton("Change") { dialog, _ ->
-                            dialog.dismiss()
-                            pickDateTime(date) { result ->
-                                if (model.addReminder(result)) {
-                                    showConfirmation("Reminder Set")
-                                }
+                    .Builder(this)
+                    .setCancelable(true)
+                    .setTitle(getString(R.string.edit_reminder))
+                    .setMessage(span.toSpannable())
+                    .setPositiveButton(getString(R.string.change)) { dialog, _ ->
+                        dialog.dismiss()
+                        pickDateTime(date) { result ->
+                            if (model.addReminder(result)) {
+                                showConfirmation(getString(R.string.reminder_set))
                             }
                         }
-                        .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
-                        .setNeutralButton("Remove") { dialog, _ ->
-                            dialog.dismiss()
-                            if (model.removeReminder()) {
-                                showConfirmation("Reminder Removed")
-                            }
+                    }
+                    .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
+                    .setNeutralButton(getString(R.string.remove)) { dialog, _ ->
+                        dialog.dismiss()
+                        if (model.removeReminder()) {
+                            showConfirmation(getString(R.string.reminder_removed))
                         }
-                        .show()
+                    }
+                    .show()
             } else {
                 val now = Instant.now()
                 val date = now.atZone(ZoneId.systemDefault())
@@ -376,7 +388,7 @@ class DetailActivity : AppuntiActivity() {
                     Timber.v("date time picker! $result")
 
                     if (model.addReminder(result)) {
-                        showConfirmation("Reminder Set")
+                        showConfirmation(getString(R.string.reminder_set))
                     }
                 }
             }
@@ -431,7 +443,7 @@ class DetailActivity : AppuntiActivity() {
                 menuItem = menu.findItem(R.id.menu_action_alarm)
                 menuItem?.apply {
 
-                    if (entry.hasAlarm() && !entry.isAlarmExpired()) {
+                    if (entry.hasAlarm() && ! entry.isAlarmExpired()) {
                         setIcon(R.drawable.twotone_alarm_24)
                         setTitle(R.string.remove_reminder)
                     } else {

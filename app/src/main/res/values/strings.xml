@@ -83,4 +83,10 @@
     <string name="channel_description">Alarm from a Note</string>
     <string name="add_reminder">Add Reminder</string>
     <string name="remove_reminder">Remove Reminder</string>
+    <string name="edit_reminder">Edit Reminder</string>
+    <string name="edit_reminder_dialog_text">This Note has a reminder set to\n%s.\nDo you want to change or remove it?</string>
+    <string name="reminder_removed">Reminder Removed</string>
+    <string name="reminder_set">Reminder Set</string>
+    <string name="change">Change</string>
+    <string name="remove">Remove</string>
 </resources>
