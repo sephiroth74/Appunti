@@ -86,15 +86,15 @@ class AlarmReceiver : BroadcastReceiver() {
 
                         val builder = NotificationCompat
                                 .Builder(context, ENTRY_ALARM_CHANNEL_ID)
-                                .setSmallIcon(R.drawable.sharp_favorite_24)
-                                .setContentTitle(entry.entryTitle ?: "")
-                                .setContentText(entry.entryText ?: "")
+                                .setSmallIcon(R.drawable.sharp_alarm_24)
+                                .setContentTitle(entry.entryTitle)
+                                .setContentText(entry.getTextSummary(50))
                                 .setColor(entry.getColor(context))
-                                .setTicker(entry.entryTitle ?: "")
+                                .setTicker(entry.entryTitle)
                                 .setContentIntent(pendingIntent)
                                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                                 .setStyle(NotificationCompat.BigTextStyle()
-                                        .bigText(entry.entryText ?: ""))
+                                        .bigText(entry.entryText))
                                 .setAutoCancel(true)
                                 .setDeleteIntent(Entry.getDeleteReminderPendingIntent(entry, context))
 

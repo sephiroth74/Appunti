@@ -16,7 +16,11 @@ import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.EntryTypeConverter
 import it.sephiroth.android.app.appunti.db.InstantTypeConverter
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
+import kotlinx.android.synthetic.main.activity_detail.*
 import org.threeten.bp.Instant
+import org.threeten.bp.ZoneId
+import org.threeten.bp.format.DateTimeFormatter
+import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 
 @Table(database = AppDatabase::class, indexGroups = [
@@ -46,7 +50,7 @@ class Entry() : BaseRXModel() {
     var entryID: Int = 0
 
     @Column(defaultValue = "")
-    var entryTitle: String? = null
+    var entryTitle: String = ""
 
     var entryPriority: Int = 5
 
@@ -58,7 +62,7 @@ class Entry() : BaseRXModel() {
     var entryCreationDate: Instant = Instant.now()
 
     @Column(defaultValue = "")
-    var entryText: String? = null
+    var entryText: String = ""
 
     @Column(typeConverter = EntryTypeConverter::class)
     var entryType: EntryType = EntryType.TEXT
@@ -108,8 +112,8 @@ class Entry() : BaseRXModel() {
     override fun hashCode(): Int {
         Timber.w("Entry.hashCode")
         var result = entryID
-        result = 31 * result + (entryTitle?.hashCode() ?: 0)
-        result = 31 * result + (entryText?.hashCode() ?: 0)
+        result = 31 * result + entryTitle.hashCode()
+        result = 31 * result + entryText.hashCode()
         result = 31 * result + entryPriority
         result = 31 * result + (category?.hashCode() ?: 0)
         result = 31 * result + entryType.hashCode()
@@ -150,8 +154,13 @@ class Entry() : BaseRXModel() {
         return true
     }
 
+    fun getTextSummary(maxLength: Int = 100, postfix: String? = null): String {
+        return if (entryText.length <= maxLength) entryText
+        else entryText.substring(0, maxLength) + postfix
+    }
+
     companion object {
-        fun getViewReminderPendingIntent(entry: Entry, context: Context): PendingIntent {
+        private fun getViewReminderPendingIntent(entry: Entry, context: Context): PendingIntent {
             return getReminderPendingIntent(entry, context, AlarmReceiver.ACTION_ENTRY_VIEW_REMINDER)
         }
 
@@ -195,6 +204,11 @@ class Entry() : BaseRXModel() {
                 return true
             }
             return false
+        }
+
+        fun getLocalizedTime(date: Instant, format: FormatStyle): String? {
+            val time = date.atZone(ZoneId.systemDefault())
+            return time.format(DateTimeFormatter.ofLocalizedDateTime(format))
         }
     }
 

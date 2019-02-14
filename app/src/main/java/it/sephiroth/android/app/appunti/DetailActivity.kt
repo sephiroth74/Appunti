@@ -1,9 +1,7 @@
 package it.sephiroth.android.app.appunti
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
@@ -18,8 +16,6 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.core.transition.doOnEnd
@@ -29,14 +25,12 @@ import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.dbflow5.structure.save
-import com.google.android.gms.location.LocationRequest
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.patloew.rxlocation.RxLocation
-import com.tbruyelle.rxpermissions2.RxPermissions
 import io.reactivex.disposables.Disposable
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.doOnTextChanged
+import it.sephiroth.android.app.appunti.ext.getLocalizedDateTimeStamp
 import it.sephiroth.android.app.appunti.ext.hideSoftInput
 import it.sephiroth.android.app.appunti.ext.rxTimer
 import it.sephiroth.android.app.appunti.models.DetailViewModel
@@ -44,7 +38,6 @@ import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
-import org.threeten.bp.format.DateTimeFormatter
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -61,6 +54,7 @@ class DetailActivity : AppuntiActivity() {
     private var currentEntry: Entry? = null
     private var changeTimer: Disposable? = null
     private var shouldRemoveAlarm: Boolean = false
+    private var isNewDocument: Boolean = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,115 +72,63 @@ class DetailActivity : AppuntiActivity() {
 
         model = ViewModelProviders.of(this).get(DetailViewModel::class.java)
         model.entry.observe(this, Observer { entry ->
-            Timber.i("model.entry changed = $entry")
+            Timber.i("Model Entry Changed = $entry")
             onEntryChanged(entry)
         })
 
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
+
+        setupBottomSheet()
+        setupNavigationView()
+        setupBottomAppBar()
+        setupSharedElementsTransition()
+
         closeBottomSheet()
 
-        bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-            override fun onSlide(p0: View, p1: Float) {
-                bottomSheetModalBackground.background.alpha = (p1 * 255).toInt()
-            }
-
-            @SuppressLint("SwitchIntDef")
-            override fun onStateChanged(p0: View, state: Int) {
-                when (state) {
-                    BottomSheetBehavior.STATE_SETTLING,
-                    BottomSheetBehavior.STATE_DRAGGING,
-                    BottomSheetBehavior.STATE_EXPANDED -> {
-                        bottomSheetModalBackground.visibility = View.VISIBLE
-                        bottomSheetModalBackground.requestFocus()
-                        bottomSheetModalBackground.hideSoftInput()
-                    }
-
-                    BottomSheetBehavior.STATE_COLLAPSED,
-                    BottomSheetBehavior.STATE_HIDDEN -> {
-                        bottomSheetModalBackground.visibility = View.INVISIBLE
-                    }
-                }
-            }
-
-        })
-
-        handleIntent(intent)
-
-        entryCategory.setOnClickListener {
-            pickCategory()
-        }
-
-        entryTitle.doOnTextChanged { s, start, count, after ->
-            if (currentFocus == entryTitle) {
-                changeTimer = rxTimer(changeTimer, 300, TimeUnit.MILLISECONDS) {
-                    currentEntry?.entryTitle = s?.toString() ?: ""
-                    currentEntry?.save()
-                }
-            }
-        }
-
-        entryText.doOnTextChanged { s, start, count, after ->
-            if (currentFocus == entryText) {
-                changeTimer = rxTimer(changeTimer, 1, TimeUnit.SECONDS) {
-                    currentEntry?.entryText = s?.toString() ?: ""
-                    currentEntry?.save()
-                }
-            }
-        }
-
+        // UI elements listeners
+        entryCategory.setOnClickListener { pickCategory() }
+        entryTitle.doOnTextChanged { s, start, count, after -> onEntryTitleChanged(s, start, count, after) }
+        entryText.doOnTextChanged { s, start, count, after -> onEntryTextChanged(s, start, count, after) }
         entryText.movementMethod = LinkMovementMethod.getInstance()
 
-        navigationView.setNavigationItemSelectedListener { menuItem ->
-            Timber.i("menuItem: $menuItem")
-            when (menuItem.itemId) {
-                R.id.menu_action_category -> {
-                    pickCategory()
-                    closeBottomSheet()
+        // handle the current listener
+        onNewIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+
+        Timber.i("onNewIntent($intent)")
+        var entryID = 0
+
+        intent?.let { intent ->
+            Timber.v("action=${intent.action}")
+            when (intent.action) {
+                Intent.ACTION_CREATE_DOCUMENT -> {
+                    isNewDocument = true
+                    entryID = 0
                 }
 
-                R.id.menu_action_delete -> {
-                    onToggleDelete()
-                    closeBottomSheet()
+                Intent.ACTION_EDIT -> {
+                    entryID = intent.getIntExtra(KEY_ENTRY_ID, 0)
+                    shouldRemoveAlarm = intent.getBooleanExtra(KEY_REMOVE_ALARM, false)
+                    isNewDocument = false
                 }
-
-                R.id.menu_action_share -> {
-                    onShareEntry()
-                    closeBottomSheet()
-                }
-            }
-            true
-        }
-
-        bottomAppBar.navigationIcon.setOnClickListener {
-            openOrCloseBottomsheet()
-        }
-
-        bottomSheetModalBackground.setOnClickListener {
-            closeBottomSheet()
-        }
-
-        bottomAppBar.doOnPreDraw {
-            if (navigationView.layoutParams is ViewGroup.MarginLayoutParams) {
-                (navigationView.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = it.height
             }
         }
 
-        // shared elements transitions adjustments
-        val sharedElementEnterTransition = window.sharedElementEnterTransition
+        // don't delay the transition if it's a new document
+        if (!isNewDocument) postponeEnterTransition()
 
-        sharedElementEnterTransition.doOnEnd {
-            entryCategory.visibility = if (model.entry.value?.category == null) View.INVISIBLE else View.VISIBLE
-        }
-        sharedElementEnterTransition.doOnStart {
-            entryCategory.visibility = if (model.entry.value?.category == null) View.INVISIBLE else View.VISIBLE
-        }
+        Timber.v("entryID=$entryID")
+        model.entryID = entryID
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == CATEGORY_PICK_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 data?.let { data ->
-                    val categoryID = data.getIntExtra("categoryID", - 1)
+                    val categoryID = data.getIntExtra("categoryID", -1)
                     DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
                         model.setEntryCategory(category)
                     }
@@ -212,46 +154,120 @@ class DetailActivity : AppuntiActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_action_pin -> {
-                onTogglePin()
-            }
-            R.id.menu_action_archive -> {
-                onToggleArchive()
-            }
-            R.id.menu_action_alarm -> {
-                onToggleReminder()
-            }
+            R.id.menu_action_pin -> onTogglePin()
+            R.id.menu_action_archive -> onToggleArchive()
+            R.id.menu_action_alarm -> onToggleReminder()
+            android.R.id.home -> onBackPressed()
         }
         return super.onOptionsItemSelected(item)
     }
 
-    private fun handleIntent(intent: Intent?) {
-        Timber.i("handleIntent: $intent")
-        var entryID = 0
+    // ENTRY TEXT LISTENERS
 
-        intent?.let { intent ->
-            Timber.v("action=${intent.action}")
-            when (intent.action) {
-                Intent.ACTION_CREATE_DOCUMENT -> {
-                    entryID = 0
-                }
-
-                Intent.ACTION_EDIT -> {
-                    entryID = intent.getIntExtra(KEY_ENTRY_ID, 0)
-                    shouldRemoveAlarm = intent.getBooleanExtra(KEY_REMOVE_ALARM, false)
-                }
+    @Suppress("UNUSED_PARAMETER")
+    private fun onEntryTextChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
+        if (currentFocus == entryText) {
+            changeTimer = rxTimer(changeTimer, 1, TimeUnit.SECONDS) {
+                currentEntry?.entryText = text?.toString() ?: ""
+                currentEntry?.save()
             }
         }
-
-        Timber.v("entryID=$entryID")
-        model.entryID = entryID
     }
 
-    private fun pickCategory() {
-        val intent = Intent(this, CategoriesEditActivity::class.java)
-        intent.action = Intent.ACTION_PICK
-        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: - 1)
-        startActivityForResult(intent, CATEGORY_PICK_REQUEST_CODE, null)
+    // ENTRY TITLE LISTENERS
+
+    @Suppress("UNUSED_PARAMETER")
+    private fun onEntryTitleChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
+        if (currentFocus == entryTitle) {
+            changeTimer = rxTimer(changeTimer, 300, TimeUnit.MILLISECONDS) {
+                currentEntry?.entryTitle = text?.toString() ?: ""
+                currentEntry?.save()
+            }
+        }
+    }
+
+    // SHARED ELEMENTS TRANSITION
+
+    private fun setupSharedElementsTransition() {
+        val sharedElementEnterTransition = window.sharedElementEnterTransition
+
+        sharedElementEnterTransition.doOnEnd {
+            entryCategory.visibility = if (model.entry.value?.category == null) View.INVISIBLE else View.VISIBLE
+        }
+        sharedElementEnterTransition.doOnStart {
+            entryCategory.visibility = if (model.entry.value?.category == null) View.INVISIBLE else View.VISIBLE
+        }
+    }
+
+    // BOTTOM APP BAR
+
+    private fun setupBottomAppBar() {
+        bottomAppBar.navigationIcon.setOnClickListener {
+            openOrCloseBottomsheet()
+        }
+
+        bottomSheetModalBackground.setOnClickListener {
+            closeBottomSheet()
+        }
+
+        bottomAppBar.doOnPreDraw {
+            if (navigationView.layoutParams is ViewGroup.MarginLayoutParams) {
+                (navigationView.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = it.height
+            }
+        }
+    }
+
+    // NAVIGATION VIEW
+
+    private fun setupNavigationView() {
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_action_category -> {
+                    pickCategory()
+                    closeBottomSheet()
+                }
+
+                R.id.menu_action_delete -> {
+                    onToggleDelete()
+                    closeBottomSheet()
+                }
+
+                R.id.menu_action_share -> {
+                    onShareEntry()
+                    closeBottomSheet()
+                }
+            }
+            true
+        }
+    }
+
+    // BOTTOM SHEET BEHAVIORS
+
+    private fun setupBottomSheet() {
+        bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onSlide(p0: View, p1: Float) {
+                bottomSheetModalBackground.background.alpha = (p1 * 255).toInt()
+            }
+
+            @SuppressLint("SwitchIntDef")
+            override fun onStateChanged(p0: View, state: Int) {
+                when (state) {
+                    BottomSheetBehavior.STATE_SETTLING,
+                    BottomSheetBehavior.STATE_DRAGGING,
+                    BottomSheetBehavior.STATE_EXPANDED -> {
+                        bottomSheetModalBackground.visibility = View.VISIBLE
+                        bottomSheetModalBackground.requestFocus()
+                        bottomSheetModalBackground.hideSoftInput()
+                    }
+
+                    BottomSheetBehavior.STATE_COLLAPSED,
+                    BottomSheetBehavior.STATE_HIDDEN -> {
+                        bottomSheetModalBackground.visibility = View.INVISIBLE
+                    }
+                }
+            }
+
+        })
     }
 
     private fun closeBottomSheet() {
@@ -271,11 +287,20 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
+    private fun pickCategory() {
+        val intent = Intent(this, CategoriesEditActivity::class.java)
+        intent.action = Intent.ACTION_PICK
+        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: -1)
+        startActivityForResult(intent, CATEGORY_PICK_REQUEST_CODE, null)
+    }
+
     private fun onEntryChanged(entry: Entry) {
         Timber.i("onEntryChanged()")
 
         val diff = EntryDiff.calculateDiff(currentEntry, entry)
         Timber.v("diff=$diff")
+
+        val currentEntryIsNull = currentEntry == null
 
         currentEntry = Entry(entry)
 
@@ -288,14 +313,18 @@ class DetailActivity : AppuntiActivity() {
             applyEntryTheme(entry)
         }
 
-        val time = entry.entryModifiedDate.atZone(ZoneId.systemDefault())
-        lastModified.text = time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM))
+        lastModified.text = entry.entryModifiedDate.getLocalizedDateTimeStamp(FormatStyle.MEDIUM)
 
         invalidateOptionsMenu()
 
         if (shouldRemoveAlarm) {
             model.removeReminder()
             shouldRemoveAlarm = false
+        }
+
+        if (currentEntryIsNull && !isNewDocument) {
+            Timber.v("startPostponedEnterTransition")
+            startPostponedEnterTransition()
         }
     }
 
@@ -361,38 +390,38 @@ class DetailActivity : AppuntiActivity() {
 
     private fun onToggleReminder() {
         model.entry.value?.let { entry ->
-            if (! entry.isAlarmExpired()) {
-                val date = entry.entryAlarm !!.atZone(ZoneId.systemDefault())
-                val dateFormatted = date.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL))
+            if (entry.entryAlarm != null && !entry.isAlarmExpired()) {
+                val date = entry.entryAlarm!!.atZone(ZoneId.systemDefault())
+                val dateFormatted = entry.entryAlarm!!.getLocalizedDateTimeStamp(FormatStyle.FULL)
                 val reminderText = getString(R.string.edit_reminder_dialog_text, dateFormatted)
                 val span = SpannableBuilder.valueOf(reminderText)
                 val index = reminderText.indexOf(dateFormatted)
 
-                if (index > - 1) {
+                if (index > -1) {
                     span[index, index + dateFormatted.length] = StyleSpan(Typeface.BOLD)
                 }
 
                 AlertDialog
-                    .Builder(this)
-                    .setCancelable(true)
-                    .setTitle(getString(R.string.edit_reminder))
-                    .setMessage(span.toSpannable())
-                    .setPositiveButton(getString(R.string.change)) { dialog, _ ->
-                        dialog.dismiss()
-                        pickDateTime(date) { result ->
-                            if (model.addReminder(result)) {
-                                showConfirmation(getString(R.string.reminder_set))
+                        .Builder(this)
+                        .setCancelable(true)
+                        .setTitle(getString(R.string.edit_reminder))
+                        .setMessage(span.toSpannable())
+                        .setPositiveButton(getString(R.string.change)) { dialog, _ ->
+                            dialog.dismiss()
+                            pickDateTime(date) { result ->
+                                if (model.addReminder(result)) {
+                                    showConfirmation(getString(R.string.reminder_set))
+                                }
                             }
                         }
-                    }
-                    .setNeutralButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
-                    .setNegativeButton(getString(R.string.remove)) { dialog, _ ->
-                        dialog.dismiss()
-                        if (model.removeReminder()) {
-                            showConfirmation(getString(R.string.reminder_removed))
+                        .setNeutralButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
+                        .setNegativeButton(getString(R.string.remove)) { dialog, _ ->
+                            dialog.dismiss()
+                            if (model.removeReminder()) {
+                                showConfirmation(getString(R.string.reminder_removed))
+                            }
                         }
-                    }
-                    .show()
+                        .show()
             } else {
                 val now = Instant.now()
                 val date = now.atZone(ZoneId.systemDefault())
@@ -455,7 +484,7 @@ class DetailActivity : AppuntiActivity() {
                 menuItem = menu.findItem(R.id.menu_action_alarm)
                 menuItem?.apply {
 
-                    if (entry.hasAlarm() && ! entry.isAlarmExpired()) {
+                    if (entry.hasAlarm() && !entry.isAlarmExpired()) {
                         setIcon(R.drawable.twotone_alarm_24)
                         setTitle(R.string.remove_reminder)
                     } else {
@@ -530,7 +559,6 @@ class DetailActivity : AppuntiActivity() {
         const val KEY_REMOVE_ALARM = "removeAlarm"
 
         const val CATEGORY_PICK_REQUEST_CODE = 1
-        const val LOCATION_PERMISSION_REQUEST_CODE = 10
     }
 
     object EntryDiff {

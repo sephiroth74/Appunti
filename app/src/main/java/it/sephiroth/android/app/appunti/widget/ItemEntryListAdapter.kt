@@ -19,6 +19,7 @@ import androidx.core.text.toSpannable
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.android.material.circularreveal.cardview.CircularRevealCardView
 import it.sephiroth.android.app.appunti.BuildConfig
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -67,9 +68,9 @@ class ItemEntryListAdapter(private val context: Context,
                         if (isLightTheme) android.R.attr.textColorPrimaryInverse else android.R.attr.textColorPrimary)
 
         cardForegroundNoStroke = context.getDrawable(
-                R.drawable.appunti_card_selectable_item_background_no_stroke) !!
+                R.drawable.appunti_card_selectable_item_background_no_stroke)!!
         cardForegroundStroke = context.getDrawable(
-                R.drawable.appunti_card_selectable_item_background_with_stroke) !!
+                R.drawable.appunti_card_selectable_item_background_with_stroke)!!
 
         setHasStableIds(true)
     }
@@ -86,7 +87,7 @@ class ItemEntryListAdapter(private val context: Context,
         return when (viewType) {
             TYPE_EMPTY -> {
                 view = LayoutInflater.from(context)
-                    .inflate(R.layout.item_list_empty, parent, false)
+                        .inflate(R.layout.item_list_empty, parent, false)
                 val searchViewHeight = context.resources.getDimensionPixelSize(
                         R.dimen.search_height_view)
                 val searchViewTopMargin = context.resources.getDimensionPixelSize(
@@ -94,7 +95,7 @@ class ItemEntryListAdapter(private val context: Context,
 
                 val params =
                         StaggeredGridLayoutManager
-                            .LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, searchViewHeight + searchViewTopMargin * 2)
+                                .LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, searchViewHeight + searchViewTopMargin * 2)
                 params.isFullSpan = true
                 view.layoutParams = params
                 BaseViewHolder(view)
@@ -102,13 +103,13 @@ class ItemEntryListAdapter(private val context: Context,
 
             TYPE_ENTRY -> {
                 view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.main_item_list_entry, parent, false)
+                        .inflate(R.layout.main_item_list_entry, parent, false)
                 EntryViewHolder(view)
             }
 
             else -> {
                 view = LayoutInflater.from(context)
-                    .inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
+                        .inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
                 val params = view.layoutParams as StaggeredGridLayoutManager.LayoutParams
                 params.isFullSpan = true
 
@@ -133,7 +134,7 @@ class ItemEntryListAdapter(private val context: Context,
         if (baseHolder.itemViewType == TYPE_ENTRY) {
 
             val holder = baseHolder as EntryViewHolder
-            val entryItem = item.entry !!
+            val entryItem = item.entry!!
             Timber.i("onBindViewHolder(position=$position, entry=$entryItem)")
 
             holder.bind(entryItem, searchText, selectionCallback?.invoke(holder, position) ?: false)
@@ -184,12 +185,12 @@ class ItemEntryListAdapter(private val context: Context,
     override fun getItemId(position: Int): Long {
         val item = getItem(position)
         return when (item.type) {
-            EntryItem.ItemType.ENTRY -> item.entry !!.entryID.toLong()
-            EntryItem.ItemType.EMPTY -> - 1
-            EntryItem.ItemType.PINNED -> - 2
-            EntryItem.ItemType.ARCHIVED -> - 3
-            EntryItem.ItemType.DELETED -> - 4
-            EntryItem.ItemType.OTHERS -> - 5
+            EntryItem.ItemType.ENTRY -> item.entry!!.entryID.toLong()
+            EntryItem.ItemType.EMPTY -> -1
+            EntryItem.ItemType.PINNED -> -2
+            EntryItem.ItemType.ARCHIVED -> -3
+            EntryItem.ItemType.DELETED -> -4
+            EntryItem.ItemType.OTHERS -> -5
         }
     }
 
@@ -224,12 +225,13 @@ class ItemEntryListAdapter(private val context: Context,
             it.entry?.entryPinned == 1 && it.entry.entryDeleted == 0 && it.entry.entryArchived == 0
         }, EntryItem.ItemType.PINNED)
 
-        val firstArchived = SearchIndex(finalData.indexOfFirst { it.entry?.entryArchived == 1 && it.entry?.entryDeleted == 0 },
-                EntryItem.ItemType.ARCHIVED)
+        val firstArchived = SearchIndex(
+                finalData.indexOfFirst { it.entry?.entryArchived == 1 && it.entry?.entryDeleted == 0 }, EntryItem.ItemType.ARCHIVED)
 
-        val firstDeleted = SearchIndex(finalData.indexOfFirst { it.entry?.entryDeleted == 1 }, EntryItem.ItemType.DELETED)
+        val firstDeleted = SearchIndex(
+                finalData.indexOfFirst { it.entry?.entryDeleted == 1 }, EntryItem.ItemType.DELETED)
 
-        var arrayIndex = arrayOf(firstPinned, firstArchived, firstDeleted)
+        val arrayIndex = arrayOf(firstPinned, firstArchived, firstDeleted)
         arrayIndex.sortBy { searchIndex -> searchIndex.index }
 
         Timber.v("arrayIndex: $arrayIndex")
@@ -242,9 +244,9 @@ class ItemEntryListAdapter(private val context: Context,
 
             Timber.v("index=$index, type=$type")
 
-            if (index > - 1) {
+            if (index > -1) {
                 finalData.add(index + addedCount, EntryItem(null, type))
-                addedCount ++
+                addedCount++
             }
         }
 
@@ -261,12 +263,12 @@ class ItemEntryListAdapter(private val context: Context,
                 EntryItem.ItemType.PINNED -> subList.indexOfFirst { it.entry?.entryPinned == 0 }
                 EntryItem.ItemType.ARCHIVED -> subList.indexOfFirst { it.entry?.entryArchived == 0 }
                 EntryItem.ItemType.DELETED -> subList.indexOfFirst { it.entry?.entryDeleted == 0 }
-                else -> - 1
+                else -> -1
             }
 
             Timber.v("firstNonPinned=$firstNonPinned, final=${firstNonPinned + addedCount}")
 
-            if (firstNonPinned > - 1) {
+            if (firstNonPinned > -1) {
                 finalData.add(firstNonPinned + firstIndex, EntryItem(null, EntryItem.ItemType.OTHERS))
             }
         }
@@ -293,31 +295,31 @@ class ItemEntryListAdapter(private val context: Context,
         val titleTextView: TextView by lazy { view.id_title }
         val contentTextView: TextView by lazy { view.id_content }
         val categoryTextView: AppCompatTextView by lazy { view.entryCategory }
-        val cardView by lazy { view.id_card }
+        val cardView: CircularRevealCardView by lazy { view.id_card }
 
         fun bind(entry: Entry, searchText: String?, isActivated: Boolean = false) {
             this.entry = entry
             itemView.isActivated = isActivated
 
             // TODO(maybe execute asyc)
-            val entryTitle = SpannableStringBuilder.valueOf(entry.entryTitle ?: "")
+            val entryTitle = SpannableStringBuilder.valueOf(entry.entryTitle)
 
-            if (! searchText.isNullOrEmpty()) {
-                val index = entry.entryTitle?.toLowerCase()?.indexOf(searchText) ?: - 1
+            if (!searchText.isNullOrEmpty()) {
+                val index = entry.entryTitle.toLowerCase().indexOf(searchText)
 
-                if (index > - 1) {
+                if (index > -1) {
                     entryTitle[index, index + searchText.length] = BackgroundColorSpan(Color.YELLOW)
                 }
             }
 
             titleTextView.text = entryTitle.toSpannable()
-            contentTextView.text = entry.entryText?.substring(0, min(entry.entryText?.length ?: 0, 100))
+            contentTextView.text = entry.getTextSummary(100, "...")
             categoryTextView.text = entry.category?.categoryTitle
 
 
-            if (! entry.isAlarmExpired(ItemEntryListAdapter.NOW)) {
+            if (!entry.isAlarmExpired(ItemEntryListAdapter.NOW)) {
                 val drawable = ResourcesCompat
-                    .getDrawable(itemView.context.resources, R.drawable.sharp_alarm_24, itemView.context.theme)
+                        .getDrawable(itemView.context.resources, R.drawable.sharp_alarm_24, itemView.context.theme)
                 titleTextView.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, drawable, null)
             } else {
                 titleTextView.setCompoundDrawables(null, null, null, null)
