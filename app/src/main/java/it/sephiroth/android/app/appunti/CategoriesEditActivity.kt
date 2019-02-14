@@ -74,7 +74,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
         updateCategories()
 
         if (intent != null && intent.action != Intent.ACTION_PICK && intent.hasExtra(ASK_NEW_CATEGORY_STARTUP)) {
-            mainThread {
+            doOnMainThread {
                 presentNewCategoryDialog()
             }
         }

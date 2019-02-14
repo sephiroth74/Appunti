@@ -10,7 +10,6 @@ import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
 import android.text.style.StyleSpan
-import android.transition.AutoTransition
 import android.view.*
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -24,6 +23,7 @@ import androidx.core.view.doOnPreDraw
 import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.transition.Slide
 import com.dbflow5.structure.save
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.disposables.Disposable
@@ -56,13 +56,20 @@ class DetailActivity : AppuntiActivity() {
     private var shouldRemoveAlarm: Boolean = false
     private var isNewDocument: Boolean = false
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS)
-        window.sharedElementEnterTransition = AutoTransition()
-        window.sharedElementExitTransition = AutoTransition()
-        window.sharedElementReenterTransition = AutoTransition()
-        window.sharedElementReturnTransition = AutoTransition()
+//        window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS)
+//        window.sharedElementEnterTransition = AutoTransition()
+//        window.sharedElementExitTransition = android.transition.Slide(Gravity.LEFT)
+//        window.sharedElementReenterTransition = AutoTransition()
+//        window.sharedElementReturnTransition = AutoTransition()
+
+        window.sharedElementReturnTransition = null
+//        window.returnTransition = android.transition.Slide(Gravity.LEFT)
+
         super.onCreate(savedInstanceState)
 
         supportActionBar?.apply {
@@ -159,7 +166,7 @@ class DetailActivity : AppuntiActivity() {
             R.id.menu_action_alarm -> onToggleReminder()
             android.R.id.home -> onBackPressed()
         }
-        return super.onOptionsItemSelected(item)
+        return true
     }
 
     // ENTRY TEXT LISTENERS
@@ -324,7 +331,12 @@ class DetailActivity : AppuntiActivity() {
 
         if (currentEntryIsNull && !isNewDocument) {
             Timber.v("startPostponedEnterTransition")
-            startPostponedEnterTransition()
+            entryTitle.doOnPreDraw {
+                startPostponedEnterTransition()
+                entryTitle.transitionName = null
+                entryText.transitionName = null
+                entryCategory.transitionName = null
+            }
         }
     }
 

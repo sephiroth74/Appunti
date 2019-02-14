@@ -65,6 +65,7 @@
 
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
         <item name="alertDialogTheme">@style/Theme.MaterialComponents.Dialog.MinWidth</item>
+        <!--<item name="android:windowReturnTransition">@android:transition/fade</item>-->
     </style>
 
     <style name="Theme.Appunti.Dark.Base.NoActionbar">

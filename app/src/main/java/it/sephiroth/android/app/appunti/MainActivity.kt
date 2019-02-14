@@ -349,6 +349,7 @@ class MainActivity : AppuntiActivity() {
         }
 
         val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this, *(elementsArray.toTypedArray()))
+//        val intentOptions = null
         startDetailActivityFromIntent(intent, intentOptions)
     }
 

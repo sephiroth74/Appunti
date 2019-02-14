@@ -7,31 +7,27 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.text.SpannableStringBuilder
 import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.graphics.drawable.DrawableCompat
-import androidx.core.text.set
-import androidx.core.text.toSpannable
+import androidx.core.text.*
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.circularreveal.cardview.CircularRevealCardView
-import it.sephiroth.android.app.appunti.BuildConfig
+import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.currentThread
-import it.sephiroth.android.app.appunti.ext.getColorStateList
-import it.sephiroth.android.app.appunti.ext.isLightTheme
+import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.main_item_list_entry.view.*
 import org.threeten.bp.Instant
 import timber.log.Timber
-import kotlin.math.min
 
 class ItemEntryListAdapter(private val context: Context,
                            private var values: MutableList<EntryItem>,
@@ -205,86 +201,85 @@ class ItemEntryListAdapter(private val context: Context,
     fun update(newData: List<Entry>?, searchQuery: String? = null) {
         Timber.i("[${currentThread()}] update: ${newData?.size}")
 
-        val finalData = mutableListOf(EntryItem(null,
-                EntryItem.ItemType.EMPTY))
+        doOnScheduler(Schedulers.single()) {
+            Timber.v("doOnScheduler[${currentThread()}]")
+            NOW = Instant.now()
 
-        newData?.let { array ->
-            finalData.addAll(array.map {
-                EntryItem(it, EntryItem.ItemType.ENTRY)
-            })
-        }
-
-        if (BuildConfig.DEBUG) {
-            // Temporary for debug only
-            newData?.forEach {
-                Timber.v(it.toString())
-            }
-        }
-
-        val firstPinned = SearchIndex(finalData.indexOfFirst {
-            it.entry?.entryPinned == 1 && it.entry.entryDeleted == 0 && it.entry.entryArchived == 0
-        }, EntryItem.ItemType.PINNED)
-
-        val firstArchived = SearchIndex(
-                finalData.indexOfFirst { it.entry?.entryArchived == 1 && it.entry?.entryDeleted == 0 }, EntryItem.ItemType.ARCHIVED)
-
-        val firstDeleted = SearchIndex(
-                finalData.indexOfFirst { it.entry?.entryDeleted == 1 }, EntryItem.ItemType.DELETED)
-
-        val arrayIndex = arrayOf(firstPinned, firstArchived, firstDeleted)
-        arrayIndex.sortBy { searchIndex -> searchIndex.index }
-
-        Timber.v("arrayIndex: $arrayIndex")
-
-        var addedCount = 0
-
-        for (item in arrayIndex) {
-            val index = item.index
-            val type = item.type
-
-            Timber.v("index=$index, type=$type")
-
-            if (index > -1) {
-                finalData.add(index + addedCount, EntryItem(null, type))
-                addedCount++
-            }
-        }
-
-        Timber.v("firstPinned=$firstPinned, firstArchived=$firstArchived, firstDeleted=$firstDeleted")
-        Timber.v("added count: $addedCount")
-
-        if (addedCount > 0) {
-            val firstIndex = arrayIndex.last().index + addedCount
-            Timber.v("firstIndex=$firstIndex")
-
-            val subList = finalData.subList(firstIndex, finalData.size)
-
-            val firstNonPinned = when (arrayIndex.last().type) {
-                EntryItem.ItemType.PINNED -> subList.indexOfFirst { it.entry?.entryPinned == 0 }
-                EntryItem.ItemType.ARCHIVED -> subList.indexOfFirst { it.entry?.entryArchived == 0 }
-                EntryItem.ItemType.DELETED -> subList.indexOfFirst { it.entry?.entryDeleted == 0 }
-                else -> -1
+            val finalData = (newData?.map { EntryItem(it, EntryItem.ItemType.ENTRY) }?.toMutableList() ?: mutableListOf()).apply {
+                add(0, EntryItem(null, EntryItem.ItemType.EMPTY))
             }
 
-            Timber.v("firstNonPinned=$firstNonPinned, final=${firstNonPinned + addedCount}")
+            val firstPinned = SearchIndex(finalData.indexOfFirst {
+                it.entry?.entryPinned == 1 && it.entry.entryDeleted == 0 && it.entry.entryArchived == 0
+            }, EntryItem.ItemType.PINNED)
 
-            if (firstNonPinned > -1) {
-                finalData.add(firstNonPinned + firstIndex, EntryItem(null, EntryItem.ItemType.OTHERS))
+            val firstArchived = SearchIndex(
+                    finalData.indexOfFirst { it.entry?.entryArchived == 1 && it.entry?.entryDeleted == 0 }, EntryItem.ItemType.ARCHIVED)
+
+            val firstDeleted = SearchIndex(
+                    finalData.indexOfFirst { it.entry?.entryDeleted == 1 }, EntryItem.ItemType.DELETED)
+
+            val arrayIndex = arrayOf(firstPinned, firstArchived, firstDeleted).apply {
+                sortBy { searchIndex -> searchIndex.index }
             }
+
+            Timber.v("arrayIndex: $arrayIndex")
+
+            var addedCount = 0
+
+            for (item in arrayIndex) {
+                val index = item.index
+                val type = item.type
+
+                Timber.v("index=$index, type=$type")
+
+                if (index > -1) {
+                    finalData.add(index + addedCount, EntryItem(null, type))
+                    addedCount++
+                }
+            }
+
+            Timber.v("firstPinned=$firstPinned, firstArchived=$firstArchived, firstDeleted=$firstDeleted")
+            Timber.v("added count: $addedCount")
+
+            if (addedCount > 0) {
+                val firstIndex = arrayIndex.last().index + addedCount
+                Timber.v("firstIndex=$firstIndex")
+
+                val subList = finalData.subList(firstIndex, finalData.size)
+
+                val firstNonPinned = when (arrayIndex.last().type) {
+                    EntryItem.ItemType.PINNED -> subList.indexOfFirst { it.entry?.entryPinned == 0 }
+                    EntryItem.ItemType.ARCHIVED -> subList.indexOfFirst { it.entry?.entryArchived == 0 }
+                    EntryItem.ItemType.DELETED -> subList.indexOfFirst { it.entry?.entryDeleted == 0 }
+                    else -> -1
+                }
+
+                Timber.v("firstNonPinned=$firstNonPinned, final=${firstNonPinned + addedCount}")
+
+                if (firstNonPinned > -1) {
+                    finalData.add(firstNonPinned + firstIndex, EntryItem(null, EntryItem.ItemType.OTHERS))
+                }
+            }
+
+            val callback = EntriesDiffCallback(values, finalData)
+            val result = DiffUtil.calculateDiff(callback, true)
+
+            values = finalData
+
+            Timber.v("[${currentThread()}] updated completed in (${Instant.now().minusMillis(NOW.toEpochMilli()).toEpochMilli()})")
+
+            doOnMainThread {
+                if (searchText != searchQuery) {
+                    searchText = searchQuery
+                    notifyDataSetChanged()
+                } else {
+                    result.dispatchUpdatesTo(this)
+                }
+            }
+
         }
 
-        val callback = EntriesDiffCallback(values, finalData)
-        val result = DiffUtil.calculateDiff(callback, true)
-
-        values = finalData
-        NOW = Instant.now()
-
-        if (searchText != searchQuery) {
-            searchText = searchQuery
-            notifyDataSetChanged()
-        } else {
-            result.dispatchUpdatesTo(this)
-        }
     }
 
     open class BaseViewHolder(view: View) : RecyclerView.ViewHolder(view)
@@ -309,6 +304,7 @@ class ItemEntryListAdapter(private val context: Context,
 
                 if (index > -1) {
                     entryTitle[index, index + searchText.length] = BackgroundColorSpan(Color.YELLOW)
+                    entryTitle[index, index + searchText.length] = ForegroundColorSpan(Color.BLACK)
                 }
             }
 

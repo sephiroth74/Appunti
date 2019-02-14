@@ -43,11 +43,11 @@ fun rxTimer(oldTimer: Disposable?,
     oldTimer?.dispose()
 
     return Observable
-        .timer(time, unit, thread)
-        .observeOn(observerThread)
-        .subscribe {
-            action.invoke(it)
-        }
+            .timer(time, unit, thread)
+            .observeOn(observerThread)
+            .subscribe {
+                action.invoke(it)
+            }
 }
 
 fun ioThread(func: () -> Unit) {
@@ -56,8 +56,12 @@ fun ioThread(func: () -> Unit) {
     }
 }
 
-fun mainThread(func: () -> Unit) {
-    AndroidSchedulers.mainThread().scheduleDirect { func.invoke() }
+fun doOnScheduler(scheduler: Scheduler, func: () -> Unit) {
+    scheduler.scheduleDirect(func)
+}
+
+fun doOnMainThread(func: () -> Unit) {
+    AndroidSchedulers.mainThread().scheduleDirect(func)
 }
 
 fun isAPI(value: Int) = Build.VERSION.SDK_INT == value
