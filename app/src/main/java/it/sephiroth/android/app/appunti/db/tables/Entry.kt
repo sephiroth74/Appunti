@@ -87,7 +87,8 @@ class Entry() : BaseRXModel() {
 
     override fun toString(): String {
         return "Entry(id=$entryID, title=$entryTitle, category=$category, pinned=$entryPinned, archived=$entryArchived, " +
-                "deleted=$entryDeleted, priority=$entryPriority, modified=${entryModifiedDate.toEpochMilli()})"
+                "deleted=$entryDeleted, priority=$entryPriority, modified=${entryModifiedDate.toEpochMilli()}, " +
+                "attachments=$attachments)"
     }
 
     fun isEntryAlarmEnabled() = entryAlarmEnabled

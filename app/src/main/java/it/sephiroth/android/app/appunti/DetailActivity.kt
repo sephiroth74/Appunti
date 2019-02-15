@@ -3,14 +3,19 @@ package it.sephiroth.android.app.appunti
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.database.Cursor
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.text.method.LinkMovementMethod
 import android.text.style.StyleSpan
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -23,23 +28,23 @@ import androidx.core.view.doOnPreDraw
 import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.transition.Slide
 import com.dbflow5.structure.save
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.disposables.Disposable
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
+import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.doOnTextChanged
-import it.sephiroth.android.app.appunti.ext.getLocalizedDateTimeStamp
-import it.sephiroth.android.app.appunti.ext.hideSoftInput
-import it.sephiroth.android.app.appunti.ext.rxTimer
+import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
+import org.apache.commons.io.FileUtils
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
+import java.io.File
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 
@@ -141,6 +146,35 @@ class DetailActivity : AppuntiActivity() {
                     }
                 }
             }
+        } else if (requestCode == READ_REQUEST_CODE && resultCode == RESULT_OK) {
+            Timber.d("uri: ${data?.data}")
+
+            data?.data?.also { uri ->
+
+                val postfix: String = UUID.randomUUID().toString()
+                val displayName: String? = postfix + (uri.getDisplayName(this) ?: "")
+
+                Timber.v("displayName: $displayName")
+
+                val stream = contentResolver.openInputStream(uri)
+                val dst = File(filesDir, "${postfix}_${displayName}")
+                val mime = uri.getMimeType(this)
+
+                Timber.v("mime: $mime")
+                Timber.v("dst: ${dst.absolutePath}")
+
+                FileUtils.copyInputStreamToFile(stream, dst)
+
+                model.entry.value?.let { entry ->
+
+                    val attachment = Attachment()
+                    attachment.attachmentEntryID = entry.entryID
+                    attachment.attachmentPath = dst.absolutePath
+                    attachment.attachmentTitle = displayName
+                    attachment.attachmentMime = mime
+                    attachment.save()
+                }
+            }
         }
 
 
@@ -212,6 +246,26 @@ class DetailActivity : AppuntiActivity() {
         bottomAppBar.navigationIcon.setOnClickListener {
             openOrCloseBottomsheet()
         }
+
+        bottomAppBar.documentPicker.setOnClickListener {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+            }
+
+            startActivityForResult(intent, READ_REQUEST_CODE)
+        }
+
+        bottomAppBar.imagePicker.setOnClickListener {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "image/*"
+            }
+
+            startActivityForResult(intent, READ_REQUEST_CODE)
+        }
+
+
 
         bottomSheetModalBackground.setOnClickListener {
             closeBottomSheet()
@@ -354,7 +408,8 @@ class DetailActivity : AppuntiActivity() {
         if (navigationView.background is ColorDrawable) {
             navigationView.backgroundTintList = ColorStateList.valueOf(color)
         } else if (navigationView.background is LayerDrawable) {
-            val drawable: Drawable? = (navigationView.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
+            val drawable: Drawable? =
+                (navigationView.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
             drawable?.setTint(color)
         }
     }
@@ -365,9 +420,11 @@ class DetailActivity : AppuntiActivity() {
 
         if (result) {
             showConfirmation(
-                    resources.getQuantityString(
-                            if (currentValue == true)
-                                R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1))
+                resources.getQuantityString(
+                    if (currentValue == true)
+                        R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1
+                )
+            )
 
         }
     }
@@ -376,9 +433,11 @@ class DetailActivity : AppuntiActivity() {
         val currentValue = model.entry.value?.isDeleted()
         if (model.toggleDeleted()) {
             showConfirmation(
-                    resources.getQuantityString(
-                            if (currentValue == true)
-                                R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1))
+                resources.getQuantityString(
+                    if (currentValue == true)
+                        R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1
+                )
+            )
 
             if (currentValue == false) {
                 onBackPressed()
@@ -390,9 +449,11 @@ class DetailActivity : AppuntiActivity() {
         val currentValue = model.entry.value?.isArchived()
         if (model.toggleArchived()) {
             showConfirmation(
-                    resources.getQuantityString(
-                            if (currentValue == true)
-                                R.plurals.entries_unarchived_title else R.plurals.entries_archived_title, 1, 1))
+                resources.getQuantityString(
+                    if (currentValue == true)
+                        R.plurals.entries_unarchived_title else R.plurals.entries_archived_title, 1, 1
+                )
+            )
 
             if (currentValue == false) {
                 onBackPressed()
@@ -414,26 +475,26 @@ class DetailActivity : AppuntiActivity() {
                 }
 
                 AlertDialog
-                        .Builder(this)
-                        .setCancelable(true)
-                        .setTitle(getString(R.string.edit_reminder))
-                        .setMessage(span.toSpannable())
-                        .setPositiveButton(getString(R.string.change)) { dialog, _ ->
-                            dialog.dismiss()
-                            pickDateTime(date) { result ->
-                                if (model.addReminder(result)) {
-                                    showConfirmation(getString(R.string.reminder_set))
-                                }
+                    .Builder(this)
+                    .setCancelable(true)
+                    .setTitle(getString(R.string.edit_reminder))
+                    .setMessage(span.toSpannable())
+                    .setPositiveButton(getString(R.string.change)) { dialog, _ ->
+                        dialog.dismiss()
+                        pickDateTime(date) { result ->
+                            if (model.addReminder(result)) {
+                                showConfirmation(getString(R.string.reminder_set))
                             }
                         }
-                        .setNeutralButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
-                        .setNegativeButton(getString(R.string.remove)) { dialog, _ ->
-                            dialog.dismiss()
-                            if (model.removeReminder()) {
-                                showConfirmation(getString(R.string.reminder_removed))
-                            }
+                    }
+                    .setNeutralButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
+                    .setNegativeButton(getString(R.string.remove)) { dialog, _ ->
+                        dialog.dismiss()
+                        if (model.removeReminder()) {
+                            showConfirmation(getString(R.string.reminder_removed))
                         }
-                        .show()
+                    }
+                    .show()
             } else {
                 val now = Instant.now()
                 val date = now.atZone(ZoneId.systemDefault())
@@ -465,19 +526,21 @@ class DetailActivity : AppuntiActivity() {
                 var menuItem = menu.findItem(R.id.menu_action_pin)
                 menuItem?.apply {
                     setIcon(
-                            if (entry.isPinned())
-                                R.drawable.appunti_sharp_favourite_24_checked_selector
-                            else
-                                R.drawable.appunti_sharp_favourite_24_unchecked_selector)
+                        if (entry.isPinned())
+                            R.drawable.appunti_sharp_favourite_24_checked_selector
+                        else
+                            R.drawable.appunti_sharp_favourite_24_unchecked_selector
+                    )
 
                 }
 
                 menuItem = menu.findItem(R.id.menu_action_archive)
                 menuItem?.apply {
                     setIcon(
-                            if (entry.isArchived())
-                                R.drawable.appunti_outline_archive_24_checked_selector
-                            else R.drawable.appunti_outline_archive_24_unchecked_selector)
+                        if (entry.isArchived())
+                            R.drawable.appunti_outline_archive_24_checked_selector
+                        else R.drawable.appunti_outline_archive_24_unchecked_selector
+                    )
 
                     setTitle(if (entry.isArchived()) R.string.unarchive else R.string.archive)
                 }
@@ -485,9 +548,9 @@ class DetailActivity : AppuntiActivity() {
                 menuItem = menu.findItem(R.id.menu_action_delete)
                 menuItem?.apply {
                     setIcon(
-                            if (entry.isDeleted())
-                                R.drawable.appunti_sharp_restore_from_trash_24_selector
-                            else R.drawable.appunti_sharp_delete_24_outline_selector
+                        if (entry.isDeleted())
+                            R.drawable.appunti_sharp_restore_from_trash_24_selector
+                        else R.drawable.appunti_sharp_delete_24_outline_selector
                     )
 
                     setTitle(if (entry.isDeleted()) R.string.restore else R.string.delete)
@@ -571,19 +634,22 @@ class DetailActivity : AppuntiActivity() {
         const val KEY_REMOVE_ALARM = "removeAlarm"
 
         const val CATEGORY_PICK_REQUEST_CODE = 1
+
+        const val READ_REQUEST_CODE = 2
     }
 
     object EntryDiff {
         data class Result(
-                var sameID: Boolean,
-                var archivedChanged: Boolean = true,
-                var deletedChanged: Boolean = true,
-                var pinnedChanged: Boolean = true,
-                var titleChanged: Boolean = true,
-                var textChanged: Boolean = true,
-                var categoryChanged: Boolean = true,
-                var priorityChanged: Boolean = true,
-                var modifiedDateChanged: Boolean = true)
+            var sameID: Boolean,
+            var archivedChanged: Boolean = true,
+            var deletedChanged: Boolean = true,
+            var pinnedChanged: Boolean = true,
+            var titleChanged: Boolean = true,
+            var textChanged: Boolean = true,
+            var categoryChanged: Boolean = true,
+            var priorityChanged: Boolean = true,
+            var modifiedDateChanged: Boolean = true
+        )
 
         fun calculateDiff(oldValue: Entry?, newValue: Entry?): Result {
             return if (isSameItem(oldValue, newValue)) {
@@ -599,15 +665,15 @@ class DetailActivity : AppuntiActivity() {
 
         private fun calculateContentDiff(oldValue: Entry?, newValue: Entry?): Result {
             return Result(
-                    sameID = true,
-                    archivedChanged = oldValue?.entryArchived != newValue?.entryArchived,
-                    deletedChanged = oldValue?.entryDeleted != newValue?.entryDeleted,
-                    pinnedChanged = oldValue?.entryPinned != newValue?.entryPinned,
-                    titleChanged = oldValue?.entryTitle != newValue?.entryTitle,
-                    textChanged = oldValue?.entryText != newValue?.entryText,
-                    categoryChanged = oldValue?.category != newValue?.category,
-                    priorityChanged = oldValue?.entryPriority != newValue?.entryPriority,
-                    modifiedDateChanged = oldValue?.entryModifiedDate != newValue?.entryModifiedDate
+                sameID = true,
+                archivedChanged = oldValue?.entryArchived != newValue?.entryArchived,
+                deletedChanged = oldValue?.entryDeleted != newValue?.entryDeleted,
+                pinnedChanged = oldValue?.entryPinned != newValue?.entryPinned,
+                titleChanged = oldValue?.entryTitle != newValue?.entryTitle,
+                textChanged = oldValue?.entryText != newValue?.entryText,
+                categoryChanged = oldValue?.category != newValue?.category,
+                priorityChanged = oldValue?.entryPriority != newValue?.entryPriority,
+                modifiedDateChanged = oldValue?.entryModifiedDate != newValue?.entryModifiedDate
             )
 
         }

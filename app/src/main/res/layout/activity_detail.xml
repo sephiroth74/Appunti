@@ -1,167 +1,181 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout android:id="@+id/coordinator"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?android:attr/windowBackground"
-    tools:context=".DetailActivity">
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                                     xmlns:app="http://schemas.android.com/apk/res-auto"
+                                                     xmlns:tools="http://schemas.android.com/tools"
+                                                     android:id="@+id/coordinator"
+                                                     android:layout_width="match_parent"
+                                                     android:layout_height="match_parent"
+                                                     android:background="?android:attr/windowBackground"
+                                                     tools:context=".DetailActivity">
 
     <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:elevation="0dp"
-        app:elevation="0dp">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_scrollFlags="enterAlways"
-            app:popupTheme="@style/Theme.Appunti.Default.PopupOverlay" />
+            android:elevation="0dp"
+            app:elevation="0dp">
+
+        <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_scrollFlags="enterAlways"
+                app:popupTheme="@style/Theme.Appunti.Default.PopupOverlay"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_anchor="@id/bottomAppBar"
-        app:layout_anchorGravity="top"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_anchor="@id/bottomAppBar"
+            app:layout_anchorGravity="top"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
         <LinearLayout
-            android:id="@+id/linearLayout"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="8dp"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <androidx.appcompat.widget.AppCompatEditText
-                android:id="@+id/entryTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:background="@null"
-                android:gravity="top|start"
-                android:hint="@string/title"
-                android:lines="1"
-                android:textAppearance="?attr/textAppearanceHeadline5"
-                android:transitionName="itemTitle"
-                app:fontFamily="?attr/fontFamily" />
-
-            <androidx.appcompat.widget.AppCompatEditText
-                android:id="@+id/entryText"
+                android:id="@+id/linearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginTop="16dp"
-                android:layout_weight="1"
-                android:autoLink="all"
-                android:background="@null"
-                android:gravity="top|start"
-                android:hint="@string/content_here"
-                android:linksClickable="true"
-                android:textAppearance="?attr/textAppearanceBody1"
-                android:transitionName="itemText"
-                tools:ignore="HardcodedText" />
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="8dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.appcompat.widget.AppCompatEditText
+                    android:id="@+id/entryTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0"
+                    android:background="@null"
+                    android:gravity="top|start"
+                    android:hint="@string/title"
+                    android:lines="1"
+                    android:textAppearance="?attr/textAppearanceHeadline5"
+                    android:transitionName="itemTitle"
+                    app:fontFamily="?attr/fontFamily"/>
+
+            <androidx.appcompat.widget.AppCompatEditText
+                    android:id="@+id/entryText"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_weight="1"
+                    android:autoLink="all"
+                    android:background="@null"
+                    android:gravity="top|start"
+                    android:hint="@string/content_here"
+                    android:linksClickable="true"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    android:transitionName="itemText"
+                    tools:ignore="HardcodedText"/>
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/entryCategory"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_weight="0"
-                android:background="@drawable/category_chip_background"
-                android:clickable="true"
-                android:padding="8dp"
-                android:textAppearance="?attr/textAppearanceListItemSmall"
-                android:textSize="@dimen/text_size_caption_material"
-                android:transitionName="itemCategory" />
+                    android:id="@+id/entryCategory"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/category_chip_background"
+                    android:clickable="true"
+                    android:padding="8dp"
+                    android:textAppearance="?attr/textAppearanceListItemSmall"
+                    android:textSize="@dimen/text_size_caption_material"
+                    android:transitionName="itemCategory"/>
 
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <View
-        android:id="@+id/bottomSheetModalBackground"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#33000000"
-        android:clickable="true"
-        android:fitsSystemWindows="true"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:visibility="invisible" />
+            android:id="@+id/bottomSheetModalBackground"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#33000000"
+            android:clickable="true"
+            android:fitsSystemWindows="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:visibility="invisible"/>
 
 
     <FrameLayout
-        android:id="@+id/bottomSheet"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="bottom"
-        android:elevation="0dp"
-        app:behavior_hideable="false"
-        app:behavior_peekHeight="0dp"
-        app:layout_behavior="@string/bottom_sheet_behavior"
-        app:layout_constraintBottom_toTopOf="@+id/bottomAppBar">
+            android:id="@+id/bottomSheet"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="bottom"
+            android:elevation="0dp"
+            app:behavior_hideable="false"
+            app:behavior_peekHeight="0dp"
+            app:layout_behavior="@string/bottom_sheet_behavior"
+            app:layout_constraintBottom_toTopOf="@+id/bottomAppBar">
 
         <com.google.android.material.navigation.NavigationView
-            android:id="@+id/navigationView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:background="@drawable/appunti_bottomappbar_shadow_top"
-            android:clickable="true"
-            android:focusable="true"
-            android:foregroundGravity="bottom"
-            app:menu="@menu/appunti_detail_extra_menu" />
+                android:id="@+id/navigationView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="@drawable/appunti_bottomappbar_shadow_top"
+                android:clickable="true"
+                android:focusable="true"
+                android:foregroundGravity="bottom"
+                app:menu="@menu/appunti_detail_extra_menu"/>
 
     </FrameLayout>
 
     <it.sephiroth.android.app.appunti.widget.DetailBottomAppBar
-        android:id="@+id/bottomAppBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:background="@android:color/white"
-        android:elevation="0dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:navigationIcon="@drawable/sharp_arrow_upward_24">
+            android:id="@+id/bottomAppBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@android:color/white"
+            android:elevation="0dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:navigationIcon="@drawable/sharp_arrow_upward_24">
+
+        <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/imagePicker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/material_background_ripple"
+                app:srcCompat="@drawable/sharp_add_photo_alternate_24"/>
+
+        <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/documentPicker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/material_background_ripple"
+                app:srcCompat="@drawable/sharp_attach_file_24"/>
 
 
         <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/lastModified"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:gravity="center"
-            android:layout_weight="1"
-            android:textAppearance="?attr/textAppearanceListItemSmall" />
+                android:id="@+id/lastModified"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:gravity="center"
+                android:layout_weight="1"
+                android:textAppearance="?attr/textAppearanceListItemSmall"/>
 
         <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/navigationIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/material_background_ripple"
-            app:srcCompat="@drawable/sharp_more_vert_24" />
+                android:id="@+id/navigationIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/material_background_ripple"
+                app:srcCompat="@drawable/sharp_more_vert_24"/>
 
     </it.sephiroth.android.app.appunti.widget.DetailBottomAppBar>
 
