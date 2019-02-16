@@ -6,17 +6,21 @@ import android.graphics.Bitmap
 import android.media.ThumbnailUtils
 import android.provider.MediaStore
 import com.shockwave.pdfium.PdfiumCore
-import com.squareup.picasso.*
+import com.squareup.picasso.OkHttp3Downloader
+import com.squareup.picasso.Picasso
 import com.squareup.picasso.Picasso.LoadedFrom
 import com.squareup.picasso.Request
+import com.squareup.picasso.RequestHandler
 import it.sephiroth.android.app.appunti.ext.getMimeTypeFromFilePart
-import okhttp3.*
-import okhttp3.Cache
+import okhttp3.MediaType
+import okhttp3.RequestBody
+import okhttp3.Response
+import okhttp3.internal.cache.DiskLruCache
+import okhttp3.internal.io.FileSystem
 import timber.log.Timber
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
-import androidx.core.app.NotificationCompat.getExtras
-import java.io.ByteArrayOutputStream
 
 
 object PicassoUtils {
@@ -44,8 +48,9 @@ object PicassoUtils {
     class PDFRequestHandler(
         private val context: Context,
         private val pdfiumCore: PdfiumCore,
-        private val cache: PublicCache
+        private val cache: DiskLruCache
     ) : RequestHandler() {
+
         companion object {
             const val PAGE_NUMBER = 0
         }
@@ -56,9 +61,6 @@ object PicassoUtils {
 
         override fun load(request: Request, networkPolicy: Int): Result? {
             Timber.i("load(${request.uri}, $networkPolicy")
-
-            val cached = cache.get(okhttp3.Request.Builder().url(request.uri.toString()).build())
-
 
 //            val loadedFrom = if (response.cacheResponse() == null) LoadedFrom.NETWORK else LoadedFrom.DISK
             val loadedFrom = LoadedFrom.NETWORK
@@ -104,29 +106,6 @@ object PicassoUtils {
             }
         }
 
-        private fun createRequest(request: Request, networkPolicy: Int): okhttp3.Request {
-            var cacheControl: CacheControl? = null
-            if (networkPolicy != 0) {
-                cacheControl = if (NetworkPolicy.isOfflineOnly(networkPolicy)) {
-                    CacheControl.FORCE_CACHE
-                } else {
-                    val builder = CacheControl.Builder()
-                    if (!NetworkPolicy.shouldReadFromDiskCache(networkPolicy)) {
-                        builder.noCache()
-                    }
-                    if (!NetworkPolicy.shouldWriteToDiskCache(networkPolicy)) {
-                        builder.noStore()
-                    }
-                    builder.build()
-                }
-            }
-
-            val builder = okhttp3.Request.Builder().url(request.uri.toString())
-            if (cacheControl != null) {
-                builder.cacheControl(cacheControl)
-            }
-            return builder.build()
-        }
     }
 
 
@@ -150,7 +129,13 @@ object PicassoUtils {
                             PDFRequestHandler(
                                 context,
                                 PdfiumCore(context),
-                                PublicCache(File(context.cacheDir, "picasso-cache"), Int.MAX_VALUE.toLong())
+                                DiskLruCache.create(
+                                    FileSystem.SYSTEM,
+                                    File(context.cacheDir, "picasso-cache"),
+                                    1,
+                                    100,
+                                    Int.MAX_VALUE.toLong()
+                                )
                             )
                         )
                         .loggingEnabled(true)
