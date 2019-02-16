@@ -14,7 +14,6 @@ import it.sephiroth.android.app.appunti.ext.rxSingle
 import org.threeten.bp.Instant
 import timber.log.Timber
 import java.io.File
-import java.lang.IllegalArgumentException
 
 object DatabaseHelper {
 
@@ -28,11 +27,11 @@ object DatabaseHelper {
         return File(context.filesDir, "private")
     }
 
-    fun getEntriesFilesDir(context: Context): File {
+    private fun getEntriesFilesDir(context: Context): File {
         return File(getFilesDir(context), "entry")
     }
 
-    fun getEntryFilesDir(context: Context, entry: Entry): File {
+    private fun getEntryFilesDir(context: Context, entry: Entry): File {
         if (entry.isNew()) throw IllegalArgumentException("Entry must be saved first!")
         return File(getEntriesFilesDir(context), "${entry.entryID}")
     }
@@ -53,42 +52,37 @@ object DatabaseHelper {
         return select().from(Category::class).where(Category_Table.categoryID.eq(id)).result
     }
 
-    fun touchEntry(entry: Entry): Entry {
-        entry.entryModifiedDate = Instant.now()
-        return entry
-    }
-
     fun setEntryPinned(entry: Entry, value: Boolean): Boolean {
         Timber.i("setEntryPinned($entry, $value)")
         entry.entryPinned = if (value) 1 else 0
-        return touchEntry(entry).save()
+        return entry.touch().save()
     }
 
     fun setEntryArchived(entry: Entry, value: Boolean): Boolean {
         Timber.i("setEntryArchived($entry, $value)")
         entry.entryArchived = if (value) 1 else 0
         if (value) entry.entryDeleted = 0
-        return touchEntry(entry).save()
+        return entry.touch().save()
     }
 
     fun setEntryDeleted(entry: Entry, value: Boolean): Boolean {
         Timber.i("setEntryDeleted($entry, $value)")
         entry.entryDeleted = if (value) 1 else 0
         if (value) entry.entryArchived = 0
-        return touchEntry(entry).save()
+        return entry.touch().save()
     }
 
     fun setEntryCategory(entry: Entry, category: Category?): Boolean {
         Timber.i("setEntryCategory($entry, $category)")
         entry.category = category
-        return touchEntry(entry).save()
+        return entry.touch().save()
     }
 
     fun removeReminder(entry: Entry, context: Context): Boolean {
         Timber.i("removeReminder($entry)")
         entry.entryAlarm = null
         entry.entryAlarmEnabled = false
-        touchEntry(entry)
+        entry.touch()
         val result = entry.save()
 
         if (result) {
@@ -105,7 +99,7 @@ object DatabaseHelper {
 
         entry.entryAlarm = date
         entry.entryAlarmEnabled = true
-        touchEntry(entry)
+        entry.touch()
         val result = entry.save()
 
         if (result) {

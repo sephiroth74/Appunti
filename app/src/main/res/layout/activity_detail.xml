@@ -28,13 +28,15 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+
+    <androidx.core.widget.NestedScrollView
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
             app:layout_anchor="@id/bottomAppBar"
             app:layout_anchorGravity="top"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
 
         <LinearLayout
                 android:id="@+id/linearLayout"
@@ -68,9 +70,9 @@
             <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/entryText"
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:layout_weight="1"
+                    android:layout_weight="0"
                     android:autoLink="all"
                     android:background="@null"
                     android:gravity="top|start"
@@ -79,6 +81,16 @@
                     android:textAppearance="?attr/textAppearanceBody1"
                     android:transitionName="itemText"
                     tools:ignore="HardcodedText"/>
+
+            <LinearLayout
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:id="@+id/attachmentsContainer"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+            </LinearLayout>
 
             <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/entryCategory"
@@ -95,7 +107,7 @@
 
         </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <View
             android:id="@+id/bottomSheetModalBackground"

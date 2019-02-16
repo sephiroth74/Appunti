@@ -15,12 +15,15 @@ import it.sephiroth.android.app.appunti.AlarmReceiver
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
+import it.sephiroth.android.app.appunti.ext.doOnMainThread
+import it.sephiroth.android.app.appunti.ext.executeIfMainThread
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import timber.log.Timber
 
-class DetailViewModel(application: Application) : AndroidViewModel(application), DirectModelNotifier.ModelChangedListener<Entry> {
+class DetailViewModel(application: Application) : AndroidViewModel(application),
+    DirectModelNotifier.ModelChangedListener<Entry> {
 
     val entry: LiveData<Entry> = MutableLiveData()
 
@@ -44,13 +47,18 @@ class DetailViewModel(application: Application) : AndroidViewModel(application),
 
     override fun onModelChanged(model: Entry, action: ChangeAction) {
         Timber.i("onModelChanged($model, $action)")
+        Timber.v("model.entryID=${model.entryID} == $entryID")
 
         if (model.entryID == entryID) {
-            if (action == ChangeAction.CHANGE) {
+            if (action == ChangeAction.CHANGE || action == ChangeAction.UPDATE) {
                 Timber.v("this entry = ${entry.value}")
                 Timber.v("new entry = $model")
 
-                setEntry(model)
+                executeIfMainThread {
+                    setEntry(model)
+                } ?: run {
+                    doOnMainThread { setEntry(model) }
+                }
             }
         }
     }

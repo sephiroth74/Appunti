@@ -6,6 +6,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
+import timber.log.Timber
 import java.io.File
 
 
@@ -28,7 +29,11 @@ fun Uri.getDisplayName(context: Context): String? {
         try {
             cursor = context.contentResolver.query(this, null, null, null, null);
             if (cursor != null && cursor.moveToFirst()) {
-                return cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+                val columnIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                Timber.v("columnIndex = $columnIndex")
+                if (columnIndex > -1) {
+                    return cursor.getString(columnIndex)
+                }
             }
         } finally {
             cursor?.close()

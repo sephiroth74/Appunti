@@ -41,8 +41,10 @@
                 android:textSize="@dimen/text_size_headline_material"
                 android:transitionName="itemTitle"
                 android:drawablePadding="8dp"
-                app:fontFamily="?attr/fontFamily" app:layout_constraintStart_toStartOf="parent"
-                android:layout_marginEnd="8dp" app:layout_constraintEnd_toStartOf="@+id/id_alarm"
+                app:fontFamily="?attr/fontFamily"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toStartOf="@+id/id_alarm"
                 app:layout_constraintTop_toTopOf="parent"/>
 
         <androidx.appcompat.widget.AppCompatImageView
@@ -50,9 +52,11 @@
                 android:id="@+id/id_alarm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:srcCompat="@drawable/sharp_alarm_24" android:layout_marginEnd="8dp"
+                app:srcCompat="@drawable/sharp_alarm_24"
+                android:layout_marginEnd="8dp"
                 app:layout_constraintEnd_toStartOf="@+id/id_attachment"
-                app:layout_constraintTop_toTopOf="@id/id_title" app:layout_constraintBottom_toBottomOf="@+id/id_title"/>
+                app:layout_constraintTop_toTopOf="@id/id_title"
+                app:layout_constraintBottom_toBottomOf="@+id/id_title"/>
 
         <androidx.appcompat.widget.AppCompatImageView
                 android:visibility="invisible"
@@ -60,7 +64,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:srcCompat="@drawable/sharp_attach_file_24"
-                app:layout_constraintEnd_toEndOf="@+id/id_content" app:layout_constraintTop_toTopOf="@id/id_title"
+                app:layout_constraintEnd_toEndOf="@+id/id_content"
+                app:layout_constraintTop_toTopOf="@id/id_title"
                 app:layout_constraintBottom_toBottomOf="@+id/id_title"/>
 
 
@@ -70,7 +75,8 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?attr/textAppearanceListItemSmall"
                 android:textSize="@dimen/text_size_subhead_material"
-                android:transitionName="itemText" app:layout_constraintTop_toBottomOf="@+id/id_title"
+                android:transitionName="itemText"
+                app:layout_constraintTop_toBottomOf="@+id/id_title"
                 android:layout_marginTop="8dp"/>
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -82,8 +88,10 @@
                 android:padding="8dp"
                 android:textAppearance="?attr/textAppearanceListItemSmall"
                 android:textSize="@dimen/text_size_caption_material"
-                android:transitionName="itemCategory" app:layout_constraintTop_toBottomOf="@+id/id_content"
-                app:layout_constraintStart_toStartOf="parent" android:layout_marginTop="8dp"/>
+                android:transitionName="itemCategory"
+                app:layout_constraintTop_toBottomOf="@+id/id_content"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="8dp"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.circularreveal.cardview.CircularRevealCardView>

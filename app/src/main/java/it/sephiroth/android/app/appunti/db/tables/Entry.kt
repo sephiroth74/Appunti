@@ -97,6 +97,11 @@ class Entry() : BaseRXModel() {
                 "attachments=$attachments)"
     }
 
+    fun touch(): Entry {
+        entryModifiedDate = Instant.now()
+        return this
+    }
+
     fun isEntryAlarmEnabled() = entryAlarmEnabled
 
     override fun equals(other: Any?): Boolean {

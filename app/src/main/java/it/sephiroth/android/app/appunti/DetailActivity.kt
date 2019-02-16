@@ -7,17 +7,20 @@ import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
+import android.media.ThumbnailUtils
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.text.method.LinkMovementMethod
 import android.text.style.StyleSpan
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
+import androidx.cardview.widget.CardView
+import androidx.core.content.FileProvider
+import androidx.core.graphics.ColorUtils
 import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.core.transition.doOnEnd
@@ -26,11 +29,15 @@ import androidx.core.view.doOnPreDraw
 import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.room.Database
 import com.dbflow5.config.FlowManager
 import com.dbflow5.structure.save
 import com.dbflow5.structure.update
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.squareup.picasso.Picasso
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
@@ -39,11 +46,13 @@ import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
+import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
 import org.apache.commons.io.FileUtils
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
+import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -180,7 +189,7 @@ class DetailActivity : AppuntiActivity() {
                     attachment.attachmentOriginalPath = uri.toString()
                     attachment.save()
 
-                    DatabaseHelper.touchEntry(entry).update()
+                    entry.touch().update()
                 }
                     .success { transaction, result -> Timber.v("success!") }
                     .error { transaction, throwable -> Timber.w("error = $throwable") }
@@ -222,6 +231,7 @@ class DetailActivity : AppuntiActivity() {
         if (currentFocus == entryText) {
             changeTimer = rxTimer(changeTimer, 1, TimeUnit.SECONDS) {
                 currentEntry?.entryText = text?.toString() ?: ""
+                currentEntry?.touch()
                 currentEntry?.save()
             }
         }
@@ -234,6 +244,7 @@ class DetailActivity : AppuntiActivity() {
         if (currentFocus == entryTitle) {
             changeTimer = rxTimer(changeTimer, 300, TimeUnit.MILLISECONDS) {
                 currentEntry?.entryTitle = text?.toString() ?: ""
+                currentEntry?.touch()
                 currentEntry?.save()
             }
         }
@@ -386,6 +397,10 @@ class DetailActivity : AppuntiActivity() {
             applyEntryTheme(entry)
         }
 
+        if (diff.attachmentsChanged) {
+            updateAttachmentsList(entry.attachments)
+        }
+
         lastModified.text = entry.entryModifiedDate.getLocalizedDateTimeStamp(FormatStyle.MEDIUM)
 
         invalidateOptionsMenu()
@@ -402,6 +417,81 @@ class DetailActivity : AppuntiActivity() {
                 entryTitle.transitionName = null
                 entryText.transitionName = null
                 entryCategory.transitionName = null
+            }
+        }
+    }
+
+    private fun updateAttachmentsList(attachments: List<Attachment>?) {
+        attachmentsContainer.removeAllViews()
+
+        attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+        attachments?.let { attachments ->
+
+            val outHSL = floatArrayOf(0f, 0f, 0f)
+            ColorUtils.colorToHSL(model.entry.value!!.getColor(this), outHSL)
+            outHSL[2] = outHSL[2] / 1.35f
+            val cardColor = ColorUtils.setAlphaComponent(ColorUtils.HSLToColor(outHSL), 201)
+
+            for (attachment in attachments) {
+                val view = LayoutInflater.from(this)
+                    .inflate(R.layout.appunti_detail_attachment_item, attachmentsContainer, false) as CardView
+
+                view.setCardBackgroundColor(cardColor)
+                view.attachmentTitle.text = attachment.attachmentTitle
+                view.tag = attachment
+
+                Timber.v("$attachment")
+
+                val finalPath = File(DatabaseHelper.getFilesDir(this), attachment.attachmentPath)
+
+                if (attachment.attachmentMime?.startsWith("image", true) == true) {
+                    view.attachmentImage.visibility = View.VISIBLE
+
+                    Picasso.get()
+                        .load(finalPath)
+                        .into(view.attachmentImage)
+                } else if (attachment.attachmentMime?.startsWith("video", true) == true) {
+                    view.attachmentImage.visibility = View.VISIBLE
+
+                    rxSingle(Schedulers.io()) {
+                        ThumbnailUtils.createVideoThumbnail(
+                            finalPath.absolutePath,
+                            MediaStore.Images.Thumbnails.MINI_KIND
+                        )
+                    }.observeOn(AndroidSchedulers.mainThread())
+                        .subscribe { t1, t2 ->
+                            view.attachmentImage.setImageBitmap(t1)
+                        }
+
+                } else {
+//                    view.attachmentImage.visibility = View.GONE
+                    view.attachmentImage.setImageResource(R.drawable.sharp_attach_file_24_rotated)
+                }
+
+                view.attachmentImage.setOnClickListener {
+                    attachment.createViewIntent(this).also {
+                        startActivity(it)
+                    }
+                }
+
+                view.attachmentViewButton.setOnClickListener {
+                    attachment.createViewIntent(this).also {
+                        startActivity(it)
+                    }
+                }
+
+                view.attachmentShareButton.setOnClickListener {
+                    attachment.createShareIntent(this).also {
+                        startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
+                    }
+                }
+
+                view.attachmentRemoveButton.setOnClickListener {
+                    // delete attachment
+                }
+
+                attachmentsContainer.addView(view)
             }
         }
     }
@@ -660,7 +750,8 @@ class DetailActivity : AppuntiActivity() {
             var textChanged: Boolean = true,
             var categoryChanged: Boolean = true,
             var priorityChanged: Boolean = true,
-            var modifiedDateChanged: Boolean = true
+            var modifiedDateChanged: Boolean = true,
+            var attachmentsChanged: Boolean = true
         )
 
         fun calculateDiff(oldValue: Entry?, newValue: Entry?): Result {
@@ -685,7 +776,8 @@ class DetailActivity : AppuntiActivity() {
                 textChanged = oldValue?.entryText != newValue?.entryText,
                 categoryChanged = oldValue?.category != newValue?.category,
                 priorityChanged = oldValue?.entryPriority != newValue?.entryPriority,
-                modifiedDateChanged = oldValue?.entryModifiedDate != newValue?.entryModifiedDate
+                modifiedDateChanged = oldValue?.entryModifiedDate != newValue?.entryModifiedDate,
+                attachmentsChanged = oldValue?.attachments != newValue?.attachments
             )
 
         }

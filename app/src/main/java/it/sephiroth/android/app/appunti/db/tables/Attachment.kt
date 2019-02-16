@@ -26,4 +26,8 @@ class Attachment : BaseRXModel() {
 
     /** original file/content path */
     var attachmentOriginalPath: String? = null
+
+    override fun toString(): String {
+        return "Attachment(entryID=$attachmentEntryID, attachmentTitle=$attachmentTitle, attachmentMime=$attachmentMime, attachmentPath=$attachmentPath)"
+    }
 }

@@ -89,4 +89,5 @@
     <string name="reminder_set">Reminder Set</string>
     <string name="change">Change</string>
     <string name="remove">Remove</string>
+    <string name="view">View</string>
 </resources>
