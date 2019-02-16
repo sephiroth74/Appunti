@@ -8,9 +8,15 @@ import android.provider.MediaStore
 import com.shockwave.pdfium.PdfiumCore
 import com.squareup.picasso.*
 import com.squareup.picasso.Picasso.LoadedFrom
+import com.squareup.picasso.Request
 import it.sephiroth.android.app.appunti.ext.getMimeTypeFromFilePart
+import okhttp3.*
+import okhttp3.Cache
 import timber.log.Timber
+import java.io.File
 import java.io.IOException
+import androidx.core.app.NotificationCompat.getExtras
+import java.io.ByteArrayOutputStream
 
 
 object PicassoUtils {
@@ -35,7 +41,11 @@ object PicassoUtils {
         }
     }
 
-    class PDFRequestHandler(private val context: Context, private val pdfiumCore: PdfiumCore) : RequestHandler() {
+    class PDFRequestHandler(
+        private val context: Context,
+        private val pdfiumCore: PdfiumCore,
+        private val cache: PublicCache
+    ) : RequestHandler() {
         companion object {
             const val PAGE_NUMBER = 0
         }
@@ -46,8 +56,19 @@ object PicassoUtils {
 
         override fun load(request: Request, networkPolicy: Int): Result? {
             Timber.i("load(${request.uri}, $networkPolicy")
-            Timber.v("policy. write=${NetworkPolicy.shouldReadFromDiskCache(networkPolicy)}, read=${NetworkPolicy.shouldReadFromDiskCache(networkPolicy)}, offline=${NetworkPolicy.isOfflineOnly(networkPolicy)}")
 
+            val cached = cache.get(okhttp3.Request.Builder().url(request.uri.toString()).build())
+
+
+//            val loadedFrom = if (response.cacheResponse() == null) LoadedFrom.NETWORK else LoadedFrom.DISK
+            val loadedFrom = LoadedFrom.NETWORK
+//
+//            if (loadedFrom == LoadedFrom.DISK && body?.contentLength() == 0L) {
+//                body.close()
+//                throw IOException("Received response with 0 content-length header.")
+//            }
+
+//            val pdfDocument = pdfiumCore.newDocument(response.body()?.bytes())
             val fd = context.contentResolver.openFileDescriptor(request.uri, "r")
             val pdfDocument = pdfiumCore.newDocument(fd)
 
@@ -68,17 +89,44 @@ object PicassoUtils {
 
                 Timber.v("bitmap size: ${bmp.width} x ${bmp.height}")
 
-                if(NetworkPolicy.shouldWriteToDiskCache(networkPolicy)) {
+                val stream = ByteArrayOutputStream()
+                bmp.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                val byteArray = stream.toByteArray()
 
-                }
+                val okRequest = okhttp3.Request.Builder().url(request.uri.toString())
+                    .put(RequestBody.create(MediaType.parse("application/pdf"), byteArray)).build()
+                val response = Response.Builder().request(okRequest).build()
+                cache.put(response)
 
-                return RequestHandler.Result(bmp, LoadedFrom.NETWORK)
+                return RequestHandler.Result(bmp, loadedFrom)
             } finally {
                 pdfiumCore.closeDocument(pdfDocument)
             }
-
         }
 
+        private fun createRequest(request: Request, networkPolicy: Int): okhttp3.Request {
+            var cacheControl: CacheControl? = null
+            if (networkPolicy != 0) {
+                cacheControl = if (NetworkPolicy.isOfflineOnly(networkPolicy)) {
+                    CacheControl.FORCE_CACHE
+                } else {
+                    val builder = CacheControl.Builder()
+                    if (!NetworkPolicy.shouldReadFromDiskCache(networkPolicy)) {
+                        builder.noCache()
+                    }
+                    if (!NetworkPolicy.shouldWriteToDiskCache(networkPolicy)) {
+                        builder.noStore()
+                    }
+                    builder.build()
+                }
+            }
+
+            val builder = okhttp3.Request.Builder().url(request.uri.toString())
+            if (cacheControl != null) {
+                builder.cacheControl(cacheControl)
+            }
+            return builder.build()
+        }
     }
 
 
@@ -93,11 +141,18 @@ object PicassoUtils {
             if (i2 != null) {
                 i2
             } else {
+                val downloader = OkHttp3Downloader(context, Integer.MAX_VALUE.toLong())
                 val created =
                     Picasso.Builder(context.applicationContext)
-                        .downloader(OkHttp3Downloader(context, Integer.MAX_VALUE.toLong()))
+                        .downloader(downloader)
                         .addRequestHandler(VideoRequestHandler())
-                        .addRequestHandler(PDFRequestHandler(context, PdfiumCore(context)))
+                        .addRequestHandler(
+                            PDFRequestHandler(
+                                context,
+                                PdfiumCore(context),
+                                PublicCache(File(context.cacheDir, "picasso-cache"), Int.MAX_VALUE.toLong())
+                            )
+                        )
                         .loggingEnabled(true)
                         .indicatorsEnabled(true)
 //                        .memoryCache(LruCache(context))
