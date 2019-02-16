@@ -23,7 +23,7 @@ fun Uri.getMimeType(context: Context): String? {
 
 fun Uri.getDisplayName(context: Context): String? {
     val uriString = toString()
-    if (uriString.startsWith("content://")) {
+    if (uriString.startsWith("content://", true)) {
         var cursor: Cursor? = null
         try {
             cursor = context.contentResolver.query(this, null, null, null, null);
@@ -33,7 +33,7 @@ fun Uri.getDisplayName(context: Context): String? {
         } finally {
             cursor?.close()
         }
-    } else if (uriString.startsWith("file://")) {
+    } else if (uriString.startsWith("file://", true)) {
         return File(uriString).name
     }
     return lastPathSegment

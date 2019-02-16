@@ -16,16 +16,18 @@ import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.EntryTypeConverter
 import it.sephiroth.android.app.appunti.db.InstantTypeConverter
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
-import kotlinx.android.synthetic.main.activity_detail.*
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.DateTimeFormatter
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
+import java.io.File
 
-@Table(database = AppDatabase::class, indexGroups = [
-    IndexGroup(number = 1, name = "firstIndex")
-])
+@Table(
+    database = AppDatabase::class, indexGroups = [
+        IndexGroup(number = 1, name = "firstIndex")
+    ]
+)
 class Entry() : BaseRXModel() {
 
     constructor(other: Entry) : this() {
@@ -83,7 +85,11 @@ class Entry() : BaseRXModel() {
     var entryAlarmEnabled: Boolean = false
 
     @get:OneToMany
-    var attachments by oneToMany { select from Attachment::class where (Attachment_Table.attachmentEntryID_entryID.eq(entryID)) }
+    var attachments by oneToMany {
+        select from Attachment::class where (Attachment_Table.attachmentEntryID_entryID.eq(
+            entryID
+        ))
+    }
 
     override fun toString(): String {
         return "Entry(id=$entryID, title=$entryTitle, category=$category, pinned=$entryPinned, archived=$entryArchived, " +
@@ -199,9 +205,11 @@ class Entry() : BaseRXModel() {
                 val alarmManager = context.getSystemService(Activity.ALARM_SERVICE) as AlarmManager
                 val pendingIntent = getViewReminderPendingIntent(entry, context)
 
-                AlarmManagerCompat.setExactAndAllowWhileIdle(alarmManager,
-                        AlarmManager.RTC_WAKEUP,
-                        millis, pendingIntent)
+                AlarmManagerCompat.setExactAndAllowWhileIdle(
+                    alarmManager,
+                    AlarmManager.RTC_WAKEUP,
+                    millis, pendingIntent
+                )
                 return true
             }
             return false
@@ -210,6 +218,38 @@ class Entry() : BaseRXModel() {
         fun getLocalizedTime(date: Instant, format: FormatStyle): String? {
             val time = date.atZone(ZoneId.systemDefault())
             return time.format(DateTimeFormatter.ofLocalizedDateTime(format))
+        }
+
+        fun getNextFile(context: Context, entry: Entry, baseDir: File, fileName: String): File {
+            Timber.i("getNextFile($fileName)")
+
+            val index = fileName.lastIndexOf('.')
+
+            Timber.v("index=$index, fileName.length=${fileName.length}")
+
+            val name: String
+            val extension: String
+
+            if (index > -1) {
+                name = fileName.substring(0, index)
+                extension = fileName.substring(index)
+            } else {
+                name = fileName
+                extension = ""
+            }
+            Timber.v("name: $name, extension: $extension")
+
+            var curFile = File(baseDir, fileName)
+
+            if (curFile.exists()) {
+                var i = 0
+                do {
+                    i++
+                    curFile = File(baseDir, "$name-$i$extension")
+                } while (curFile.exists())
+            }
+
+            return curFile
         }
     }
 

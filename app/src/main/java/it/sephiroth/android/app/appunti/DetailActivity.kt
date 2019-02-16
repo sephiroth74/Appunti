@@ -3,13 +3,11 @@ package it.sephiroth.android.app.appunti
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.database.Cursor
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
-import android.provider.OpenableColumns
 import android.text.method.LinkMovementMethod
 import android.text.style.StyleSpan
 import android.view.Menu
@@ -28,9 +26,12 @@ import androidx.core.view.doOnPreDraw
 import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.dbflow5.config.FlowManager
 import com.dbflow5.structure.save
+import com.dbflow5.structure.update
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.disposables.Disposable
+import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -43,7 +44,6 @@ import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
-import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -151,29 +151,41 @@ class DetailActivity : AppuntiActivity() {
 
             data?.data?.also { uri ->
 
-                val postfix: String = UUID.randomUUID().toString()
-                val displayName: String? = postfix + (uri.getDisplayName(this) ?: "")
+                val entry = model.entry.value!!
+                val displayName: String = uri.getDisplayName(this) ?: UUID.randomUUID().toString()
+                val mimeType = uri.getMimeType(this)
 
                 Timber.v("displayName: $displayName")
+                Timber.v("mimeType: $mimeType")
+
+
+                val baseDir = DatabaseHelper.getAttachmentFilesDir(this, entry)
+                val dstFile = Entry.getNextFile(this, entry, baseDir, displayName)
+
+                Timber.v("baseDir=${baseDir.absolutePath}")
+                Timber.v("dstFile=$dstFile")
+
+                val relativePath = DatabaseHelper.getFilesDir(this).toURI().relativize(dstFile.toURI())
+                Timber.v("relative=$relativePath")
 
                 val stream = contentResolver.openInputStream(uri)
-                val dst = File(filesDir, "${postfix}_${displayName}")
-                val mime = uri.getMimeType(this)
-
-                Timber.v("mime: $mime")
-                Timber.v("dst: ${dst.absolutePath}")
-
-                FileUtils.copyInputStreamToFile(stream, dst)
-
-                model.entry.value?.let { entry ->
-
+                FileUtils.copyInputStreamToFile(stream, dstFile)
+//
+                FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
                     val attachment = Attachment()
                     attachment.attachmentEntryID = entry.entryID
-                    attachment.attachmentPath = dst.absolutePath
+                    attachment.attachmentPath = relativePath.toString()
                     attachment.attachmentTitle = displayName
-                    attachment.attachmentMime = mime
+                    attachment.attachmentMime = mimeType
+                    attachment.attachmentOriginalPath = uri.toString()
                     attachment.save()
+
+                    DatabaseHelper.touchEntry(entry).update()
                 }
+                    .success { transaction, result -> Timber.v("success!") }
+                    .error { transaction, throwable -> Timber.w("error = $throwable") }
+                    .build()
+                    .execute()
             }
         }
 

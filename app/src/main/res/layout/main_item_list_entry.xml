@@ -50,7 +50,7 @@
                 android:id="@+id/id_alarm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:srcCompat="@drawable/sharp_attach_file_24" android:layout_marginEnd="8dp"
+                app:srcCompat="@drawable/sharp_alarm_24" android:layout_marginEnd="8dp"
                 app:layout_constraintEnd_toStartOf="@+id/id_attachment"
                 app:layout_constraintTop_toTopOf="@id/id_title" app:layout_constraintBottom_toBottomOf="@+id/id_title"/>
 
@@ -59,7 +59,7 @@
                 android:id="@+id/id_attachment"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:srcCompat="@drawable/sharp_alarm_24"
+                app:srcCompat="@drawable/sharp_attach_file_24"
                 app:layout_constraintEnd_toEndOf="@+id/id_content" app:layout_constraintTop_toTopOf="@id/id_title"
                 app:layout_constraintBottom_toBottomOf="@+id/id_title"/>
 
