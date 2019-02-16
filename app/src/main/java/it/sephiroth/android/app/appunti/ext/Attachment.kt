@@ -2,11 +2,22 @@ package it.sephiroth.android.app.appunti.ext
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
+import android.os.ParcelFileDescriptor
+import android.widget.ImageView
 import androidx.core.content.FileProvider
+import com.shockwave.pdfium.PdfiumCore
+import com.squareup.picasso.Callback
+import com.squareup.picasso.MemoryPolicy
+import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
+import it.sephiroth.android.app.appunti.utils.PicassoUtils
+import timber.log.Timber
 import java.io.File
+
 
 fun Attachment.getFile(context: Context): File {
     return File(DatabaseHelper.getFilesDir(context), attachmentPath)
@@ -34,5 +45,36 @@ fun Attachment.createViewIntent(context: Context): Intent {
     return Intent(Intent.ACTION_VIEW).apply {
         setDataAndType(finalUri, attachmentMime)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+}
+
+fun Attachment.loadThumbnail(context: Context, view: ImageView) {
+    Timber.i("loadThumbnail($attachmentPath, $attachmentMime)")
+
+    if (isImage() || isVideo() || isPdf()) {
+
+        PicassoUtils
+            .get(context)
+            .load(getFile(context))
+            .resizeDimen(
+                R.dimen.appunti_detail_attachment_thumbnail_size,
+                R.dimen.appunti_detail_attachment_thumbnail_size
+            )
+            .into(view, object : Callback {
+                override fun onError(e: Exception?) {
+                    e?.printStackTrace()
+                    view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
+                }
+
+                override fun onSuccess() {
+                    Timber.v("success=${(view.drawable as BitmapDrawable).bounds}")
+                }
+            })
+    } else if (isPdf()) {
+        view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
+    } else if (isText()) {
+        view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
+    } else {
+        view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
     }
 }

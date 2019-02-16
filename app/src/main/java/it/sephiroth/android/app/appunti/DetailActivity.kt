@@ -445,29 +445,32 @@ class DetailActivity : AppuntiActivity() {
 
                 val finalPath = File(DatabaseHelper.getFilesDir(this), attachment.attachmentPath)
 
-                if (attachment.attachmentMime?.startsWith("image", true) == true) {
-                    view.attachmentImage.visibility = View.VISIBLE
+                attachment.loadThumbnail(this, view.attachmentImage)
 
-                    Picasso.get()
-                        .load(finalPath)
-                        .into(view.attachmentImage)
-                } else if (attachment.attachmentMime?.startsWith("video", true) == true) {
-                    view.attachmentImage.visibility = View.VISIBLE
 
-                    rxSingle(Schedulers.io()) {
-                        ThumbnailUtils.createVideoThumbnail(
-                            finalPath.absolutePath,
-                            MediaStore.Images.Thumbnails.MINI_KIND
-                        )
-                    }.observeOn(AndroidSchedulers.mainThread())
-                        .subscribe { t1, t2 ->
-                            view.attachmentImage.setImageBitmap(t1)
-                        }
-
-                } else {
-//                    view.attachmentImage.visibility = View.GONE
-                    view.attachmentImage.setImageResource(R.drawable.sharp_attach_file_24_rotated)
-                }
+//                if (attachment.attachmentMime?.startsWith("image", true) == true) {
+//                    view.attachmentImage.visibility = View.VISIBLE
+//
+//                    Picasso.get()
+//                        .load(finalPath)
+//                        .into(view.attachmentImage)
+//                } else if (attachment.attachmentMime?.startsWith("video", true) == true) {
+//                    view.attachmentImage.visibility = View.VISIBLE
+//
+//                    rxSingle(Schedulers.io()) {
+//                        ThumbnailUtils.createVideoThumbnail(
+//                            finalPath.absolutePath,
+//                            MediaStore.Images.Thumbnails.MINI_KIND
+//                        )
+//                    }.observeOn(AndroidSchedulers.mainThread())
+//                        .subscribe { t1, t2 ->
+//                            view.attachmentImage.setImageBitmap(t1)
+//                        }
+//
+//                } else {
+////                    view.attachmentImage.visibility = View.GONE
+//                    view.attachmentImage.setImageResource(R.drawable.sharp_attach_file_24_rotated)
+//                }
 
                 view.attachmentImage.setOnClickListener {
                     attachment.createViewIntent(this).also {

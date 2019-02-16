@@ -22,6 +22,14 @@ fun Uri.getMimeType(context: Context): String? {
     return mimeType
 }
 
+/**
+ * Tries to return the mime type from the file path
+ */
+fun Uri.getMimeTypeFromFilePart(): String? {
+    val fileExtension = MimeTypeMap.getFileExtensionFromUrl(toString())
+    return MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase())
+}
+
 fun Uri.getDisplayName(context: Context): String? {
     val uriString = toString()
     if (uriString.startsWith("content://", true)) {

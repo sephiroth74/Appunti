@@ -24,8 +24,8 @@
                 android:id="@+id/attachmentImage"
                 app:srcCompat="@drawable/sharp_attach_file_24_rotated"
                 android:visibility="visible"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="@dimen/appunti_detail_attachment_thumbnail_size"
+                android:layout_height="@dimen/appunti_detail_attachment_thumbnail_size"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"/>
