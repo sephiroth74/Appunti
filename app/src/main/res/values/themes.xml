@@ -9,9 +9,10 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="windowActionModeOverlay">true</item>
 
-        <item name="android:windowBackground">@android:color/white</item>
         <!--<item name="android:navigationBarColor">?android:attr/windowBackground</item>-->
-        <item name="android:navigationBarColor">@android:color/white</item>
+        <item name="android:windowBackground">@color/background_material_light</item>
+        <item name="android:navigationBarColor">@color/background_material_light</item>
+        <item name="android:colorForegroundInverse">@color/background_material_dark</item>
         <item name="android:windowLightNavigationBar"
               tools:ignore="NewApi">true
         </item>
@@ -20,22 +21,6 @@
               tools:ignore="NewApi">true
         </item>
         <item name="android:windowContentTransitions">true</item>
-
-        <!-- specify enter and exit transitions -->
-        <!-- options are: explode, slide, fade -->
-        <!--<item name="android:windowEnterTransition">@android:transition/slide_bottom</item>-->
-        <!--<item name="android:windowExitTransition">@android:transition/slide_bottom</item>-->
-
-        <!-- specify shared element transitions -->
-        <!--<item name="android:windowSharedElementEnterTransition">@android:transition/slide_left</item>-->
-        <!--<item name="android:windowSharedElementExitTransition">@android:transition/slide_left</item>-->
-
-        <!-- fonts -->
-        <!--<item name="android:fontFamily">@font/assistant_extralight</item>-->
-        <!--<item name="fontFamily">@font/product_sans_regular</item>-->
-        <!--<item name="fontFamilyLight">@font/poppins_light</item>-->
-        <!--<item name="fontFamilyThin">@font/product_sans_regular</item>-->
-        <!--<item name="fontFamilyBold">@font/product_sans_regular</item>-->
 
         <!-- default colors -->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
@@ -56,11 +41,11 @@
         <item name="colorPrimary">@color/darkColorPrimary</item>
         <item name="colorPrimaryDark">@color/darkColorPrimaryDark</item>
         <item name="colorAccent">@color/darkColorAccent</item>
-        <item name="windowActionModeOverlay">true</item>
 
-        <item name="android:windowBackground">@android:color/black</item>
-        <!--<item name="android:navigationBarColor">?android:attr/windowBackground</item>-->
-        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">@color/background_material_dark</item>
+        <item name="android:navigationBarColor">@color/background_material_dark</item>
+        <item name="android:colorForegroundInverse">@color/background_material_light</item>
         <item name="android:windowLightNavigationBar"
               tools:ignore="NewApi">false
         </item>
@@ -72,10 +57,7 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="search_theme">dark</item>
         <item name="categoryColors">@array/category_colors_dark</item>
-
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
-        <item name="alertDialogTheme">@style/Theme.MaterialComponents.Dialog.MinWidth</item>
-        <!--<item name="android:windowReturnTransition">@android:transition/fade</item>-->
     </style>
 
     <style name="Theme.Appunti.Dark.Base.NoActionbar">

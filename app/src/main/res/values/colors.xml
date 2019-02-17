@@ -1,13 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <color name="colorPrimary">#FFA726</color>
     <color name="colorPrimaryDark">#FFC400</color>
     <color name="colorAccent">#FFA726</color>
 
     <color name="darkColorPrimary">#FF6F00</color>
     <color name="darkColorPrimaryDark">#E65100</color>
-    <color name="darkColorAccent">#2F4858</color>
+    <color name="darkColorAccent">#0D47A1</color>
 
+    <color name="material_grey_50">#fffafafa</color>
+    <color name="material_grey_100">#fff5f5f5</color>
+    <color name="material_grey_300">#ffe0e0e0</color>
+    <color name="material_grey_600">#ff757575</color>
+    <color name="material_grey_800">#ff424242</color>
+    <color name="material_grey_850">#ff303030</color>
+    <color name="material_grey_900">#ff212121</color>
+
+    <color name="background_material_dark"
+           tools:override="true">@color/material_grey_900
+    </color>
+    <color name="background_material_light"
+           tools:override="true">@color/material_grey_50
+    </color>
 
     <!-- colors for categories -->
 
