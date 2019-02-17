@@ -8,6 +8,7 @@ import android.provider.MediaStore
 import com.shockwave.pdfium.PdfiumCore
 import com.squareup.picasso.*
 import com.squareup.picasso.Picasso.LoadedFrom
+import it.sephiroth.android.app.appunti.BuildConfig
 import it.sephiroth.android.app.appunti.ext.getMimeTypeFromFilePart
 import it.sephiroth.android.app.appunti.ext.sha1
 import timber.log.Timber
@@ -120,8 +121,8 @@ object PicassoUtils {
                         .downloader(downloader)
                         .addRequestHandler(VideoRequestHandler())
                         .addRequestHandler(PDFRequestHandler(context))
-                        .loggingEnabled(true)
-                        .indicatorsEnabled(true)
+                        .loggingEnabled(BuildConfig.DEBUG)
+                        .indicatorsEnabled(false)
                         .build()
 
                 Picasso.setSingletonInstance(created)

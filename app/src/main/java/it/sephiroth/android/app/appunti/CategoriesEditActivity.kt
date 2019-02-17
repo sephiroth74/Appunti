@@ -92,6 +92,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     }
 
     private fun presentNewCategoryDialog() {
+
         val alertDialog: AlertDialog = AlertDialog
             .Builder(this)
             .setCancelable(true)

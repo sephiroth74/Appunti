@@ -35,8 +35,9 @@ fun Attachment.getFileUri(context: Context): Uri? {
 fun Attachment.createShareIntent(context: Context): Intent {
     val finalUri = getFileUri(context)
     return Intent(Intent.ACTION_SEND).apply {
-        setDataAndType(finalUri, attachmentMime)
         putExtra(android.content.Intent.EXTRA_SUBJECT, attachmentTitle)
+        putExtra(android.content.Intent.EXTRA_STREAM, finalUri)
+        setDataAndType(finalUri, attachmentMime)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
 }

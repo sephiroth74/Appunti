@@ -185,12 +185,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/material_background_ripple"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
                 app:srcCompat="@drawable/sharp_add_photo_alternate_24"/>
 
         <androidx.appcompat.widget.AppCompatImageButton
                 android:id="@+id/documentPicker"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
                 android:background="@drawable/material_background_ripple"
                 app:srcCompat="@drawable/sharp_attach_file_24"/>
 
