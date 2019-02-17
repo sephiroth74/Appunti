@@ -9,7 +9,6 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.google.android.material.snackbar.Snackbar
 import it.sephiroth.android.app.appunti.R
-import kotlinx.android.synthetic.main.appunti_main_bottomappbar.view.*
 import timber.log.Timber
 
 
@@ -33,11 +32,11 @@ class DetailBottomAppBar @JvmOverloads constructor(
             return null
         } else {
             val dependents = (this.parent as CoordinatorLayout).getDependents(this)
-            Timber.v("dependents: $dependents")
+//            Timber.v("dependents: $dependents")
             val var2 = dependents.iterator()
 
             while (var2.hasNext()) {
-                Timber.v("item: $var2")
+//                Timber.v("item: $var2")
                 val v: View = var2.next()
                 if ((v.layoutParams as CoordinatorLayout.LayoutParams).anchorId == id) return v
                 if (v is FrameLayout) return v
@@ -63,12 +62,12 @@ class DetailBottomAppBar @JvmOverloads constructor(
         }
 
         override fun onLayoutChild(parent: CoordinatorLayout, child: DetailBottomAppBar, layoutDirection: Int): Boolean {
-            Timber.i("onLayoutChild(layoutDirection=$layoutDirection)")
+//            Timber.i("onLayoutChild(layoutDirection=$layoutDirection)")
 
             val view = child.findDependent()
             view?.let { view ->
                 val params = view.layoutParams as CoordinatorLayout.LayoutParams
-                Timber.d("found dependent:$view,  child.height=${child.height}, bottomMargin=${params.bottomMargin}")
+//                Timber.d("found dependent:$view,  child.height=${child.height}, bottomMargin=${params.bottomMargin}")
                 params.bottomMargin = child.measuredHeight - shadowHeight
                 view.layoutParams = params
             }
@@ -83,7 +82,7 @@ class DetailBottomAppBar @JvmOverloads constructor(
         }
 
         override fun onDependentViewChanged(parent: CoordinatorLayout, child: DetailBottomAppBar, dependency: View): Boolean {
-            Timber.i("onDependentViewChanged($dependency)")
+//            Timber.i("onDependentViewChanged($dependency)")
 
             if (dependency is Snackbar.SnackbarLayout) {
                 val params = dependency.layoutParams as CoordinatorLayout.LayoutParams

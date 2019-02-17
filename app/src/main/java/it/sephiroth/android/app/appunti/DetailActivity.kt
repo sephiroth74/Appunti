@@ -7,6 +7,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
 import android.text.style.StyleSpan
@@ -28,6 +29,7 @@ import androidx.lifecycle.ViewModelProviders
 import com.dbflow5.config.FlowManager
 import com.dbflow5.structure.save
 import com.dbflow5.structure.update
+import com.dbflow5.transaction.Transaction
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.disposables.Disposable
 import it.sephiroth.android.app.appunti.db.AppDatabase
@@ -107,6 +109,11 @@ class DetailActivity : AppuntiActivity() {
         onNewIntent(intent)
     }
 
+    override fun onDestroy() {
+        setProgressVisible(false)
+        super.onDestroy()
+    }
+
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
@@ -147,50 +154,32 @@ class DetailActivity : AppuntiActivity() {
                 }
             }
         } else if (requestCode == READ_REQUEST_CODE && resultCode == RESULT_OK) {
-            Timber.d("uri: ${data?.data}")
 
             data?.data?.also { uri ->
 
-                val entry = model.entry.value!!
-                val displayName: String = uri.getDisplayName(this) ?: UUID.randomUUID().toString()
-                val mimeType = uri.getMimeType(this)
-
-                Timber.v("displayName: $displayName")
-                Timber.v("mimeType: $mimeType")
-
-
-                val baseDir = DatabaseHelper.getAttachmentFilesDir(this, entry)
-                val dstFile = Entry.getNextFile(this, entry, baseDir, displayName)
-
-                Timber.v("baseDir=${baseDir.absolutePath}")
-                Timber.v("dstFile=$dstFile")
-
-                val relativePath = DatabaseHelper.getFilesDir(this).toURI().relativize(dstFile.toURI())
-                Timber.v("relative=$relativePath")
-
-                val stream = contentResolver.openInputStream(uri)
-                FileUtils.copyInputStreamToFile(stream, dstFile)
-//
-                FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
-                    val attachment = Attachment()
-                    attachment.attachmentEntryID = entry.entryID
-                    attachment.attachmentPath = relativePath.toString()
-                    attachment.attachmentTitle = displayName
-                    attachment.attachmentMime = mimeType
-                    attachment.attachmentOriginalPath = uri.toString()
-                    attachment.save()
-
-                    entry.touch().update()
+                model.entry.value?.let { entry ->
+                    onAddAttachment(uri, entry)
                 }
-                    .success { transaction, result -> Timber.v("success!") }
-                    .error { transaction, throwable -> Timber.w("error = $throwable") }
-                    .build()
-                    .execute()
             }
         }
 
 
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    private fun onAddAttachment(uri: Uri, entry: Entry) {
+        setProgressVisible(true)
+
+        DatabaseHelper.addAttachmentFromUri(this, Entry(entry), uri) { success, throwable ->
+            doOnMainThread {
+                throwable?.let {
+                    showConfirmation(it.localizedMessage)
+                } ?: run {
+                    showConfirmation("File added")
+                }
+            }
+            setProgressVisible(false)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -220,7 +209,7 @@ class DetailActivity : AppuntiActivity() {
     @Suppress("UNUSED_PARAMETER")
     private fun onEntryTextChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
         if (currentFocus == entryText) {
-            changeTimer = rxTimer(changeTimer, 1, TimeUnit.SECONDS) {
+            changeTimer = rxTimer(changeTimer, 5, TimeUnit.SECONDS) {
                 currentEntry?.entryText = text?.toString() ?: ""
                 currentEntry?.touch()
                 currentEntry?.save()
@@ -233,7 +222,7 @@ class DetailActivity : AppuntiActivity() {
     @Suppress("UNUSED_PARAMETER")
     private fun onEntryTitleChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
         if (currentFocus == entryTitle) {
-            changeTimer = rxTimer(changeTimer, 300, TimeUnit.MILLISECONDS) {
+            changeTimer = rxTimer(changeTimer, 2, TimeUnit.SECONDS) {
                 currentEntry?.entryTitle = text?.toString() ?: ""
                 currentEntry?.touch()
                 currentEntry?.save()
@@ -469,7 +458,7 @@ class DetailActivity : AppuntiActivity() {
                 }
 
                 view.attachmentRemoveButton.setOnClickListener {
-                    // delete attachment
+                    onRemoveAttachment(attachment)
                 }
 
                 attachmentsContainer.addView(view)
@@ -494,6 +483,19 @@ class DetailActivity : AppuntiActivity() {
             val drawable: Drawable? =
                 (navigationView.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
             drawable?.setTint(color)
+        }
+    }
+
+    private fun onRemoveAttachment(attachment: Attachment) {
+        model.entry.value?.let { entry ->
+            DatabaseHelper.deleteAttachment(this, Entry(entry), Attachment(attachment)) { result, throwable ->
+                throwable?.let { throwable ->
+                    showConfirmation(throwable.localizedMessage)
+                } ?: run {
+                    Timber.v("[${currentThread()}] success = $result")
+                    showConfirmation("File has been removed")
+                }
+            }
         }
     }
 
@@ -710,6 +712,10 @@ class DetailActivity : AppuntiActivity() {
 
     private fun showConfirmation(text: String) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun setProgressVisible(visible: Boolean) {
+        toolbarProgress.visibility = if (visible) View.VISIBLE else View.INVISIBLE
     }
 
     companion object {

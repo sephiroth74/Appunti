@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                                     xmlns:app="http://schemas.android.com/apk/res-auto"
-                                                     xmlns:tools="http://schemas.android.com/tools"
-                                                     android:id="@+id/coordinator"
-                                                     android:layout_width="match_parent"
-                                                     android:layout_height="match_parent"
-                                                     android:background="?android:attr/windowBackground"
-                                                     tools:context=".DetailActivity">
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/coordinator"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?android:attr/windowBackground"
+        tools:context=".DetailActivity">
 
     <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
@@ -24,7 +25,28 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_scrollFlags="enterAlways"
-                app:popupTheme="@style/Theme.Appunti.Default.PopupOverlay"/>
+                app:popupTheme="@style/Theme.Appunti.Default.PopupOverlay">
+
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:gravity="end|center_vertical"
+                    android:layout_width="match_parent"
+                    android:layout_marginEnd="8dp"
+                    android:layout_height="24dp">
+
+                <ProgressBar
+                        android:visibility="invisible"
+                        android:indeterminateTint="?attr/colorControlNormal"
+                        android:id="@+id/toolbarProgress"
+                        style="@style/Widget.AppCompat.ProgressBar"
+                        android:indeterminate="true"
+                        android:indeterminateOnly="true"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"/>
+            </LinearLayout>
+
+
+        </androidx.appcompat.widget.Toolbar>
 
     </com.google.android.material.appbar.AppBarLayout>
 

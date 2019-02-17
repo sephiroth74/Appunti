@@ -2,28 +2,24 @@ package it.sephiroth.android.app.appunti.models
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.app.PendingIntent
-import android.content.Intent
-import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.ChangeAction
 import io.reactivex.android.schedulers.AndroidSchedulers
-import it.sephiroth.android.app.appunti.AlarmReceiver
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
+import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
+import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.ext.doOnMainThread
-import it.sephiroth.android.app.appunti.ext.executeIfMainThread
-import org.threeten.bp.Instant
+import it.sephiroth.android.app.appunti.ext.isMainThread
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import timber.log.Timber
 
-class DetailViewModel(application: Application) : AndroidViewModel(application),
-    DirectModelNotifier.ModelChangedListener<Entry> {
+class DetailViewModel(application: Application) : AndroidViewModel(application) {
 
     val entry: LiveData<Entry> = MutableLiveData()
 
@@ -45,27 +41,41 @@ class DetailViewModel(application: Application) : AndroidViewModel(application),
             return entry.value?.entryID ?: 0
         }
 
-    override fun onModelChanged(model: Entry, action: ChangeAction) {
-        Timber.i("onModelChanged($model, $action)")
-        Timber.v("model.entryID=${model.entryID} == $entryID")
+    val entryModelListener = object : DirectModelNotifier.ModelChangedListener<Entry> {
+        override fun onModelChanged(model: Entry, action: ChangeAction) {
+            Timber.i("[${currentThread()}] onModelChanged($model, $action)")
+            Timber.v("model.entryID=${model.entryID} == $entryID")
 
-        if (model.entryID == entryID) {
-            if (action == ChangeAction.CHANGE || action == ChangeAction.UPDATE) {
-                Timber.v("this entry = ${entry.value}")
-                Timber.v("new entry = $model")
+            if (model.entryID == entryID) {
+                if (action == ChangeAction.CHANGE || action == ChangeAction.UPDATE) {
+                    Timber.v("this entry = ${entry.value}")
+                    Timber.v("new entry = $model")
 
-                executeIfMainThread {
-                    setEntry(model)
-                } ?: run {
-                    doOnMainThread { setEntry(model) }
+                    if (isMainThread()) {
+                        setEntry(model)
+                    } else {
+                        doOnMainThread { setEntry(model) }
+                    }
                 }
             }
         }
+
+        override fun onTableChanged(table: Class<*>?, action: ChangeAction) {
+            Timber.i("onTableChanged($table, $action)")
+        }
     }
 
-    override fun onTableChanged(table: Class<*>?, action: ChangeAction) {}
+    val attachmentModelListener = object : DirectModelNotifier.ModelChangedListener<Attachment> {
+        override fun onModelChanged(model: Attachment, action: ChangeAction) {
+            Timber.i("onModelChanged($model, $action)")
+        }
 
-    private fun setEntry(value: Entry) {
+        override fun onTableChanged(table: Class<*>?, action: ChangeAction) {
+            Timber.i("onTableChanged($table, $action)")
+        }
+    }
+
+    private fun setEntry(value: Entry?) {
         (entry as MutableLiveData).value = value
     }
 
@@ -107,11 +117,13 @@ class DetailViewModel(application: Application) : AndroidViewModel(application),
     }
 
     override fun onCleared() {
-        DirectModelNotifier.get().unregisterForModelChanges(Entry::class.java, this)
+        DirectModelNotifier.get().unregisterForModelChanges(Entry::class.java, entryModelListener)
+        DirectModelNotifier.get().unregisterForModelChanges(Attachment::class.java, attachmentModelListener)
         super.onCleared()
     }
 
     init {
-        DirectModelNotifier.get().registerForModelChanges(Entry::class.java, this)
+        DirectModelNotifier.get().registerForModelChanges(Entry::class.java, entryModelListener)
+        DirectModelNotifier.get().registerForModelChanges(Attachment::class.java, attachmentModelListener)
     }
 }

@@ -11,7 +11,16 @@ import it.sephiroth.android.app.appunti.db.AppDatabase
 
 
 @Table(database = AppDatabase::class)
-class Attachment : BaseRXModel() {
+class Attachment() : BaseRXModel() {
+
+    constructor(other: Attachment) : this() {
+        attachmentID = other.attachmentID
+        attachmentEntryID = other.attachmentEntryID
+        attachmentTitle = other.attachmentTitle
+        attachmentMime = other.attachmentMime
+        attachmentPath = other.attachmentPath
+        attachmentOriginalPath = other.attachmentOriginalPath
+    }
 
     @PrimaryKey(autoincrement = true)
     var attachmentID: Int = 0

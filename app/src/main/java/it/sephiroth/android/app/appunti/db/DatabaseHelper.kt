@@ -1,19 +1,23 @@
 package it.sephiroth.android.app.appunti.db
 
 import android.content.Context
+import android.net.Uri
 import com.dbflow5.config.FlowManager
 import com.dbflow5.query.*
+import com.dbflow5.structure.delete
+import com.dbflow5.structure.load
 import com.dbflow5.structure.save
+import com.dbflow5.structure.update
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
-import it.sephiroth.android.app.appunti.db.tables.Category
-import it.sephiroth.android.app.appunti.db.tables.Category_Table
-import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.db.tables.Entry_Table
-import it.sephiroth.android.app.appunti.ext.rxSingle
+import it.sephiroth.android.app.appunti.db.tables.*
+import it.sephiroth.android.app.appunti.ext.*
+import org.apache.commons.io.FileUtils
 import org.threeten.bp.Instant
 import timber.log.Timber
 import java.io.File
+import java.lang.Exception
+import java.util.*
 
 object DatabaseHelper {
 
@@ -145,6 +149,87 @@ object DatabaseHelper {
                 .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
                 .execute(FlowManager.getDatabase(AppDatabase::class.java))
 
+        }
+    }
+
+    /**
+     * Deleted the attachment from the Database and remove the stored file from the filesystem
+     */
+    fun deleteAttachment(
+        context: Context,
+        entry: Entry,
+        attachment: Attachment,
+        callback: ((Boolean, Throwable?) -> (Unit))? = null
+    ) {
+        Timber.i("deleteAttachment($attachment")
+
+        if (attachment.attachmentEntryID != entry.entryID) {
+            callback?.invoke(false, IllegalArgumentException("This attachment doesn't belong to the provided entry!"))
+            return
+        }
+
+        FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
+            Timber.i("[${currentThread()}] onRemoveAttachment($attachment)")
+
+            val file = attachment.getFile(context)
+            Timber.v("deleting ${file.absolutePath}")
+            if (attachment.delete()) {
+                entry.load()?.touch()?.save()
+            }
+
+            FileUtils.deleteQuietly(file)
+        }.success { _, result ->
+            callback?.invoke(result, null)
+        }.error { _, throwable ->
+            callback?.invoke(false, throwable)
+        }
+            .build()
+            .execute()
+    }
+
+    fun addAttachmentFromUri(
+        context: Context,
+        entry: Entry,
+        uri: Uri,
+        callback: ((Boolean, Throwable?) -> (Unit))? = null
+    ) {
+        Timber.i("addAttachmentFromUri($entry, $uri)")
+
+        val displayName: String = uri.getDisplayName(context) ?: UUID.randomUUID().toString()
+        val mimeType = uri.getMimeType(context)
+        Timber.v("displayName: $displayName, mimeType: $mimeType")
+
+        val baseDir = DatabaseHelper.getAttachmentFilesDir(context, entry)
+        val dstFile = Entry.getNextFile(context, entry, baseDir, displayName)
+        val relativePath = DatabaseHelper.getFilesDir(context).toURI().relativize(dstFile.toURI())
+
+        Timber.v("baseDir=${baseDir.absolutePath}")
+        Timber.v("dstFile=$dstFile")
+        Timber.v("relative=$relativePath")
+
+        doOnScheduler(Schedulers.io()) {
+            try {
+                val stream = context.contentResolver.openInputStream(uri)
+                FileUtils.copyInputStreamToFile(stream, dstFile)
+
+                FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
+                    val attachment = Attachment()
+                    attachment.attachmentEntryID = entry.entryID
+                    attachment.attachmentPath = relativePath.toString()
+                    attachment.attachmentTitle = displayName
+                    attachment.attachmentMime = mimeType
+                    attachment.attachmentOriginalPath = uri.toString()
+                    attachment.save()
+                    entry.load()?.touch()?.save()
+                }
+                    .success { _, result -> callback?.invoke(true, null) }
+                    .error { _, throwable -> callback?.invoke(false, throwable) }
+                    .build()
+                    .execute()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                callback?.invoke(false, e)
+            }
         }
     }
 
