@@ -7,10 +7,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
-import android.media.ThumbnailUtils
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.text.method.LinkMovementMethod
 import android.text.style.StyleSpan
 import android.view.*
@@ -19,7 +16,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
-import androidx.core.content.FileProvider
 import androidx.core.graphics.ColorUtils
 import androidx.core.text.set
 import androidx.core.text.toSpannable
@@ -29,15 +25,11 @@ import androidx.core.view.doOnPreDraw
 import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.room.Database
 import com.dbflow5.config.FlowManager
 import com.dbflow5.structure.save
 import com.dbflow5.structure.update
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.squareup.picasso.Picasso
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
@@ -52,7 +44,6 @@ import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
-import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -443,41 +434,15 @@ class DetailActivity : AppuntiActivity() {
 
                 Timber.v("$attachment")
 
-                val finalPath = File(DatabaseHelper.getFilesDir(this), attachment.attachmentPath)
-
+                // TODO(Specify the exact size here)
                 attachment.loadThumbnail(this, view.attachmentImage)
-
-
-//                if (attachment.attachmentMime?.startsWith("image", true) == true) {
-//                    view.attachmentImage.visibility = View.VISIBLE
-//
-//                    Picasso.get()
-//                        .load(finalPath)
-//                        .into(view.attachmentImage)
-//                } else if (attachment.attachmentMime?.startsWith("video", true) == true) {
-//                    view.attachmentImage.visibility = View.VISIBLE
-//
-//                    rxSingle(Schedulers.io()) {
-//                        ThumbnailUtils.createVideoThumbnail(
-//                            finalPath.absolutePath,
-//                            MediaStore.Images.Thumbnails.MINI_KIND
-//                        )
-//                    }.observeOn(AndroidSchedulers.mainThread())
-//                        .subscribe { t1, t2 ->
-//                            view.attachmentImage.setImageBitmap(t1)
-//                        }
-//
-//                } else {
-////                    view.attachmentImage.visibility = View.GONE
-//                    view.attachmentImage.setImageResource(R.drawable.sharp_attach_file_24_rotated)
-//                }
 
                 view.attachmentImage.setOnClickListener {
                     try {
                         attachment.createViewIntent(this).also {
                             startActivity(it)
                         }
-                    } catch (e: IllegalArgumentException) {
+                    } catch (e: Exception) {
                         Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -487,7 +452,8 @@ class DetailActivity : AppuntiActivity() {
                         attachment.createViewIntent(this).also {
                             startActivity(it)
                         }
-                    } catch (e: IllegalArgumentException) {
+                    } catch (e: Exception) {
+                        // TODO(for ActivityNotFoundException provide a detailed explanation)
                         Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -497,7 +463,7 @@ class DetailActivity : AppuntiActivity() {
                         attachment.createShareIntent(this).also {
                             startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
                         }
-                    } catch (e: IllegalArgumentException) {
+                    } catch (e: Exception) {
                         Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
                 }

@@ -11,6 +11,7 @@ import androidx.core.content.FileProvider
 import com.shockwave.pdfium.PdfiumCore
 import com.squareup.picasso.Callback
 import com.squareup.picasso.MemoryPolicy
+import com.squareup.picasso.Picasso
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
@@ -52,7 +53,6 @@ fun Attachment.loadThumbnail(context: Context, view: ImageView) {
     Timber.i("loadThumbnail($attachmentPath, $attachmentMime)")
 
     if (isImage() || isVideo() || isPdf()) {
-
         PicassoUtils
             .get(context)
             .load(getFile(context))
