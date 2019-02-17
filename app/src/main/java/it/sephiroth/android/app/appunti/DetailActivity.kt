@@ -17,7 +17,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
-import androidx.core.graphics.ColorUtils
 import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.core.transition.doOnEnd
@@ -27,13 +26,9 @@ import androidx.core.view.doOnPreDraw
 import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.dbflow5.config.FlowManager
 import com.dbflow5.structure.save
-import com.dbflow5.structure.update
-import com.dbflow5.transaction.Transaction
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.disposables.Disposable
-import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -42,12 +37,10 @@ import it.sephiroth.android.app.appunti.models.DetailViewModel
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
-import org.apache.commons.io.FileUtils
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 
@@ -246,29 +239,31 @@ class DetailActivity : AppuntiActivity() {
 
     // BOTTOM APP BAR
 
+    private fun setNavigationMenuPicker(value: Boolean) {
+        with(navigationView.menu) {
+            findItem(R.id.menu_action_camera).isVisible = value
+            findItem(R.id.menu_action_image).isVisible = value
+            findItem(R.id.menu_action_file).isVisible = value
+            findItem(R.id.menu_action_category).isVisible = !value
+            findItem(R.id.menu_action_delete).isVisible = !value
+            findItem(R.id.menu_action_share).setVisible(!value)
+        }
+    }
+
     private fun setupBottomAppBar() {
         bottomAppBar.navigationIcon.setOnClickListener {
+            if (!isBottomSheetClosed()) {
+                setNavigationMenuPicker(false)
+            }
             openOrCloseBottomsheet()
         }
 
-        bottomAppBar.documentPicker.setOnClickListener {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "*/*"
+        bottomAppBar.attachmentPicker.setOnClickListener {
+            if (!isBottomSheetClosed()) {
+                setNavigationMenuPicker(true)
             }
-
-            startActivityForResult(intent, READ_REQUEST_CODE)
+            openOrCloseBottomsheet()
         }
-
-        bottomAppBar.imagePicker.setOnClickListener {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "image/*"
-            }
-
-            startActivityForResult(intent, READ_REQUEST_CODE)
-        }
-
 
 
         bottomSheetModalBackground.setOnClickListener {
@@ -301,6 +296,28 @@ class DetailActivity : AppuntiActivity() {
                     onShareEntry()
                     closeBottomSheet()
                 }
+
+                R.id.menu_action_image -> {
+                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "image/*"
+                    }
+                    startActivityForResult(intent, READ_REQUEST_CODE)
+                }
+
+                R.id.menu_action_file -> {
+                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "*/*"
+                    }
+
+                    startActivityForResult(intent, READ_REQUEST_CODE)
+                }
+
+                R.id.menu_action_camera -> {
+
+                }
+
             }
             true
         }
@@ -344,12 +361,20 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun openOrCloseBottomsheet() {
-        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+        if (isBottomSheetOpened()) {
             closeBottomSheet()
         } else {
             openBottomSheet()
             navigationView.bringToFront()
         }
+    }
+
+    private fun isBottomSheetOpened(): Boolean {
+        return bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED
+    }
+
+    private fun isBottomSheetClosed(): Boolean {
+        return bottomSheetBehavior.state == BottomSheetBehavior.STATE_HIDDEN
     }
 
     private fun pickCategory() {
@@ -382,7 +407,7 @@ class DetailActivity : AppuntiActivity() {
             updateAttachmentsList(entry.attachments)
         }
 
-        lastModified.text = entry.entryModifiedDate.getLocalizedDateTimeStamp(FormatStyle.MEDIUM)
+//        lastModified.text = entry.entryModifiedDate.getLocalizedDateTimeStamp(FormatStyle.MEDIUM)
 
         invalidateOptionsMenu()
 

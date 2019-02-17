@@ -32,7 +32,7 @@
                     android:gravity="end|center_vertical"
                     android:layout_width="match_parent"
                     android:layout_marginEnd="8dp"
-                    android:layout_height="24dp">
+                    android:layout_height="@dimen/appunti_toolbar_icon_size">
 
                 <ProgressBar
                         android:visibility="invisible"
@@ -41,8 +41,8 @@
                         style="@style/Widget.AppCompat.ProgressBar"
                         android:indeterminate="true"
                         android:indeterminateOnly="true"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"/>
+                        android:layout_width="@dimen/appunti_toolbar_icon_size"
+                        android:layout_height="@dimen/appunti_toolbar_icon_size"/>
             </LinearLayout>
 
 
@@ -181,36 +181,47 @@
             app:navigationIcon="@drawable/sharp_arrow_upward_24">
 
         <androidx.appcompat.widget.AppCompatImageButton
-                android:id="@+id/imagePicker"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:id="@+id/attachmentPicker"
+                android:layout_width="@dimen/appunti_toolbar_icon_size"
+                android:layout_height="@dimen/appunti_toolbar_icon_size"
                 android:background="@drawable/material_background_ripple"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
-                app:srcCompat="@drawable/sharp_add_photo_alternate_24"/>
+                app:srcCompat="@drawable/sharp_add_24"/>
 
-        <androidx.appcompat.widget.AppCompatImageButton
-                android:id="@+id/documentPicker"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/material_background_ripple"
-                app:srcCompat="@drawable/sharp_attach_file_24"/>
+        <!--<androidx.appcompat.widget.AppCompatImageButton-->
+        <!--android:id="@+id/imagePicker"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:background="@drawable/material_background_ripple"-->
+        <!--android:layout_marginEnd="8dp"-->
+        <!--android:layout_marginStart="8dp"-->
+        <!--app:srcCompat="@drawable/sharp_add_photo_alternate_24"/>-->
+
+        <!--<androidx.appcompat.widget.AppCompatImageButton-->
+        <!--android:id="@+id/documentPicker"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginStart="8dp"-->
+        <!--android:background="@drawable/material_background_ripple"-->
+        <!--app:srcCompat="@drawable/sharp_attach_file_24"/>-->
 
 
-        <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/lastModified"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:gravity="center"
-                android:layout_weight="1"
-                android:textAppearance="?attr/textAppearanceListItemSmall"/>
+        <!--<androidx.appcompat.widget.AppCompatTextView-->
+        <!--android:id="@+id/lastModified"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginStart="16dp"-->
+        <!--android:gravity="center"-->
+        <!--android:layout_weight="1"-->
+        <!--android:textAppearance="?attr/textAppearanceListItemSmall"/>-->
 
         <androidx.appcompat.widget.AppCompatImageButton
                 android:id="@+id/navigationIcon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="@dimen/appunti_toolbar_icon_size"
+                android:layout_height="@dimen/appunti_toolbar_icon_size"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
                 android:background="@drawable/material_background_ripple"
                 app:srcCompat="@drawable/sharp_more_vert_24"/>
 

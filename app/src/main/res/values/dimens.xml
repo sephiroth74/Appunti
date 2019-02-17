@@ -29,6 +29,8 @@
     <!-- snackbar bottom margin when linked to bottomappbar -->
     <dimen name="appunti_snackbar_appbar_bottom_margin">8dp</dimen>
 
+    <!-- toolbar icons size -->
+    <dimen name="appunti_toolbar_icon_size">24dp</dimen>
 
     <dimen name="text_size_display_4_material">71sp</dimen>
     <dimen name="text_size_display_3_material">44sp</dimen>

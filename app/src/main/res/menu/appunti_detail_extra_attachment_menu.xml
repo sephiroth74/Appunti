@@ -4,29 +4,6 @@
         xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-            android:id="@+id/menu_action_delete"
-            android:checkable="false"
-            android:icon="@drawable/sharp_delete_outline_24"
-            android:title="@string/delete"
-            app:showAsAction="ifRoom"/>
-
-    <item
-            android:id="@+id/menu_action_share"
-            android:checkable="false"
-            android:icon="@drawable/sharp_share_24"
-            android:title="@string/share"
-            app:showAsAction="always"/>
-
-
-    <item
-            android:id="@+id/menu_action_category"
-            android:checkable="false"
-            android:icon="@drawable/outline_label_24"
-            android:title="@string/category"
-            app:showAsAction="always"/>
-
-
-    <item
             android:id="@+id/menu_action_camera"
             android:checkable="false"
             android:icon="@drawable/baseline_camera_alt_24"
@@ -42,7 +19,7 @@
 
 
     <item
-            android:id="@+id/menu_action_file"
+            android:id="@+id/menu_action_category"
             android:checkable="false"
             android:icon="@drawable/sharp_attach_file_24"
             android:title="Attach File"
