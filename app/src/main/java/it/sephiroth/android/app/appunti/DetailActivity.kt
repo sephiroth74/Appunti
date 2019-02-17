@@ -22,6 +22,7 @@ import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.core.transition.doOnEnd
 import androidx.core.transition.doOnStart
+import androidx.core.view.children
 import androidx.core.view.doOnPreDraw
 import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
@@ -404,64 +405,63 @@ class DetailActivity : AppuntiActivity() {
     private fun updateAttachmentsList(attachments: List<Attachment>?) {
         attachmentsContainer.removeAllViews()
 
-        attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
+        model.entry.value?.let { entry ->
 
-        attachments?.let { attachments ->
+            attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
 
-            val outHSL = floatArrayOf(0f, 0f, 0f)
-            ColorUtils.colorToHSL(model.entry.value!!.getColor(this), outHSL)
-            outHSL[2] = outHSL[2] / 1.35f
-            val cardColor = ColorUtils.setAlphaComponent(ColorUtils.HSLToColor(outHSL), 201)
+            attachments?.let { attachments ->
+                val cardColor = entry.getAttachmentColor(this)
 
-            for (attachment in attachments) {
-                val view = LayoutInflater.from(this)
-                    .inflate(R.layout.appunti_detail_attachment_item, attachmentsContainer, false) as CardView
+                for (attachment in attachments) {
+                    val view = LayoutInflater.from(this)
+                        .inflate(R.layout.appunti_detail_attachment_item, attachmentsContainer, false) as CardView
 
-                view.setCardBackgroundColor(cardColor)
-                view.attachmentTitle.text = attachment.attachmentTitle
-                view.tag = attachment
+                    view.setCardBackgroundColor(cardColor)
+                    view.attachmentTitle.text = attachment.attachmentTitle
+                    view.tag = attachment
 
-                Timber.v("$attachment")
+                    Timber.v("$attachment")
 
-                // TODO(Specify the exact size here)
-                attachment.loadThumbnail(this, view.attachmentImage)
+                    // TODO(Specify the exact size here)
+                    attachment.loadThumbnail(this, view.attachmentImage)
 
-                view.attachmentImage.setOnClickListener {
-                    try {
-                        attachment.createViewIntent(this).also {
-                            startActivity(it)
+                    view.setOnClickListener {
+                        try {
+                            attachment.createViewIntent(this).also {
+                                startActivity(it)
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                         }
-                    } catch (e: Exception) {
-                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
-                }
 
-                view.attachmentViewButton.setOnClickListener {
-                    try {
-                        attachment.createViewIntent(this).also {
-                            startActivity(it)
+                    view.attachmentViewButton.setOnClickListener {
+                        try {
+                            attachment.createViewIntent(this).also {
+                                startActivity(it)
+                            }
+                        } catch (e: Exception) {
+                            // TODO(for ActivityNotFoundException provide a detailed explanation)
+                            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                         }
-                    } catch (e: Exception) {
-                        // TODO(for ActivityNotFoundException provide a detailed explanation)
-                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
-                }
 
-                view.attachmentShareButton.setOnClickListener {
-                    try {
-                        attachment.createShareIntent(this).also {
-                            startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
+                    view.attachmentShareButton.setOnClickListener {
+                        try {
+                            attachment.createShareIntent(this).also {
+                                startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                         }
-                    } catch (e: Exception) {
-                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
-                }
 
-                view.attachmentRemoveButton.setOnClickListener {
-                    onRemoveAttachment(attachment)
-                }
+                    view.attachmentRemoveButton.setOnClickListener {
+                        onRemoveAttachment(attachment)
+                    }
 
-                attachmentsContainer.addView(view)
+                    attachmentsContainer.addView(view)
+                }
             }
         }
     }
@@ -483,6 +483,15 @@ class DetailActivity : AppuntiActivity() {
             val drawable: Drawable? =
                 (navigationView.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
             drawable?.setTint(color)
+        }
+
+        // attachments
+
+        if (attachmentsContainer.childCount > 0) {
+            val cardColor = entry.getAttachmentColor(this)
+            for (view in attachmentsContainer.children) {
+                (view as CardView).setCardBackgroundColor(cardColor)
+            }
         }
     }
 
