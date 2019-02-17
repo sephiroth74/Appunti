@@ -3,22 +3,18 @@ package it.sephiroth.android.app.appunti.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.media.ThumbnailUtils
 import android.provider.MediaStore
 import com.shockwave.pdfium.PdfiumCore
-import com.squareup.picasso.OkHttp3Downloader
-import com.squareup.picasso.Picasso
+import com.squareup.picasso.*
 import com.squareup.picasso.Picasso.LoadedFrom
-import com.squareup.picasso.Request
-import com.squareup.picasso.RequestHandler
 import it.sephiroth.android.app.appunti.ext.getMimeTypeFromFilePart
-import okhttp3.MediaType
-import okhttp3.RequestBody
-import okhttp3.Response
+import it.sephiroth.android.app.appunti.ext.sha1
 import okhttp3.internal.cache.DiskLruCache
 import okhttp3.internal.io.FileSystem
+import okio.Buffer
 import timber.log.Timber
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 
@@ -62,15 +58,36 @@ object PicassoUtils {
         override fun load(request: Request, networkPolicy: Int): Result? {
             Timber.i("load(${request.uri}, $networkPolicy")
 
-//            val loadedFrom = if (response.cacheResponse() == null) LoadedFrom.NETWORK else LoadedFrom.DISK
+            val cacheKey =
+                "${request.uri.toString().sha1().toLowerCase()}-${request.targetWidth}-${request.targetHeight}"
+
+            Timber.v("cacheKey=$cacheKey")
+
+
+            if (NetworkPolicy.shouldReadFromDiskCache(networkPolicy)) {
+                cache.get(cacheKey)?.use { cacheResult ->
+                    cacheResult.getSource(0)?.use { source ->
+                        Buffer().use { buffer ->
+                            do {
+                                val read = source.read(buffer, 8192)
+                            } while (read > -1)
+
+                            Timber.v("buffer size: ${cacheResult.getLength(0)}, ${buffer.size()}")
+
+                            val bmp = BitmapFactory.decodeStream(buffer.inputStream())
+                            bmp?.let { bmp ->
+                                Timber.v("bmp: ${bmp.width}, ${bmp.height}")
+                                return RequestHandler.Result(bmp, LoadedFrom.DISK)
+                            }
+                        }
+                    }
+                }
+            }
+
+
             val loadedFrom = LoadedFrom.NETWORK
 //
-//            if (loadedFrom == LoadedFrom.DISK && body?.contentLength() == 0L) {
-//                body.close()
-//                throw IOException("Received response with 0 content-length header.")
-//            }
 
-//            val pdfDocument = pdfiumCore.newDocument(response.body()?.bytes())
             val fd = context.contentResolver.openFileDescriptor(request.uri, "r")
             val pdfDocument = pdfiumCore.newDocument(fd)
 
@@ -79,6 +96,7 @@ object PicassoUtils {
 
                 var width = pdfiumCore.getPageWidthPoint(pdfDocument, PAGE_NUMBER)
                 var height = pdfiumCore.getPageHeightPoint(pdfDocument, PAGE_NUMBER)
+
                 Timber.v("pdf size=$width,$height")
 
                 if (request.targetWidth > 0 && request.targetHeight > 0) {
@@ -91,14 +109,28 @@ object PicassoUtils {
 
                 Timber.v("bitmap size: ${bmp.width} x ${bmp.height}")
 
-                val stream = ByteArrayOutputStream()
-                bmp.compress(Bitmap.CompressFormat.PNG, 100, stream)
-                val byteArray = stream.toByteArray()
+                bmp?.let {
+                    if (NetworkPolicy.shouldWriteToDiskCache(networkPolicy)) {
+                        Timber.v("saving to cache...")
 
-                val okRequest = okhttp3.Request.Builder().url(request.uri.toString())
-                    .put(RequestBody.create(MediaType.parse("application/pdf"), byteArray)).build()
-                val response = Response.Builder().request(okRequest).build()
-                cache.put(response)
+                        val editor = cache.edit(cacheKey)
+                        editor?.apply {
+
+                            editor.newSink(0).apply {
+                                Buffer().use { buffer ->
+                                    bmp.compress(Bitmap.CompressFormat.JPEG, 75, buffer.outputStream())
+                                    this.write(buffer, buffer.size())
+                                    this.flush()
+                                }
+
+                                Timber.v("flushed sink")
+                            }
+
+                            this.commit()
+                            Timber.v("committing editor")
+                        }
+                    }
+                }
 
                 return RequestHandler.Result(bmp, loadedFrom)
             } finally {
@@ -132,8 +164,8 @@ object PicassoUtils {
                                 DiskLruCache.create(
                                     FileSystem.SYSTEM,
                                     File(context.cacheDir, "picasso-cache"),
+                                    2,
                                     1,
-                                    100,
                                     Int.MAX_VALUE.toLong()
                                 )
                             )
