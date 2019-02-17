@@ -3,7 +3,6 @@ package it.sephiroth.android.app.appunti.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.media.ThumbnailUtils
 import android.provider.MediaStore
 import com.shockwave.pdfium.PdfiumCore
@@ -11,11 +10,7 @@ import com.squareup.picasso.*
 import com.squareup.picasso.Picasso.LoadedFrom
 import it.sephiroth.android.app.appunti.ext.getMimeTypeFromFilePart
 import it.sephiroth.android.app.appunti.ext.sha1
-import okhttp3.internal.cache.DiskLruCache
-import okhttp3.internal.io.FileSystem
-import okio.Buffer
 import timber.log.Timber
-import java.io.File
 import java.io.IOException
 
 
@@ -41,18 +36,16 @@ object PicassoUtils {
         }
     }
 
-    class PDFRequestHandler(
-        private val context: Context,
-        private val pdfiumCore: PdfiumCore,
-        private val cache: DiskLruCache
-    ) : RequestHandler() {
+    class PDFRequestHandler(private val context: Context) : RequestHandler() {
+        private val pdfiumCore: PdfiumCore = PdfiumCore(context)
+        private val cache: DiskLruImageCache = DiskLruImageCache.get(context)
 
-        companion object {
-            const val PAGE_NUMBER = 0
+        init {
+            Timber.i("PDFRequestHandler()")
         }
 
         override fun canHandleRequest(data: Request): Boolean {
-            return data.uri.getMimeTypeFromFilePart()?.startsWith("application/pdf", true) == true
+            return data.uri.getMimeTypeFromFilePart()?.startsWith(MIME_TYPE, true) == true
         }
 
         override fun load(request: Request, networkPolicy: Int): Result? {
@@ -61,32 +54,12 @@ object PicassoUtils {
             val cacheKey =
                 "${request.uri.toString().sha1().toLowerCase()}-${request.targetWidth}-${request.targetHeight}"
 
-            Timber.v("cacheKey=$cacheKey")
-
-
             if (NetworkPolicy.shouldReadFromDiskCache(networkPolicy)) {
-                cache.get(cacheKey)?.use { cacheResult ->
-                    cacheResult.getSource(0)?.use { source ->
-                        Buffer().use { buffer ->
-                            do {
-                                val read = source.read(buffer, 8192)
-                            } while (read > -1)
-
-                            Timber.v("buffer size: ${cacheResult.getLength(0)}, ${buffer.size()}")
-
-                            val bmp = BitmapFactory.decodeStream(buffer.inputStream())
-                            bmp?.let { bmp ->
-                                Timber.v("bmp: ${bmp.width}, ${bmp.height}")
-                                return RequestHandler.Result(bmp, LoadedFrom.DISK)
-                            }
-                        }
-                    }
+                cache.get(cacheKey)?.let { bmp ->
+                    return RequestHandler.Result(bmp, LoadedFrom.DISK)
                 }
             }
 
-
-            val loadedFrom = LoadedFrom.NETWORK
-//
 
             val fd = context.contentResolver.openFileDescriptor(request.uri, "r")
             val pdfDocument = pdfiumCore.newDocument(fd)
@@ -111,31 +84,20 @@ object PicassoUtils {
 
                 bmp?.let {
                     if (NetworkPolicy.shouldWriteToDiskCache(networkPolicy)) {
-                        Timber.v("saving to cache...")
-
-                        val editor = cache.edit(cacheKey)
-                        editor?.apply {
-
-                            editor.newSink(0).apply {
-                                Buffer().use { buffer ->
-                                    bmp.compress(Bitmap.CompressFormat.JPEG, 75, buffer.outputStream())
-                                    this.write(buffer, buffer.size())
-                                    this.flush()
-                                }
-
-                                Timber.v("flushed sink")
-                            }
-
-                            this.commit()
-                            Timber.v("committing editor")
-                        }
+                        cache.put(cacheKey, bmp)
                     }
                 }
 
-                return RequestHandler.Result(bmp, loadedFrom)
+                return RequestHandler.Result(bmp, LoadedFrom.NETWORK)
+
             } finally {
                 pdfiumCore.closeDocument(pdfDocument)
             }
+        }
+
+        companion object {
+            private const val PAGE_NUMBER = 0
+            private const val MIME_TYPE = "application/pdf"
         }
 
     }
@@ -157,22 +119,9 @@ object PicassoUtils {
                     Picasso.Builder(context.applicationContext)
                         .downloader(downloader)
                         .addRequestHandler(VideoRequestHandler())
-                        .addRequestHandler(
-                            PDFRequestHandler(
-                                context,
-                                PdfiumCore(context),
-                                DiskLruCache.create(
-                                    FileSystem.SYSTEM,
-                                    File(context.cacheDir, "picasso-cache"),
-                                    2,
-                                    1,
-                                    Int.MAX_VALUE.toLong()
-                                )
-                            )
-                        )
+                        .addRequestHandler(PDFRequestHandler(context))
                         .loggingEnabled(true)
                         .indicatorsEnabled(true)
-//                        .memoryCache(LruCache(context))
                         .build()
 
                 Picasso.setSingletonInstance(created)

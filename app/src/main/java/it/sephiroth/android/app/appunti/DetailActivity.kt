@@ -473,20 +473,32 @@ class DetailActivity : AppuntiActivity() {
 //                }
 
                 view.attachmentImage.setOnClickListener {
-                    attachment.createViewIntent(this).also {
-                        startActivity(it)
+                    try {
+                        attachment.createViewIntent(this).also {
+                            startActivity(it)
+                        }
+                    } catch (e: IllegalArgumentException) {
+                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
                 }
 
                 view.attachmentViewButton.setOnClickListener {
-                    attachment.createViewIntent(this).also {
-                        startActivity(it)
+                    try {
+                        attachment.createViewIntent(this).also {
+                            startActivity(it)
+                        }
+                    } catch (e: IllegalArgumentException) {
+                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
                 }
 
                 view.attachmentShareButton.setOnClickListener {
-                    attachment.createShareIntent(this).also {
-                        startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
+                    try {
+                        attachment.createShareIntent(this).also {
+                            startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
+                        }
+                    } catch (e: IllegalArgumentException) {
+                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
                 }
 
