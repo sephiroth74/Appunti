@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/button_material_background_ripple"
         android:drawablePadding="8dp"
-        android:drawableStart="@drawable/sharp_add_box_24"
+        android:drawableStart="@drawable/sharp_add_24"
         android:gravity="center"
         android:padding="8dp"
         android:text="@string/add_new_note"

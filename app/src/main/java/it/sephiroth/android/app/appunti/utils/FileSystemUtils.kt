@@ -80,6 +80,13 @@ object FileSystemUtils {
     }
 
     /**
+     * Removes illegal characters from a file name
+     */
+    fun normalizeFileName(name: String): String {
+        return name.replace(Regex("[^a-zA-Z0-9\\.\\-]"), "_")
+    }
+
+    /**
      * Given a base directory and a filename it will return the next
      * available file for the directory
      */

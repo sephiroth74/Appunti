@@ -26,15 +26,18 @@ fun Attachment.getFile(context: Context): File {
 }
 
 fun Attachment.getFileUri(context: Context): Uri? {
+    val file = getFile(context)
+    Timber.v("file: $file")
     return FileProvider.getUriForFile(
         context.applicationContext,
         context.applicationContext.packageName + ".fileprovider",
-        getFile(context)
+        file
     )
 }
 
 fun Attachment.createShareIntent(context: Context): Intent {
     val finalUri = getFileUri(context)
+    Timber.i("finalUri: ${finalUri.toString()}")
     return Intent(Intent.ACTION_SEND).apply {
         putExtra(android.content.Intent.EXTRA_SUBJECT, attachmentTitle)
         putExtra(android.content.Intent.EXTRA_STREAM, finalUri)

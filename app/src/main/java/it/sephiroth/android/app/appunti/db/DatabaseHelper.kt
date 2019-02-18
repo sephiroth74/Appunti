@@ -172,11 +172,12 @@ object DatabaseHelper {
 
         val displayName: String = uri.getDisplayName(context) ?: UUID.randomUUID().toString()
         val mimeType = uri.getMimeType(context)
+        
         Timber.v("displayName: $displayName, mimeType: $mimeType")
 
         val filesDir = FileSystemUtils.getPrivateFilesDir(context)
         val attachmentsDir = FileSystemUtils.getAttachmentFilesDir(context, entry)
-        val dstFile = FileSystemUtils.getNextFile(attachmentsDir, displayName)
+        val dstFile = FileSystemUtils.getNextFile(attachmentsDir, FileSystemUtils.normalizeFileName(displayName))
         val relativePath = filesDir.toURI().relativize(dstFile.toURI())
 
         Timber.v("filesDir=${filesDir.absolutePath}")

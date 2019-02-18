@@ -46,6 +46,7 @@ object PicassoUtils {
         }
 
         override fun canHandleRequest(data: Request): Boolean {
+            Timber.i("canHandleRequest(uri=${data.uri}, scheme=${data.uri.scheme})")
             return data.uri.getMimeTypeFromFilePart()?.startsWith(MIME_TYPE, true) == true
         }
 
@@ -60,7 +61,6 @@ object PicassoUtils {
                     return RequestHandler.Result(bmp, LoadedFrom.DISK)
                 }
             }
-
 
             val fd = context.contentResolver.openFileDescriptor(request.uri, "r")
             val pdfDocument = pdfiumCore.newDocument(fd)
