@@ -15,13 +15,14 @@ import com.squareup.picasso.Picasso
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
+import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.PicassoUtils
 import timber.log.Timber
 import java.io.File
 
 
 fun Attachment.getFile(context: Context): File {
-    return File(DatabaseHelper.getFilesDir(context), attachmentPath)
+    return File(FileSystemUtils.getPrivateFilesDir(context), attachmentPath)
 }
 
 fun Attachment.getFileUri(context: Context): Uri? {

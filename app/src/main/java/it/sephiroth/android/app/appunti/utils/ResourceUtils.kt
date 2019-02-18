@@ -8,7 +8,7 @@ import it.sephiroth.android.app.appunti.ext.resolveAttribute
 
 
 object ResourceUtils {
-    var categoryColors: IntArray? = null
+    private var categoryColors: IntArray? = null
 
     fun getCategoryColors(context: Context): IntArray {
         if (null == categoryColors) {

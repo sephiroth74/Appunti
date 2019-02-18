@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools"
-          package="it.sephiroth.android.app.appunti">
+<manifest
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        package="it.sephiroth.android.app.appunti">
 
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <uses-feature
+            android:name="android.hardware.camera"
+            android:required="true"/>
 
     <!--<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />-->
     <!--<uses-feature android:name="android.hardware.location.gps" />-->
@@ -32,14 +37,17 @@
         </provider>
 
         <!-- reminders receiver -->
-        <receiver android:name=".AlarmReceiver" android:process=":background"/>
+        <receiver
+                android:name=".AlarmReceiver"
+                android:process=":background"/>
 
-        <!-- device reboot receiver -->
-        <receiver android:name=".BootReceiver" android:process=":background">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-        </receiver>
+        <!-- device reboot receiver --><receiver
+            android:name=".BootReceiver"
+            android:process=":background">
+        <intent-filter>
+            <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        </intent-filter>
+    </receiver>
 
         <activity
                 android:name=".DetailActivity"

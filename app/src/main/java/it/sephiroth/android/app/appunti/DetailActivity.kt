@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.text.method.LinkMovementMethod
 import android.text.style.StyleSpan
 import android.view.*
@@ -34,6 +35,7 @@ import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.models.DetailViewModel
+import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
@@ -41,6 +43,8 @@ import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
+import java.io.File
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 
@@ -138,6 +142,24 @@ class DetailActivity : AppuntiActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        Timber.i("onActivityResult(requestCode=$requestCode, resultCode=$resultCode, data=$data)")
+
+        if (resultCode == RESULT_OK) {
+            when (requestCode) {
+                CATEGORY_PICK_REQUEST_CODE -> {
+
+                }
+
+                OPEN_FILE_REQUEST_CODE -> {
+
+                }
+
+                IMAGE_CAPTURE_REQUEST_CODE -> {
+
+                }
+            }
+        }
+
         if (requestCode == CATEGORY_PICK_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 data?.let { data ->
@@ -147,7 +169,7 @@ class DetailActivity : AppuntiActivity() {
                     }
                 }
             }
-        } else if (requestCode == READ_REQUEST_CODE && resultCode == RESULT_OK) {
+        } else if (requestCode == OPEN_FILE_REQUEST_CODE && resultCode == RESULT_OK) {
 
             data?.data?.also { uri ->
 
@@ -297,29 +319,52 @@ class DetailActivity : AppuntiActivity() {
                     closeBottomSheet()
                 }
 
-                R.id.menu_action_image -> {
-                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                        addCategory(Intent.CATEGORY_OPENABLE)
-                        type = "image/*"
-                    }
-                    startActivityForResult(intent, READ_REQUEST_CODE)
-                }
-
-                R.id.menu_action_file -> {
-                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                        addCategory(Intent.CATEGORY_OPENABLE)
-                        type = "*/*"
-                    }
-
-                    startActivityForResult(intent, READ_REQUEST_CODE)
-                }
-
-                R.id.menu_action_camera -> {
-
-                }
+                R.id.menu_action_image -> dispatchOpenImageIntent()
+                R.id.menu_action_file -> dispatchOpenFileIntent()
+                R.id.menu_action_camera -> dispatchTakePictureIntent()
 
             }
             true
+        }
+    }
+
+    // External Intents
+
+    private fun dispatchOpenFileIntent() {
+        Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+        }.also {
+            startActivityForResult(it, OPEN_FILE_REQUEST_CODE)
+        }
+    }
+
+    private fun dispatchOpenImageIntent() {
+        Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+        }.also {
+            startActivityForResult(it, OPEN_FILE_REQUEST_CODE)
+        }
+    }
+
+    private fun dispatchTakePictureIntent() {
+        Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
+            takePictureIntent.resolveActivity(packageManager)?.also {
+                val photoFile: File? = try {
+                    FileSystemUtils.createImageFile(this, model.entry.value!!)
+                } catch (ex: IOException) {
+                    ex.printStackTrace()
+                    null
+                }
+
+                photoFile?.also { file ->
+                    Timber.v("photoFile = ${file.absolutePath}")
+                    val photoURI = FileSystemUtils.getFileUri(this, file)
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+                    startActivityForResult(takePictureIntent, IMAGE_CAPTURE_REQUEST_CODE)
+                }
+            }
         }
     }
 
@@ -758,7 +803,9 @@ class DetailActivity : AppuntiActivity() {
 
         const val CATEGORY_PICK_REQUEST_CODE = 1
 
-        const val READ_REQUEST_CODE = 2
+        const val OPEN_FILE_REQUEST_CODE = 2
+
+        const val IMAGE_CAPTURE_REQUEST_CODE = 3
     }
 
     object EntryDiff {

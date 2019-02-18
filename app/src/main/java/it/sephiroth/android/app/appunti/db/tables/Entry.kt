@@ -225,37 +225,6 @@ class Entry() : BaseRXModel() {
             return time.format(DateTimeFormatter.ofLocalizedDateTime(format))
         }
 
-        fun getNextFile(context: Context, entry: Entry, baseDir: File, fileName: String): File {
-            Timber.i("getNextFile($fileName)")
-
-            val index = fileName.lastIndexOf('.')
-
-            Timber.v("index=$index, fileName.length=${fileName.length}")
-
-            val name: String
-            val extension: String
-
-            if (index > -1) {
-                name = fileName.substring(0, index)
-                extension = fileName.substring(index)
-            } else {
-                name = fileName
-                extension = ""
-            }
-            Timber.v("name: $name, extension: $extension")
-
-            var curFile = File(baseDir, fileName)
-
-            if (curFile.exists()) {
-                var i = 0
-                do {
-                    i++
-                    curFile = File(baseDir, "$name-$i$extension")
-                } while (curFile.exists())
-            }
-
-            return curFile
-        }
     }
 
     enum class EntryType {

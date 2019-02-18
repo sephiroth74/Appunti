@@ -7,44 +7,18 @@ import com.dbflow5.query.*
 import com.dbflow5.structure.delete
 import com.dbflow5.structure.load
 import com.dbflow5.structure.save
-import com.dbflow5.structure.update
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.*
 import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import org.apache.commons.io.FileUtils
 import org.threeten.bp.Instant
 import timber.log.Timber
 import java.io.File
-import java.lang.Exception
 import java.util.*
 
 object DatabaseHelper {
-
-    // FILE -----
-
-
-    /**
-     * Database related files base directory
-     */
-    fun getFilesDir(context: Context): File {
-        return File(context.filesDir, "private")
-    }
-
-    private fun getEntriesFilesDir(context: Context): File {
-        return File(getFilesDir(context), "entry")
-    }
-
-    private fun getEntryFilesDir(context: Context, entry: Entry): File {
-        if (entry.isNew()) throw IllegalArgumentException("Entry must be saved first!")
-        return File(getEntriesFilesDir(context), "${entry.entryID}")
-    }
-
-    fun getAttachmentFilesDir(context: Context, entry: Entry): File {
-        return File(getEntryFilesDir(context, entry), "attachments")
-    }
-
-    // ----------
 
     fun getCategories(): Single<MutableList<Category>> {
         return rxSingle(Schedulers.io()) {
@@ -199,11 +173,13 @@ object DatabaseHelper {
         val mimeType = uri.getMimeType(context)
         Timber.v("displayName: $displayName, mimeType: $mimeType")
 
-        val baseDir = DatabaseHelper.getAttachmentFilesDir(context, entry)
-        val dstFile = Entry.getNextFile(context, entry, baseDir, displayName)
-        val relativePath = DatabaseHelper.getFilesDir(context).toURI().relativize(dstFile.toURI())
+        val filesDir = FileSystemUtils.getPrivateFilesDir(context)
+        val attachmentsDir = FileSystemUtils.getAttachmentFilesDir(context, entry)
+        val dstFile = FileSystemUtils.getNextFile(attachmentsDir, displayName)
+        val relativePath = filesDir.toURI().relativize(dstFile.toURI())
 
-        Timber.v("baseDir=${baseDir.absolutePath}")
+        Timber.v("filesDir=${filesDir.absolutePath}")
+        Timber.v("attachmentsDir=${attachmentsDir.absolutePath}")
         Timber.v("dstFile=$dstFile")
         Timber.v("relative=$relativePath")
 
