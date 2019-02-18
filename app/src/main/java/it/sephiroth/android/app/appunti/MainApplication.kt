@@ -15,6 +15,7 @@ import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.ioThread
+import it.sephiroth.android.app.appunti.utils.ShortcutUtils
 import timber.log.Timber
 
 
@@ -37,6 +38,8 @@ class MainApplication : Application() {
                         .modelNotifier(DirectModelNotifier.get())
                         .build())
                 .build())
+
+        ShortcutUtils.getInstance(this).updateShortcuts()
 
 
         ioThread {

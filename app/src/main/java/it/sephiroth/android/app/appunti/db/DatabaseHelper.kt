@@ -172,7 +172,7 @@ object DatabaseHelper {
 
         val displayName: String = uri.getDisplayName(context) ?: UUID.randomUUID().toString()
         val mimeType = uri.getMimeType(context)
-        
+
         Timber.v("displayName: $displayName, mimeType: $mimeType")
 
         val filesDir = FileSystemUtils.getPrivateFilesDir(context)

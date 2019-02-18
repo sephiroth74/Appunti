@@ -1,0 +1,24 @@
+<vector
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="24dp"
+        android:height="24dp"
+        android:tint="?attr/colorControlNormal"
+        android:viewportHeight="24.0"
+        android:viewportWidth="24.0">
+
+    <path
+            android:fillColor="@color/shortcut_background_color"
+            android:pathData="M 12, 12 m -12, 0 a 12,12 0 1,0 24,0 a 12,12 0 1,0 -24,0
+    "/>
+
+    <group
+            android:scaleX="0.75"
+            android:scaleY="0.75"
+            android:pivotY="12"
+            android:pivotX="12">
+
+        <path
+                android:fillColor="@android:color/black"
+                android:pathData="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+    </group>
+</vector>

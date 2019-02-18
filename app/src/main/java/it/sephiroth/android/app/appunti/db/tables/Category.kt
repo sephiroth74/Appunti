@@ -1,11 +1,13 @@
 package it.sephiroth.android.app.appunti.db.tables
 
+import android.content.Context
 import com.dbflow5.annotation.Column
 import com.dbflow5.annotation.PrimaryKey
 import com.dbflow5.annotation.Table
 import com.dbflow5.reactivestreams.structure.BaseRXModel
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.CategoryTypeConverter
+import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import timber.log.Timber
 
 @Table(database = AppDatabase::class)
@@ -57,6 +59,10 @@ class Category() : BaseRXModel() {
         result = 31 * result + categoryColorIndex
         result = 31 * result + categoryType.hashCode()
         return result
+    }
+
+    fun getColor(context: Context): Int {
+        return ResourceUtils.getCategoryColors(context)[categoryColorIndex]
     }
 
     enum class CategoryType {

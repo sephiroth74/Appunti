@@ -21,7 +21,6 @@ import org.threeten.bp.ZoneId
 import org.threeten.bp.format.DateTimeFormatter
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
-import java.io.File
 
 @Table(
     database = AppDatabase::class, indexGroups = [

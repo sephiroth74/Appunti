@@ -23,6 +23,8 @@
            tools:override="true">@color/material_grey_50
     </color>
 
+    <color name="shortcut_background_color">@color/material_grey_300</color>
+
     <!-- colors for categories -->
 
     <integer-array name="category_colors_light">
