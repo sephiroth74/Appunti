@@ -61,6 +61,9 @@ class DetailActivity : AppuntiActivity() {
     private var shouldRemoveAlarm: Boolean = false
     private var isNewDocument: Boolean = false
 
+    // temporary file used for pictures taken with camera
+    private var mCurrentPhotoPath: File? = null
+
     override fun onBackPressed() {
         super.onBackPressed()
     }
@@ -98,7 +101,7 @@ class DetailActivity : AppuntiActivity() {
         closeBottomSheet()
 
         // UI elements listeners
-        entryCategory.setOnClickListener { pickCategory() }
+        entryCategory.setOnClickListener { dispatchPickCategoryIntent() }
         entryTitle.doOnTextChanged { s, start, count, after -> onEntryTitleChanged(s, start, count, after) }
         entryText.doOnTextChanged { s, start, count, after -> onEntryTextChanged(s, start, count, after) }
         entryText.movementMethod = LinkMovementMethod.getInstance()
@@ -147,39 +150,28 @@ class DetailActivity : AppuntiActivity() {
         if (resultCode == RESULT_OK) {
             when (requestCode) {
                 CATEGORY_PICK_REQUEST_CODE -> {
-
+                    data?.let { data ->
+                        val categoryID = data.getIntExtra("categoryID", -1)
+                        DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
+                            model.setEntryCategory(category)
+                        }
+                    }
                 }
 
                 OPEN_FILE_REQUEST_CODE -> {
-
+                    data?.data?.also { uri ->
+                        model.entry.value?.let { entry ->
+                            onAddAttachment(uri, entry)
+                        }
+                    }
                 }
 
                 IMAGE_CAPTURE_REQUEST_CODE -> {
-
+                    onImageCaptured(mCurrentPhotoPath)
+                    mCurrentPhotoPath = null
                 }
             }
         }
-
-        if (requestCode == CATEGORY_PICK_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                data?.let { data ->
-                    val categoryID = data.getIntExtra("categoryID", -1)
-                    DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
-                        model.setEntryCategory(category)
-                    }
-                }
-            }
-        } else if (requestCode == OPEN_FILE_REQUEST_CODE && resultCode == RESULT_OK) {
-
-            data?.data?.also { uri ->
-
-                model.entry.value?.let { entry ->
-                    onAddAttachment(uri, entry)
-                }
-            }
-        }
-
-
         super.onActivityResult(requestCode, resultCode, data)
     }
 
@@ -304,31 +296,47 @@ class DetailActivity : AppuntiActivity() {
     private fun setupNavigationView() {
         navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.menu_action_category -> {
-                    pickCategory()
-                    closeBottomSheet()
-                }
+                R.id.menu_action_category -> dispatchPickCategoryIntent()
 
-                R.id.menu_action_delete -> {
-                    onToggleDelete()
-                    closeBottomSheet()
-                }
+                R.id.menu_action_delete -> onToggleDelete()
 
-                R.id.menu_action_share -> {
-                    onShareEntry()
-                    closeBottomSheet()
-                }
+                R.id.menu_action_share -> dispatchShareEntryIntent()
 
                 R.id.menu_action_image -> dispatchOpenImageIntent()
-                R.id.menu_action_file -> dispatchOpenFileIntent()
-                R.id.menu_action_camera -> dispatchTakePictureIntent()
 
+                R.id.menu_action_file -> dispatchOpenFileIntent()
+
+                R.id.menu_action_camera -> dispatchTakePictureIntent()
             }
+            closeBottomSheet()
             true
         }
     }
 
     // External Intents
+
+    private fun dispatchPickCategoryIntent() {
+        model.entry.value?.let { entry ->
+            Intent(this, CategoriesEditActivity::class.java).apply {
+                action = Intent.ACTION_PICK
+                putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, entry.category?.categoryID ?: -1)
+            }.also {
+                startActivityForResult(it, CATEGORY_PICK_REQUEST_CODE, null)
+            }
+        }
+    }
+
+    private fun dispatchShareEntryIntent() {
+        model.entry.value?.let { entry ->
+            Intent(android.content.Intent.ACTION_SEND).apply {
+                type = FileSystemUtils.TEXT_MIME_TYPE
+                putExtra(android.content.Intent.EXTRA_SUBJECT, entry.entryTitle)
+                putExtra(android.content.Intent.EXTRA_TEXT, entry.entryText)
+            }.also {
+                startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
+            }
+        }
+    }
 
     private fun dispatchOpenFileIntent() {
         Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -360,12 +368,41 @@ class DetailActivity : AppuntiActivity() {
 
                 photoFile?.also { file ->
                     Timber.v("photoFile = ${file.absolutePath}")
+                    mCurrentPhotoPath = file
                     val photoURI = FileSystemUtils.getFileUri(this, file)
                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
                     startActivityForResult(takePictureIntent, IMAGE_CAPTURE_REQUEST_CODE)
                 }
             }
         }
+    }
+
+    /**
+     * Result from [IMAGE_CAPTURE_REQUEST_CODE]
+     */
+    private fun onImageCaptured(dstFile: File?) {
+        Timber.i("onImageCaptured(${dstFile?.absolutePath})")
+
+        dstFile?.let { dstFile ->
+            model.entry.value?.let { entry ->
+
+                DatabaseHelper.addAttachment(
+                    this,
+                    Entry(entry),
+                    dstFile,
+                    FileSystemUtils.JPEG_MIME_TYPE
+                ) { success, throwable ->
+                    doOnMainThread {
+                        throwable?.let {
+                            showConfirmation(it.localizedMessage)
+                        } ?: run {
+                            showConfirmation("File added")
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
     // BOTTOM SHEET BEHAVIORS
@@ -420,13 +457,6 @@ class DetailActivity : AppuntiActivity() {
 
     private fun isBottomSheetClosed(): Boolean {
         return bottomSheetBehavior.state == BottomSheetBehavior.STATE_HIDDEN
-    }
-
-    private fun pickCategory() {
-        val intent = Intent(this, CategoriesEditActivity::class.java)
-        intent.action = Intent.ACTION_PICK
-        intent.putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, model.entry.value?.category?.categoryID ?: -1)
-        startActivityForResult(intent, CATEGORY_PICK_REQUEST_CODE, null)
     }
 
     private fun onEntryChanged(entry: Entry) {
@@ -670,16 +700,6 @@ class DetailActivity : AppuntiActivity() {
                     }
                 }
             }
-        }
-    }
-
-    private fun onShareEntry() {
-        model.entry.value?.let { entry ->
-            val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
-            sharingIntent.type = "text/plain"
-            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, entry.entryTitle)
-            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, entry.entryText)
-            startActivity(Intent.createChooser(sharingIntent, resources.getString(R.string.share)))
         }
     }
 

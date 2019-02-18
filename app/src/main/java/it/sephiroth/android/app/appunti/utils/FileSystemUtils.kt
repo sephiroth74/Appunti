@@ -3,11 +3,8 @@ package it.sephiroth.android.app.appunti.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
-import android.os.Environment
 import androidx.core.content.FileProvider
-import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.getFile
 import timber.log.Timber
 import java.io.File
 import java.text.SimpleDateFormat
@@ -18,6 +15,9 @@ object FileSystemUtils {
     const val PRIVATE_DIR = "private"
     const val ENTRIES_DIR = "entry"
     const val ATTACHMENTS_DIR = "attachments"
+
+    const val JPEG_MIME_TYPE = "image/jpeg"
+    const val TEXT_MIME_TYPE = "text/plain"
 
     /**
      * Internal base directory where database related files

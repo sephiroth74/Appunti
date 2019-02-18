@@ -2,6 +2,7 @@ package it.sephiroth.android.app.appunti.db
 
 import android.content.Context
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import com.dbflow5.config.FlowManager
 import com.dbflow5.query.*
 import com.dbflow5.structure.delete
@@ -199,6 +200,58 @@ object DatabaseHelper {
                     entry.load()?.touch()?.save()
                 }
                     .success { _, result -> callback?.invoke(true, null) }
+                    .error { _, throwable -> callback?.invoke(false, throwable) }
+                    .build()
+                    .execute()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                callback?.invoke(false, e)
+            }
+        }
+    }
+
+    fun addAttachment(
+        context: Context,
+        entry: Entry,
+        dstFile: File,
+        dstFileMimeType: String?,
+        callback: ((Boolean, Throwable?) -> (Unit))? = null
+    ) {
+        Timber.i("addAttachment($entry, ${dstFile.absolutePath})")
+
+        val displayName: String = dstFile.name
+        val mimeType =
+            dstFileMimeType ?: MimeTypeMap.getSingleton().getMimeTypeFromExtension(dstFile.extension.toLowerCase())
+
+        Timber.v("displayName: $displayName, mimeType: $mimeType")
+
+        val dstUri = FileSystemUtils.getFileUri(context, dstFile)
+        val filesDir = FileSystemUtils.getPrivateFilesDir(context)
+        val attachmentsDir = FileSystemUtils.getAttachmentFilesDir(context, entry)
+        val relativePath = filesDir.toURI().relativize(dstFile.toURI())
+
+        Timber.v("relative path is absolute: ${relativePath.isAbsolute}")
+
+        if (relativePath.isAbsolute) throw java.lang.IllegalArgumentException("Not an internal file")
+
+        Timber.v("filesDir=${filesDir.absolutePath}")
+        Timber.v("attachmentsDir=${attachmentsDir.absolutePath}")
+        Timber.v("dstFile=$dstFile")
+        Timber.v("relative=$relativePath")
+
+        doOnScheduler(Schedulers.io()) {
+            try {
+                FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
+                    val attachment = Attachment()
+                    attachment.attachmentEntryID = entry.entryID
+                    attachment.attachmentPath = relativePath.toString()
+                    attachment.attachmentTitle = displayName
+                    attachment.attachmentMime = mimeType
+                    attachment.attachmentOriginalPath = dstUri.toString()
+                    attachment.save()
+                    entry.load()?.touch()?.save()
+                }
+                    .success { _, _ -> callback?.invoke(true, null) }
                     .error { _, throwable -> callback?.invoke(false, throwable) }
                     .build()
                     .execute()
