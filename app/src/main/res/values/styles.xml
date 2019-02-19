@@ -138,4 +138,31 @@
         <item name="android:fontFamily">@font/nunito_semibold</item>
     </style>
 
+    <style name="Widget.Appunti.Text.EntryContent">
+        <item name="android:autoLink">all</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:gravity">top|start</item>
+        <item name="android:linksClickable">true</item>
+        <item name="android:textAppearance">?attr/textAppearanceBody1</item>
+        <item name="android:inputType">textImeMultiLine|textMultiLine</item>
+        <item name="android:textSize">@dimen/text_size_large_material</item>
+        <item name="fontFamily">@font/nunito_light</item>
+        <item name="android:fontFamily">@font/nunito_light</item>
+    </style>
+
+    <style name="Widget.Appunti.Text.EntryTitle">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:gravity">top|start</item>
+        <item name="android:lines">1</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:maxEms">255</item>
+        <item name="android:imeOptions">actionNext</item>
+        <item name="android:inputType">textCapWords</item>
+        <item name="android:textAppearance">?attr/textAppearanceHeadline5</item>
+        <item name="android:scrollHorizontally">true</item>
+        <item name="android:textSize">@dimen/text_size_entry_title</item>
+        <item name="fontFamily">@font/nunito_bold</item>
+        <item name="android:fontFamily">@font/nunito_bold</item>
+    </style>
+
 </resources>

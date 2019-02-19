@@ -104,6 +104,12 @@ class DetailActivity : AppuntiActivity() {
         entryCategory.setOnClickListener { dispatchPickCategoryIntent() }
         entryTitle.doOnTextChanged { s, start, count, after -> onEntryTitleChanged(s, start, count, after) }
         entryText.doOnTextChanged { s, start, count, after -> onEntryTextChanged(s, start, count, after) }
+
+        entryText.setOnEditorActionListener { view, actionId, event ->
+            Timber.i("actionId: $actionId, event: $event")
+            false
+        }
+
         entryText.movementMethod = LinkMovementMethod.getInstance()
 
         // handle the current listener
@@ -217,6 +223,9 @@ class DetailActivity : AppuntiActivity() {
     @Suppress("UNUSED_PARAMETER")
     private fun onEntryTextChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
         if (currentFocus == entryText) {
+
+            Timber.i("onEntryTextChanged(start=$start, count=$count, after=$after)")
+
             changeTimer = rxTimer(changeTimer, 5, TimeUnit.SECONDS) {
                 currentEntry?.entryText = text?.toString() ?: ""
                 currentEntry?.touch()

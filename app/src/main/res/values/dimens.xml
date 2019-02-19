@@ -57,6 +57,7 @@
     <dimen name="text_size_large_material">16sp</dimen>
     <dimen name="text_size_medium_material">14sp</dimen>
     <dimen name="text_size_small_material">12sp</dimen>
+    <dimen name="text_size_entry_title">22sp</dimen>
 
     <!-- height of the shadow on top of the bottomappbar -->
     <dimen name="appunti_bottomappbar_shadow_height">3dp</dimen>

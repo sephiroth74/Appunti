@@ -34,20 +34,22 @@ fun <T> rxSingle(thread: Scheduler, func: () -> T): Single<T> {
     }.subscribeOn(thread)
 }
 
-fun rxTimer(oldTimer: Disposable?,
-            time: Long,
-            unit: TimeUnit = TimeUnit.MILLISECONDS,
-            thread: Scheduler = Schedulers.computation(),
-            observerThread: Scheduler = AndroidSchedulers.mainThread(), action: ((Long) -> Unit)): Disposable? {
+fun rxTimer(
+    oldTimer: Disposable?,
+    time: Long,
+    unit: TimeUnit = TimeUnit.MILLISECONDS,
+    thread: Scheduler = Schedulers.computation(),
+    observerThread: Scheduler = AndroidSchedulers.mainThread(), action: ((Long) -> Unit)
+): Disposable? {
 
     oldTimer?.dispose()
 
     return Observable
-            .timer(time, unit, thread)
-            .observeOn(observerThread)
-            .subscribe {
-                action.invoke(it)
-            }
+        .timer(time, unit, thread)
+        .observeOn(observerThread)
+        .subscribe {
+            action.invoke(it)
+        }
 }
 
 fun ioThread(func: () -> Unit) {
@@ -120,23 +122,29 @@ fun View.hideSoftInput() {
 }
 
 inline fun TextView.doOnTextChanged(crossinline action: (s: CharSequence?, start: Int, count: Int, after: Int) -> Unit) =
-        addTextChangedListener(onTextChanged = action)
+    addTextChangedListener(onTextChanged = action)
+
+inline fun TextView.doOnBeforeTextChanged(crossinline action: (s: CharSequence?, start: Int, count: Int, after: Int) -> Unit) =
+    addTextChangedListener(onBeforeTextChanged = action)
 
 
 inline fun TextView.addTextChangedListener(
-        crossinline onBeforeTextChanged: (s: CharSequence?, start: Int, count: Int, after: Int) -> Unit = { _, _, _, _ -> },
-        crossinline onTextChanged: (s: CharSequence?, start: Int, before: Int, count: Int) -> Unit = { _, _, _, _ -> },
-        crossinline onAfterTextChanged: (s: Editable?) -> Unit = { }
+    crossinline onBeforeTextChanged: (s: CharSequence?, start: Int, count: Int, after: Int) -> Unit = { _, _, _, _ -> },
+    crossinline onTextChanged: (s: CharSequence?, start: Int, before: Int, count: Int) -> Unit = { _, _, _, _ -> },
+    crossinline onAfterTextChanged: (s: Editable?) -> Unit = { }
 ): TextWatcher {
     val listener = object : TextWatcher {
 
-        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = onTextChanged(s, start, before, count)
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) =
+            onTextChanged(s, start, before, count)
+
         override fun afterTextChanged(s: Editable?) = onAfterTextChanged(s)
         override fun beforeTextChanged(
-                s: CharSequence?,
-                start: Int,
-                count: Int,
-                after: Int) = onBeforeTextChanged(s, start, count, after)
+            s: CharSequence?,
+            start: Int,
+            count: Int,
+            after: Int
+        ) = onBeforeTextChanged(s, start, count, after)
 
 
     }

@@ -35,7 +35,7 @@ import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import it.sephiroth.android.app.appunti.widget.GridLayoutColorChooser
 import kotlinx.android.synthetic.main.activity_categories.*
 import kotlinx.android.synthetic.main.appunti_category_color_button_checkable.view.*
-import kotlinx.android.synthetic.main.category_item_list_content.view.*
+import kotlinx.android.synthetic.main.appunti_category_content_item.view.*
 import timber.log.Timber
 
 
@@ -300,7 +300,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(context).inflate(R.layout.category_item_list_content, parent, false)
+            val view = LayoutInflater.from(context).inflate(R.layout.appunti_category_content_item, parent, false)
             view.colorButton.allowUserToggle = false
 
             val holder = ViewHolder(view)

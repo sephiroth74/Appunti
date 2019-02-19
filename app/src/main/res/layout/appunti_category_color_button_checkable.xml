@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <it.sephiroth.android.app.appunti.widget.CheckableAppcompatImageButton
-    android:id="@+id/colorButton"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="24dp"
-    android:layout_height="24dp"
-    android:background="@drawable/material_background_ripple"
-    tools:showIn="@layout/category_item_list_content" />
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        style="@style/Widget.Appunti.BottomBar.ImageButton"
+        android:id="@+id/colorButton"
+        tools:showIn="@layout/appunti_category_content_item"/>

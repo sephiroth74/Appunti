@@ -68,44 +68,36 @@
                 android:layout_marginEnd="20dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginTop="8dp"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-            <androidx.appcompat.widget.AppCompatEditText
+            <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/entryTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="0"
-                    android:background="@null"
-                    android:gravity="top|start"
                     android:hint="@string/title"
-                    android:lines="1"
-                    android:textAppearance="?attr/textAppearanceHeadline5"
+                    android:nextFocusDown="@id/entryText"
                     android:transitionName="itemTitle"
-                    app:fontFamily="@font/nunito_bold"
-                    android:textSize="22sp"/>
+                    android:visibility="visible"
+                    style="@style/Widget.Appunti.Text.EntryTitle"/>
 
-            <androidx.appcompat.widget.AppCompatEditText
+            <com.google.android.material.textfield.TextInputEditText
+                    android:nextFocusUp="@id/entryTitle"
+                    android:minLines="3"
+                    android:cursorVisible="true"
                     android:id="@+id/entryText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:layout_weight="0"
-                    android:autoLink="all"
-                    android:background="@null"
-                    android:gravity="top|start"
-                    android:hint="@string/content_here"
-                    android:linksClickable="true"
-                    android:textAppearance="?attr/textAppearanceBody1"
                     android:transitionName="itemText"
-                    tools:ignore="HardcodedText"
-                    app:fontFamily="@font/nunito_light"
-                    android:textSize="16sp"/>
+                    style="@style/Widget.Appunti.Text.EntryContent"/>
 
             <LinearLayout
                     android:layout_marginTop="8dp"
@@ -118,18 +110,12 @@
             </LinearLayout>
 
             <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/Widget.Appunti.Text.CategoryChip"
                     android:id="@+id/entryCategory"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:layout_weight="0"
-                    android:background="@drawable/category_chip_background"
-                    android:clickable="true"
-                    android:padding="8dp"
-                    android:textAppearance="?attr/textAppearanceListItemSmall"
-                    android:textSize="@dimen/text_size_caption_material"
                     android:transitionName="itemCategory"
-                    app:fontFamily="@font/nunito_light"/>
+                    />
 
         </LinearLayout>
 

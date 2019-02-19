@@ -42,7 +42,7 @@
             android:fitsSystemWindows="true"
             app:itemIconTint="?attr/colorControlNormal">
 
-        <include layout="@layout/navigation_content"/>
+        <include layout="@layout/appunti_main_drawer_navigation_content"/>
 
     </it.sephiroth.android.app.appunti.widget.RecyclerNavigationView>
 

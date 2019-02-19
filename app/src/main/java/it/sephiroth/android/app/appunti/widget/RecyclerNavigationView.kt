@@ -2,8 +2,6 @@ package it.sephiroth.android.app.appunti.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -18,7 +16,7 @@ import com.google.android.material.navigation.NavigationView
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.models.MainViewModel
-import kotlinx.android.synthetic.main.navigation_content.view.*
+import kotlinx.android.synthetic.main.appunti_main_drawer_navigation_content.view.*
 import timber.log.Timber
 
 class RecyclerNavigationView @JvmOverloads constructor(
@@ -130,7 +128,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
         private var layoutInflater: LayoutInflater = LayoutInflater.from(context)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NavigationItemsAdapter.ViewHolderBase {
-            val view = layoutInflater.inflate(R.layout.navigation_item_checkable, parent, false)
+            val view = layoutInflater.inflate(R.layout.appunti_main_drawer_navigation_item_checkable, parent, false)
             return ViewHolderBase(view)
         }
 
