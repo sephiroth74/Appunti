@@ -76,7 +76,9 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
+
             <com.google.android.material.textfield.TextInputEditText
+                    style="@style/Widget.Appunti.Text.EntryTitle"
                     android:id="@+id/entryTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -84,10 +86,10 @@
                     android:hint="@string/title"
                     android:nextFocusDown="@id/entryText"
                     android:transitionName="itemTitle"
-                    android:visibility="visible"
-                    style="@style/Widget.Appunti.Text.EntryTitle"/>
+                    />
 
             <com.google.android.material.textfield.TextInputEditText
+                    style="@style/Widget.Appunti.Text.EntryContent"
                     android:nextFocusUp="@id/entryTitle"
                     android:minLines="3"
                     android:cursorVisible="true"
@@ -98,7 +100,7 @@
                     android:hint="@string/content_here"
                     android:layout_weight="0"
                     android:transitionName="itemText"
-                    style="@style/Widget.Appunti.Text.EntryContent"/>
+                    />
 
             <LinearLayout
                     android:layout_marginTop="8dp"

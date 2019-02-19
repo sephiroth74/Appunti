@@ -10,8 +10,8 @@ import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.text.method.LinkMovementMethod
 import android.text.style.StyleSpan
+import android.text.util.Linkify
 import android.view.*
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -20,6 +20,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
 import androidx.core.text.set
 import androidx.core.text.toSpannable
+import androidx.core.text.util.LinkifyCompat
 import androidx.core.transition.doOnEnd
 import androidx.core.transition.doOnStart
 import androidx.core.view.children
@@ -65,10 +66,6 @@ class DetailActivity : AppuntiActivity() {
     // temporary file used for pictures taken with camera
     private var mCurrentPhotoPath: File? = null
 
-    override fun onBackPressed() {
-        super.onBackPressed()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
 //        window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS)
 //        window.sharedElementEnterTransition = AutoTransition()
@@ -77,7 +74,6 @@ class DetailActivity : AppuntiActivity() {
 //        window.sharedElementReturnTransition = AutoTransition()
 
         window.sharedElementReturnTransition = null
-//        window.returnTransition = android.transition.Slide(Gravity.LEFT)
 
         super.onCreate(savedInstanceState)
 
@@ -106,14 +102,12 @@ class DetailActivity : AppuntiActivity() {
         entryTitle.doOnTextChanged { s, start, count, after -> onEntryTitleChanged(s, start, count, after) }
         entryText.doOnTextChanged { s, start, count, after -> onEntryTextChanged(s, start, count, after) }
 
-        entryText.setOnEditorActionListener { view, actionId, event ->
-            Timber.i("actionId: $actionId, event: $event")
-            false
-        }
-
-        entryText.movementMethod = LinkMovementMethod.getInstance()
+        // TODO(Create a custom movement method)
+        // entryText.movementMethod = LinkMovementMethod.getInstance()
+        entryText.doOnAfterTextChanged { e -> LinkifyCompat.addLinks(e, Linkify.ALL) }
 
         // handle the current listener
+        // TODO(manage intent when activity is destroyed and recreated)
         onNewIntent(intent)
     }
 
@@ -229,10 +223,13 @@ class DetailActivity : AppuntiActivity() {
 
             Timber.i("onEntryTextChanged(start=$start, count=$count, after=$after)")
 
-            changeTimer = rxTimer(changeTimer, 5, TimeUnit.SECONDS) {
-                currentEntry?.entryText = text?.toString() ?: ""
-                currentEntry?.touch()
-                currentEntry?.save()
+            // TODO(usare timer differenti per titolo e testo)
+            changeTimer = rxTimer(changeTimer, 2, TimeUnit.SECONDS) {
+                currentEntry?.apply {
+                    entryText = text?.toString() ?: ""
+                    touch()
+                    save()
+                }
             }
         }
     }
@@ -243,9 +240,11 @@ class DetailActivity : AppuntiActivity() {
     private fun onEntryTitleChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
         if (currentFocus == entryTitle) {
             changeTimer = rxTimer(changeTimer, 2, TimeUnit.SECONDS) {
-                currentEntry?.entryTitle = text?.toString() ?: ""
-                currentEntry?.touch()
-                currentEntry?.save()
+                currentEntry?.apply {
+                    entryTitle = text?.toString() ?: ""
+                    touch()
+                    save()
+                }
             }
         }
     }
@@ -484,8 +483,6 @@ class DetailActivity : AppuntiActivity() {
         if (diff.attachmentsChanged) {
             updateAttachmentsList(entry.attachments)
         }
-
-//        lastModified.text = entry.entryModifiedDate.getLocalizedDateTimeStamp(FormatStyle.MEDIUM)
 
         invalidateOptionsMenu()
 

@@ -121,7 +121,6 @@ class Entry() : BaseRXModel() {
     }
 
     override fun hashCode(): Int {
-        Timber.w("Entry.hashCode")
         var result = entryID.hashCode()
         result = 31 * result + entryTitle.hashCode()
         result = 31 * result + entryText.hashCode()

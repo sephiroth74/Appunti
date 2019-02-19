@@ -124,6 +124,9 @@ fun View.hideSoftInput() {
 inline fun TextView.doOnTextChanged(crossinline action: (s: CharSequence?, start: Int, count: Int, after: Int) -> Unit) =
     addTextChangedListener(onTextChanged = action)
 
+inline fun TextView.doOnAfterTextChanged(crossinline action: (e: Editable) -> Unit) =
+    addTextChangedListener(onAfterTextChanged = action)
+
 inline fun TextView.doOnBeforeTextChanged(crossinline action: (s: CharSequence?, start: Int, count: Int, after: Int) -> Unit) =
     addTextChangedListener(onBeforeTextChanged = action)
 
@@ -131,14 +134,14 @@ inline fun TextView.doOnBeforeTextChanged(crossinline action: (s: CharSequence?,
 inline fun TextView.addTextChangedListener(
     crossinline onBeforeTextChanged: (s: CharSequence?, start: Int, count: Int, after: Int) -> Unit = { _, _, _, _ -> },
     crossinline onTextChanged: (s: CharSequence?, start: Int, before: Int, count: Int) -> Unit = { _, _, _, _ -> },
-    crossinline onAfterTextChanged: (s: Editable?) -> Unit = { }
+    crossinline onAfterTextChanged: (s: Editable) -> Unit = { }
 ): TextWatcher {
     val listener = object : TextWatcher {
 
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) =
             onTextChanged(s, start, before, count)
 
-        override fun afterTextChanged(s: Editable?) = onAfterTextChanged(s)
+        override fun afterTextChanged(s: Editable) = onAfterTextChanged(s)
         override fun beforeTextChanged(
             s: CharSequence?,
             start: Int,
