@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.AppCompatCheckedTextView android:id="@android:id/text1"
-    style="@style/Theme.Appunti.NavigationItem"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawableStart="@drawable/outline_label_24" />
+<androidx.appcompat.widget.AppCompatCheckedTextView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@android:id/text1"
+        style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
+        android:drawableStart="@drawable/outline_label_24"/>

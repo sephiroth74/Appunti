@@ -5,22 +5,8 @@
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
-    <style name="Theme.Appunti.NavigationItem"
-           parent="">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">?attr/listPreferredItemHeightSmall</item>
-        <item name="android:background">@drawable/navigation_item_selectable_background</item>
-        <item name="android:drawablePadding">8dp</item>
-        <item name="android:gravity">center_vertical</item>
-        <item name="android:paddingEnd">?android:attr/listPreferredItemPaddingEnd</item>
-        <item name="android:paddingLeft">16dp</item>
-        <item name="android:paddingStart">?android:attr/listPreferredItemPaddingStart</item>
-        <item name="android:textAppearance">?android:attr/textAppearanceListItemSmall</item>
-    </style>
-
     <style name="Theme.Appunti.TextAppearance"
            parent=""/>
-
 
     <style name="Widget.Appunti"
            parent="">
@@ -118,6 +104,38 @@
         <item name="android:paddingLeft">0dp</item>
         <item name="android:paddingRight">0dp</item>
         <item name="android:paddingTop">2dp</item>
+    </style>
+
+    <style name="Widget.Appunti.Text.Drawer.Title"
+           parent="Widget.Appunti.Text">
+        <item name="android:lines">1</item>
+        <item name="android:textAppearance">?attr/textAppearanceHeadline6</item>
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+        <item name="fontFamily">@font/nunito_bold</item>
+        <item name="android:fontFamily">@font/nunito_bold</item>
+    </style>
+
+    <style name="Widget.Appunti.Text.Drawer.Label"
+           parent="Widget.Appunti.Text">
+        <item name="android:textAppearance">?attr/textAppearanceBody1</item>
+        <item name="android:textColor">?attr/colorControlNormal</item>
+        <item name="fontFamily">@font/nunito_semibold</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
+    </style>
+
+    <style name="Theme.Appunti.Text.Drawer.NavigationItem"
+           parent="Widget.Appunti.Text">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">?attr/listPreferredItemHeightSmall</item>
+        <item name="android:background">@drawable/navigation_item_selectable_background</item>
+        <item name="android:drawablePadding">8dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingEnd">?android:attr/listPreferredItemPaddingEnd</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingStart">?android:attr/listPreferredItemPaddingStart</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceListItemSmall</item>
+        <item name="fontFamily">@font/nunito_semibold</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
     </style>
 
 </resources>

@@ -2,15 +2,13 @@ package it.sephiroth.android.app.appunti.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Rect
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowInsets
 import android.widget.CheckedTextView
-import androidx.core.view.WindowInsetsCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -24,7 +22,7 @@ import kotlinx.android.synthetic.main.navigation_content.view.*
 import timber.log.Timber
 
 class RecyclerNavigationView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : NavigationView(context, attrs, defStyleAttr), LifecycleOwner {
 
     private val mLifecycleRegistry = LifecycleRegistry(this)
@@ -122,8 +120,8 @@ class RecyclerNavigationView @JvmOverloads constructor(
         mLifecycleRegistry.markState(Lifecycle.State.RESUMED)
     }
 
-    inner class NavigationItemsAdapter(context: Context, var values: List<Category>)
-        : RecyclerView.Adapter<NavigationItemsAdapter.ViewHolderBase>() {
+    inner class NavigationItemsAdapter(context: Context, var values: List<Category>) :
+        RecyclerView.Adapter<NavigationItemsAdapter.ViewHolderBase>() {
 
         init {
             setHasStableIds(true)

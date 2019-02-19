@@ -57,7 +57,7 @@ class ShortcutHelper private constructor(private val context: Context) {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { result, error ->
                 result?.let { result ->
-                    for (category in result) {
+                    for (category in result.take(4)) {
                         val shortcut = ShortcutInfo.Builder(context, "category${category.categoryID}")
                             .setShortLabel(category.categoryTitle ?: "noname")
                             .setIcon(
