@@ -21,6 +21,7 @@ import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
 import it.sephiroth.android.app.appunti.ext.rxSingle
+import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
 import kotlinx.android.synthetic.main.appunti_search_view_toolbar_arrow_only.*
@@ -70,15 +71,18 @@ class SearchableActivity : AppuntiActivity() {
     private fun searchEntries(text: String): Single<MutableList<Entry>> {
         return rxSingle(Schedulers.io()) {
             select().from(Entry::class)
-                    .where(Entry_Table.entryText.like("%$text%"))
-                    .or(Entry_Table.entryTitle.like("%$text%"))
-                    .orderByAll(listOf(
-                            OrderBy(Entry_Table.entryArchived.nameAlias, false),
-                            OrderBy(Entry_Table.entryDeleted.nameAlias, false),
-                            OrderBy(Entry_Table.entryPinned.nameAlias, false),
-                            OrderBy(Entry_Table.entryPriority.nameAlias, false),
-                            OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)))
-                    .list
+                .where(Entry_Table.entryText.like("%$text%"))
+                .or(Entry_Table.entryTitle.like("%$text%"))
+                .orderByAll(
+                    listOf(
+                        OrderBy(Entry_Table.entryArchived.nameAlias, false),
+                        OrderBy(Entry_Table.entryDeleted.nameAlias, false),
+                        OrderBy(Entry_Table.entryPinned.nameAlias, false),
+                        OrderBy(Entry_Table.entryPriority.nameAlias, false),
+                        OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
+                    )
+                )
+                .list
         }
     }
 
@@ -88,19 +92,19 @@ class SearchableActivity : AppuntiActivity() {
 
         timer?.dispose()
         timer = Observable.timer(300, TimeUnit.MILLISECONDS, Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
 
-                    if (text.isNotNullOrEmpty()) {
-                        searchEntries(text!!)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe { result, error ->
-                                    adapter.update(result, text.toLowerCase(Locale.getDefault()))
-                                }
-                    } else {
-                        adapter.update(arrayListOf())
-                    }
+                if (text.isNotNullOrEmpty()) {
+                    searchEntries(text!!)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe { result, error ->
+                            adapter.update(result, text.toLowerCase(Locale.getDefault()))
+                        }
+                } else {
+                    adapter.update(arrayListOf())
                 }
+            }
     }
 
 
@@ -123,13 +127,12 @@ class SearchableActivity : AppuntiActivity() {
     }
 
     private fun startDetailActivity(holder: ItemEntryListAdapter.EntryViewHolder, entry: Entry) {
-        val intent = Intent(this, DetailActivity::class.java)
-        intent.action = Intent.ACTION_EDIT
-        intent.putExtra("entryID", entry.entryID)
+        val intent = IntentUtils.createViewEntryIntent(this, entry.entryID)
 
         val elementsArray = arrayListOf<Pair<View, String>>(
-                Pair(holder.titleTextView, "itemTitle"),
-                Pair(holder.contentTextView, "itemText"))
+            Pair(holder.titleTextView, "itemTitle"),
+            Pair(holder.contentTextView, "itemText")
+        )
 
         if (entry.category != null) {
             elementsArray.add(Pair(holder.categoryTextView, "itemCategory"))

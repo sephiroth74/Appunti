@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout android:id="@+id/constraintLayout"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".SearchableActivity">
-
-    <FrameLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="8dp"
-        android:layout_marginTop="8dp">
+        tools:context=".SearchableActivity">
 
-        <include layout="@layout/appunti_entries_recycler_view" />
+    <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp">
+
+        <include layout="@layout/appunti_entries_recycler_view"/>
     </FrameLayout>
 
-    <include layout="@layout/appunti_search_view_toolbar_arrow_only" />
+    <include layout="@layout/appunti_search_view_toolbar_arrow_only"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,29 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<androidx.appcompat.widget.Toolbar android:id="@+id/toolbar"
+<androidx.appcompat.widget.Toolbar
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/toolbar"
         android:transitionName="toolbar"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    tools:showIn="@layout/activity_main">
-
-    <com.lapism.searchview.widget.SearchView
-        android:id="@+id/searchView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="12dp"
-        android:layout_marginRight="12dp"
-        android:layout_marginTop="@dimen/appunti_main_search_view_margin_top"
-        android:background="@android:color/transparent"
-        app:layout_behavior="@string/search_behavior"
-        app:search_hint="@string/search_view_hint_text"
-        app:search_logo="arrow"
-        app:search_mic_icon="@drawable/baseline_mic_24"
-        app:search_shadow_color="@android:color/transparent"
-        app:search_shape="rounded"
-        app:search_theme="?attr/search_theme"
-        tools:ignore="PrivateResource" />
+        tools:showIn="@layout/activity_main">
+
+    <com.lapism.searchview.widget.SearchView
+            android:id="@+id/searchView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="12dp"
+            android:layout_marginTop="@dimen/appunti_main_search_view_margin_top"
+            android:background="@android:color/transparent"
+            app:layout_behavior="@string/search_behavior"
+            app:search_hint="@string/search_view_hint_text"
+            app:search_logo="arrow"
+            app:search_mic_icon="@drawable/baseline_mic_24"
+            app:search_shadow_color="@android:color/transparent"
+            app:search_shape="rounded"
+            app:search_theme="?attr/search_theme"
+            tools:ignore="PrivateResource"/>
 </androidx.appcompat.widget.Toolbar>

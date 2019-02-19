@@ -32,6 +32,7 @@ import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.ext.getColor
 import it.sephiroth.android.app.appunti.ext.getColorStateList
 import it.sephiroth.android.app.appunti.models.MainViewModel
+import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
@@ -141,9 +142,6 @@ class MainActivity : AppuntiActivity() {
                         }
                     } ?: run {
                         startDetailActivity(holder, entryItem)
-//                        val newEntry = Entry(entryItem)
-//                        newEntry.entryPinned = if (newEntry.entryPinned == 1) 0 else 1
-//                        newEntry.save()
                     }
                 }
             }
@@ -193,7 +191,7 @@ class MainActivity : AppuntiActivity() {
                     closeDrawerIfOpened()
                 }
                 R.id.settings -> {
-                    startActivity(Intent(this, PreferencesActivity::class.java))
+                    startActivity(IntentUtils.createPerferencesIntent(this))
                 }
             }
         }
@@ -324,10 +322,8 @@ class MainActivity : AppuntiActivity() {
         textEdit.setOnClickListener {
             Timber.i("onClick!!!")
 
-            val intent = Intent(this, SearchableActivity::class.java)
             val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this, toolbar, "toolbar")
-
-            startActivity(intent, intentOptions.toBundle())
+            startActivity(IntentUtils.createSearchableIntent(this), intentOptions.toBundle())
         }
     }
 
@@ -341,27 +337,18 @@ class MainActivity : AppuntiActivity() {
 
                 if (data?.hasExtra(RecognizerIntent.EXTRA_RESULTS) == true) {
                     val results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-
-                    val intent = Intent(this, SearchableActivity::class.java)
-                    intent.action = Intent.ACTION_SEARCH
-                    intent.putExtra("query", results[0])
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    startActivity(intent)
+                    startActivity(IntentUtils.createSearchableIntent(this, results[0]))
                 }
             }
         }
     }
 
     private fun startDetailActivity() {
-        val intent = Intent(this, DetailActivity::class.java)
-        intent.action = Intent.ACTION_CREATE_DOCUMENT
-        startDetailActivityFromIntent(intent, null)
+        startDetailActivityFromIntent(IntentUtils.createNewEntryIntent(this), null)
     }
 
     private fun startDetailActivity(holder: ItemEntryListAdapter.EntryViewHolder, entry: Entry) {
-        val intent = Intent(this, DetailActivity::class.java)
-        intent.action = Intent.ACTION_EDIT
-        intent.putExtra("entryID", entry.entryID)
+        val intent = IntentUtils.createViewEntryIntent(this, entry.entryID)
 
         val elementsArray = arrayListOf<Pair<View, String>>(
             Pair(holder.titleTextView, "itemTitle"),
@@ -374,7 +361,6 @@ class MainActivity : AppuntiActivity() {
         }
 
         val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this, *(elementsArray.toTypedArray()))
-//        val intentOptions = null
         startDetailActivityFromIntent(intent, intentOptions)
     }
 
@@ -383,9 +369,7 @@ class MainActivity : AppuntiActivity() {
     }
 
     private fun startCategoriesEditActivity(newCategory: Boolean = false) {
-        val intent = Intent(this, CategoriesEditActivity::class.java)
-        if (newCategory) intent.putExtra(CategoriesEditActivity.ASK_NEW_CATEGORY_STARTUP, true)
-        startActivity(intent)
+        startActivity(IntentUtils.createEditCategoriesIntent(this))
     }
 
     private fun closeDrawerIfOpened() {
