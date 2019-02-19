@@ -29,6 +29,11 @@
 
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
         <!--<item name="alertDialogTheme">@style/Theme.MaterialComponents.Light.Dialog.MinWidth</item>-->
+
+
+        <item name="android:fontFamily">@font/nunito_semibold</item>
+        <item name="fontFamily">@font/nunito_semibold</item>
+
     </style>
 
     <style name="Theme.Appunti.Light.Base.NoActionbar">

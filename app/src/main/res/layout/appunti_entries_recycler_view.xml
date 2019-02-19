@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<androidx.recyclerview.widget.RecyclerView android:id="@+id/itemsRecycler"
-    android:name="it.sephiroth.android.app.appunti.ItemListFragment"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginLeft="@dimen/appunti_main_recycler_margins_horizontal"
-    android:layout_marginRight="@dimen/appunti_main_recycler_margins_horizontal"
-    app:layoutManager="it.sephiroth.android.app.appunti.widget.NpaStaggeredGridLayoutManager"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    app:spanCount="@integer/list_items_columns"
-    tools:context=".MainActivity"
-    tools:listitem="@layout/main_item_list_entry"
-    tools:showIn="@layout/activity_main" />
+<androidx.recyclerview.widget.RecyclerView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/itemsRecycler"
+        android:name="it.sephiroth.android.app.appunti.ItemListFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="@dimen/appunti_main_recycler_margins_horizontal"
+        android:layout_marginRight="@dimen/appunti_main_recycler_margins_horizontal"
+        app:layoutManager="it.sephiroth.android.app.appunti.widget.NpaStaggeredGridLayoutManager"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:spanCount="@integer/list_items_columns"
+        tools:context=".MainActivity"
+        tools:listitem="@layout/appunti_recycler_main_entry_item"
+        tools:showIn="@layout/activity_main"/>

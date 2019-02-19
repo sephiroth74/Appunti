@@ -1,10 +1,12 @@
 <resources>
 
-    <style name="Theme.Appunti.BottomSheetDialog" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
+    <style name="Theme.Appunti.BottomSheetDialog"
+           parent="Theme.MaterialComponents.Light.BottomSheetDialog">
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
-    <style name="Theme.Appunti.NavigationItem" parent="">
+    <style name="Theme.Appunti.NavigationItem"
+           parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">?attr/listPreferredItemHeightSmall</item>
         <item name="android:background">@drawable/navigation_item_selectable_background</item>
@@ -16,13 +18,106 @@
         <item name="android:textAppearance">?android:attr/textAppearanceListItemSmall</item>
     </style>
 
-    <style name="Theme.Appunti.TextAppearance" parent="" />
+    <style name="Theme.Appunti.TextAppearance"
+           parent=""/>
 
-    <style name="Theme.Appunti.TextAppearance.NewNote" parent="@android:style/TextAppearance.Material.Medium">
-        <!--<item name="fontFamily">?attr/fontFamilyBold</item>-->
-        <!--<item name="android:fontFamily">?attr/fontFamilyBold</item>-->
-        <item name="android:textSize">16sp</item>
+
+    <style name="Widget.Appunti"
+           parent="">
+
     </style>
 
+    <style name="Widget.Appunti.Text"
+           parent="">
+        <item name="android:fontFamily">@font/nunito</item>
+        <item name="fontFamily">@font/nunito</item>
+    </style>
+
+    <style name="Theme.Appunti.TextAppearance.Medium"
+           parent="@android:style/TextAppearance.Material.Medium">
+        <item name="android:textSize">@dimen/text_size_menu_material</item>
+    </style>
+
+
+    <style name="Widget.Appunti.Text.EntryListItemTitle">
+        <item name="android:fontFamily">font/nunito_bold</item>
+        <item name="fontFamily">font/nunito_bold</item>
+        <item name="android:textAppearance">?attr/textAppearanceListItem</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:transitionName">itemTitle</item>
+        <item name="android:drawablePadding">8dp</item>
+    </style>
+
+    <style name="Widget.Appunti.Text.EntryListItemContent">
+        <item name="android:textAppearance">?attr/textAppearanceListItemSmall</item>
+        <item name="android:textSize">14sp</item>
+        <item name="fontFamily">@font/nunito_light</item>
+        <item name="android:fontFamily">@font/nunito_light</item>
+    </style>
+
+    <style name="Widget.Appunti.Text.CategoryChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/category_chip_background</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceListItemSmall</item>
+        <item name="android:textSize">@dimen/text_size_caption_material</item>
+        <item name="fontFamily">@font/nunito_light</item>
+        <item name="android:fontFamily">@font/nunito_light</item>
+    </style>
+
+    <style name="Widget.Appunti.Text.CategoryChip.NonClickable">
+        <item name="android:background">@drawable/category_chip_background_no_ripple</item>
+        <item name="android:clickable">false</item>
+    </style>
+
+    <style name="Widget.Appunti.CardView.Entry"
+           parent="Widget.MaterialComponents.CardView">
+        <item name="android:foreground">@drawable/appunti_card_selectable_item_background_with_stroke</item>
+        <item name="cardCornerRadius">@dimen/material_cardview_cornerRadius</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardMaxElevation">0dp</item>
+        <item name="android:strokeColor">?attr/colorControlNormal</item>
+        <item name="android:strokeWidth">@dimen/appunti_card_stroke_width</item>
+    </style>
+
+    <style name="Widget.Appunti.Text.SectionLabel">
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:textAppearance">?attr/textAppearanceBody1</item>
+        <item name="android:textColor">?attr/colorControlNormal</item>
+        <item name="fontFamily">@font/nunito_semibold</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
+    </style>
+
+    <style name="Widget.Appunti.TextButton"
+           parent="Widget.Appunti.Text">
+        <item name="android:background">@drawable/button_material_background_ripple</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAppearance">@style/Theme.Appunti.TextAppearance.Medium</item>
+        <item name="fontFamily">@font/nunito_semibold</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
+        <item name="android:padding">8dp</item>
+    </style>
+
+    <style name="Widget.Appunti.BottomBar.TextButton"
+           parent="Widget.Appunti.TextButton">
+        <item name="android:drawablePadding">8dp</item>
+    </style>
+
+    <style name="Widget.Appunti.BottomBar.ImageButton"
+           parent="Widget.Appunti.Text">
+        <item name="android:layout_width">@dimen/appunti_toolbar_icon_size</item>
+        <item name="android:layout_height">@dimen/appunti_toolbar_icon_size</item>
+        <item name="android:background">@drawable/material_background_ripple</item>
+    </style>
+
+    <style name="Widget.Appunti.BottomBar">
+        <item name="android:background">@drawable/appunti_bottomappbar_shadow_top</item>
+        <item name="android:elevation">@dimen/appunti_bottombar_elevation</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:paddingLeft">0dp</item>
+        <item name="android:paddingRight">0dp</item>
+        <item name="android:paddingTop">2dp</item>
+    </style>
 
 </resources>

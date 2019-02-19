@@ -156,11 +156,11 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
             item?.let { category ->
                 holder.textView.text = category.categoryTitle
-                holder.textView.isChecked = model?.group?.getCategory()?.categoryID == category.categoryID
+                holder.textView.isChecked = model?.group?.getCategoryID() == category.categoryID
             } ?: kotlin.run {
                 holder.textView.text = context.getString(R.string.categories_all)
                 holder.textView.isChecked = model?.let {
-                    !it.group.isDeleted() && !it.group.isArchived() && it.group.getCategory() == null
+                    !it.group.isDeleted() && !it.group.isArchived() && it.group.getCategoryID() == null
                 } ?: false
             }
 

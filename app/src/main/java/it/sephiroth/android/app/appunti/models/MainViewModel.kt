@@ -21,10 +21,11 @@ import it.sephiroth.android.app.appunti.ext.currentThread
 import timber.log.Timber
 
 class MainViewModel(application: Application) : AndroidViewModel(application),
-        DirectModelNotifier.OnModelStateChangedListener<BaseRXModel>, OnTableChangedListener {
+    DirectModelNotifier.OnModelStateChangedListener<BaseRXModel>, OnTableChangedListener {
 
     class Group(private val callback: (() -> (Unit))? = null) {
-        private var mCategory: Category? = null
+        //        private var mCategory: Category? = null
+        private var mCategoryID: Int? = null
         private var mArchived: Boolean = false
         private var mDeleted: Boolean = false
 
@@ -32,8 +33,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
             callback?.invoke()
         }
 
-        fun setCategory(category: Category?) {
-            mCategory = category
+        fun setCategoryID(id: Int?) {
+            mCategoryID = id
             mArchived = false
             mDeleted = false
             dispatchValue()
@@ -59,13 +60,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
         fun isArchived() = mArchived
 
-        fun getCategory(): Category? {
-            if (! mDeleted && ! mArchived) return mCategory
+        fun getCategoryID(): Int? {
+            if (!mDeleted && !mArchived) return mCategoryID
             return null
         }
 
         override fun toString(): String {
-            return "Group(deleted=$mDeleted, archived=$mArchived, category=$mCategory)"
+            return "Group(deleted=$mDeleted, archived=$mArchived, category=$mCategoryID)"
         }
 
         fun buildQuery(from: From<Entry>): Transformable<Entry> {
@@ -82,8 +83,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
                     .where(Entry_Table.entryArchived.eq(0))
                     .and(Entry_Table.entryDeleted.eq(0)).also { where ->
 
-                        mCategory?.let { category ->
-                            where.and(Entry_Table.category_categoryID.eq(category.categoryID))
+                        mCategoryID?.let { categoryID ->
+                            where.and(Entry_Table.category_categoryID.eq(categoryID))
                         }
                     }
             }
@@ -93,7 +94,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     private val handler: Handler = Handler()
 
     private val updateEntriesRunnable = Runnable {
-        //        updateEntries(currentCategory)
         updateEntries()
     }
 
@@ -116,25 +116,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
     val categoryChanged: LiveData<Boolean> = MutableLiveData()
 
-
-    fun initialize() {
-        updateEntries()
-    }
-
-//    var currentCategory by Delegates.observable<Category?>(null) { _, _, newValue ->
-//        Timber.i("[${currentThread()}] currentCategory = $newValue")
-//
-//        executeIfMainThread {
-//            (category as MutableLiveData).value = newValue
-//        } ?: run {
-//            (category as MutableLiveData).postValue(newValue)
-//        }
-//
-//        updateEntries(newValue)
-//    }
-
     val displayAsList: LiveData<Boolean> = MutableLiveData<Boolean>()
-    val settingsManager = SettingsManager.getInstance(application)
+
+    private val settingsManager = SettingsManager.getInstance(application)
 
     fun setDisplayAsList(value: Boolean) {
         settingsManager.displayAsList = value
@@ -206,7 +190,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     }
 
     init {
-//        currentCategory = null
         (displayAsList as MutableLiveData).value = settingsManager.displayAsList
         settingsManager.setOnDisplayAsListChanged { value: Boolean -> displayAsList.value = value }
 

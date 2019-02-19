@@ -32,6 +32,12 @@
     <!-- toolbar icons size -->
     <dimen name="appunti_toolbar_icon_size">24dp</dimen>
 
+    <!-- attachment cardview elevation for the detail activity -->
+    <dimen name="appunti_entry_attachment_card_elevation">4dp</dimen>
+
+    <!-- bottombar elevation -->
+    <dimen name="appunti_bottombar_elevation">6dp</dimen>
+
     <dimen name="text_size_display_4_material">71sp</dimen>
     <dimen name="text_size_display_3_material">44sp</dimen>
     <dimen name="text_size_display_2_material">36sp</dimen>

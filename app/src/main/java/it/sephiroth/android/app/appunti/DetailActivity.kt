@@ -535,17 +535,6 @@ class DetailActivity : AppuntiActivity() {
                         }
                     }
 
-                    view.attachmentViewButton.setOnClickListener {
-                        try {
-                            attachment.createViewIntent(this).also {
-                                startActivity(it)
-                            }
-                        } catch (e: Exception) {
-                            // TODO(for ActivityNotFoundException provide a detailed explanation)
-                            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-
                     view.attachmentShareButton.setOnClickListener {
                         try {
                             attachment.createShareIntent(this).also {

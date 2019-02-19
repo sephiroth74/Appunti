@@ -87,7 +87,8 @@
                     android:lines="1"
                     android:textAppearance="?attr/textAppearanceHeadline5"
                     android:transitionName="itemTitle"
-                    app:fontFamily="?attr/fontFamily"/>
+                    app:fontFamily="@font/nunito_bold"
+                    android:textSize="22sp"/>
 
             <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/entryText"
@@ -102,7 +103,9 @@
                     android:linksClickable="true"
                     android:textAppearance="?attr/textAppearanceBody1"
                     android:transitionName="itemText"
-                    tools:ignore="HardcodedText"/>
+                    tools:ignore="HardcodedText"
+                    app:fontFamily="@font/nunito_light"
+                    android:textSize="16sp"/>
 
             <LinearLayout
                     android:layout_marginTop="8dp"
@@ -125,7 +128,8 @@
                     android:padding="8dp"
                     android:textAppearance="?attr/textAppearanceListItemSmall"
                     android:textSize="@dimen/text_size_caption_material"
-                    android:transitionName="itemCategory"/>
+                    android:transitionName="itemCategory"
+                    app:fontFamily="@font/nunito_light"/>
 
         </LinearLayout>
 
@@ -177,52 +181,20 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:padding="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:navigationIcon="@drawable/sharp_arrow_upward_24">
+            app:layout_constraintBottom_toBottomOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageButton
                 android:id="@+id/attachmentPicker"
-                android:layout_width="@dimen/appunti_toolbar_icon_size"
-                android:layout_height="@dimen/appunti_toolbar_icon_size"
-                android:background="@drawable/material_background_ripple"
+                style="@style/Widget.Appunti.BottomBar.ImageButton"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 app:srcCompat="@drawable/sharp_add_24"/>
 
-        <!--<androidx.appcompat.widget.AppCompatImageButton-->
-        <!--android:id="@+id/imagePicker"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:background="@drawable/material_background_ripple"-->
-        <!--android:layout_marginEnd="8dp"-->
-        <!--android:layout_marginStart="8dp"-->
-        <!--app:srcCompat="@drawable/sharp_add_photo_alternate_24"/>-->
-
-        <!--<androidx.appcompat.widget.AppCompatImageButton-->
-        <!--android:id="@+id/documentPicker"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_marginStart="8dp"-->
-        <!--android:background="@drawable/material_background_ripple"-->
-        <!--app:srcCompat="@drawable/sharp_attach_file_24"/>-->
-
-
-        <!--<androidx.appcompat.widget.AppCompatTextView-->
-        <!--android:id="@+id/lastModified"-->
-        <!--android:layout_width="0dp"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_marginStart="16dp"-->
-        <!--android:gravity="center"-->
-        <!--android:layout_weight="1"-->
-        <!--android:textAppearance="?attr/textAppearanceListItemSmall"/>-->
-
         <androidx.appcompat.widget.AppCompatImageButton
                 android:id="@+id/navigationIcon"
-                android:layout_width="@dimen/appunti_toolbar_icon_size"
-                android:layout_height="@dimen/appunti_toolbar_icon_size"
+                style="@style/Widget.Appunti.BottomBar.ImageButton"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
-                android:background="@drawable/material_background_ripple"
                 app:srcCompat="@drawable/sharp_more_vert_24"/>
 
     </it.sephiroth.android.app.appunti.widget.DetailBottomAppBar>

@@ -14,7 +14,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.text.*
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -26,7 +25,7 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
-import kotlinx.android.synthetic.main.main_item_list_entry.view.*
+import kotlinx.android.synthetic.main.appunti_recycler_main_entry_item.view.*
 import org.threeten.bp.Instant
 import timber.log.Timber
 
@@ -108,13 +107,13 @@ class ItemEntryListAdapter(
 
             TYPE_ENTRY -> {
                 view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.main_item_list_entry, parent, false)
+                    .inflate(R.layout.appunti_recycler_main_entry_item, parent, false)
                 EntryViewHolder(view)
             }
 
             else -> {
                 view = LayoutInflater.from(context)
-                    .inflate(R.layout.appunti_main_list_pinned_entry, parent, false)
+                    .inflate(R.layout.appunti_recycler_main_label_entry_item, parent, false)
                 val params = view.layoutParams as StaggeredGridLayoutManager.LayoutParams
                 params.isFullSpan = true
 

@@ -4,6 +4,8 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         style="@style/Widget.MaterialComponents.CardView"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         android:orientation="vertical"
@@ -12,7 +14,7 @@
         android:foreground="@drawable/material_background_ripple"
         app:cardCornerRadius="@dimen/material_cardview_cornerRadius"
         app:contentPadding="0dp"
-        app:cardElevation="0dp"
+        app:cardElevation="@dimen/appunti_entry_attachment_card_elevation"
         app:cardMaxElevation="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -42,21 +44,9 @@
                 android:layout_marginStart="8dp"
                 app:layout_constraintTop_toTopOf="parent"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"/>
-
-        <androidx.appcompat.widget.AppCompatImageView
-                app:srcCompat="@drawable/sharp_visibility_24"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/attachmentViewButton"
-                android:tooltipText="@string/view"
-                android:contentDescription="@string/view"
-                app:layout_constraintEnd_toStartOf="@id/attachmentShareButton"
-                android:background="@drawable/material_background_ripple"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="8dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                tools:targetApi="o"/>
+                android:layout_marginEnd="8dp"
+                app:fontFamily="@font/nunito_semibold"
+                android:textSize="14sp"/>
 
         <androidx.appcompat.widget.AppCompatImageView
                 app:srcCompat="@drawable/appunti_sharp_share_24_selector"

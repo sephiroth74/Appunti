@@ -7,4 +7,16 @@
             <solid android:color="@android:color/black" />
         </shape>
     </item>
+
+    <item>
+        <selector>
+            <item android:state_pressed="true">
+                <color android:color="?attr/colorControlHighlight"/>
+            </item>
+            <item>
+                <color android:color="@color/transparent"/>
+            </item>
+        </selector>
+    </item>
+
 </ripple>

@@ -32,7 +32,6 @@ import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.ext.getColor
 import it.sephiroth.android.app.appunti.ext.getColorStateList
 import it.sephiroth.android.app.appunti.models.MainViewModel
-import it.sephiroth.android.app.appunti.utils.ShortcutUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
@@ -91,11 +90,27 @@ class MainActivity : AppuntiActivity() {
         }
 
         if (bottomAppBar.background is LayerDrawable) {
-            val drawable: Drawable? = (bottomAppBar.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
+            val drawable: Drawable? =
+                (bottomAppBar.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
             drawable?.setTint(theme.getColor(this, android.R.attr.windowBackground))
         }
 
-        model.initialize()
+        // handle current intent
+        if (intent?.action == ACTION_ENTRIES_BY_CATEGORY) {
+            model.group.setCategoryID(intent.getIntExtra(KEY_CATEGORY_ID, 0))
+        } else {
+            model.group.setCategoryID(null)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        Timber.i("onNewIntent($intent)")
+        super.onNewIntent(intent)
+
+        if (intent?.action == ACTION_ENTRIES_BY_CATEGORY) {
+            model.group.setCategoryID(intent.getIntExtra(KEY_CATEGORY_ID, 0))
+        }
+
     }
 
     override fun getToolbar(): Toolbar? = toolbar
@@ -103,7 +118,9 @@ class MainActivity : AppuntiActivity() {
     override fun getContentLayout(): Int = R.layout.activity_main
 
     private fun setupRecyclerView() {
-        adapter = ItemEntryListAdapter(this, arrayListOf()) { holder, position -> tracker?.isSelected(position.toLong()) ?: false }
+        adapter = ItemEntryListAdapter(this, arrayListOf()) { holder, position ->
+            tracker?.isSelected(position.toLong()) ?: false
+        }
 
         layoutManager = itemsRecycler.layoutManager as StaggeredGridLayoutManager
 
@@ -159,7 +176,7 @@ class MainActivity : AppuntiActivity() {
         navigationView.model = model
         navigationView.setNavigationCategorySelectedListener { category ->
             Timber.i("setNavigationCategorySelectedListener($category)")
-            model.group.setCategory(category)
+            model.group.setCategoryID(category?.categoryID)
             closeDrawerIfOpened()
         }
 
@@ -226,9 +243,11 @@ class MainActivity : AppuntiActivity() {
                     makeMovementFlags(0, 0)
             }
 
-            override fun onMove(recyclerView: RecyclerView,
-                                viewHolder: RecyclerView.ViewHolder,
-                                target: RecyclerView.ViewHolder): Boolean {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
                 return false
             }
 
@@ -245,13 +264,15 @@ class MainActivity : AppuntiActivity() {
 
 
             @SuppressLint("ClickableViewAccessibility")
-            override fun onChildDraw(c: Canvas,
-                                     recyclerView: RecyclerView,
-                                     viewHolder: RecyclerView.ViewHolder,
-                                     dX: Float,
-                                     dY: Float,
-                                     actionState: Int,
-                                     isCurrentlyActive: Boolean) {
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
 
                 if (actionState == ACTION_STATE_SWIPE) {
                     setTouchListener(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
@@ -261,14 +282,16 @@ class MainActivity : AppuntiActivity() {
             }
 
             @SuppressLint("ClickableViewAccessibility")
-            private fun setTouchListener(c: Canvas,
-                                         recyclerView: RecyclerView,
-                                         viewHolder: RecyclerView.ViewHolder,
-                                         dX: Float, dY: Float,
-                                         actionState: Int, isCurrentlyActive: Boolean) {
+            private fun setTouchListener(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float, dY: Float,
+                actionState: Int, isCurrentlyActive: Boolean
+            ) {
 
                 recyclerView.setOnTouchListener { v, event ->
-                    swipeBack = ! isSwipeEnabled(viewHolder)
+                    swipeBack = !isSwipeEnabled(viewHolder)
                     Timber.v("isSwipeEnabled=$swipeBack")
 //                    swipeBack = event.action == MotionEvent.ACTION_CANCEL || event.action == MotionEvent.ACTION_UP
                     false
@@ -341,9 +364,10 @@ class MainActivity : AppuntiActivity() {
         intent.putExtra("entryID", entry.entryID)
 
         val elementsArray = arrayListOf<Pair<View, String>>(
-                Pair(holder.titleTextView, "itemTitle"),
-                Pair(holder.contentTextView, "itemText"),
-                Pair(bottomAppBar, "bottomAppBar"))
+            Pair(holder.titleTextView, "itemTitle"),
+            Pair(holder.contentTextView, "itemText"),
+            Pair(bottomAppBar, "bottomAppBar")
+        )
 
         if (entry.category != null) {
             elementsArray.add(Pair(holder.categoryTextView, "itemCategory"))
@@ -370,33 +394,37 @@ class MainActivity : AppuntiActivity() {
     }
 
     private fun toggleDrawer() {
-        if (! drawerLayout.isDrawerOpen(navigationView)) drawerLayout.openDrawer(navigationView)
+        if (!drawerLayout.isDrawerOpen(navigationView)) drawerLayout.openDrawer(navigationView)
         else drawerLayout.closeDrawer(navigationView)
     }
 
     private fun onEntriesDeleted(values: List<Entry>) {
         val mSnackbar =
-                Snackbar
-                    .make(constraintLayout,
-                            resources.getQuantityString(R.plurals.entries_deleted_title, values.size, values.size),
-                            Snackbar
-                                .LENGTH_LONG)
-                    .setAction(getString(R.string.undo_uppercase)) { restoreDeletedEntries(values) }
-                    .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
+            Snackbar
+                .make(
+                    constraintLayout,
+                    resources.getQuantityString(R.plurals.entries_deleted_title, values.size, values.size),
+                    Snackbar
+                        .LENGTH_LONG
+                )
+                .setAction(getString(R.string.undo_uppercase)) { restoreDeletedEntries(values) }
+                .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
 
         mSnackbar.show()
     }
 
     private fun onEntriesArchived(values: List<Entry>) {
         val mSnackbar =
-                Snackbar
-                    .make(constraintLayout,
-                            resources.getQuantityString(R.plurals.entries_archived_title, values.size, values.size),
-                            Snackbar.LENGTH_LONG)
-                    .setAction(getString(R.string.undo_uppercase)) {
-                        DatabaseHelper.setEntriesArchived(values, false).subscribe()
-                    }
-                    .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
+            Snackbar
+                .make(
+                    constraintLayout,
+                    resources.getQuantityString(R.plurals.entries_archived_title, values.size, values.size),
+                    Snackbar.LENGTH_LONG
+                )
+                .setAction(getString(R.string.undo_uppercase)) {
+                    DatabaseHelper.setEntriesArchived(values, false).subscribe()
+                }
+                .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
         mSnackbar.show()
     }
 
@@ -467,7 +495,7 @@ class MainActivity : AppuntiActivity() {
         }
 
         fun select(position: Long, value: T) {
-            if (! isSelected(position)) {
+            if (!isSelected(position)) {
                 selectedPositions[position] = value
                 notifyPosition(position)
                 Timber.v("select(position=$position), isSelected=${isSelected(position)}")
@@ -500,11 +528,11 @@ class MainActivity : AppuntiActivity() {
                 } else {
                     actionMode.title = "${selection.size} Selected"
 
-                    val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > - 1
-                    val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > - 1
+                    val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > -1
+                    val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > -1
 
                     Timber.v("pinned=$pinned, unpinned=$unpinned")
-                    updatePinnedMenuItem(actionMode.menu, pinned && (pinned && ! unpinned))
+                    updatePinnedMenuItem(actionMode.menu, pinned && (pinned && !unpinned))
                 }
             }
         }
@@ -523,9 +551,12 @@ class MainActivity : AppuntiActivity() {
             when (item.itemId) {
                 R.id.menu_action_pin -> {
                     tracker?.let { tracker ->
-                        val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > - 1
-                        val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > - 1
-                        DatabaseHelper.setEntriesPinned(tracker.selection.values.toList(), ! (pinned && (pinned && ! unpinned)))
+                        val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > -1
+                        val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > -1
+                        DatabaseHelper.setEntriesPinned(
+                            tracker.selection.values.toList(),
+                            !(pinned && (pinned && !unpinned))
+                        )
                             .subscribe()
                     }
                 }
@@ -580,6 +611,12 @@ class MainActivity : AppuntiActivity() {
         }
     }
 
+    companion object {
+        // show entries by category
+        const val ACTION_ENTRIES_BY_CATEGORY = "view_entries_by_category"
+
+        const val KEY_CATEGORY_ID = "categoryID"
+    }
 
 }
 
