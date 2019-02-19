@@ -98,7 +98,7 @@ class MainActivity : AppuntiActivity() {
 
         // handle current intent
         if (intent?.action == ACTION_ENTRIES_BY_CATEGORY) {
-            model.group.setCategoryID(intent.getIntExtra(KEY_CATEGORY_ID, 0))
+            model.group.setCategoryID(intent.getLongExtra(KEY_CATEGORY_ID, 0))
         } else {
             model.group.setCategoryID(null)
         }
@@ -109,7 +109,7 @@ class MainActivity : AppuntiActivity() {
         super.onNewIntent(intent)
 
         if (intent?.action == ACTION_ENTRIES_BY_CATEGORY) {
-            model.group.setCategoryID(intent.getIntExtra(KEY_CATEGORY_ID, 0))
+            model.group.setCategoryID(intent.getLongExtra(KEY_CATEGORY_ID, 0))
         }
 
     }
@@ -369,7 +369,11 @@ class MainActivity : AppuntiActivity() {
     }
 
     private fun startCategoriesEditActivity(newCategory: Boolean = false) {
-        startActivity(IntentUtils.createEditCategoriesIntent(this))
+        val intent = IntentUtils.Categories.Builder(this).apply {
+            if (newCategory) createNewCategory()
+        }.build()
+
+        startActivity(intent)
     }
 
     private fun closeDrawerIfOpened() {

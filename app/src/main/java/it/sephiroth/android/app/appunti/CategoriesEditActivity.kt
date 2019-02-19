@@ -31,6 +31,7 @@ import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.graphics.CategoryColorDrawable
 import it.sephiroth.android.app.appunti.utils.CategoriesDiffCallback
+import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import it.sephiroth.android.app.appunti.widget.GridLayoutColorChooser
 import kotlinx.android.synthetic.main.activity_categories.*
@@ -45,7 +46,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     private var mSnackbar: Snackbar? = null
 
     private var mPickCategory = false
-    private var mPickCategorySelection: Int = -1
+    private var mPickCategorySelection: Long = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +58,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
 
         intent?.let { intent ->
             mPickCategory = intent.action == Intent.ACTION_PICK
-            mPickCategorySelection = intent.getIntExtra(SELECTED_CATEGORY_ID, -1)
+            mPickCategorySelection = intent.getLongExtra(IntentUtils.KEY_CATEGORY_ID, -1)
         }
 
         mAdapter = CategoriesAdapter(this, mPickCategory, mPickCategorySelection, mutableListOf())
@@ -73,7 +74,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
         newCategory.setOnClickListener { presentNewCategoryDialog() }
         updateCategories()
 
-        if (intent != null && intent.action != Intent.ACTION_PICK && intent.hasExtra(ASK_NEW_CATEGORY_STARTUP)) {
+        if (intent?.action == IntentUtils.ACTION_ASK_NEW_CATEGORY_STARTUP) {
             doOnMainThread {
                 presentNewCategoryDialog()
             }
@@ -86,7 +87,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     private fun setResultAndFinish(category: Category) {
         Timber.i("categorySelectedListener = $category")
         val newIntent = Intent(intent)
-        newIntent.putExtra("categoryID", category.categoryID)
+        newIntent.putExtra(IntentUtils.KEY_CATEGORY_ID, category.categoryID)
         setResult(Activity.RESULT_OK, newIntent)
         finish()
     }
@@ -258,15 +259,10 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
         return super.onOptionsItemSelected(item)
     }
 
-    companion object {
-        const val ASK_NEW_CATEGORY_STARTUP = "ask_for_new_category_startup"
-        const val SELECTED_CATEGORY_ID = "selected_category_id"
-    }
-
     private inner class CategoriesAdapter(
         var context: CategoriesEditActivity,
         val pickCategory: Boolean,
-        val selectedCategoryID: Int,
+        val selectedCategoryID: Long,
         var values: MutableList<Category>
     ) :
         RecyclerView.Adapter<CategoriesAdapter.ViewHolder>() {

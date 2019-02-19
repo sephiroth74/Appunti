@@ -36,6 +36,7 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
+import it.sephiroth.android.app.appunti.utils.IntentUtils
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
@@ -125,7 +126,7 @@ class DetailActivity : AppuntiActivity() {
         super.onNewIntent(intent)
 
         Timber.i("onNewIntent($intent)")
-        var entryID = 0
+        var entryID = 0L
 
         intent?.let { intent ->
             Timber.v("action=${intent.action}")
@@ -136,18 +137,20 @@ class DetailActivity : AppuntiActivity() {
                 }
 
                 Intent.ACTION_EDIT -> {
-                    entryID = intent.getIntExtra(KEY_ENTRY_ID, 0)
-                    shouldRemoveAlarm = intent.getBooleanExtra(KEY_REMOVE_ALARM, false)
+                    entryID = intent.getLongExtra(IntentUtils.KEY_ENTRY_ID, 0)
+                    shouldRemoveAlarm = intent.getBooleanExtra(IntentUtils.KEY_REMOVE_ALARM, false)
                     isNewDocument = false
                 }
             }
         }
 
         // don't delay the transition if it's a new document
-        if (!isNewDocument) postponeEnterTransition()
-
-        Timber.v("entryID=$entryID")
-        model.entryID = entryID
+        if (!isNewDocument) {
+            postponeEnterTransition()
+            model.entryID = entryID
+        } else {
+            model.createNewEntry()
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -157,7 +160,7 @@ class DetailActivity : AppuntiActivity() {
             when (requestCode) {
                 CATEGORY_PICK_REQUEST_CODE -> {
                     data?.let { data ->
-                        val categoryID = data.getIntExtra("categoryID", -1)
+                        val categoryID = data.getLongExtra(IntentUtils.KEY_CATEGORY_ID, -1)
                         DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
                             model.setEntryCategory(category)
                         }
@@ -326,41 +329,32 @@ class DetailActivity : AppuntiActivity() {
 
     private fun dispatchPickCategoryIntent() {
         model.entry.value?.let { entry ->
-            Intent(this, CategoriesEditActivity::class.java).apply {
-                action = Intent.ACTION_PICK
-                putExtra(CategoriesEditActivity.SELECTED_CATEGORY_ID, entry.category?.categoryID ?: -1)
-            }.also {
-                startActivityForResult(it, CATEGORY_PICK_REQUEST_CODE, null)
-            }
+
+            IntentUtils.Categories
+                .Builder(this)
+                .pickCategory()
+                .selectedCategory(entry.category?.categoryID ?: -1).build().also {
+                    startActivityForResult(it, CATEGORY_PICK_REQUEST_CODE, null)
+                }
         }
     }
 
     private fun dispatchShareEntryIntent() {
         model.entry.value?.let { entry ->
-            Intent(android.content.Intent.ACTION_SEND).apply {
-                type = FileSystemUtils.TEXT_MIME_TYPE
-                putExtra(android.content.Intent.EXTRA_SUBJECT, entry.entryTitle)
-                putExtra(android.content.Intent.EXTRA_TEXT, entry.entryText)
-            }.also {
+            IntentUtils.createShareEntryIntent(this, entry).also {
                 startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
             }
         }
     }
 
     private fun dispatchOpenFileIntent() {
-        Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "*/*"
-        }.also {
+        IntentUtils.createPickDocumentIntent(this).also {
             startActivityForResult(it, OPEN_FILE_REQUEST_CODE)
         }
     }
 
     private fun dispatchOpenImageIntent() {
-        Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "image/*"
-        }.also {
+        IntentUtils.createPickImageIntent(this).also {
             startActivityForResult(it, OPEN_FILE_REQUEST_CODE)
         }
     }
@@ -414,7 +408,7 @@ class DetailActivity : AppuntiActivity() {
 
     }
 
-    // BOTTOM SHEET BEHAVIORS
+// BOTTOM SHEET BEHAVIORS
 
     private fun setupBottomSheet() {
         bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
@@ -536,7 +530,7 @@ class DetailActivity : AppuntiActivity() {
 
                     view.setOnClickListener {
                         try {
-                            attachment.createViewIntent(this).also {
+                            IntentUtils.createAttachmentViewIntent(this, attachment).also {
                                 startActivity(it)
                             }
                         } catch (e: Exception) {
@@ -546,7 +540,7 @@ class DetailActivity : AppuntiActivity() {
 
                     view.attachmentShareButton.setOnClickListener {
                         try {
-                            attachment.createShareIntent(this).also {
+                            IntentUtils.createAttachmentShareIntent(this, attachment).also {
                                 startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
                             }
                         } catch (e: Exception) {
@@ -816,9 +810,6 @@ class DetailActivity : AppuntiActivity() {
     }
 
     companion object {
-        const val KEY_ENTRY_ID = "entryID"
-        const val KEY_REMOVE_ALARM = "removeAlarm"
-
         const val CATEGORY_PICK_REQUEST_CODE = 1
 
         const val OPEN_FILE_REQUEST_CODE = 2

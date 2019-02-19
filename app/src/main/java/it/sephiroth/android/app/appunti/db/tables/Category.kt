@@ -27,7 +27,7 @@ class Category() : BaseRXModel() {
     }
 
     @PrimaryKey(autoincrement = true)
-    var categoryID: Int = 0
+    var categoryID: Long = 0
 
     @Column(defaultValue = "")
     var categoryTitle: String? = null
@@ -54,7 +54,7 @@ class Category() : BaseRXModel() {
     }
 
     override fun hashCode(): Int {
-        var result = categoryID
+        var result = categoryID.hashCode()
         result = 31 * result + (categoryTitle?.hashCode() ?: 0)
         result = 31 * result + categoryColorIndex
         result = 31 * result + categoryType.hashCode()

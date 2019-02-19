@@ -23,10 +23,10 @@ class Attachment() : BaseRXModel() {
     }
 
     @PrimaryKey(autoincrement = true)
-    var attachmentID: Int = 0
+    var attachmentID: Long = 0
 
     @ForeignKey(tableClass = Entry::class, onDelete = ForeignKeyAction.CASCADE)
-    var attachmentEntryID: Int? = 0
+    var attachmentEntryID: Long? = 0
 
     var attachmentTitle: String? = null
 

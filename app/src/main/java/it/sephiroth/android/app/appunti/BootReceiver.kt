@@ -26,8 +26,10 @@ class BootReceiver : BroadcastReceiver() {
     @SuppressLint("CheckResult")
     private fun scheduleAlarms(context: Context) {
         DatabaseHelper.getEntries {
-            where(Entry_Table.entryAlarmEnabled.eq(true)
-                    .and(Entry_Table.entryAlarm.isNotNull()))
+            where(
+                Entry_Table.entryAlarmEnabled.eq(true)
+                    .and(Entry_Table.entryAlarm.isNotNull())
+            )
         }.subscribe { result, error ->
             error?.let {
                 Timber.e(it)

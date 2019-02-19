@@ -7,6 +7,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.ChangeAction
+import com.dbflow5.structure.insert
+import com.dbflow5.structure.save
 import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
@@ -23,25 +25,33 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
 
     val entry: LiveData<Entry> = MutableLiveData()
 
-    var entryID: Int
+    var entryID: Long?
         @SuppressLint("CheckResult")
         set(value) {
-            DatabaseHelper
-                .getEntryById(value)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { result, error ->
-                    result?.let {
-                        setEntry(it)
-                    } ?: run {
-                        setEntry(Entry())
+            value?.let { value ->
+                DatabaseHelper
+                    .getEntryById(value)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe { result, error ->
+                        error?.printStackTrace()
+                        setEntry(result)
                     }
-                }
+            }
         }
         get() {
-            return entry.value?.entryID ?: 0
+            return entry.value?.entryID
         }
 
-    val entryModelListener = object : DirectModelNotifier.ModelChangedListener<Entry> {
+    fun createNewEntry() {
+        Entry().apply {
+            save().also {
+                Timber.i("Entry saved. $this")
+                setEntry(this)
+            }
+        }
+    }
+
+    private val entryModelListener = object : DirectModelNotifier.ModelChangedListener<Entry> {
         override fun onModelChanged(model: Entry, action: ChangeAction) {
             Timber.i("[${currentThread()}] onModelChanged($model, $action)")
             Timber.v("model.entryID=${model.entryID} == $entryID")
@@ -57,6 +67,12 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
                         doOnMainThread { setEntry(model) }
                     }
                 }
+            } else if (action == ChangeAction.INSERT && null == entryID) {
+//                if (isMainThread()) {
+//                    setEntry(model)
+//                } else {
+//                    doOnMainThread { setEntry(model) }
+//                }
             }
         }
 

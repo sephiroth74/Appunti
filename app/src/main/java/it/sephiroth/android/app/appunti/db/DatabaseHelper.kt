@@ -27,7 +27,7 @@ object DatabaseHelper {
         }
     }
 
-    fun getCategoryByID(id: Int): Category? {
+    fun getCategoryByID(id: Long): Category? {
         return select().from(Category::class).where(Category_Table.categoryID.eq(id)).result
     }
 
@@ -287,7 +287,7 @@ object DatabaseHelper {
         }
     }
 
-    fun getEntryById(id: Int): Single<Entry?> {
+    fun getEntryById(id: Long): Single<Entry?> {
         return rxSingle(Schedulers.io()) {
             select().from(Entry::class).where(Entry_Table.entryID.eq(id)).result
         }

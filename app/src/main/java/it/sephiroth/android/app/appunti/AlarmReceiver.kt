@@ -16,6 +16,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.TaskStackBuilder
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
+import it.sephiroth.android.app.appunti.utils.IntentUtils
 import timber.log.Timber
 
 
@@ -35,7 +36,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     private fun onEntryRemoveReminderReceived(context: Context, intent: Intent) {
         intent.data?.let { data ->
-            val entryID = data.lastPathSegment?.toInt()
+            val entryID = data.lastPathSegment?.toLong()
             entryID?.let { entryID ->
 
                 val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -59,7 +60,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     private fun onEntryReminderRecived(context: Context, intent: Intent) {
         intent.data?.let { data ->
-            val entryID = data.lastPathSegment?.toInt()
+            val entryID = data.lastPathSegment?.toLong()
             entryID?.let { entryID ->
                 Timber.i("entryID=$entryID")
 
@@ -73,30 +74,28 @@ class AlarmReceiver : BroadcastReceiver() {
                     } else if (entry != null) {
                         createNotificationChannel(context)
 
-                        val contentIntent = Intent(context, DetailActivity::class.java).apply {
-                            action = Intent.ACTION_EDIT
-                            putExtra(DetailActivity.KEY_ENTRY_ID, entry.entryID)
-                            putExtra(DetailActivity.KEY_REMOVE_ALARM, true)
-                        }
+                        val contentIntent = IntentUtils.createViewEntryIntent(context, entry.entryID, true)
 
                         val pendingIntent = TaskStackBuilder.create(context)
-                                .addParentStack(DetailActivity::class.java)
-                                .addNextIntent(contentIntent)
-                                .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+                            .addParentStack(DetailActivity::class.java)
+                            .addNextIntent(contentIntent)
+                            .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
 
                         val builder = NotificationCompat
-                                .Builder(context, ENTRY_ALARM_CHANNEL_ID)
-                                .setSmallIcon(R.drawable.sharp_alarm_24)
-                                .setContentTitle(entry.entryTitle)
-                                .setContentText(entry.getTextSummary(50))
-                                .setColor(entry.getColor(context))
-                                .setTicker(entry.entryTitle)
-                                .setContentIntent(pendingIntent)
-                                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                                .setStyle(NotificationCompat.BigTextStyle()
-                                        .bigText(entry.entryText))
-                                .setAutoCancel(true)
-                                .setDeleteIntent(Entry.getDeleteReminderPendingIntent(entry, context))
+                            .Builder(context, ENTRY_ALARM_CHANNEL_ID)
+                            .setSmallIcon(R.drawable.sharp_alarm_24)
+                            .setContentTitle(entry.entryTitle)
+                            .setContentText(entry.getTextSummary(50))
+                            .setColor(entry.getColor(context))
+                            .setTicker(entry.entryTitle)
+                            .setContentIntent(pendingIntent)
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setStyle(
+                                NotificationCompat.BigTextStyle()
+                                    .bigText(entry.entryText)
+                            )
+                            .setAutoCancel(true)
+                            .setDeleteIntent(Entry.getDeleteReminderPendingIntent(entry, context))
 
                         with(NotificationManagerCompat.from(context)) {
                             notify((System.currentTimeMillis() / 1000).toInt(), builder.build())
@@ -124,7 +123,7 @@ class AlarmReceiver : BroadcastReceiver() {
             }
 
             val notificationManager: NotificationManager = context
-                    .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             val group = NotificationChannelGroup(DEFAULT_CHANNEL_GROUP, "Default")
             notificationManager.createNotificationChannelGroup(group)

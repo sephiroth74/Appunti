@@ -25,7 +25,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
     class Group(private val callback: (() -> (Unit))? = null) {
         //        private var mCategory: Category? = null
-        private var mCategoryID: Int? = null
+        private var mCategoryID: Long? = null
         private var mArchived: Boolean = false
         private var mDeleted: Boolean = false
 
@@ -33,7 +33,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
             callback?.invoke()
         }
 
-        fun setCategoryID(id: Int?) {
+        fun setCategoryID(id: Long?) {
             mCategoryID = id
             mArchived = false
             mDeleted = false
@@ -60,7 +60,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
         fun isArchived() = mArchived
 
-        fun getCategoryID(): Int? {
+        fun getCategoryID(): Long? {
             if (!mDeleted && !mArchived) return mCategoryID
             return null
         }

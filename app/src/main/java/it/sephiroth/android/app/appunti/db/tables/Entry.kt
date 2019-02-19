@@ -48,7 +48,7 @@ class Entry() : BaseRXModel() {
 
     @PrimaryKey(autoincrement = true)
     @Index(indexGroups = [1])
-    var entryID: Int = 0
+    var entryID: Long = 0
 
     @Column(defaultValue = "")
     var entryTitle: String = ""
@@ -122,7 +122,7 @@ class Entry() : BaseRXModel() {
 
     override fun hashCode(): Int {
         Timber.w("Entry.hashCode")
-        var result = entryID
+        var result = entryID.hashCode()
         result = 31 * result + entryTitle.hashCode()
         result = 31 * result + entryText.hashCode()
         result = 31 * result + entryPriority
@@ -148,7 +148,7 @@ class Entry() : BaseRXModel() {
         return ResourceUtils.getCategoryColors(context)[category?.categoryColorIndex ?: 0]
     }
 
-    fun isNew() = entryID == 0
+    fun isNew() = entryID == 0L
     fun isDeleted() = entryDeleted == 1
     fun isArchived() = entryArchived == 1
     fun isPinned() = entryPinned == 1

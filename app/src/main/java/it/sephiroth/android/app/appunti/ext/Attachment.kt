@@ -35,24 +35,8 @@ fun Attachment.getFileUri(context: Context): Uri? {
     )
 }
 
-fun Attachment.createShareIntent(context: Context): Intent {
-    val finalUri = getFileUri(context)
-    Timber.i("finalUri: ${finalUri.toString()}")
-    return Intent(Intent.ACTION_SEND).apply {
-        putExtra(android.content.Intent.EXTRA_SUBJECT, attachmentTitle)
-        putExtra(android.content.Intent.EXTRA_STREAM, finalUri)
-        setDataAndType(finalUri, attachmentMime)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
-}
 
-fun Attachment.createViewIntent(context: Context): Intent {
-    val finalUri = getFileUri(context)
-    return Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(finalUri, attachmentMime)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
-}
+
 
 fun Attachment.loadThumbnail(context: Context, view: ImageView) {
     Timber.i("loadThumbnail($attachmentPath, $attachmentMime)")
