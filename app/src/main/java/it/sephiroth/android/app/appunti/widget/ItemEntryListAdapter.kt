@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.text.SpannableStringBuilder
 import android.text.style.BackgroundColorSpan
@@ -25,6 +26,7 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
 import it.sephiroth.android.app.appunti.graphics.MaterialShape
+import it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable
 import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.appunti_recycler_main_entry_item.view.*
@@ -310,13 +312,19 @@ class ItemEntryListAdapter(
         val attachmentView: ImageView by lazy { view.id_attachment }
 
         init {
-//            val context = categoryTextView.context
-//            val drawable = MaterialBackgroundDrawable
-//                .Builder(MaterialShape.Type.ALL)
-//                .addNormal(context.theme.getColor(context, R.attr.colorControlNormal), 2f)
-//                .build()
-//
-//            categoryTextView.background = drawable
+            val context = categoryTextView.context
+            val drawable = MaterialBackgroundDrawable
+                .Builder()
+                .addNormal(
+                    MaterialShapeDrawable
+                        .Builder(MaterialShape.Type.ALL)
+                        .color(context.theme.getColor(context, R.attr.colorControlNormal))
+                        .strokeWidth(context.resources.getDimension(R.dimen.appunti_category_chip_strokeWidth))
+                        .style(Paint.Style.STROKE)
+                )
+                .build()
+
+            categoryTextView.background = drawable
         }
 
         fun bind(entry: Entry, searchText: String?, isActivated: Boolean = false) {

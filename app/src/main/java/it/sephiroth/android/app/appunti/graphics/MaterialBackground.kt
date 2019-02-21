@@ -2,13 +2,21 @@ package it.sephiroth.android.app.appunti.graphics
 
 import android.animation.ArgbEvaluator
 import android.content.res.ColorStateList
+import android.content.res.Resources
+import android.content.res.TypedArray
 import android.graphics.*
 import android.graphics.drawable.AnimatedStateListDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.Shape
+import android.util.AttributeSet
+import android.util.TypedValue
 import androidx.annotation.ColorInt
+import it.sephiroth.android.app.appunti.R
+import it.sephiroth.android.app.appunti.utils.DrawableUtils
+import org.xmlpull.v1.XmlPullParser
+import timber.log.Timber
 import kotlin.math.roundToInt
 
 
@@ -42,7 +50,6 @@ class MaterialBackgroundDrawable {
             return addState(intArrayOf(), drawable.build())
         }
 
-
         fun ripple(@ColorInt color: Int, drawable: MaterialShapeDrawable.Builder): Builder {
             ripple = RippleDrawable(
                 ColorStateList.valueOf(color), selector, drawable.build()
@@ -62,6 +69,8 @@ class MaterialBackgroundDrawable {
 
 class MaterialShapeDrawable(s: Shape?) : ShapeDrawable(s) {
 
+    constructor() : this(null)
+
     override fun onBoundsChange(bounds: Rect?) {
         if (paint.style != Paint.Style.FILL && paint.strokeWidth > 0) {
             bounds?.inset(paint.strokeWidth.roundToInt() / 2, paint.strokeWidth.roundToInt() / 2)
@@ -73,8 +82,9 @@ class MaterialShapeDrawable(s: Shape?) : ShapeDrawable(s) {
         val shape: MaterialShape = MaterialShape(type)
         val drawable = MaterialShapeDrawable(shape)
 
-        fun setStyle(style: Paint.Style) {
+        fun style(style: Paint.Style): Builder {
             drawable.paint.style = style
+            return this
         }
 
         fun color(color: Int): Builder {
@@ -98,6 +108,8 @@ class MaterialShapeDrawable(s: Shape?) : ShapeDrawable(s) {
 }
 
 class MaterialShape(private val type: Type) : Shape() {
+
+    constructor() : this(Type.START)
 
     private val path = Path()
     private val bounds = RectF()
@@ -150,7 +162,7 @@ class MaterialShape(private val type: Type) : Shape() {
     }
 
     enum class Type {
-        ALL, END, START
+        ALL, START, END
     }
 
 }

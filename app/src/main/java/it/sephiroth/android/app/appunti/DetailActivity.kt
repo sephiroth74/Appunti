@@ -3,6 +3,7 @@ package it.sephiroth.android.app.appunti
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -35,6 +36,9 @@ import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
+import it.sephiroth.android.app.appunti.graphics.MaterialShape
+import it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
@@ -101,6 +105,25 @@ class DetailActivity : AppuntiActivity() {
         entryCategory.setOnClickListener { dispatchPickCategoryIntent() }
         entryTitle.doOnTextChanged { s, start, count, after -> onEntryTitleChanged(s, start, count, after) }
         entryText.doOnTextChanged { s, start, count, after -> onEntryTextChanged(s, start, count, after) }
+
+
+        val drawable = MaterialBackgroundDrawable
+            .Builder()
+            .addNormal(
+                MaterialShapeDrawable
+                    .Builder(MaterialShape.Type.ALL)
+                    .color(theme.getColor(this, R.attr.colorControlNormal))
+                    .strokeWidth(resources.getDimension(R.dimen.appunti_category_chip_strokeWidth))
+                    .style(Paint.Style.STROKE)
+            )
+            .ripple(
+                theme.getColor(this, R.attr.colorControlHighlight),
+                MaterialShapeDrawable.Builder(MaterialShape.Type.ALL)
+            )
+            .build()
+
+        entryCategory.background = drawable
+
 
         // TODO(Create a custom movement method)
         // entryText.movementMethod = LinkMovementMethod.getInstance()

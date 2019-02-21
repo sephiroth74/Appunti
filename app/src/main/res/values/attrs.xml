@@ -3,7 +3,7 @@
 
     <!-- reference to the colors array for the note category -->
     <attr name="categoryColors"
-          format="reference" />
+          format="reference"/>
 
     <!--<attr name="fontFamilyThin" format="reference" />-->
     <!--<attr name="fontFamilyLight" format="reference" />-->
@@ -13,27 +13,49 @@
 
     <declare-styleable name="HorizontalColorChooser">
         <attr name="appunti_colors"
-              format="reference" />
+              format="reference"/>
         <attr name="appunti_selectedColorIndex"
-              format="integer" />
+              format="integer"/>
         <attr name="appunti_color_padding_left"
-              format="dimension" />
+              format="dimension"/>
         <attr name="appunti_color_padding_right"
-              format="dimension" />
+              format="dimension"/>
     </declare-styleable>
 
     <declare-styleable name="GridLayoutColorChooser">
-        <attr name="appunti_colors" />
-        <attr name="appunti_selectedColorIndex" />
+        <attr name="appunti_colors"/>
+        <attr name="appunti_selectedColorIndex"/>
         <attr name="appunti_color_padding"
-              format="dimension" />
+              format="dimension"/>
         <attr name="appunti_colorButtonSize"
-              format="dimension" />
+              format="dimension"/>
     </declare-styleable>
 
     <declare-styleable name="CheckableAppcompatImageButton">
         <attr name="appunti_toggle_enabled"
-              format="boolean" />
+              format="boolean"/>
+    </declare-styleable>
+
+    <declare-styleable name="MaterialShapeDrawable">
+        <attr name="type"
+              format="enum">
+            <enum name="all"
+                  value="0"/>
+            <enum name="start"
+                  value="1"/>
+            <enum name="end"
+                  value="2"/>
+        </attr>
+
+        <attr name="android:width"/>
+        <attr name="android:height"/>
+        <attr name="android:dither"/>
+        <attr name="android:tint"/>
+        <attr name="android:tintMode"/>
+    </declare-styleable>
+
+    <declare-styleable name="MaterialShapeSolid">
+        <attr name="android:color"/>
     </declare-styleable>
 
 </resources>

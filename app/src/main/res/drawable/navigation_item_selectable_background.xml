@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="?attr/colorControlNormal">
+<ripple
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:color="?attr/colorControlNormal">
 
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
-            <solid android:color="@android:color/black" />
+            <solid android:color="@android:color/black"/>
+
         </shape>
     </item>
 
@@ -20,13 +24,26 @@
 
             <item android:state_checked="true">
                 <shape
-                    android:shape="rectangle"
-                    android:tint="?attr/colorControlHighlight">
-                    <solid android:color="@android:color/white" />
+                        android:shape="rectangle"
+                        android:tint="?attr/colorControlHighlight">
+                    <solid android:color="@android:color/white"/>
                 </shape>
             </item>
 
-            <item android:drawable="@android:color/transparent" />
+            <!--<item>-->
+            <!--<it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable-->
+            <!--tools:ignore="NewApi"-->
+            <!--app:type="start">-->
+
+            <!--<solid android:color="?attr/colorControlNormal"/>-->
+            <!--<stroke-->
+            <!--android:width="0.2dp"-->
+            <!--android:color="?attr/colorControlNormal"/>-->
+
+            <!--</it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable>-->
+            <!--</item>-->
+
+            <item android:drawable="@android:color/transparent"/>
         </selector>
     </item>
 </ripple>
