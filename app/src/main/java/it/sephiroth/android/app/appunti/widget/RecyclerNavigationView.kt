@@ -2,6 +2,10 @@ package it.sephiroth.android.app.appunti.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.RippleDrawable
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.VectorDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +19,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Category
+import it.sephiroth.android.app.appunti.ext.getColor
+import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
+import it.sephiroth.android.app.appunti.graphics.MaterialShape
+import it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable
 import it.sephiroth.android.app.appunti.models.MainViewModel
 import kotlinx.android.synthetic.main.appunti_main_drawer_navigation_content.view.*
 import timber.log.Timber
@@ -129,8 +137,36 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NavigationItemsAdapter.ViewHolderBase {
             val view = layoutInflater.inflate(R.layout.appunti_main_drawer_navigation_item_checkable, parent, false)
+
+            val drawable = MaterialBackgroundDrawable
+                .Builder()
+                .addChecked(
+                    MaterialShapeDrawable.Builder(MaterialShape.Type.START).tint(
+                        context.theme.getColor(
+                            context,
+                            R.attr.colorControlActivated
+                        )
+                    )
+                )
+                .addSelected(
+                    MaterialShapeDrawable.Builder(MaterialShape.Type.START).tint(
+                        context.theme.getColor(
+                            context,
+                            R.attr.colorControlActivated
+                        )
+                    )
+                )
+                .ripple(
+                    context.theme.getColor(context, R.attr.colorControlHighlight),
+                    MaterialShapeDrawable.Builder(MaterialShape.Type.START)
+                )
+                .build()
+
+            view.background = drawable
+
             return ViewHolderBase(view)
         }
+
 
         override fun getItemCount(): Int {
             return values.size + 1

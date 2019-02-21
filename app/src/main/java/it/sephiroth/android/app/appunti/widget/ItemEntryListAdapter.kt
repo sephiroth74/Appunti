@@ -23,6 +23,8 @@ import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
+import it.sephiroth.android.app.appunti.graphics.MaterialShape
 import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.appunti_recycler_main_entry_item.view.*
@@ -299,12 +301,23 @@ class ItemEntryListAdapter(
     class EntryViewHolder(view: View) : BaseViewHolder(view) {
         internal var entry: Entry? = null
 
+
         val titleTextView: TextView by lazy { view.id_title }
         val contentTextView: TextView by lazy { view.id_content }
         val categoryTextView: AppCompatTextView by lazy { view.entryCategory }
         val cardView: CircularRevealCardView by lazy { view.id_card }
         val alarmView: ImageView by lazy { view.id_alarm }
         val attachmentView: ImageView by lazy { view.id_attachment }
+
+        init {
+//            val context = categoryTextView.context
+//            val drawable = MaterialBackgroundDrawable
+//                .Builder(MaterialShape.Type.ALL)
+//                .addNormal(context.theme.getColor(context, R.attr.colorControlNormal), 2f)
+//                .build()
+//
+//            categoryTextView.background = drawable
+        }
 
         fun bind(entry: Entry, searchText: String?, isActivated: Boolean = false) {
             this.entry = entry

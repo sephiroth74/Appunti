@@ -30,6 +30,8 @@ import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.graphics.CategoryColorDrawable
+import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
+import it.sephiroth.android.app.appunti.graphics.MaterialShape
 import it.sephiroth.android.app.appunti.utils.CategoriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
@@ -298,6 +300,16 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(context).inflate(R.layout.appunti_category_content_item, parent, false)
             view.colorButton.allowUserToggle = false
+
+//            if (pickCategory) {
+//                val drawable = MaterialBackgroundDrawable
+//                    .Builder(MaterialShape.Type.ALL)
+//                    .addChecked(context.theme.getColor(context, R.attr.colorControlHighlight))
+//                    .addSelected(context.theme.getColor(context, R.attr.colorControlHighlight))
+//                    .ripple(context.theme.getColor(context, R.attr.colorControlHighlight))
+//                    .build()
+//                view.background = drawable
+//            }
 
             val holder = ViewHolder(view)
             holder.editTextView.imeOptions = EditorInfo.IME_ACTION_DONE

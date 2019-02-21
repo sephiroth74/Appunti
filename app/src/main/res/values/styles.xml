@@ -53,7 +53,7 @@
     </style>
 
     <style name="Widget.Appunti.Text.CategoryChip.NonClickable">
-        <item name="android:background">@drawable/category_chip_background_no_ripple</item>
+        <!--<item name="android:background">@drawable/category_chip_background_no_ripple</item>-->
         <item name="android:clickable">false</item>
     </style>
 
@@ -127,7 +127,7 @@
            parent="Widget.Appunti.Text">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">?attr/listPreferredItemHeightSmall</item>
-        <item name="android:background">@drawable/navigation_item_selectable_background</item>
+        <!--<item name="android:background">@drawable/navigation_item_selectable_background</item>-->
         <item name="android:drawablePadding">8dp</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:paddingEnd">?android:attr/listPreferredItemPaddingEnd</item>
