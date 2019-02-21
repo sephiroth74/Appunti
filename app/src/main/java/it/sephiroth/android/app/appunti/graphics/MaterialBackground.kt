@@ -2,21 +2,13 @@ package it.sephiroth.android.app.appunti.graphics
 
 import android.animation.ArgbEvaluator
 import android.content.res.ColorStateList
-import android.content.res.Resources
-import android.content.res.TypedArray
 import android.graphics.*
 import android.graphics.drawable.AnimatedStateListDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.Shape
-import android.util.AttributeSet
-import android.util.TypedValue
 import androidx.annotation.ColorInt
-import it.sephiroth.android.app.appunti.R
-import it.sephiroth.android.app.appunti.utils.DrawableUtils
-import org.xmlpull.v1.XmlPullParser
-import timber.log.Timber
 import kotlin.math.roundToInt
 
 
@@ -27,7 +19,6 @@ class MaterialBackgroundDrawable {
         private val selector = AnimatedStateListDrawable()
         private val evaluator = ArgbEvaluator()
         private val states = hashMapOf<Int, Int>()
-
 
         fun addState(stateSet: IntArray, drawable: ShapeDrawable): Builder {
             selector.addState(stateSet, drawable)
@@ -71,9 +62,13 @@ class MaterialShapeDrawable(s: Shape?) : ShapeDrawable(s) {
 
     constructor() : this(null)
 
+    init {
+        paint.flags = Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG
+    }
+
     override fun onBoundsChange(bounds: Rect?) {
         if (paint.style != Paint.Style.FILL && paint.strokeWidth > 0) {
-            bounds?.inset(paint.strokeWidth.roundToInt() / 2, paint.strokeWidth.roundToInt() / 2)
+            bounds?.inset(paint.strokeWidth.roundToInt(), paint.strokeWidth.roundToInt())
         }
         super.onBoundsChange(bounds)
     }
