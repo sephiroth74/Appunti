@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Canvas
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.view.Menu
@@ -36,7 +34,6 @@ import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
-import kotlinx.android.synthetic.main.appunti_main_bottomappbar.*
 import kotlinx.android.synthetic.main.appunti_search_view_toolbar.*
 import timber.log.Timber
 import java.util.*
@@ -55,7 +52,6 @@ class MainActivity : AppuntiActivity() {
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
         drawerLayout.setStatusBarBackgroundColor(theme.getColor(this, android.R.attr.windowBackground))
@@ -79,22 +75,25 @@ class MainActivity : AppuntiActivity() {
                 layoutManager.spanCount = resources.getInteger(R.integer.list_items_columns_grid)
             }
 
-            bottomAppBar.setDisplayAsList(it)
+//            bottomAppBar.setDisplayAsList(it)
         })
 
-        bottomAppBar.doOnDisplayAsListChanged { value ->
-            model.setDisplayAsList(value)
-        }
+        floatingActionButton.setOnClickListener { startDetailActivity() }
 
-        bottomAppBar.doOnNewNoteClick {
-            startDetailActivity()
-        }
+//        bottomAppBar.doOnDisplayAsListChanged { value ->
+//            model.setDisplayAsList(value)
+//        }
+//
+//        bottomAppBar.doOnNewNoteClick {
+//            startDetailActivity()
+//        }
 
-        if (bottomAppBar.background is LayerDrawable) {
-            val drawable: Drawable? =
-                (bottomAppBar.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
-            drawable?.setTint(theme.getColor(this, android.R.attr.windowBackground))
-        }
+//        if (bottomAppBar.background is LayerDrawable) {
+//            val drawable: Drawable? =
+//                (bottomAppBar.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
+//            drawable?.setTint(theme.getColor(this, android.R.attr.windowBackground))
+//        }
+
 
         // handle current intent
         if (intent?.action == ACTION_ENTRIES_BY_CATEGORY) {
@@ -352,8 +351,8 @@ class MainActivity : AppuntiActivity() {
 
         val elementsArray = arrayListOf<Pair<View, String>>(
             Pair(holder.titleTextView, "itemTitle"),
-            Pair(holder.contentTextView, "itemText"),
-            Pair(bottomAppBar, "bottomAppBar")
+            Pair(holder.contentTextView, "itemText")
+//            Pair(bottomAppBar, "bottomAppBar")
         )
 
         if (entry.category != null) {

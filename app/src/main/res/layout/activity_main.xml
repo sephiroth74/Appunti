@@ -20,15 +20,26 @@
                 android:layout_height="match_parent"
                 android:layout_marginBottom="8dp"
                 android:layout_marginTop="8dp"
-                app:layout_anchor="@id/bottomAppBar"
                 app:layout_anchorGravity="top">
+                <!--app:layout_anchor="@id/bottomAppBar"-->
 
             <include layout="@layout/appunti_entries_recycler_view"/>
         </FrameLayout>
 
         <include layout="@layout/appunti_search_view_toolbar"/>
 
-        <include layout="@layout/appunti_main_bottomappbar"/>
+        <!--<include layout="@layout/appunti_main_bottomappbar"/>-->
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/floatingActionButton"
+                style="@style/Widget.MaterialComponents.FloatingActionButton"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/sharp_add_24"
+
+        />
 
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
