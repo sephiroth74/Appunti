@@ -19,6 +19,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
+import androidx.core.graphics.ColorUtils
 import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
@@ -42,6 +43,7 @@ import it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
+import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
@@ -106,23 +108,7 @@ class DetailActivity : AppuntiActivity() {
         entryTitle.doOnTextChanged { s, start, count, after -> onEntryTitleChanged(s, start, count, after) }
         entryText.doOnTextChanged { s, start, count, after -> onEntryTextChanged(s, start, count, after) }
 
-
-        val drawable = MaterialBackgroundDrawable
-            .Builder()
-            .addNormal(
-                MaterialShapeDrawable
-                    .Builder(MaterialShape.Type.ALL)
-                    .color(theme.getColor(this, R.attr.colorControlNormal))
-                    .strokeWidth(resources.getDimension(R.dimen.appunti_category_chip_strokeWidth))
-                    .style(Paint.Style.STROKE)
-            )
-            .ripple(
-                theme.getColor(this, R.attr.colorControlHighlight),
-                MaterialShapeDrawable.Builder(MaterialShape.Type.ALL)
-            )
-            .build()
-
-        entryCategory.background = drawable
+        entryCategory.background = MaterialBackgroundUtils.categoryChipClickable(this)
 
 
         // TODO(Create a custom movement method)
@@ -579,8 +565,10 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun applyEntryTheme(entry: Entry) {
-        val color = entry.getColor(this)
+        var color = entry.getColor(this)
         Timber.i("applyEntryTheme. color=${color.toString(16)}")
+
+//        color = ColorUtils.setAlphaComponent(color, 201)
 
         coordinator.backgroundTintList = ColorStateList.valueOf(color)
 

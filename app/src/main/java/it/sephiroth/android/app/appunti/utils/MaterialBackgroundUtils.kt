@@ -1,6 +1,7 @@
 package it.sephiroth.android.app.appunti.utils
 
 import android.content.Context
+import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.ext.getColor
@@ -32,6 +33,56 @@ object MaterialBackgroundUtils {
             .ripple(
                 context.theme.getColor(context, R.attr.colorControlHighlight),
                 MaterialShapeDrawable.Builder(MaterialShape.Type.START)
+            )
+            .build()
+    }
+
+    fun categoryChip(context: Context): Drawable {
+        return MaterialBackgroundDrawable
+            .Builder()
+            .addNormal(
+                MaterialShapeDrawable
+                    .Builder(MaterialShape.Type.ALL)
+                    .color(context.theme.getColor(context, R.attr.colorControlNormal))
+                    .strokeWidth(context.resources.getDimension(R.dimen.appunti_category_chip_strokeWidth))
+                    .style(Paint.Style.STROKE)
+            )
+            .build()
+    }
+
+    fun categoryChipClickable(context: Context): Drawable {
+        return MaterialBackgroundDrawable
+            .Builder()
+            .addNormal(
+                MaterialShapeDrawable
+                    .Builder(MaterialShape.Type.ALL)
+                    .color(context.theme.getColor(context, R.attr.colorControlNormal))
+                    .strokeWidth(context.resources.getDimension(R.dimen.appunti_category_chip_strokeWidth))
+                    .style(Paint.Style.STROKE)
+            )
+            .ripple(
+                context.theme.getColor(context, R.attr.colorControlHighlight),
+                MaterialShapeDrawable.Builder(MaterialShape.Type.ALL)
+            )
+            .build()
+    }
+
+    fun categoryItemDrawable(context: Context): Drawable {
+        return MaterialBackgroundDrawable
+            .Builder()
+            .addChecked(
+                MaterialShapeDrawable
+                    .Builder(MaterialShape.Type.ALL)
+                    .tint(context.theme.getColor(context, R.attr.colorControlHighlight))
+            )
+            .addSelected(
+                MaterialShapeDrawable
+                    .Builder(MaterialShape.Type.ALL)
+                    .tint(context.theme.getColor(context, R.attr.colorControlHighlight))
+            )
+            .ripple(
+                context.theme.getColor(context, R.attr.colorControlHighlight),
+                MaterialShapeDrawable.Builder(MaterialShape.Type.ALL)
             )
             .build()
     }

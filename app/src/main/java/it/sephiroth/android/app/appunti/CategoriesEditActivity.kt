@@ -34,6 +34,7 @@ import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
 import it.sephiroth.android.app.appunti.graphics.MaterialShape
 import it.sephiroth.android.app.appunti.utils.CategoriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.IntentUtils
+import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import it.sephiroth.android.app.appunti.widget.GridLayoutColorChooser
 import kotlinx.android.synthetic.main.activity_categories.*
@@ -301,15 +302,9 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
             val view = LayoutInflater.from(context).inflate(R.layout.appunti_category_content_item, parent, false)
             view.colorButton.allowUserToggle = false
 
-//            if (pickCategory) {
-//                val drawable = MaterialBackgroundDrawable
-//                    .Builder(MaterialShape.Type.ALL)
-//                    .addChecked(context.theme.getColor(context, R.attr.colorControlHighlight))
-//                    .addSelected(context.theme.getColor(context, R.attr.colorControlHighlight))
-//                    .ripple(context.theme.getColor(context, R.attr.colorControlHighlight))
-//                    .build()
-//                view.background = drawable
-//            }
+            if (pickCategory) {
+                view.background = MaterialBackgroundUtils.categoryItemDrawable(context)
+            }
 
             val holder = ViewHolder(view)
             holder.editTextView.imeOptions = EditorInfo.IME_ACTION_DONE

@@ -28,6 +28,7 @@ import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
 import it.sephiroth.android.app.appunti.graphics.MaterialShape
 import it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable
 import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
+import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import kotlinx.android.synthetic.main.appunti_recycler_main_entry_item.view.*
 import org.threeten.bp.Instant
@@ -313,18 +314,7 @@ class ItemEntryListAdapter(
 
         init {
             val context = categoryTextView.context
-            val drawable = MaterialBackgroundDrawable
-                .Builder()
-                .addNormal(
-                    MaterialShapeDrawable
-                        .Builder(MaterialShape.Type.ALL)
-                        .color(context.theme.getColor(context, R.attr.colorControlNormal))
-                        .strokeWidth(context.resources.getDimension(R.dimen.appunti_category_chip_strokeWidth))
-                        .style(Paint.Style.STROKE)
-                )
-                .build()
-
-            categoryTextView.background = drawable
+            categoryTextView.background = MaterialBackgroundUtils.categoryChip(context)
         }
 
         fun bind(entry: Entry, searchText: String?, isActivated: Boolean = false) {
