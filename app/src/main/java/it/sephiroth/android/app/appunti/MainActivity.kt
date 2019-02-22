@@ -38,7 +38,7 @@ import timber.log.Timber
 import java.util.*
 
 
-class MainActivity : AppuntiActivity() {
+class MainActivity : AppuntiActivityFullscreen() {
 
     lateinit var adapter: ItemEntryListAdapter
 
@@ -52,23 +52,9 @@ class MainActivity : AppuntiActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Apps can't draw under the navbar in multiwindow mode.
-        val fitSystemWindows = if (isInMultiWindow == true) {
-            true
-        } else {
-            resources.getBoolean(R.bool.fullscreen_style_fit_system_windows)
-        }
+
         // Override the activity's theme when in multiwindow mode.
         constraintLayout.fitsSystemWindows = fitSystemWindows
-
-        if (!fitSystemWindows) {
-            // Inset bottom of content if drawing under the translucent navbar, but
-            // only if the navbar is a software bar and is on the bottom of the screen.
-            if (resources.showsSoftwareNavBar && resources.isNavBarAtBottom) {
-//                itemsRecycler.setPaddingRelative(/* ... */)
-            }
-        }
-
         navigationBackground.layoutParams.height = navigationbarHeight
         statusbarBackground.layoutParams.height = statusbarHeight
 
@@ -144,7 +130,20 @@ class MainActivity : AppuntiActivity() {
     }
 
     private fun setupRecyclerView() {
-        adapter = ItemEntryListAdapter(this, arrayListOf()) { holder, position ->
+
+        var top = 0
+        var bottom = 0
+        if (!fitSystemWindows) {
+            // Inset bottom of content if drawing under the translucent navbar, but
+            // only if the navbar is a software bar and is on the bottom of the screen.
+            if (resources.showsSoftwareNavBar && resources.isNavBarAtBottom) {
+                bottom = navigationbarHeight
+            }
+            top = statusbarHeight
+        }
+
+
+        adapter = ItemEntryListAdapter(this, arrayListOf(), top, bottom) { holder, position ->
             tracker?.isSelected(position.toLong()) ?: false
         }
 

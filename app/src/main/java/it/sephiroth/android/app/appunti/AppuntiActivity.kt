@@ -8,42 +8,57 @@ import android.view.WindowManager
 import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import it.sephiroth.android.app.appunti.ext.getColor
-import it.sephiroth.android.app.appunti.ext.getNavigationBarSize
-import it.sephiroth.android.app.appunti.ext.getStatusbarHeight
-import it.sephiroth.android.app.appunti.ext.isAPI
+import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import org.threeten.bp.ZonedDateTime
 import timber.log.Timber
 
-abstract class AppuntiActivity : AppCompatActivity() {
+abstract class AppuntiActivity(
+    private val fullscreen: Boolean = false,
+    val lightTheme: Int = R.style.Theme_Appunti_Light_NoActionbar,
+    val darkTheme: Int = R.style.Theme_Appunti_Dark_NoActionbar
+) : AppCompatActivity() {
 
     internal var statusbarHeight: Int = 0
     internal var navigationbarHeight: Int = 0
+    internal var isDarkTheme: Boolean = false
+    internal var fitSystemWindows: Boolean = false
 
     @SuppressLint("InlinedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val darkTheme = SettingsManager.getInstance(this).darkTheme
-        setTheme(if (darkTheme) R.style.Theme_Appunti_Dark_NoActionbar else R.style.Theme_Appunti_Light_NoActionbar)
+        isDarkTheme = SettingsManager.getInstance(this).darkTheme
+        setTheme(if (isDarkTheme) darkTheme else lightTheme)
 
         statusbarHeight = getStatusbarHeight()
         navigationbarHeight = getNavigationBarSize().y - statusbarHeight
 
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        )
+        Timber.v("fullscreen = ${fullscreen and !isInMultiWindow}")
+        Timber.v("statusbar height = $statusbarHeight")
+        Timber.v("navigationbar height = $navigationbarHeight")
+
+        if (fullscreen && !isInMultiWindow) {
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            )
+        }
 
         window.statusBarColor = theme.getColor(this, android.R.attr.statusBarColor)
         window.navigationBarColor = theme.getColor(this, android.R.attr.navigationBarColor)
+
+        // Apps can't draw under the navbar in multiwindow mode.
+        fitSystemWindows =
+            if (isInMultiWindow) true else resources.getBoolean(R.bool.fullscreen_style_fit_system_windows)
+
+        Timber.v("fitSystemWindows = $fitSystemWindows")
 
         setContentView(getContentLayout())
 
         getToolbar()?.let { toolbar ->
             setSupportActionBar(toolbar)
-            if (!darkTheme && isAPI(26)) {
+            if (!isDarkTheme && isAPI(26)) {
                 toolbar.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
             }
         }

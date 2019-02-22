@@ -22,10 +22,6 @@
         </item>
         <item name="android:windowContentTransitions">true</item>
 
-
-        <item name="android:fitsSystemWindows">@bool/fullscreen_style_fit_system_windows</item>
-        <!--<item name="android:windowTranslucentNavigation">@bool/fullscreen_style_use_translucent_nav</item>-->
-
         <!-- default colors -->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="search_theme">play</item>
@@ -43,6 +39,10 @@
     <style name="Theme.Appunti.Light.Base.NoActionbar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.Appunti.Light.Base.NoActionbar.FullScreen">
+        <item name="android:fitsSystemWindows">@bool/fullscreen_style_fit_system_windows</item>
     </style>
 
     <style name="Theme.Appunti.Dark.Base"
@@ -74,6 +74,9 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="Theme.Appunti.Dark.Base.NoActionbar.FullScreen">
+        <item name="android:fitsSystemWindows">@bool/fullscreen_style_fit_system_windows</item>
+    </style>
 
     <style name="Theme.Appunti.Light"
            parent="Theme.Appunti.Light.Base"/>

@@ -33,6 +33,8 @@ import timber.log.Timber
 class ItemEntryListAdapter(
     private val context: Activity,
     private var values: MutableList<EntryItem>,
+    private var contextMarginTop: Int,
+    private var contextMarginBottom: Int,
     private val selectionCallback: ((BaseViewHolder, Int) -> (Boolean))?
 ) :
     RecyclerView.Adapter<ItemEntryListAdapter.BaseViewHolder>() {
@@ -100,7 +102,7 @@ class ItemEntryListAdapter(
                     R.dimen.appunti_main_search_view_margin_top
                 )
 
-                val marginTop = searchViewHeight + (searchViewTopMargin * 2) + context.getStatusbarHeight()
+                val marginTop = searchViewHeight + (searchViewTopMargin * 2) + contextMarginTop
 
                 val params =
                     StaggeredGridLayoutManager
@@ -111,9 +113,8 @@ class ItemEntryListAdapter(
             }
 
             TYPE_EMPTY_END -> {
-
                 view = inflater.inflate(R.layout.item_list_empty, parent, false)
-                val marginBottom = context.getNavigationBarSize().y - context.getStatusbarHeight()
+                val marginBottom = if (contextMarginBottom > 0) contextMarginBottom else 0
 
                 val params =
                     StaggeredGridLayoutManager.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, marginBottom)

@@ -109,7 +109,7 @@ class SearchableActivity : AppuntiActivity() {
 
 
     private fun setupRecyclerView() {
-        adapter = ItemEntryListAdapter(this, arrayListOf()) { holder, position -> false }
+        adapter = ItemEntryListAdapter(this, arrayListOf(), 0, 0) { holder, position -> false }
 
         layoutManager = itemsRecycler.layoutManager as StaggeredGridLayoutManager
 
