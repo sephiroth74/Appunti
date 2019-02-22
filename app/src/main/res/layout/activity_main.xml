@@ -47,7 +47,7 @@
                 android:id="@+id/navigationBackground"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/appunti_navigationbar_background_light"
+                android:background="?attr/navigationbarBackgroundDrawable"
         />
 
         <View
@@ -57,7 +57,7 @@
                 android:id="@+id/statusbarBackground"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/appunti_statusbar_background_light"
+                android:background="?attr/statusbarBackgroundDrawable"
         />
 
 
@@ -69,7 +69,6 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:fitsSystemWindows="true"
             app:itemIconTint="?attr/colorControlNormal">
 
         <include layout="@layout/appunti_main_drawer_navigation_content"/>

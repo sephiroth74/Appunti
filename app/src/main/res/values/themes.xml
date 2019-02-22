@@ -30,10 +30,8 @@
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
         <!--<item name="alertDialogTheme">@style/Theme.MaterialComponents.Light.Dialog.MinWidth</item>-->
 
-
         <item name="android:fontFamily">@font/nunito_semibold</item>
         <item name="fontFamily">@font/nunito_semibold</item>
-
     </style>
 
     <style name="Theme.Appunti.Light.Base.NoActionbar">
@@ -43,6 +41,8 @@
 
     <style name="Theme.Appunti.Light.Base.NoActionbar.FullScreen">
         <item name="android:fitsSystemWindows">@bool/fullscreen_style_fit_system_windows</item>
+        <item name="navigationbarBackgroundDrawable">@drawable/appunti_navigationbar_background_light</item>
+        <item name="statusbarBackgroundDrawable">@drawable/appunti_statusbar_background_light</item>
     </style>
 
     <style name="Theme.Appunti.Dark.Base"
@@ -67,6 +67,8 @@
         <item name="search_theme">dark</item>
         <item name="categoryColors">@array/category_colors_dark</item>
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
+        <item name="fontFamily">@font/nunito_semibold</item>
     </style>
 
     <style name="Theme.Appunti.Dark.Base.NoActionbar">
@@ -76,6 +78,8 @@
 
     <style name="Theme.Appunti.Dark.Base.NoActionbar.FullScreen">
         <item name="android:fitsSystemWindows">@bool/fullscreen_style_fit_system_windows</item>
+        <item name="navigationbarBackgroundDrawable">@drawable/appunti_navigationbar_background_light</item>
+        <item name="statusbarBackgroundDrawable">@drawable/appunti_statusbar_background_light</item>
     </style>
 
     <style name="Theme.Appunti.Light"

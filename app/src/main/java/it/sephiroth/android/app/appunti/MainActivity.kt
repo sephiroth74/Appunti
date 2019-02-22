@@ -55,8 +55,14 @@ class MainActivity : AppuntiActivityFullscreen() {
 
         // Override the activity's theme when in multiwindow mode.
         constraintLayout.fitsSystemWindows = fitSystemWindows
-        navigationBackground.layoutParams.height = navigationbarHeight
-        statusbarBackground.layoutParams.height = statusbarHeight
+
+        if (!fitSystemWindows) {
+            navigationBackground.layoutParams.height = navigationbarHeight
+            statusbarBackground.layoutParams.height = statusbarHeight
+        } else {
+            navigationBackground.visibility = View.INVISIBLE
+            statusbarBackground.visibility = View.INVISIBLE
+        }
 
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
@@ -81,24 +87,7 @@ class MainActivity : AppuntiActivityFullscreen() {
             } else {
                 layoutManager.spanCount = resources.getInteger(R.integer.list_items_columns_grid)
             }
-
-//            bottomAppBar.setDisplayAsList(it)
         })
-
-//        bottomAppBar.doOnDisplayAsListChanged { value ->
-//            model.setDisplayAsList(value)
-//        }
-//
-//        bottomAppBar.doOnNewNoteClick {
-//            startDetailActivity()
-//        }
-
-//        if (bottomAppBar.background is LayerDrawable) {
-//            val drawable: Drawable? =
-//                (bottomAppBar.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
-//            drawable?.setTint(theme.getColor(this, android.R.attr.windowBackground))
-//        }
-
 
         // handle current intent
         if (intent?.action == ACTION_ENTRIES_BY_CATEGORY) {

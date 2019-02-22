@@ -25,6 +25,9 @@
 
     <color name="shortcut_background_color">@color/material_grey_300</color>
 
+    <color name="navigation_background_fill_light">#bbffffff</color>
+    <color name="navigation_background_stroke_light">#22000000</color>
+
     <!-- colors for categories -->
 
     <integer-array name="category_colors_light">

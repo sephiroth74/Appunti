@@ -50,7 +50,7 @@ abstract class AppuntiActivity(
 
         // Apps can't draw under the navbar in multiwindow mode.
         fitSystemWindows =
-            if (isInMultiWindow) true else resources.getBoolean(R.bool.fullscreen_style_fit_system_windows)
+            if (isInMultiWindow) true else fullscreen && resources.getBoolean(R.bool.fullscreen_style_fit_system_windows)
 
         Timber.v("fitSystemWindows = $fitSystemWindows")
 
