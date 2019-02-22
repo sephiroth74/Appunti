@@ -3,7 +3,6 @@ package it.sephiroth.android.app.appunti
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -11,6 +10,8 @@ import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.InputType
+import android.text.method.LinkMovementMethod
 import android.text.style.StyleSpan
 import android.text.util.Linkify
 import android.view.*
@@ -19,7 +20,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
-import androidx.core.graphics.ColorUtils
 import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
@@ -37,9 +37,6 @@ import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
-import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
-import it.sephiroth.android.app.appunti.graphics.MaterialShape
-import it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
@@ -110,9 +107,6 @@ class DetailActivity : AppuntiActivity() {
 
         entryCategory.background = MaterialBackgroundUtils.categoryChipClickable(this)
 
-
-        // TODO(Create a custom movement method)
-        // entryText.movementMethod = LinkMovementMethod.getInstance()
         entryText.doOnAfterTextChanged { e -> LinkifyCompat.addLinks(e, Linkify.ALL) }
 
         // handle the current listener

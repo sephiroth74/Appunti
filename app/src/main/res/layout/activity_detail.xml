@@ -99,6 +99,10 @@
                     android:layout_marginTop="16dp"
                     android:hint="@string/content_here"
                     android:layout_weight="0"
+                    android:inputType="none"
+                    android:focusable="true"
+                    android:textIsSelectable="true"
+                    android:clickable="true"
                     android:transitionName="itemText"
                     />
 
