@@ -22,6 +22,10 @@
         </item>
         <item name="android:windowContentTransitions">true</item>
 
+
+        <item name="android:fitsSystemWindows">@bool/fullscreen_style_fit_system_windows</item>
+        <!--<item name="android:windowTranslucentNavigation">@bool/fullscreen_style_use_translucent_nav</item>-->
+
         <!-- default colors -->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="search_theme">play</item>

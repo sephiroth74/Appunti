@@ -1,7 +1,9 @@
 package it.sephiroth.android.app.appunti.ext
 
+import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
+import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.content.res.Resources
 import android.os.Build
 import android.os.Looper
@@ -12,6 +14,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.annotation.AttrRes
+import androidx.annotation.Px
 import androidx.core.content.ContextCompat
 import com.dbflow5.isNotNullOrEmpty
 import io.reactivex.Observable
@@ -20,6 +23,7 @@ import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import it.sephiroth.android.app.appunti.R
 import java.text.DateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -96,6 +100,39 @@ fun Resources.Theme.getColor(context: Context, @AttrRes id: Int): Int {
     context.theme.resolveAttribute(id, typedValue, false)
     return ContextCompat.getColor(context, typedValue.data)
 }
+
+val Resources.showsSoftwareNavBar: Boolean
+    get() {
+        val id = getIdentifier("config_showNavigationBar", "bool", "android")
+        return id > 0 && getBoolean(id)
+    }
+
+inline val Resources.isNavBarAtBottom: Boolean
+    get() {
+        // Navbar is always on the bottom of the screen in portrait mode, but may
+        // rotate with device if its category is sw600dp or above.
+        return this.isTablet || this.configuration.orientation == ORIENTATION_PORTRAIT
+    }
+
+inline val Resources.isTablet: Boolean get() = getBoolean(R.bool.is_tablet)
+
+val Resources.statusBarHeight: Int
+    @Px get() {
+        val id = getIdentifier("status_bar_height", "dimen", "android")
+        return when {
+            id > 0 -> getDimensionPixelSize(id)
+            else -> 0
+        }
+    }
+
+inline val Activity.isInMultiWindow: Boolean
+    get() {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            isInMultiWindowMode
+        } else {
+            false
+        }
+    }
 
 
 fun Context.isLightTheme(): Boolean {

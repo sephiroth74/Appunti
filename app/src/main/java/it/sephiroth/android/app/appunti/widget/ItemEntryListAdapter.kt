@@ -1,10 +1,9 @@
 package it.sephiroth.android.app.appunti.widget
 
 import android.annotation.SuppressLint
-import android.content.Context
+import android.app.Activity
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.text.SpannableStringBuilder
 import android.text.style.BackgroundColorSpan
@@ -24,9 +23,6 @@ import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
-import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
-import it.sephiroth.android.app.appunti.graphics.MaterialShape
-import it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable
 import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
@@ -35,7 +31,7 @@ import org.threeten.bp.Instant
 import timber.log.Timber
 
 class ItemEntryListAdapter(
-    private val context: Context,
+    private val context: Activity,
     private var values: MutableList<EntryItem>,
     private val selectionCallback: ((BaseViewHolder, Int) -> (Boolean))?
 ) :
@@ -52,7 +48,8 @@ class ItemEntryListAdapter(
     companion object {
         var NOW = Instant.now()
 
-        val TYPE_EMPTY = EntryItem.ItemType.EMPTY.ordinal
+        val TYPE_EMPTY_START = EntryItem.ItemType.EMPTY_START.ordinal
+        val TYPE_EMPTY_END = EntryItem.ItemType.EMPTY_END.ordinal
         val TYPE_ENTRY = EntryItem.ItemType.ENTRY.ordinal
         val TYPE_PINNED = EntryItem.ItemType.PINNED.ordinal
         val TYPE_ARCHIVED = EntryItem.ItemType.ARCHIVED.ordinal
@@ -90,11 +87,12 @@ class ItemEntryListAdapter(
     @SuppressLint("PrivateResource")
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
         val view: View
+        val inflater = LayoutInflater.from(context)
 
         return when (viewType) {
-            TYPE_EMPTY -> {
-                view = LayoutInflater.from(context)
-                    .inflate(R.layout.item_list_empty, parent, false)
+            TYPE_EMPTY_START -> {
+
+                view = inflater.inflate(R.layout.item_list_empty, parent, false)
                 val searchViewHeight = context.resources.getDimensionPixelSize(
                     R.dimen.search_height_view
                 )
@@ -102,23 +100,35 @@ class ItemEntryListAdapter(
                     R.dimen.appunti_main_search_view_margin_top
                 )
 
+                val marginTop = searchViewHeight + (searchViewTopMargin * 2) + context.getStatusbarHeight()
+
                 val params =
                     StaggeredGridLayoutManager
-                        .LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, searchViewHeight + searchViewTopMargin * 2)
+                        .LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, marginTop)
+                params.isFullSpan = true
+                view.layoutParams = params
+                BaseViewHolder(view)
+            }
+
+            TYPE_EMPTY_END -> {
+
+                view = inflater.inflate(R.layout.item_list_empty, parent, false)
+                val marginBottom = context.getNavigationBarSize().y - context.getStatusbarHeight()
+
+                val params =
+                    StaggeredGridLayoutManager.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, marginBottom)
                 params.isFullSpan = true
                 view.layoutParams = params
                 BaseViewHolder(view)
             }
 
             TYPE_ENTRY -> {
-                view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.appunti_recycler_main_entry_item, parent, false)
+                view = inflater.inflate(R.layout.appunti_recycler_main_entry_item, parent, false)
                 EntryViewHolder(view)
             }
 
             else -> {
-                view = LayoutInflater.from(context)
-                    .inflate(R.layout.appunti_recycler_main_label_entry_item, parent, false)
+                view = inflater.inflate(R.layout.appunti_recycler_main_label_entry_item, parent, false)
                 val params = view.layoutParams as StaggeredGridLayoutManager.LayoutParams
                 params.isFullSpan = true
 
@@ -194,12 +204,13 @@ class ItemEntryListAdapter(
     override fun getItemId(position: Int): Long {
         val item = getItem(position)
         return when (item.type) {
-            EntryItem.ItemType.ENTRY -> item.entry!!.entryID.toLong()
-            EntryItem.ItemType.EMPTY -> -1
-            EntryItem.ItemType.PINNED -> -2
-            EntryItem.ItemType.ARCHIVED -> -3
-            EntryItem.ItemType.DELETED -> -4
-            EntryItem.ItemType.OTHERS -> -5
+            EntryItem.ItemType.ENTRY -> item.entry!!.entryID
+            EntryItem.ItemType.EMPTY_START -> -1
+            EntryItem.ItemType.EMPTY_END -> -2
+            EntryItem.ItemType.PINNED -> -3
+            EntryItem.ItemType.ARCHIVED -> -4
+            EntryItem.ItemType.DELETED -> -5
+            EntryItem.ItemType.OTHERS -> -6
         }
     }
 
@@ -220,7 +231,7 @@ class ItemEntryListAdapter(
 
             val finalData =
                 (newData?.map { EntryItem(it, EntryItem.ItemType.ENTRY) }?.toMutableList() ?: mutableListOf()).apply {
-                    add(0, EntryItem(null, EntryItem.ItemType.EMPTY))
+                    add(0, EntryItem(null, EntryItem.ItemType.EMPTY_START))
                 }
 
             val firstPinned = SearchIndex(finalData.indexOfFirst {
@@ -278,6 +289,8 @@ class ItemEntryListAdapter(
                     finalData.add(firstNonPinned + firstIndex, EntryItem(null, EntryItem.ItemType.OTHERS))
                 }
             }
+
+            finalData.add(EntryItem(null, EntryItem.ItemType.EMPTY_END))
 
             val callback = EntriesDiffCallback(values, finalData)
             val result = DiffUtil.calculateDiff(callback, true)
@@ -343,7 +356,7 @@ class ItemEntryListAdapter(
     }
 
     class EntryItem(val entry: Entry?, val type: ItemType) {
-        enum class ItemType { ENTRY, EMPTY, PINNED, ARCHIVED, DELETED, OTHERS }
+        enum class ItemType { ENTRY, EMPTY_START, PINNED, ARCHIVED, DELETED, OTHERS, EMPTY_END }
 
         override fun equals(other: Any?): Boolean {
             if (other is EntryItem) {

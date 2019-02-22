@@ -9,6 +9,7 @@ import android.speech.RecognizerIntent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityOptionsCompat
@@ -26,9 +27,7 @@ import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
 import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.currentThread
-import it.sephiroth.android.app.appunti.ext.getColor
-import it.sephiroth.android.app.appunti.ext.getColorStateList
+import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
@@ -52,6 +51,27 @@ class MainActivity : AppuntiActivity() {
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Apps can't draw under the navbar in multiwindow mode.
+        val fitSystemWindows = if (isInMultiWindow == true) {
+            true
+        } else {
+            resources.getBoolean(R.bool.fullscreen_style_fit_system_windows)
+        }
+        // Override the activity's theme when in multiwindow mode.
+        constraintLayout.fitsSystemWindows = fitSystemWindows
+
+        if (!fitSystemWindows) {
+            // Inset bottom of content if drawing under the translucent navbar, but
+            // only if the navbar is a software bar and is on the bottom of the screen.
+            if (resources.showsSoftwareNavBar && resources.isNavBarAtBottom) {
+//                itemsRecycler.setPaddingRelative(/* ... */)
+            }
+        }
+
+        navigationBackground.layoutParams.height = navigationbarHeight
+        statusbarBackground.layoutParams.height = statusbarHeight
+
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
         drawerLayout.setStatusBarBackgroundColor(theme.getColor(this, android.R.attr.windowBackground))
@@ -60,6 +80,7 @@ class MainActivity : AppuntiActivity() {
         setupSearchView()
         seupNavigationView()
         setupItemTouchHelper()
+        setupFloatingActionButton()
 
         model.entries.observe(this, Observer {
             Timber.i("[${currentThread()}] entries changed")
@@ -77,8 +98,6 @@ class MainActivity : AppuntiActivity() {
 
 //            bottomAppBar.setDisplayAsList(it)
         })
-
-        floatingActionButton.setOnClickListener { startDetailActivity() }
 
 //        bottomAppBar.doOnDisplayAsListChanged { value ->
 //            model.setDisplayAsList(value)
@@ -116,6 +135,13 @@ class MainActivity : AppuntiActivity() {
     override fun getToolbar(): Toolbar? = toolbar
 
     override fun getContentLayout(): Int = R.layout.activity_main
+
+    private fun setupFloatingActionButton() {
+        val params = floatingActionButton.layoutParams as ViewGroup.MarginLayoutParams
+        params.bottomMargin += navigationbarHeight
+
+        floatingActionButton.setOnClickListener { startDetailActivity() }
+    }
 
     private fun setupRecyclerView() {
         adapter = ItemEntryListAdapter(this, arrayListOf()) { holder, position ->
@@ -194,6 +220,8 @@ class MainActivity : AppuntiActivity() {
                 }
             }
         }
+
+        navigationView.setPaddingRelative(0, statusbarHeight, 0, navigationbarHeight)
     }
 
     private fun setupItemTouchHelper() {
@@ -308,6 +336,10 @@ class MainActivity : AppuntiActivity() {
     }
 
     private fun setupSearchView() {
+
+        val params = (searchView.layoutParams as ViewGroup.MarginLayoutParams)
+        params.topMargin += statusbarHeight
+
         searchView.setOnMicClickListener {
             Search.setVoiceSearch(this, "")
         }
@@ -319,8 +351,6 @@ class MainActivity : AppuntiActivity() {
         textEdit.isFocusableInTouchMode = false
 
         textEdit.setOnClickListener {
-            Timber.i("onClick!!!")
-
             val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this, toolbar, "toolbar")
             startActivity(IntentUtils.createSearchableIntent(this), intentOptions.toBundle())
         }

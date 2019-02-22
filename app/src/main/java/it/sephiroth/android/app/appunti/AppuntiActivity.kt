@@ -4,10 +4,13 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.View
+import android.view.WindowManager
 import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import it.sephiroth.android.app.appunti.ext.getColor
+import it.sephiroth.android.app.appunti.ext.getNavigationBarSize
+import it.sephiroth.android.app.appunti.ext.getStatusbarHeight
 import it.sephiroth.android.app.appunti.ext.isAPI
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import org.threeten.bp.ZonedDateTime
@@ -15,12 +18,23 @@ import timber.log.Timber
 
 abstract class AppuntiActivity : AppCompatActivity() {
 
+    internal var statusbarHeight: Int = 0
+    internal var navigationbarHeight: Int = 0
+
     @SuppressLint("InlinedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val darkTheme = SettingsManager.getInstance(this).darkTheme
         setTheme(if (darkTheme) R.style.Theme_Appunti_Dark_NoActionbar else R.style.Theme_Appunti_Light_NoActionbar)
+
+        statusbarHeight = getStatusbarHeight()
+        navigationbarHeight = getNavigationBarSize().y - statusbarHeight
+
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        )
 
         window.statusBarColor = theme.getColor(this, android.R.attr.statusBarColor)
         window.navigationBarColor = theme.getColor(this, android.R.attr.navigationBarColor)
