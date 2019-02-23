@@ -1,8 +1,10 @@
 package it.sephiroth.android.app.appunti
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -10,12 +12,10 @@ import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.text.InputType
 import android.text.style.StyleSpan
 import android.text.util.Linkify
 import android.view.*
-import android.widget.FrameLayout
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
@@ -29,6 +29,7 @@ import androidx.core.view.doOnPreDraw
 import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.structure.save
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.disposables.Disposable
@@ -43,6 +44,8 @@ import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
+import org.json.JSONArray
+import org.json.JSONObject
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
@@ -70,6 +73,8 @@ class DetailActivity : AppuntiActivity() {
 
     // temporary file used for pictures taken with camera
     private var mCurrentPhotoPath: File? = null
+
+    private var detailListAdapter: DetailListAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
 //        window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS)
@@ -279,6 +284,8 @@ class DetailActivity : AppuntiActivity() {
             findItem(R.id.menu_action_file).isVisible = value
             findItem(R.id.menu_action_category).isVisible = !value
             findItem(R.id.menu_action_delete).isVisible = !value
+            findItem(R.id.menu_action_list).isVisible = !value && currentEntry?.entryType == Entry.EntryType.TEXT
+            findItem(R.id.menu_action_text).isVisible = !value && currentEntry?.entryType == Entry.EntryType.LIST
             findItem(R.id.menu_action_share).setVisible(!value)
         }
     }
@@ -326,6 +333,10 @@ class DetailActivity : AppuntiActivity() {
                 R.id.menu_action_file -> dispatchOpenFileIntent()
 
                 R.id.menu_action_camera -> dispatchTakePictureIntent()
+
+                R.id.menu_action_list -> onConvertEntryToList()
+
+                R.id.menu_action_text -> onConvertEntryToText()
             }
             closeBottomSheet()
             true
@@ -483,7 +494,25 @@ class DetailActivity : AppuntiActivity() {
         currentEntry = Entry(entry)
 
         if (diff.titleChanged) entryTitle.setText(entry.entryTitle)
-        if (diff.textChanged) entryText.setText(entry.entryText)
+
+        if (diff.typeChanged) {
+            entryText.visibility = if (entry.entryType == Entry.EntryType.TEXT) View.VISIBLE else View.GONE
+            detailRecycler.visibility = if (entry.entryType == Entry.EntryType.LIST) View.VISIBLE else View.GONE
+        }
+
+        if (entry.entryType == Entry.EntryType.TEXT) {
+            detailRecycler.adapter = null
+            detailListAdapter = null
+
+            if (diff.typeChanged) entryText.setText(entry.entryText)
+        } else if (entry.entryType == Entry.EntryType.LIST) {
+            if (diff.typeChanged) {
+                detailListAdapter = DetailListAdapter(this).apply { setData(JSONObject(entry.entryText)) }
+                detailRecycler.adapter = detailListAdapter
+            }
+        }
+
+        if (entry.entryType == Entry.EntryType.TEXT && diff.textChanged) entryText.setText(entry.entryText)
 
         if (diff.categoryChanged) {
             entryCategory.text = entry.category?.categoryTitle
@@ -611,6 +640,18 @@ class DetailActivity : AppuntiActivity() {
                 }
             }
         }
+    }
+
+    private fun onConvertEntryToList() {
+        model.entry.value?.entryText =
+            "{\"list\":[{\"id\":0,\"position\":0,\"text\":\"Testo del todo\",\"checked\":false},{\"id\":2,\"position\":2,\"text\":\"Testo del secondo todo\",\"checked\":false},{\"id\":1,\"position\":1,\"text\":\"Testo del terzo todo fatto\",\"checked\":true}]}"
+        model.entry.value?.entryType = Entry.EntryType.LIST
+        model.entry.value?.touch()?.save()
+    }
+
+    private fun onConvertEntryToText() {
+        model.entry.value?.entryType = Entry.EntryType.TEXT
+        model.entry.value?.touch()?.save()
     }
 
     private fun onTogglePin() {
@@ -841,7 +882,8 @@ class DetailActivity : AppuntiActivity() {
             var categoryChanged: Boolean = true,
             var priorityChanged: Boolean = true,
             var modifiedDateChanged: Boolean = true,
-            var attachmentsChanged: Boolean = true
+            var attachmentsChanged: Boolean = true,
+            var typeChanged: Boolean = true
         )
 
         fun calculateDiff(oldValue: Entry?, newValue: Entry?): Result {
@@ -867,9 +909,64 @@ class DetailActivity : AppuntiActivity() {
                 categoryChanged = oldValue?.category != newValue?.category,
                 priorityChanged = oldValue?.entryPriority != newValue?.entryPriority,
                 modifiedDateChanged = oldValue?.entryModifiedDate != newValue?.entryModifiedDate,
-                attachmentsChanged = oldValue?.attachments != newValue?.attachments
+                attachmentsChanged = oldValue?.attachments != newValue?.attachments,
+                typeChanged = oldValue?.entryType != newValue?.entryType
             )
 
         }
+    }
+}
+
+
+class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListAdapter.DetailEntryViewHolder>() {
+
+    private var data: JSONArray = JSONArray()
+    private var inflater = LayoutInflater.from(context)
+
+    init {
+        setHasStableIds(true)
+    }
+
+    fun setData(json: JSONObject) {
+        data = json.getJSONArray("list")
+        notifyDataSetChanged()
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailEntryViewHolder {
+        val view = inflater.inflate(R.layout.appunti_detail_entry_list_item_checkable, parent, false)
+        return DetailEntryViewHolder(view)
+    }
+
+    override fun getItemCount(): Int {
+        return data.length()
+    }
+
+    override fun getItemId(position: Int): Long {
+        return data.getJSONObject(position).getLong("id")
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return if (data.getJSONObject(position).getBoolean("checked")) 0 else 1
+    }
+
+    override fun onBindViewHolder(holder: DetailEntryViewHolder, position: Int) {
+        val entry = data.getJSONObject(position)
+        val checked = entry.optBoolean("checked")
+        holder.text.text = entry.optString("text")
+        holder.checkbox.isChecked = checked
+
+
+        if (checked) {
+            holder.text.paintFlags = holder.text.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+        } else {
+            holder.text.paintFlags = holder.text.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+        }
+
+    }
+
+    class DetailEntryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val text: TextView = itemView.findViewById(android.R.id.text1)
+        val checkbox: CheckBox = itemView.findViewById(R.id.checkbox)
+
     }
 }

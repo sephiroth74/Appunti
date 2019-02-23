@@ -228,4 +228,8 @@ class Entry() : BaseRXModel() {
     enum class EntryType {
         TEXT, LIST
     }
+
+    object EntryJson {
+
+    }
 }

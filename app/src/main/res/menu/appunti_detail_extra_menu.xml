@@ -17,7 +17,6 @@
             android:title="@string/share"
             app:showAsAction="always"/>
 
-
     <item
             android:id="@+id/menu_action_category"
             android:checkable="false"
@@ -25,6 +24,19 @@
             android:title="@string/category"
             app:showAsAction="always"/>
 
+    <item
+            android:id="@+id/menu_action_list"
+            android:checkable="false"
+            android:icon="@drawable/sharp_format_list_bulleted_24"
+            android:title="Convert to List"
+            app:showAsAction="always"/>
+
+    <item
+            android:id="@+id/menu_action_text"
+            android:checkable="false"
+            android:icon="@drawable/sharp_text_fields_24"
+            android:title="Convert to Text"
+            app:showAsAction="always"/>
 
     <item
             android:id="@+id/menu_action_camera"
