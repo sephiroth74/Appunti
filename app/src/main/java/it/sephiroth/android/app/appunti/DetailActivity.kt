@@ -15,7 +15,10 @@ import android.provider.MediaStore
 import android.text.style.StyleSpan
 import android.text.util.Linkify
 import android.view.*
-import android.widget.*
+import android.widget.CheckBox
+import android.widget.FrameLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
@@ -32,6 +35,8 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.structure.save
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import io.reactivex.disposables.Disposable
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
@@ -44,8 +49,6 @@ import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
-import org.json.JSONArray
-import org.json.JSONObject
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
@@ -507,7 +510,12 @@ class DetailActivity : AppuntiActivity() {
             if (diff.typeChanged) entryText.setText(entry.entryText)
         } else if (entry.entryType == Entry.EntryType.LIST) {
             if (diff.typeChanged) {
-                detailListAdapter = DetailListAdapter(this).apply { setData(JSONObject(entry.entryText)) }
+                detailListAdapter = DetailListAdapter(this).apply {
+                    val gson = Gson()
+                    val entryListType = object : TypeToken<MutableList<Entry.EntryJson>>() {}.type
+                    val list = gson.fromJson<MutableList<Entry.EntryJson>>(entry.entryText, entryListType)
+                    setData(list)
+                }
                 detailRecycler.adapter = detailListAdapter
             }
         }
@@ -644,7 +652,7 @@ class DetailActivity : AppuntiActivity() {
 
     private fun onConvertEntryToList() {
         model.entry.value?.entryText =
-            "{\"list\":[{\"id\":0,\"position\":0,\"text\":\"Testo del todo\",\"checked\":false},{\"id\":2,\"position\":2,\"text\":\"Testo del secondo todo\",\"checked\":false},{\"id\":1,\"position\":1,\"text\":\"Testo del terzo todo fatto\",\"checked\":true}]}"
+            "[{\"id\":0,\"position\":0,\"text\":\"Testo del todo\",\"checked\":false},{\"id\":2,\"position\":2,\"text\":\"Testo del secondo todo\",\"checked\":false},{\"id\":1,\"position\":1,\"text\":\"Testo del terzo todo fatto\",\"checked\":true},{\"id\":3,\"position\":3,\"text\":\"\",\"checked\":false}]"
         model.entry.value?.entryType = Entry.EntryType.LIST
         model.entry.value?.touch()?.save()
     }
@@ -918,55 +926,123 @@ class DetailActivity : AppuntiActivity() {
 }
 
 
-class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListAdapter.DetailEntryViewHolder>() {
+class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
 
-    private var data: JSONArray = JSONArray()
+    private var uncheckedList: List<Entry.EntryJson> = listOf()
+    private var checkedList: List<Entry.EntryJson> = listOf()
+
     private var inflater = LayoutInflater.from(context)
+
+    private val listComparator = Comparator<Entry.EntryJson> { o1, o2 ->
+        if (o1.checked == o2.checked) {
+            if (o1.position < o2.position) -1 else 1
+        } else {
+            if (o1.checked) 1 else -1
+        }
+    }
 
     init {
         setHasStableIds(true)
     }
 
-    fun setData(json: JSONObject) {
-        data = json.getJSONArray("list")
+    companion object {
+        const val TYPE_UNCHECKED = 0
+        const val TYPE_CHECKED = 1
+        const val TYPE_NEW_ENTRY = 2
+    }
+
+    fun setData(list: MutableList<Entry.EntryJson>) {
+        uncheckedList = list.filter { entry -> !entry.checked }.sortedWith(listComparator)
+        checkedList = list.filter { entry -> entry.checked }.sortedWith(listComparator)
+        Timber.i("unchecked size: ${uncheckedList.size}, checked size: ${checkedList.size}")
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailEntryViewHolder {
-        val view = inflater.inflate(R.layout.appunti_detail_entry_list_item_checkable, parent, false)
-        return DetailEntryViewHolder(view)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailViewHolder {
+        return if (viewType == TYPE_NEW_ENTRY) {
+            val view = inflater.inflate(R.layout.appunti_detail_new_entry_list_item, parent, false)
+            DetailNewEntryViewHolder(view)
+        } else {
+            val view = inflater.inflate(R.layout.appunti_detail_entry_list_item_checkable, parent, false)
+            DetailEntryViewHolder(view)
+        }
     }
 
     override fun getItemCount(): Int {
-        return data.length()
+        return uncheckedList.size + checkedList.size + 1
     }
 
     override fun getItemId(position: Int): Long {
-        return data.getJSONObject(position).getLong("id")
+        Timber.i("getItemId($position)")
+        return when {
+            position < uncheckedList.size -> uncheckedList[position].id
+            position == uncheckedList.size -> -1
+            else -> checkedList[position - uncheckedList.size - 1].id
+        }
+    }
+
+    private fun getItem(position: Int): Entry.EntryJson {
+        return when {
+            position < uncheckedList.size -> uncheckedList[position]
+            else -> checkedList[position - uncheckedList.size - 1]
+        }
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (data.getJSONObject(position).getBoolean("checked")) 0 else 1
+        Timber.i("getItemViewType($position)")
+        return when {
+            position < uncheckedList.size -> TYPE_UNCHECKED
+            position == uncheckedList.size -> TYPE_NEW_ENTRY
+            else -> TYPE_CHECKED
+        }
     }
 
-    override fun onBindViewHolder(holder: DetailEntryViewHolder, position: Int) {
-        val entry = data.getJSONObject(position)
-        val checked = entry.optBoolean("checked")
-        holder.text.text = entry.optString("text")
-        holder.checkbox.isChecked = checked
+    override fun onBindViewHolder(baseHolder: DetailViewHolder, position: Int) {
 
+        if (baseHolder.itemViewType == TYPE_NEW_ENTRY) {
+            val holder = baseHolder as DetailNewEntryViewHolder
 
-        if (checked) {
-            holder.text.paintFlags = holder.text.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+            holder.buttonAdd.setOnClickListener {
+                Timber.v("onclick")
+            }
+
         } else {
-            holder.text.paintFlags = holder.text.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+            val holder = baseHolder as DetailEntryViewHolder
+            val entry = getItem(position)
+            val checked = entry.checked
+            holder.text.text = entry.text
+            holder.checkbox.isChecked = checked
+
+            if (checked) {
+                holder.text.paintFlags = holder.text.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+            } else {
+                holder.text.paintFlags = holder.text.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+            }
+
+            holder.checkbox.setOnCheckedChangeListener { buttonView, isChecked ->
+
+            }
         }
 
     }
 
-    class DetailEntryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    open class DetailViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val text: TextView = itemView.findViewById(android.R.id.text1)
+    }
+
+    open class DetailNewEntryViewHolder(itemView: View) : DetailViewHolder(itemView) {
+        val buttonAdd: View = itemView.findViewById(R.id.buttonAdd)
+    }
+
+    class DetailEntryViewHolder(itemView: View) : DetailViewHolder(itemView) {
         val checkbox: CheckBox = itemView.findViewById(R.id.checkbox)
+        val deleteButton: View = itemView.findViewById(R.id.deleteButton)
+
+        init {
+            text.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
+                deleteButton.visibility = if (hasFocus) View.VISIBLE else View.INVISIBLE
+            }
+        }
 
     }
 }

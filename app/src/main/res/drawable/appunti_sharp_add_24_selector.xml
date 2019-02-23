@@ -3,9 +3,9 @@
           android:enterFadeDuration="@android:integer/config_shortAnimTime"
           android:exitFadeDuration="@android:integer/config_shortAnimTime">
 
-    <item android:drawable="@drawable/sharp_edit_24_pressed" android:state_pressed="true"/>
+    <item android:drawable="@drawable/sharp_add_24_pressed" android:state_pressed="true"/>
 
-    <item android:state_enabled="false" android:drawable="@drawable/sharp_edit_24_disabled"/>
+    <item android:state_enabled="false" android:drawable="@drawable/sharp_add_24_disabled"/>
 
-    <item android:drawable="@drawable/sharp_edit_24"/>
+    <item android:drawable="@drawable/sharp_add_24"/>
 </selector>
