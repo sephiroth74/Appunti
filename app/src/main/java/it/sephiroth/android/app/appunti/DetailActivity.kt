@@ -928,8 +928,8 @@ class DetailActivity : AppuntiActivity() {
 
 class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
 
-    private var uncheckedList: List<Entry.EntryJson> = listOf()
-    private var checkedList: List<Entry.EntryJson> = listOf()
+    private var uncheckedList = mutableListOf<Entry.EntryJson>()
+    private var checkedList = mutableListOf<Entry.EntryJson>()
 
     private var inflater = LayoutInflater.from(context)
 
@@ -952,8 +952,8 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     }
 
     fun setData(list: MutableList<Entry.EntryJson>) {
-        uncheckedList = list.filter { entry -> !entry.checked }.sortedWith(listComparator)
-        checkedList = list.filter { entry -> entry.checked }.sortedWith(listComparator)
+        uncheckedList = (list.filter { entry -> !entry.checked }.sortedWith(listComparator)).toMutableList()
+        checkedList = (list.filter { entry -> entry.checked }.sortedWith(listComparator)).toMutableList()
         Timber.i("unchecked size: ${uncheckedList.size}, checked size: ${checkedList.size}")
         notifyDataSetChanged()
     }
@@ -1002,9 +1002,8 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         if (baseHolder.itemViewType == TYPE_NEW_ENTRY) {
             val holder = baseHolder as DetailNewEntryViewHolder
 
-            holder.buttonAdd.setOnClickListener {
-                Timber.v("onclick")
-            }
+            holder.buttonAdd.setOnClickListener { addNewItem() }
+            holder.text.setOnClickListener { addNewItem() }
 
         } else {
             val holder = baseHolder as DetailEntryViewHolder
@@ -1023,7 +1022,25 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
 
             }
         }
+    }
 
+    fun nextId() {
+        uncheckedList.las
+    }
+
+    fun addNewItem() {
+
+    }
+
+    fun toJson() {
+        val gson = Gson()
+        val entryListType = object : TypeToken<MutableList<Entry.EntryJson>>() {}.type
+
+        val finalData = mutableListOf<Entry.EntryJson>()
+        finalData.addAll(uncheckedList)
+        finalData.addAll(checkedList)
+
+        val jsonString = gson.toJson(finalData)
     }
 
     open class DetailViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
