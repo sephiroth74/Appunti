@@ -6,10 +6,7 @@ import android.content.Intent
 import android.graphics.Canvas
 import android.os.Bundle
 import android.speech.RecognizerIntent
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityOptionsCompat
@@ -33,10 +30,10 @@ import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
+import kotlinx.android.synthetic.main.appunti_main_drawer_navigation_content.*
 import kotlinx.android.synthetic.main.appunti_search_view_toolbar.*
 import timber.log.Timber
 import java.util.*
-
 
 class MainActivity : AppuntiActivityFullscreen() {
 
@@ -52,28 +49,60 @@ class MainActivity : AppuntiActivityFullscreen() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
-        // Override the activity's theme when in multiwindow mode.
-        constraintLayout.fitsSystemWindows = fitSystemWindows
-
-        if (!fitSystemWindows) {
-            navigationBackground.layoutParams.height = navigationbarHeight
-            statusbarBackground.layoutParams.height = statusbarHeight
-        } else {
-            navigationBackground.visibility = View.INVISIBLE
-            statusbarBackground.visibility = View.INVISIBLE
-        }
-
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
-        drawerLayout.setStatusBarBackgroundColor(theme.getColor(this, android.R.attr.windowBackground))
+        // Override the activity's theme when in multiwindow mode.
+        coordinatorLayout.fitsSystemWindows = fitSystemWindows
 
+        if (isFullScreen) {
+            navigationView.setOnApplyWindowInsetsListener { v, insets ->
+                Timber.w("applyWindowInsetsListener: $insets")
+
+                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+
+                navigationbarHeight = insets.systemWindowInsetBottom
+                statusbarHeight = insets.systemWindowInsetTop
+
+                Timber.v("navigationbarHeight = $navigationbarHeight")
+                Timber.v("statusbarHeight = $statusbarHeight")
+
+                navigationView.setOnApplyWindowInsetsListener(null)
+
+                initializeUI()
+                initializeModel()
+
+                insets.consumeSystemWindowInsets()
+            }
+        } else {
+            initializeUI()
+            initializeModel()
+        }
+//        drawerLayout.setStatusBarBackgroundColor(theme.getColor(this, android.R.attr.windowBackground))
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        Timber.i("onNewIntent($intent)")
+        super.onNewIntent(intent)
+
+        if (intent?.action == ACTION_ENTRIES_BY_CATEGORY) {
+            model.group.setCategoryID(intent.getLongExtra(KEY_CATEGORY_ID, 0))
+        }
+    }
+
+    override fun getToolbar(): Toolbar? = toolbar
+
+    override fun getContentLayout(): Int = R.layout.activity_main
+
+    private fun initializeUI() {
+        initializeSystemUI()
         setupRecyclerView()
         setupSearchView()
         seupNavigationView()
         setupItemTouchHelper()
         setupFloatingActionButton()
+    }
 
+    private fun initializeModel() {
         model.entries.observe(this, Observer {
             Timber.i("[${currentThread()}] entries changed")
             tracker?.clearSelection()
@@ -97,19 +126,17 @@ class MainActivity : AppuntiActivityFullscreen() {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        Timber.i("onNewIntent($intent)")
-        super.onNewIntent(intent)
-
-        if (intent?.action == ACTION_ENTRIES_BY_CATEGORY) {
-            model.group.setCategoryID(intent.getLongExtra(KEY_CATEGORY_ID, 0))
+    private fun initializeSystemUI() {
+        if (isFullScreen) {
+            navigationBackground.layoutParams.height = navigationbarHeight
+            statusbarBackground.layoutParams.height = statusbarHeight
+            navigationBackground.visibility = View.VISIBLE
+            statusbarBackground.visibility = View.VISIBLE
+        } else {
+            navigationBackground.visibility = View.INVISIBLE
+            statusbarBackground.visibility = View.INVISIBLE
         }
-
     }
-
-    override fun getToolbar(): Toolbar? = toolbar
-
-    override fun getContentLayout(): Int = R.layout.activity_main
 
     private fun setupFloatingActionButton() {
         val params = floatingActionButton.layoutParams as ViewGroup.MarginLayoutParams
@@ -122,15 +149,19 @@ class MainActivity : AppuntiActivityFullscreen() {
 
         var top = 0
         var bottom = 0
-        if (!fitSystemWindows) {
+        if (isFullScreen) {
             // Inset bottom of content if drawing under the translucent navbar, but
             // only if the navbar is a software bar and is on the bottom of the screen.
-            if (resources.showsSoftwareNavBar && resources.isNavBarAtBottom) {
-                bottom = navigationbarHeight
-            }
+//            Timber.v("resources.showsSoftwareNavBar = ${resources.hasSoftwareNavBar(this)}")
+//            Timber.v("resources.isNavBarAtBottom = ${resources.isNavBarAtBottom}")
+//            if (resources.hasSoftwareNavBar(this) && resources.isNavBarAtBottom) {
+//                bottom = navigationbarHeight
+//            }
+            bottom = navigationbarHeight
             top = statusbarHeight
         }
 
+        Timber.v("top=$top, bottom=$bottom")
 
         adapter = ItemEntryListAdapter(this, arrayListOf(), top, bottom) { holder, position ->
             tracker?.isSelected(position.toLong()) ?: false
@@ -209,7 +240,12 @@ class MainActivity : AppuntiActivityFullscreen() {
             }
         }
 
-        navigationView.setPaddingRelative(0, statusbarHeight, 0, navigationbarHeight)
+        navigationViewContent.setPadding(
+            navigationViewContent.paddingLeft,
+            statusbarHeight,
+            navigationViewContent.paddingRight,
+            navigationbarHeight
+        )
     }
 
     private fun setupItemTouchHelper() {
@@ -407,7 +443,7 @@ class MainActivity : AppuntiActivityFullscreen() {
         val mSnackbar =
             Snackbar
                 .make(
-                    constraintLayout,
+                    coordinatorLayout,
                     resources.getQuantityString(R.plurals.entries_deleted_title, values.size, values.size),
                     Snackbar
                         .LENGTH_LONG
@@ -422,7 +458,7 @@ class MainActivity : AppuntiActivityFullscreen() {
         val mSnackbar =
             Snackbar
                 .make(
-                    constraintLayout,
+                    coordinatorLayout,
                     resources.getQuantityString(R.plurals.entries_archived_title, values.size, values.size),
                     Snackbar.LENGTH_LONG
                 )

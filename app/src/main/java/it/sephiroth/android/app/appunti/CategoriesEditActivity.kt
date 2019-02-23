@@ -30,8 +30,6 @@ import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.graphics.CategoryColorDrawable
-import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
-import it.sephiroth.android.app.appunti.graphics.MaterialShape
 import it.sephiroth.android.app.appunti.utils.CategoriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
@@ -170,7 +168,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
             mAdapter.trash(category)
 
             mSnackbar = Snackbar.make(
-                constraintLayout,
+                coordinatorLayout,
                 getString(R.string.category_deleted_snackbar_title),
                 Snackbar.LENGTH_SHORT
             )

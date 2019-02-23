@@ -91,6 +91,8 @@ class ItemEntryListAdapter(
         val view: View
         val inflater = LayoutInflater.from(context)
 
+        Timber.v("onCreateViewHolder(type=$viewType)")
+
         return when (viewType) {
             TYPE_EMPTY_START -> {
 
@@ -102,7 +104,10 @@ class ItemEntryListAdapter(
                     R.dimen.appunti_main_search_view_margin_top
                 )
 
-                val marginTop = searchViewHeight + (searchViewTopMargin * 2) + contextMarginTop
+                val marginTop =
+                    searchViewHeight + (searchViewTopMargin * 2) + contextMarginTop + context.resources.getDimensionPixelOffset(
+                        R.dimen.appunti_main_recycler_margins_vertical
+                    )
 
                 val params =
                     StaggeredGridLayoutManager
@@ -117,7 +122,10 @@ class ItemEntryListAdapter(
                 val marginBottom = if (contextMarginBottom > 0) contextMarginBottom else 0
 
                 val params =
-                    StaggeredGridLayoutManager.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, marginBottom)
+                    StaggeredGridLayoutManager.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        marginBottom + context.resources.getDimensionPixelOffset(R.dimen.appunti_main_recycler_margins_vertical)
+                    )
                 params.isFullSpan = true
                 view.layoutParams = params
                 BaseViewHolder(view)
@@ -150,12 +158,10 @@ class ItemEntryListAdapter(
     override fun onBindViewHolder(baseHolder: BaseViewHolder, position: Int) {
         val item = getItem(position)
 
-
         if (baseHolder.itemViewType == TYPE_ENTRY) {
-
             val holder = baseHolder as EntryViewHolder
             val entryItem = item.entry!!
-            Timber.i("onBindViewHolder(position=$position, entry=$entryItem)")
+//            Timber.i("onBindViewHolder(position=$position, entry=$entryItem)")
 
             holder.bind(entryItem, searchText, selectionCallback?.invoke(holder, position) ?: false)
 

@@ -3,17 +3,16 @@ package it.sephiroth.android.app.appunti.ext
 import android.app.Activity
 import android.content.Context
 import android.graphics.Point
-import android.graphics.Rect
-import android.view.View
-import android.view.Window
 import android.view.WindowManager
-import android.view.Window.ID_ANDROID_CONTENT
+import timber.log.Timber
 
 
 fun Activity.getNavigationBarSize(): Point {
     val appUsableSize = getUsableScreenSize()
     val realScreenSize = getRealScreenSize()
 
+    Timber.v("getUsableScreenSize = $appUsableSize")
+    Timber.v("realScreenSize = $realScreenSize")
     // navigation bar on the side
     return when {
         appUsableSize.x < realScreenSize.x -> Point(realScreenSize.x - appUsableSize.x, appUsableSize.y)

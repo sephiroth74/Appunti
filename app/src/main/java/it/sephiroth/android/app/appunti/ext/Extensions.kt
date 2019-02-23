@@ -10,7 +10,10 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.TypedValue
+import android.view.KeyCharacterMap
+import android.view.KeyEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.annotation.AttrRes
@@ -24,6 +27,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.R
+import timber.log.Timber
 import java.text.DateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -101,11 +105,18 @@ fun Resources.Theme.getColor(context: Context, @AttrRes id: Int): Int {
     return ContextCompat.getColor(context, typedValue.data)
 }
 
-val Resources.showsSoftwareNavBar: Boolean
-    get() {
-        val id = getIdentifier("config_showNavigationBar", "bool", "android")
-        return id > 0 && getBoolean(id)
+fun Resources.hasSoftwareNavBar(context: Context): Boolean {
+    val id = getIdentifier("config_showNavigationBar", "bool", "android")
+    if (id < 0) {
+        Timber.v("config_showNavigationBar = ${getBoolean(id)}")
+        return getBoolean(id)
+    } else {    // Check for keys
+        val hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK)
+        val hasHomeKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_HOME)
+        Timber.v("hasBackKey = ${hasBackKey}, hasHomeKey = ${hasHomeKey}")
+        return ((hasBackKey && hasHomeKey))
     }
+}
 
 inline val Resources.isNavBarAtBottom: Boolean
     get() {

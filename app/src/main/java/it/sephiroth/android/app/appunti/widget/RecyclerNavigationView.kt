@@ -37,12 +37,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
         Timber.i("init")
         mLifecycleRegistry.markState(Lifecycle.State.INITIALIZED)
         adapter = NavigationItemsAdapter(context, mutableListOf())
-
-        setOnApplyWindowInsetsListener { v, insets ->
-            statusBarHeight = insets.systemWindowInsetTop
-            setPadding(paddingLeft, statusBarHeight, paddingRight, paddingBottom)
-            insets
-        }
     }
 
     fun setNavigationItemSelectedListener(action: (Int) -> Unit) {

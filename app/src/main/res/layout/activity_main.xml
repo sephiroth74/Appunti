@@ -10,7 +10,7 @@
         tools:openDrawer="start">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
-            android:id="@+id/constraintLayout"
+            android:id="@+id/coordinatorLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             tools:context=".MainActivity">
@@ -18,8 +18,8 @@
         <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginBottom="8dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginBottom="0dp"
+                android:layout_marginTop="0dp"
                 app:layout_anchorGravity="top">
             <!--app:layout_anchor="@id/bottomAppBar"-->
 
@@ -41,23 +41,25 @@
         />
 
         <View
-                android:layout_gravity="bottom"
-                android:foregroundGravity="bottom"
-                app:layout_anchorGravity="bottom"
-                android:id="@+id/navigationBackground"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?attr/navigationbarBackgroundDrawable"
-        />
-
-        <View
+                android:visibility="visible"
                 android:layout_gravity="top"
                 android:foregroundGravity="bottom"
                 app:layout_anchorGravity="bottom"
                 android:id="@+id/statusbarBackground"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:background="?attr/statusbarBackgroundDrawable"
+        />
+
+        <View
+                android:visibility="visible"
+                android:layout_gravity="bottom"
+                android:foregroundGravity="bottom"
+                app:layout_anchorGravity="bottom"
+                android:id="@+id/navigationBackground"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:background="?attr/navigationbarBackgroundDrawable"
         />
 
 

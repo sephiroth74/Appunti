@@ -20,6 +20,9 @@
     <!-- horizontal margins for the main activity recycler view -->
     <dimen name="appunti_main_recycler_margins_horizontal">8dp</dimen>
 
+    <!-- vertical margins for the main activity recycler view -->
+    <dimen name="appunti_main_recycler_margins_vertical">8dp</dimen>
+
     <!-- horizontal margins for the default item of the main recycler view -->
     <dimen name="appunti_main_item_list_margins_horizontal">4dp</dimen>
 
