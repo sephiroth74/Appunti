@@ -41,18 +41,20 @@
                 android:name=".AlarmReceiver"
                 android:process=":background"/>
 
-        <!-- device reboot receiver --><receiver
-            android:name=".BootReceiver"
-            android:process=":background">
-        <intent-filter>
-            <action android:name="android.intent.action.BOOT_COMPLETED"/>
-        </intent-filter>
-    </receiver>
+        <!-- device reboot receiver -->
+        <receiver
+                android:name=".BootReceiver"
+                android:process=":background">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
 
         <activity
                 android:name=".DetailActivity"
                 android:label=""
                 android:launchMode="singleTop"
+                android:windowSoftInputMode="stateHidden"
                 android:parentActivityName="it.sephiroth.android.app.appunti.MainActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"

@@ -11,7 +11,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.InputType
-import android.text.method.LinkMovementMethod
 import android.text.style.StyleSpan
 import android.text.util.Linkify
 import android.view.*
@@ -62,9 +61,12 @@ class DetailActivity : AppuntiActivity() {
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<FrameLayout>
     private lateinit var model: DetailViewModel
     private var currentEntry: Entry? = null
-    private var changeTimer: Disposable? = null
     private var shouldRemoveAlarm: Boolean = false
     private var isNewDocument: Boolean = false
+    private var isUpdating = false
+
+    private var changeTitleTimer: Disposable? = null
+    private var changeTextTimer: Disposable? = null
 
     // temporary file used for pictures taken with camera
     private var mCurrentPhotoPath: File? = null
@@ -97,17 +99,22 @@ class DetailActivity : AppuntiActivity() {
         setupNavigationView()
         setupBottomAppBar()
         setupSharedElementsTransition()
-
         closeBottomSheet()
+
+        linearLayout.requestFocus()
 
         // UI elements listeners
         entryCategory.setOnClickListener { dispatchPickCategoryIntent() }
         entryTitle.doOnTextChanged { s, start, count, after -> onEntryTitleChanged(s, start, count, after) }
         entryText.doOnTextChanged { s, start, count, after -> onEntryTextChanged(s, start, count, after) }
+        entryText.doOnAfterTextChanged { e -> LinkifyCompat.addLinks(e, Linkify.ALL) }
 
         entryCategory.background = MaterialBackgroundUtils.categoryChipClickable(this)
 
-        entryText.doOnAfterTextChanged { e -> LinkifyCompat.addLinks(e, Linkify.ALL) }
+        entryText.setOnClickListener {
+            entryText.requestFocus()
+            entryText.setOnClickListener(null)
+        }
 
         // handle the current listener
         // TODO(manage intent when activity is destroyed and recreated)
@@ -222,12 +229,9 @@ class DetailActivity : AppuntiActivity() {
 
     @Suppress("UNUSED_PARAMETER")
     private fun onEntryTextChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
-        if (currentFocus == entryText) {
-
-            Timber.i("onEntryTextChanged(start=$start, count=$count, after=$after)")
-
-            // TODO(usare timer differenti per titolo e testo)
-            changeTimer = rxTimer(changeTimer, 2, TimeUnit.SECONDS) {
+        if (currentFocus == entryText && !isUpdating) {
+            Timber.i("onEntryTextChanged()")
+            changeTextTimer = rxTimer(changeTextTimer, 2, TimeUnit.SECONDS) {
                 currentEntry?.apply {
                     entryText = text?.toString() ?: ""
                     touch()
@@ -241,8 +245,9 @@ class DetailActivity : AppuntiActivity() {
 
     @Suppress("UNUSED_PARAMETER")
     private fun onEntryTitleChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
-        if (currentFocus == entryTitle) {
-            changeTimer = rxTimer(changeTimer, 2, TimeUnit.SECONDS) {
+        if (currentFocus == entryTitle && !isUpdating) {
+            Timber.i("onEntryTitleChanged($text, ${currentEntry?.entryTitle})")
+            changeTitleTimer = rxTimer(changeTitleTimer, 2, TimeUnit.SECONDS) {
                 currentEntry?.apply {
                     entryTitle = text?.toString() ?: ""
                     touch()
@@ -467,6 +472,9 @@ class DetailActivity : AppuntiActivity() {
     private fun onEntryChanged(entry: Entry) {
         Timber.i("onEntryChanged()")
 
+        // entry is updating, pause listeners..
+        isUpdating = true
+
         val diff = EntryDiff.calculateDiff(currentEntry, entry)
         Timber.v("diff=$diff")
 
@@ -503,6 +511,9 @@ class DetailActivity : AppuntiActivity() {
                 entryCategory.transitionName = null
             }
         }
+
+        // resume listeners
+        isUpdating = false
     }
 
     private fun updateAttachmentsList(attachments: List<Attachment>?) {

@@ -68,8 +68,9 @@
                 android:layout_marginEnd="20dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginTop="8dp"
-                android:focusable="false"
-                android:focusableInTouchMode="false"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:clickable="true"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -86,7 +87,7 @@
                     android:hint="@string/title"
                     android:nextFocusDown="@id/entryText"
                     android:transitionName="itemTitle"
-                    />
+            />
 
             <com.google.android.material.textfield.TextInputEditText
                     style="@style/Widget.Appunti.Text.EntryContent"
@@ -99,12 +100,12 @@
                     android:layout_marginTop="16dp"
                     android:hint="@string/content_here"
                     android:layout_weight="0"
-                    android:inputType="none"
+                    android:inputType="textMultiLine"
                     android:focusable="true"
                     android:textIsSelectable="true"
                     android:clickable="true"
                     android:transitionName="itemText"
-                    />
+            />
 
             <LinearLayout
                     android:layout_marginTop="8dp"
@@ -122,7 +123,7 @@
                     android:layout_marginTop="8dp"
                     android:layout_weight="0"
                     android:transitionName="itemCategory"
-                    />
+            />
 
         </LinearLayout>
 

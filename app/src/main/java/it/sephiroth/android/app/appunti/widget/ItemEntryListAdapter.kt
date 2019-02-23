@@ -14,7 +14,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
-import androidx.core.text.*
+import androidx.core.text.set
+import androidx.core.text.toSpannable
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -90,8 +91,6 @@ class ItemEntryListAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
         val view: View
         val inflater = LayoutInflater.from(context)
-
-        Timber.v("onCreateViewHolder(type=$viewType)")
 
         return when (viewType) {
             TYPE_EMPTY_START -> {
