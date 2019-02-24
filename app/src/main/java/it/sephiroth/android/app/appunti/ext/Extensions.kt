@@ -66,6 +66,12 @@ fun ioThread(func: () -> Unit) {
     }
 }
 
+fun uiThread(func: () -> Unit) {
+    AndroidSchedulers.mainThread().scheduleDirect {
+        func.invoke()
+    }
+}
+
 fun doOnScheduler(scheduler: Scheduler, func: () -> Unit) {
     scheduler.scheduleDirect(func)
 }
@@ -81,15 +87,6 @@ fun isAtLeastAPI(value: Int) = Build.VERSION.SDK_INT >= value
 fun currentThread() = Thread.currentThread()
 
 fun isMainThread() = Thread.currentThread() == Looper.getMainLooper().thread
-
-inline fun <T> T.executeIfMainThread(func: () -> Unit): T? {
-    return if (isMainThread()) {
-        func.invoke()
-        null
-    } else {
-        this
-    }
-}
 
 fun Date.toUserDate() = ExtensionUtils.dateformat.format(this)
 

@@ -228,11 +228,4 @@ class Entry() : BaseRXModel() {
     enum class EntryType {
         TEXT, LIST
     }
-
-    class EntryJson {
-        var id: Long = 0
-        var position: Int = 0
-        var text: String = ""
-        var checked: Boolean = false
-    }
 }
