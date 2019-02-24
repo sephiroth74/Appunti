@@ -58,7 +58,6 @@ import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
-import java.lang.StringBuilder
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -964,16 +963,18 @@ class DetailActivity : AppuntiActivity() {
 
 class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
 
-    inner class JsonEntryHolder {
+    class JsonEntryHolder {
         private val gson = Gson()
         private val listType = object : TypeToken<MutableList<EntryJson>>() {}.type
         private var data: MutableList<EntryJson>? = null
         private var uncheckedList = mutableListOf<EntryJson>()
         private var checkedList = mutableListOf<EntryJson>()
 
-        val TYPE_UNCHECKED = 0
-        val TYPE_CHECKED = 1
-        val TYPE_NEW_ENTRY = 2
+        companion object {
+            const val TYPE_UNCHECKED = 0
+            const val TYPE_CHECKED = 1
+            const val TYPE_NEW_ENTRY = 2
+        }
 
         private val listComparator = Comparator<EntryJson> { o1, o2 ->
             if (o1.checked == o2.checked) {
@@ -990,8 +991,6 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
                 uncheckedList = (data.filter { entry -> !entry.checked }.sortedWith(listComparator)).toMutableList()
                 checkedList = (data.filter { entry -> entry.checked }.sortedWith(listComparator)).toMutableList()
             }
-
-            notifyDataSetChanged()
             Timber.i("unchecked size: ${uncheckedList.size}, checked size: ${checkedList.size}")
         }
 
@@ -1038,29 +1037,30 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             }
         }
 
-        fun deleteItem(entry: EntryJson, type: Int) {
+        fun deleteItem(entry: EntryJson, type: Int): Int? {
             if (type == TYPE_UNCHECKED) {
                 val index = uncheckedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
                 if (index > -1) {
                     uncheckedList.removeAt(index)
-                    notifyItemRemoved(index)
+                    return index
                 }
             } else if (type == TYPE_CHECKED) {
                 val index = checkedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
                 if (index > -1) {
                     checkedList.removeAt(index)
-                    notifyItemRemoved(index + uncheckedList.size + 1)
+                    return index + uncheckedList.size + 1
                 }
             }
+            return null
         }
 
-        fun newItem() {
+        fun newItem(): Int {
             val newEntry = EntryJson(UUIDUtils.randomLongUUID(), (uncheckedList.size + checkedList.size))
             uncheckedList.add(newEntry)
-            notifyItemInserted(uncheckedList.size - 1)
+            return (uncheckedList.size - 1)
         }
 
-        fun toggle(entry: EntryJson, type: Int) {
+        fun toggle(entry: EntryJson, type: Int): Pair<Int, Int>? {
             Timber.i("toggle($entry, $type)")
 
             if (type == TYPE_UNCHECKED) {
@@ -1073,7 +1073,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
                     checkedList.add(addedIndex, entry)
 
                     Timber.v("removedIndex=$removedIndex, addedIndex=${addedIndex + uncheckedList.size + 1}")
-                    notifyItemMoved(removedIndex, addedIndex + uncheckedList.size + 1)
+                    return Pair(removedIndex, addedIndex + uncheckedList.size + 1)
 
                 }
             } else if (type == TYPE_CHECKED) {
@@ -1087,9 +1087,10 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
 
                     Timber.v("removedIndex=${removedIndex + uncheckedList.size}, addedIndex=${addedIndex}")
 
-                    notifyItemMoved(removedIndex + uncheckedList.size, addedIndex)
+                    return Pair(removedIndex + uncheckedList.size, addedIndex)
                 }
             }
+            return null
         }
     }
 
@@ -1103,6 +1104,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
 
     fun setData(text: String) {
         dataHolder.fromJson(text)
+        notifyDataSetChanged()
     }
 
     override fun toString(): String {
@@ -1110,7 +1112,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailViewHolder {
-        return if (viewType == dataHolder.TYPE_NEW_ENTRY) {
+        return if (viewType == JsonEntryHolder.TYPE_NEW_ENTRY) {
             val view = inflater.inflate(R.layout.appunti_detail_new_entry_list_item, parent, false)
             DetailNewEntryViewHolder(view)
         } else {
@@ -1138,10 +1140,12 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     override fun onBindViewHolder(baseHolder: DetailViewHolder, position: Int) {
         Timber.i("onBindViewHolder(position=$position, type=${baseHolder.itemViewType})")
 
-        if (baseHolder.itemViewType == dataHolder.TYPE_NEW_ENTRY) {
+        if (baseHolder.itemViewType == JsonEntryHolder.TYPE_NEW_ENTRY) {
             val holder = baseHolder as DetailNewEntryViewHolder
-            holder.buttonAdd.setOnClickListener { dataHolder.newItem() }
-            holder.text.setOnClickListener { dataHolder.newItem() }
+
+            holder.buttonAdd.setOnClickListener { dataHolder.newItem().also { index -> notifyItemInserted(index) } }
+            holder.text.setOnClickListener { dataHolder.newItem().also { index -> notifyItemInserted(index) } }
+
         } else {
             val holder = baseHolder as DetailEntryViewHolder
             holder.checkbox.setOnCheckedChangeListener(null)
@@ -1149,7 +1153,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             val entry = getItem(position)
             holder.text.text = entry.text
 
-            if (holder.itemViewType == dataHolder.TYPE_CHECKED) {
+            if (holder.itemViewType == JsonEntryHolder.TYPE_CHECKED) {
                 holder.checkbox.isChecked = true
                 holder.text.paintFlags = holder.text.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
             } else {
@@ -1163,11 +1167,15 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
                     dataHolder.toggle(
                         entry,
                         baseHolder.itemViewType
-                    )
+                    )?.also { result ->
+                        notifyItemMoved(result.first, result.second)
+                    }
                 }
             }
 
-            holder.deleteButton.setOnClickListener { dataHolder.deleteItem(entry, baseHolder.itemViewType) }
+            holder.deleteButton.setOnClickListener {
+                dataHolder.deleteItem(entry, baseHolder.itemViewType)?.let { index -> notifyItemRemoved(index) }
+            }
         }
     }
 
