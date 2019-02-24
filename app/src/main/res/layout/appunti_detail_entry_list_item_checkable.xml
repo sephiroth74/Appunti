@@ -24,10 +24,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
-                android:inputType="text|textImeMultiLine"
-                android:maxLines="1"
-                android:lines="1"
-                android:maxEms="255"
+                android:inputType="text|textMultiLine"
                 android:imeOptions="actionDone"
                 android:textSize="@dimen/text_size_body_1_material"
                 android:visibility="visible"/>

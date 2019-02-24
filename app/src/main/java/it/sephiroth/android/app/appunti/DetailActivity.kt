@@ -36,6 +36,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.structure.save
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import io.reactivex.disposables.Disposable
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
@@ -56,6 +58,7 @@ import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
+import java.lang.StringBuilder
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -508,8 +511,8 @@ class DetailActivity : AppuntiActivity() {
         if (entry.entryType == Entry.EntryType.TEXT) {
             detailRecycler.adapter = null
             detailListAdapter = null
-
             if (diff.typeChanged) entryText.setText(entry.entryText)
+
         } else if (entry.entryType == Entry.EntryType.LIST) {
             if (diff.typeChanged) {
                 detailListAdapter = DetailListAdapter(this).apply {
@@ -519,7 +522,6 @@ class DetailActivity : AppuntiActivity() {
             }
         }
 
-        if (entry.entryType == Entry.EntryType.TEXT && diff.textChanged) entryText.setText(entry.entryText)
 
         if (diff.categoryChanged) {
             entryCategory.text = entry.category?.categoryTitle
@@ -650,15 +652,50 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun onConvertEntryToList() {
-        model.entry.value?.entryText =
-            "[{\"id\":0,\"position\":0,\"text\":\"Position 0 Entry\",\"checked\":false},{\"id\":1,\"position\":1,\"text\":\"Position 1 Entry\",\"checked\":true}]"
-        model.entry.value?.entryType = Entry.EntryType.LIST
-        model.entry.value?.touch()?.save()
+
+        model.entry.value?.let { entry ->
+            if (entry.entryType == Entry.EntryType.TEXT) {
+                val list =
+                    entry.entryText.split(Regex("((\\.[\\s]*)?\\r?\\n)|(\\r?\\n)"))
+
+                val array = JsonArray()
+                var id = 0L
+                for (item in list) {
+                    if (item.isEmpty() || item.isBlank()) continue
+
+                    JsonObject().apply {
+                        addProperty("id", id)
+                        addProperty("position", id.toInt())
+                        addProperty("text", item)
+                        addProperty("checked", false)
+                    }.also {
+                        array.add(it)
+                    }
+
+                    id++
+                }
+
+                with(entry) {
+                    entryType = Entry.EntryType.LIST
+                    entryText = array.toString()
+                    touch()
+                    save()
+                }
+            }
+        }
     }
 
     private fun onConvertEntryToText() {
-        model.entry.value?.entryType = Entry.EntryType.TEXT
-        model.entry.value?.touch()?.save()
+        Timber.i("onConvertEntryToText")
+        model.entry.value?.let { entry ->
+            if (entry.entryType == Entry.EntryType.LIST) {
+                val text = detailListAdapter?.toString() ?: ""
+                entry.entryText = text
+                entry.entryType = Entry.EntryType.TEXT
+                entry.touch()
+                entry.save()
+            }
+        }
     }
 
     private fun onTogglePin() {
@@ -967,6 +1004,13 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             return jsonString
         }
 
+        override fun toString(): String {
+            return StringBuilder().apply {
+                uncheckedList.forEach { append("${it.text}\n") }
+                checkedList.forEach { append("${it.text}\n") }
+            }.toString()
+        }
+
         fun size(): Int {
             return uncheckedList.size + checkedList.size + 1
         }
@@ -1059,6 +1103,10 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
 
     fun setData(text: String) {
         dataHolder.fromJson(text)
+    }
+
+    override fun toString(): String {
+        return dataHolder.toString()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailViewHolder {
