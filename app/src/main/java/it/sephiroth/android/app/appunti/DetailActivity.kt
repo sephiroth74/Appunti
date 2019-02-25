@@ -12,13 +12,13 @@ import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.method.KeyListener
 import android.text.style.StyleSpan
 import android.text.util.Linkify
 import android.view.*
-import android.widget.CheckBox
-import android.widget.FrameLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.view.inputmethod.EditorInfo
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
@@ -1118,6 +1118,7 @@ class JsonEntryHolder {
 class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
     private var dataHolder = JsonEntryHolder()
     private var inflater = LayoutInflater.from(context)
+    private var currentEditText: TextView? = null
 
     var saveAction: ((String) -> (Unit))? = null
 
@@ -1139,16 +1140,6 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
 
     override fun toString(): String {
         return dataHolder.toString()
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailViewHolder {
-        return if (viewType == JsonEntryHolder.TYPE_NEW_ENTRY) {
-            val view = inflater.inflate(R.layout.appunti_detail_new_entry_list_item, parent, false)
-            DetailNewEntryViewHolder(view)
-        } else {
-            val view = inflater.inflate(R.layout.appunti_detail_entry_list_item_checkable, parent, false)
-            DetailEntryViewHolder(view)
-        }
     }
 
     override fun getItemCount(): Int {
@@ -1197,14 +1188,38 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         }
     }
 
+
+    private fun removeFocusFromEditText() {
+        currentEditText?.clearFocus()
+        currentEditText?.hideSoftInput()
+        currentEditText = null
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailViewHolder {
+        return if (viewType == JsonEntryHolder.TYPE_NEW_ENTRY) {
+            val view = inflater.inflate(R.layout.appunti_detail_new_entry_list_item, parent, false)
+            DetailNewEntryViewHolder(view)
+        } else {
+            val view = inflater.inflate(R.layout.appunti_detail_entry_list_item_checkable, parent, false)
+            DetailEntryViewHolder(view)
+        }
+    }
+
     override fun onBindViewHolder(baseHolder: DetailViewHolder, position: Int) {
         Timber.i("onBindViewHolder(position=$position, type=${baseHolder.itemViewType})")
 
         if (baseHolder.itemViewType == JsonEntryHolder.TYPE_NEW_ENTRY) {
             val holder = baseHolder as DetailNewEntryViewHolder
 
-            holder.buttonAdd.setOnClickListener { addItem() }
-            holder.text.setOnClickListener { addItem() }
+            holder.buttonAdd.setOnClickListener {
+                removeFocusFromEditText()
+                addItem()
+            }
+
+            holder.text.setOnClickListener {
+                removeFocusFromEditText()
+                addItem()
+            }
 
         } else {
             val holder = baseHolder as DetailEntryViewHolder
@@ -1222,12 +1237,52 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             }
 
             holder.checkbox.setOnCheckedChangeListener { buttonView, isChecked ->
+                removeFocusFromEditText()
                 toggleItem(
                     entry,
                     holder.itemViewType
                 )
             }
-            holder.deleteButton.setOnClickListener { deleteItem(entry, holder.itemViewType) }
+
+            holder.deleteButton.setOnClickListener {
+                removeFocusFromEditText()
+                deleteItem(entry, holder.itemViewType)
+            }
+
+            holder.text.setOnFocusChangeListener { v, hasFocus ->
+                if (hasFocus) {
+                    currentEditText = holder.text
+                }
+            }
+
+            holder.text.doOnTextChanged { s, start, count, after ->
+                Timber.v("doOnTextChanged: $s, start=$start, count=$count, after=$after")
+            }
+
+            holder.text.setOnKeyListener { v, keyCode, event ->
+                Timber.v("onKeyListener($v, keyCode=$keyCode, event=$event)")
+                var returnType = true
+
+                if (event.action == KeyEvent.ACTION_UP) {
+                    if (keyCode == KeyEvent.KEYCODE_DEL) {
+                        if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.length() == 0) {
+                            removeFocusFromEditText()
+                            deleteItem(entry, holder.itemViewType)
+                            returnType = false
+
+                            // ok give focus to the previous one then
+                        }
+                    }
+                }
+
+                returnType
+            }
+
+            holder.text.setOnEditorActionListener { v, actionId, event ->
+                Timber.v("editorAction: $actionId, event=$event")
+                true
+            }
+
         }
     }
 
