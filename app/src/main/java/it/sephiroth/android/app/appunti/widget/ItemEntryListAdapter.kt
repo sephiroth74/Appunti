@@ -353,12 +353,7 @@ class ItemEntryListAdapter(
 
             titleTextView.text = entryTitle.toSpannable()
 
-            if (entry.entryType == Entry.EntryType.TEXT) {
-                contentTextView.text = entry.getTextSummary(100, "...")
-            } else {
-                contentTextView.text = entry.asList(itemView.context, contentTextView.textSize, 10)
-            }
-
+            contentTextView.text = entry.getSummary(itemView.context, contentTextView.textSize, 100, 6)
             categoryTextView.text = entry.category?.categoryTitle
 
             alarmView.visibility = if (!entry.isAlarmExpired(ItemEntryListAdapter.NOW)) View.VISIBLE else View.INVISIBLE

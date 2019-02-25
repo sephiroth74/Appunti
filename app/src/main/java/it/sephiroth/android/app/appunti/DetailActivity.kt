@@ -12,9 +12,11 @@ import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.InputType
 import android.text.style.StyleSpan
 import android.text.util.Linkify
 import android.view.*
+import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
@@ -1055,7 +1057,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             holder.text.doOnTextChanged { s, start, count, after ->
                 if (currentEditText == holder.text) {
                     entry.text = s.toString()
-                    postSave()
+//                    postSave()
                 }
             }
 
@@ -1067,14 +1069,20 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
                         returnType = deleteAction?.invoke(holder, entry) ?: true
                     }
                 }
-
                 returnType
             }
 
             holder.text.setOnEditorActionListener { v, actionId, event ->
-                Timber.v("editorAction: $actionId, event=$event")
-                true
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    removeFocusFromEditText()
+                    postSave()
+                    true
+                } else {
+                    false
+                }
             }
+
+            holder.text.setRawInputType(InputType.TYPE_CLASS_TEXT)
 
             if (insertedIndex == position) {
                 currentEditText?.clearFocus()

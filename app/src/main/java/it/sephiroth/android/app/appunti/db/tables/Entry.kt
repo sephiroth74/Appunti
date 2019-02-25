@@ -164,11 +164,6 @@ class Entry() : BaseRXModel() {
         return true
     }
 
-    fun getTextSummary(maxLength: Int = 100, postfix: String? = null): String {
-        return if (entryText.length <= maxLength) entryText
-        else entryText.substring(0, maxLength) + postfix
-    }
-
     companion object {
         private fun getViewReminderPendingIntent(entry: Entry, context: Context): PendingIntent {
             return getReminderPendingIntent(entry, context, AlarmReceiver.ACTION_ENTRY_VIEW_REMINDER)

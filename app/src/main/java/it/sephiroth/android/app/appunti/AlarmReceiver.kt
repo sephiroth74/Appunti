@@ -16,6 +16,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.TaskStackBuilder
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
+import it.sephiroth.android.app.appunti.ext.getSummary
+import it.sephiroth.android.app.appunti.ext.getTextSummary
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import timber.log.Timber
 
@@ -85,7 +87,14 @@ class AlarmReceiver : BroadcastReceiver() {
                             .Builder(context, ENTRY_ALARM_CHANNEL_ID)
                             .setSmallIcon(R.drawable.sharp_alarm_24)
                             .setContentTitle(entry.entryTitle)
-                            .setContentText(entry.getTextSummary(50))
+                            .setContentText(
+                                entry.getSummary(
+                                    context,
+                                    context.resources.getDimension(R.dimen.text_size_body_1_material),
+                                    50,
+                                    5
+                                )
+                            )
                             .setColor(entry.getColor(context))
                             .setTicker(entry.entryTitle)
                             .setContentIntent(pendingIntent)
