@@ -1167,10 +1167,31 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         return dataHolder.getItemType(position)
     }
 
-    fun addItem() {
+    private fun addItem() {
         doOnMainThread {
             dataHolder.newItem().also { index ->
                 notifyItemInserted(index)
+                postSave()
+            }
+        }
+    }
+
+    private fun deleteItem(entry: JsonEntryHolder.EntryJson, itemViewType: Int) {
+        doOnMainThread {
+            dataHolder.deleteItem(entry, itemViewType)?.let { index ->
+                notifyItemRemoved(index)
+                postSave()
+            }
+        }
+    }
+
+    private fun toggleItem(entry: JsonEntryHolder.EntryJson, itemViewType: Int) {
+        doOnMainThread {
+            dataHolder.toggle(
+                entry,
+                itemViewType
+            )?.also { result ->
+                notifyItemMoved(result.first, result.second)
                 postSave()
             }
         }
@@ -1201,25 +1222,12 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             }
 
             holder.checkbox.setOnCheckedChangeListener { buttonView, isChecked ->
-                doOnMainThread {
-                    dataHolder.toggle(
-                        entry,
-                        baseHolder.itemViewType
-                    )?.also { result ->
-                        notifyItemMoved(result.first, result.second)
-                        postSave()
-                    }
-                }
+                toggleItem(
+                    entry,
+                    holder.itemViewType
+                )
             }
-
-            holder.deleteButton.setOnClickListener {
-                doOnMainThread {
-                    dataHolder.deleteItem(entry, baseHolder.itemViewType)?.let { index ->
-                        notifyItemRemoved(index)
-                        postSave()
-                    }
-                }
-            }
+            holder.deleteButton.setOnClickListener { deleteItem(entry, holder.itemViewType) }
         }
     }
 
