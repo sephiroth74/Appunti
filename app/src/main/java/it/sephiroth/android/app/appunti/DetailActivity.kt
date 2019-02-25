@@ -12,12 +12,9 @@ import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.text.Editable
-import android.text.method.KeyListener
 import android.text.style.StyleSpan
 import android.text.util.Linkify
 import android.view.*
-import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
@@ -32,6 +29,7 @@ import androidx.core.view.doOnPreDraw
 import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.structure.save
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -499,32 +497,60 @@ class DetailActivity : AppuntiActivity() {
 
         currentEntry = Entry(entry)
 
-        if (diff.titleChanged) entryTitle.setText(entry.entryTitle)
+        if (currentEntryIsNull && diff.titleChanged) entryTitle.setText(entry.entryTitle)
 
         if (diff.typeChanged) {
             entryText.visibility = if (entry.entryType == Entry.EntryType.TEXT) View.VISIBLE else View.GONE
             detailRecycler.visibility = if (entry.entryType == Entry.EntryType.LIST) View.VISIBLE else View.GONE
-        }
 
-        if (entry.entryType == Entry.EntryType.TEXT) {
-            detailRecycler.adapter = null
-            detailListAdapter?.saveAction = null
-            detailListAdapter = null
-            if (diff.typeChanged) entryText.setText(entry.entryText)
+            if (entry.entryType == Entry.EntryType.TEXT) {
+                detailRecycler.adapter = null
+                detailListAdapter?.saveAction = null
+                detailListAdapter?.deleteAction = null
+                detailListAdapter = null
+                if (diff.typeChanged) entryText.setText(entry.entryText)
 
-        } else if (entry.entryType == Entry.EntryType.LIST) {
-            if (diff.typeChanged) {
-                detailListAdapter = DetailListAdapter(this).apply {
-                    setData(entry.entryText)
-                    saveAction = { text ->
-                        currentEntry?.let { currentEntry ->
-                            currentEntry.entryText = text
-                            currentEntry.touch()
-                            currentEntry.save()
+            } else if (entry.entryType == Entry.EntryType.LIST) {
+                if (diff.typeChanged) {
+                    detailListAdapter = DetailListAdapter(this).apply {
+                        setData(entry.entryText)
+                        saveAction = { text ->
+                            currentEntry?.let { currentEntry ->
+                                currentEntry.entryText = text
+                                currentEntry.touch()
+                                currentEntry.save()
+                            }
+                        }
+
+                        deleteAction = { holder, entry ->
+                            var result = false
+                            if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.length() == 0) {
+
+                                removeFocusFromEditText()
+                                deleteItem(entry, holder.itemViewType)
+
+                                if (holder.adapterPosition > 0) {
+                                    val view =
+                                        (detailRecycler.layoutManager as LinearLayoutManager).findViewByPosition(holder.adapterPosition - 1)
+                                    view?.let { view ->
+                                        val previous = detailRecycler.findContainingViewHolder(view)
+                                        previous?.let { previous ->
+                                            if (previous is DetailListAdapter.DetailEntryViewHolder) {
+                                                previous.text.requestFocus()
+                                                (previous.text as EditText).setSelection(previous.text.length())
+                                                previous.text.showSoftInput()
+                                            }
+                                        }
+                                    }
+                                }
+
+                                result = true
+                            }
+                            result
                         }
                     }
+                    detailRecycler.adapter = detailListAdapter
                 }
-                detailRecycler.adapter = detailListAdapter
             }
         }
 
@@ -1121,6 +1147,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     private var currentEditText: TextView? = null
 
     var saveAction: ((String) -> (Unit))? = null
+    var deleteAction: ((DetailEntryViewHolder, JsonEntryHolder.EntryJson) -> Boolean)? = null
 
     init {
         setHasStableIds(true)
@@ -1167,7 +1194,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         }
     }
 
-    private fun deleteItem(entry: JsonEntryHolder.EntryJson, itemViewType: Int) {
+    internal fun deleteItem(entry: JsonEntryHolder.EntryJson, itemViewType: Int) {
         doOnMainThread {
             dataHolder.deleteItem(entry, itemViewType)?.let { index ->
                 notifyItemRemoved(index)
@@ -1189,7 +1216,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     }
 
 
-    private fun removeFocusFromEditText() {
+    internal fun removeFocusFromEditText() {
         currentEditText?.clearFocus()
         currentEditText?.hideSoftInput()
         currentEditText = null
@@ -1251,6 +1278,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
 
             holder.text.setOnFocusChangeListener { v, hasFocus ->
                 if (hasFocus) {
+                    Timber.v("onFocusChangeListener")
                     currentEditText = holder.text
                 }
             }
@@ -1261,17 +1289,11 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
 
             holder.text.setOnKeyListener { v, keyCode, event ->
                 Timber.v("onKeyListener($v, keyCode=$keyCode, event=$event)")
-                var returnType = true
+                var returnType = false
 
                 if (event.action == KeyEvent.ACTION_UP) {
                     if (keyCode == KeyEvent.KEYCODE_DEL) {
-                        if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.length() == 0) {
-                            removeFocusFromEditText()
-                            deleteItem(entry, holder.itemViewType)
-                            returnType = false
-
-                            // ok give focus to the previous one then
-                        }
+                        returnType = deleteAction?.invoke(holder, entry) ?: true
                     }
                 }
 

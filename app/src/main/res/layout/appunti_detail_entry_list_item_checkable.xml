@@ -25,7 +25,6 @@
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:inputType="text|textMultiLine"
-                android:imeOptions="flagNoEnterAction"
                 android:textSize="@dimen/text_size_body_1_material"
                 android:visibility="visible"/>
 
