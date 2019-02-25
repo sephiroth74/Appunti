@@ -36,10 +36,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.structure.save
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.gson.Gson
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -509,6 +508,7 @@ class DetailActivity : AppuntiActivity() {
 
         if (entry.entryType == Entry.EntryType.TEXT) {
             detailRecycler.adapter = null
+            detailListAdapter?.saveAction = null
             detailListAdapter = null
             if (diff.typeChanged) entryText.setText(entry.entryText)
 
@@ -516,6 +516,13 @@ class DetailActivity : AppuntiActivity() {
             if (diff.typeChanged) {
                 detailListAdapter = DetailListAdapter(this).apply {
                     setData(entry.entryText)
+                    saveAction = { text ->
+                        currentEntry?.let { currentEntry ->
+                            currentEntry.entryText = text
+                            currentEntry.touch()
+                            currentEntry.save()
+                        }
+                    }
                 }
                 detailRecycler.adapter = detailListAdapter
             }
@@ -657,26 +664,26 @@ class DetailActivity : AppuntiActivity() {
                 val list =
                     entry.entryText.split(Regex("((\\.[\\s]*)?\\r?\\n)|(\\r?\\n)"))
 
-                val array = JsonArray()
+                val array = arrayListOf<JsonEntryHolder.EntryJson>()
                 var id = 0L
                 for (item in list) {
                     if (item.isEmpty() || item.isBlank()) continue
 
-                    JsonObject().apply {
-                        addProperty("id", id)
-                        addProperty("position", id.toInt())
-                        addProperty("text", item)
-                        addProperty("checked", false)
-                    }.also {
-                        array.add(it)
-                    }
+                    JsonEntryHolder.EntryJson(id, id.toInt(), item, false)
+                        .apply {
+                            array.add(this)
+                        }
 
                     id++
                 }
 
+                val string = Gson().toJson(array, object : TypeToken<ArrayList<JsonEntryHolder.EntryJson>>() {}.type)
+                Timber.v("string: $string")
+
+
                 with(entry) {
                     entryType = Entry.EntryType.LIST
-                    entryText = array.toString()
+                    entryText = string
                     touch()
                     save()
                 }
@@ -960,146 +967,169 @@ class DetailActivity : AppuntiActivity() {
     }
 }
 
+class JsonEntryHolder {
 
-class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
-
-    class JsonEntryHolder {
-        private val gson = Gson()
-        private val listType = object : TypeToken<MutableList<EntryJson>>() {}.type
-        private var data: MutableList<EntryJson>? = null
-        private var uncheckedList = mutableListOf<EntryJson>()
-        private var checkedList = mutableListOf<EntryJson>()
-
-        companion object {
-            const val TYPE_UNCHECKED = 0
-            const val TYPE_CHECKED = 1
-            const val TYPE_NEW_ENTRY = 2
+    data class EntryJson(
+        val id: Long = UUIDUtils.randomLongUUID(),
+        val position: Int = 0,
+        var text: String = "",
+        var checked: Boolean = false
+    ) {
+        override fun hashCode(): Int {
+            return id.hashCode()
         }
 
-        private val listComparator = Comparator<EntryJson> { o1, o2 ->
-            if (o1.checked == o2.checked) {
-                if (o1.position < o2.position) -1 else 1
-            } else {
-                if (o1.checked) 1 else -1
-            }
-        }
-
-        fun fromJson(text: String) {
-            Timber.i("parseString($text)")
-            data = gson.fromJson<MutableList<EntryJson>>(text, listType)
-            data?.let { data ->
-                uncheckedList = (data.filter { entry -> !entry.checked }.sortedWith(listComparator)).toMutableList()
-                checkedList = (data.filter { entry -> entry.checked }.sortedWith(listComparator)).toMutableList()
-            }
-            Timber.i("unchecked size: ${uncheckedList.size}, checked size: ${checkedList.size}")
-        }
-
-        fun toJson(): String {
-            val finalData = mutableListOf<EntryJson>()
-            finalData.addAll(uncheckedList)
-            finalData.addAll(checkedList)
-            val jsonString = gson.toJson(finalData)
-            Timber.v("jsonString = $jsonString")
-            return jsonString
-        }
-
-        override fun toString(): String {
-            return StringBuilder().apply {
-                uncheckedList.forEach { append("${it.text}\n") }
-                checkedList.forEach { append("${it.text}\n") }
-            }.toString()
-        }
-
-        fun size(): Int {
-            return uncheckedList.size + checkedList.size + 1
-        }
-
-        fun getItemId(position: Int): Long {
-            return when {
-                position < uncheckedList.size -> uncheckedList[position].id
-                position == uncheckedList.size -> -1
-                else -> checkedList[position - uncheckedList.size - 1].id
-            }
-        }
-
-        fun getItem(position: Int): EntryJson {
-            return when {
-                position < uncheckedList.size -> uncheckedList[position]
-                else -> checkedList[position - uncheckedList.size - 1]
-            }
-        }
-
-        fun getItemType(position: Int): Int {
-            return when {
-                position < uncheckedList.size -> TYPE_UNCHECKED
-                position == uncheckedList.size -> TYPE_NEW_ENTRY
-                else -> TYPE_CHECKED
-            }
-        }
-
-        fun deleteItem(entry: EntryJson, type: Int): Int? {
-            if (type == TYPE_UNCHECKED) {
-                val index = uncheckedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
-                if (index > -1) {
-                    uncheckedList.removeAt(index)
-                    return index
-                }
-            } else if (type == TYPE_CHECKED) {
-                val index = checkedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
-                if (index > -1) {
-                    checkedList.removeAt(index)
-                    return index + uncheckedList.size + 1
-                }
-            }
-            return null
-        }
-
-        fun newItem(): Int {
-            val newEntry = EntryJson(UUIDUtils.randomLongUUID(), (uncheckedList.size + checkedList.size))
-            uncheckedList.add(newEntry)
-            return (uncheckedList.size - 1)
-        }
-
-        fun toggle(entry: EntryJson, type: Int): Pair<Int, Int>? {
-            Timber.i("toggle($entry, $type)")
-
-            if (type == TYPE_UNCHECKED) {
-                val removedIndex = uncheckedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
-                if (removedIndex > -1) {
-                    uncheckedList.removeAt(removedIndex)
-                    entry.checked = true
-                    var addedIndex = checkedList.indexOfFirst { entryJson -> entryJson.position > entry.position }
-                    if (addedIndex < 0) addedIndex = checkedList.size
-                    checkedList.add(addedIndex, entry)
-
-                    Timber.v("removedIndex=$removedIndex, addedIndex=${addedIndex + uncheckedList.size + 1}")
-                    return Pair(removedIndex, addedIndex + uncheckedList.size + 1)
-
-                }
-            } else if (type == TYPE_CHECKED) {
-                val removedIndex = checkedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
-                if (removedIndex > -1) {
-                    checkedList.removeAt(removedIndex)
-                    entry.checked = false
-                    var addedIndex = uncheckedList.indexOfFirst { entryJson -> entryJson.position > entry.position }
-                    if (addedIndex < 0) addedIndex = uncheckedList.size
-                    uncheckedList.add(addedIndex, entry)
-
-                    Timber.v("removedIndex=${removedIndex + uncheckedList.size}, addedIndex=${addedIndex}")
-
-                    return Pair(removedIndex + uncheckedList.size, addedIndex)
-                }
-            }
-            return null
+        fun toJSon(): String {
+            return Gson().toJson(this)
         }
     }
 
+    private val gson = Gson()
+    private var data: MutableList<EntryJson>? = null
+    private var uncheckedList = mutableListOf<EntryJson>()
+    private var checkedList = mutableListOf<EntryJson>()
+
+    companion object {
+        const val TYPE_UNCHECKED = 0
+        const val TYPE_CHECKED = 1
+        const val TYPE_NEW_ENTRY = 2
+    }
+
+    private val listComparator = Comparator<EntryJson> { o1, o2 ->
+        if (o1.checked == o2.checked) {
+            if (o1.position < o2.position) -1 else 1
+        } else {
+            if (o1.checked) 1 else -1
+        }
+    }
+
+    fun fromJson(text: String) {
+        Timber.i("parseString($text)")
+        data = gson.fromJson<MutableList<EntryJson>>(text)
+        data?.let { data ->
+            uncheckedList = (data.filter { entry -> !entry.checked }.sortedWith(listComparator)).toMutableList()
+            checkedList = (data.filter { entry -> entry.checked }.sortedWith(listComparator)).toMutableList()
+        }
+        Timber.i("unchecked size: ${uncheckedList.size}, checked size: ${checkedList.size}")
+    }
+
+    fun toJson(): String {
+        val finalData = mutableListOf<EntryJson>()
+        finalData.addAll(uncheckedList)
+        finalData.addAll(checkedList)
+        val jsonString = gson.toJson(finalData)
+        Timber.v("jsonString = $jsonString")
+        return jsonString
+    }
+
+    override fun toString(): String {
+        return StringBuilder().apply {
+            uncheckedList.forEach { append("${it.text}\n") }
+            checkedList.forEach { append("${it.text}\n") }
+        }.toString()
+    }
+
+    fun size(): Int {
+        return uncheckedList.size + checkedList.size + 1
+    }
+
+    fun getItemId(position: Int): Long {
+        return when {
+            position < uncheckedList.size -> uncheckedList[position].id
+            position == uncheckedList.size -> -1
+            else -> checkedList[position - uncheckedList.size - 1].id
+        }
+    }
+
+    fun getItem(position: Int): EntryJson {
+        return when {
+            position < uncheckedList.size -> uncheckedList[position]
+            else -> checkedList[position - uncheckedList.size - 1]
+        }
+    }
+
+    fun getItemType(position: Int): Int {
+        return when {
+            position < uncheckedList.size -> TYPE_UNCHECKED
+            position == uncheckedList.size -> TYPE_NEW_ENTRY
+            else -> TYPE_CHECKED
+        }
+    }
+
+    fun deleteItem(entry: EntryJson, type: Int): Int? {
+        if (type == TYPE_UNCHECKED) {
+            val index = uncheckedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
+            if (index > -1) {
+                uncheckedList.removeAt(index)
+                return index
+            }
+        } else if (type == TYPE_CHECKED) {
+            val index = checkedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
+            if (index > -1) {
+                checkedList.removeAt(index)
+                return index + uncheckedList.size + 1
+            }
+        }
+        return null
+    }
+
+    fun newItem(): Int {
+        val newEntry =
+            EntryJson(UUIDUtils.randomLongUUID(), (uncheckedList.size + checkedList.size))
+        uncheckedList.add(newEntry)
+        return (uncheckedList.size - 1)
+    }
+
+    fun toggle(entry: EntryJson, type: Int): Pair<Int, Int>? {
+        Timber.i("toggle($entry, $type)")
+
+        if (type == TYPE_UNCHECKED) {
+            val removedIndex = uncheckedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
+            if (removedIndex > -1) {
+                uncheckedList.removeAt(removedIndex)
+                entry.checked = true
+                var addedIndex = checkedList.indexOfFirst { entryJson -> entryJson.position > entry.position }
+                if (addedIndex < 0) addedIndex = checkedList.size
+                checkedList.add(addedIndex, entry)
+
+                Timber.v("removedIndex=$removedIndex, addedIndex=${addedIndex + uncheckedList.size + 1}")
+                return Pair(removedIndex, addedIndex + uncheckedList.size + 1)
+
+            }
+        } else if (type == TYPE_CHECKED) {
+            val removedIndex = checkedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
+            if (removedIndex > -1) {
+                checkedList.removeAt(removedIndex)
+                entry.checked = false
+                var addedIndex = uncheckedList.indexOfFirst { entryJson -> entryJson.position > entry.position }
+                if (addedIndex < 0) addedIndex = uncheckedList.size
+                uncheckedList.add(addedIndex, entry)
+
+                Timber.v("removedIndex=${removedIndex + uncheckedList.size}, addedIndex=${addedIndex}")
+
+                return Pair(removedIndex + uncheckedList.size, addedIndex)
+            }
+        }
+        return null
+    }
+}
+
+
+class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
     private var dataHolder = JsonEntryHolder()
     private var inflater = LayoutInflater.from(context)
 
+    var saveAction: ((String) -> (Unit))? = null
 
     init {
         setHasStableIds(true)
+    }
+
+    private fun postSave() {
+        Timber.i("postSave")
+        doOnScheduler(Schedulers.computation()) {
+            saveAction?.invoke(dataHolder.toJson())
+        }
     }
 
     fun setData(text: String) {
@@ -1129,12 +1159,21 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         return dataHolder.getItemId(position)
     }
 
-    private fun getItem(position: Int): EntryJson {
+    private fun getItem(position: Int): JsonEntryHolder.EntryJson {
         return dataHolder.getItem(position)
     }
 
     override fun getItemViewType(position: Int): Int {
         return dataHolder.getItemType(position)
+    }
+
+    fun addItem() {
+        doOnMainThread {
+            dataHolder.newItem().also { index ->
+                notifyItemInserted(index)
+                postSave()
+            }
+        }
     }
 
     override fun onBindViewHolder(baseHolder: DetailViewHolder, position: Int) {
@@ -1143,8 +1182,8 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         if (baseHolder.itemViewType == JsonEntryHolder.TYPE_NEW_ENTRY) {
             val holder = baseHolder as DetailNewEntryViewHolder
 
-            holder.buttonAdd.setOnClickListener { dataHolder.newItem().also { index -> notifyItemInserted(index) } }
-            holder.text.setOnClickListener { dataHolder.newItem().also { index -> notifyItemInserted(index) } }
+            holder.buttonAdd.setOnClickListener { addItem() }
+            holder.text.setOnClickListener { addItem() }
 
         } else {
             val holder = baseHolder as DetailEntryViewHolder
@@ -1162,19 +1201,24 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             }
 
             holder.checkbox.setOnCheckedChangeListener { buttonView, isChecked ->
-
-                uiThread {
+                doOnMainThread {
                     dataHolder.toggle(
                         entry,
                         baseHolder.itemViewType
                     )?.also { result ->
                         notifyItemMoved(result.first, result.second)
+                        postSave()
                     }
                 }
             }
 
             holder.deleteButton.setOnClickListener {
-                dataHolder.deleteItem(entry, baseHolder.itemViewType)?.let { index -> notifyItemRemoved(index) }
+                doOnMainThread {
+                    dataHolder.deleteItem(entry, baseHolder.itemViewType)?.let { index ->
+                        notifyItemRemoved(index)
+                        postSave()
+                    }
+                }
             }
         }
     }
@@ -1197,16 +1241,5 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             }
         }
 
-    }
-
-    data class EntryJson(
-        val id: Long = UUIDUtils.randomLongUUID(),
-        val position: Int = 0,
-        var text: String = "",
-        var checked: Boolean = false
-    ) {
-        override fun hashCode(): Int {
-            return id.hashCode()
-        }
     }
 }

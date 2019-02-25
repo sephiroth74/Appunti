@@ -66,12 +66,6 @@ fun ioThread(func: () -> Unit) {
     }
 }
 
-fun uiThread(func: () -> Unit) {
-    AndroidSchedulers.mainThread().scheduleDirect {
-        func.invoke()
-    }
-}
-
 fun doOnScheduler(scheduler: Scheduler, func: () -> Unit) {
     scheduler.scheduleDirect(func)
 }
