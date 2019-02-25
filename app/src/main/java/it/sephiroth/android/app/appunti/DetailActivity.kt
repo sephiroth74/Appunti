@@ -33,8 +33,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.structure.save
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
@@ -42,10 +40,10 @@ import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.models.DetailViewModel
+import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
-import it.sephiroth.android.app.appunti.utils.UUIDUtils
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
@@ -55,7 +53,6 @@ import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 
@@ -67,9 +64,12 @@ class DetailActivity : AppuntiActivity() {
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<FrameLayout>
     private lateinit var model: DetailViewModel
+
+    private var isModified = false
     private var currentEntry: Entry? = null
     private var shouldRemoveAlarm: Boolean = false
     private var isNewDocument: Boolean = false
+
     private var isUpdating = false
 
     private var changeTitleTimer: Disposable? = null
@@ -174,17 +174,13 @@ class DetailActivity : AppuntiActivity() {
                 CATEGORY_PICK_REQUEST_CODE -> {
                     data?.let { data ->
                         val categoryID = data.getLongExtra(IntentUtils.KEY_CATEGORY_ID, -1)
-                        DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
-                            model.setEntryCategory(category)
-                        }
+                        changeEntryCategory(categoryID)
                     }
                 }
 
                 OPEN_FILE_REQUEST_CODE -> {
                     data?.data?.also { uri ->
-                        model.entry.value?.let { entry ->
-                            onAddAttachment(uri, entry)
-                        }
+                        addAttachmentToEntry(uri)
                     }
                 }
 
@@ -197,15 +193,24 @@ class DetailActivity : AppuntiActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    private fun onAddAttachment(uri: Uri, entry: Entry) {
+    private fun changeEntryCategory(categoryID: Long) {
+        if (categoryID > -1) {
+            DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
+                model.setEntryCategory(category)
+            }
+        }
+    }
+
+    private fun addAttachmentToEntry(uri: Uri) {
         setProgressVisible(true)
 
-        DatabaseHelper.addAttachmentFromUri(this, Entry(entry), uri) { success, throwable ->
+        model.addAttachment(uri) { success, throwable ->
+            Timber.v("addAttachment: $success")
             doOnMainThread {
                 throwable?.let {
                     showConfirmation(it.localizedMessage)
                 } ?: run {
-                    showConfirmation("File added")
+                    showConfirmation(getString(R.string.file_added))
                 }
             }
             setProgressVisible(false)
@@ -226,9 +231,9 @@ class DetailActivity : AppuntiActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_action_pin -> onTogglePin()
-            R.id.menu_action_archive -> onToggleArchive()
-            R.id.menu_action_alarm -> onToggleReminder()
+            R.id.menu_action_pin -> togglePin()
+            R.id.menu_action_archive -> toggleArchive()
+            R.id.menu_action_alarm -> toggleReminder()
             android.R.id.home -> onBackPressed()
         }
         return true
@@ -239,7 +244,6 @@ class DetailActivity : AppuntiActivity() {
     @Suppress("UNUSED_PARAMETER")
     private fun onEntryTextChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
         if (currentFocus == entryText && !isUpdating) {
-            Timber.i("onEntryTextChanged()")
             changeTextTimer = rxTimer(changeTextTimer, 2, TimeUnit.SECONDS) {
                 currentEntry?.apply {
                     entryText = text?.toString() ?: ""
@@ -255,7 +259,6 @@ class DetailActivity : AppuntiActivity() {
     @Suppress("UNUSED_PARAMETER")
     private fun onEntryTitleChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
         if (currentFocus == entryTitle && !isUpdating) {
-            Timber.i("onEntryTitleChanged($text, ${currentEntry?.entryTitle})")
             changeTitleTimer = rxTimer(changeTitleTimer, 2, TimeUnit.SECONDS) {
                 currentEntry?.apply {
                     entryTitle = text?.toString() ?: ""
@@ -328,7 +331,7 @@ class DetailActivity : AppuntiActivity() {
             when (menuItem.itemId) {
                 R.id.menu_action_category -> dispatchPickCategoryIntent()
 
-                R.id.menu_action_delete -> onToggleDelete()
+                R.id.menu_action_delete -> toggleDelete()
 
                 R.id.menu_action_share -> dispatchShareEntryIntent()
 
@@ -338,9 +341,9 @@ class DetailActivity : AppuntiActivity() {
 
                 R.id.menu_action_camera -> dispatchTakePictureIntent()
 
-                R.id.menu_action_list -> onConvertEntryToList()
+                R.id.menu_action_list -> convertEntryToList()
 
-                R.id.menu_action_text -> onConvertEntryToText()
+                R.id.menu_action_text -> convertEntryToText()
             }
             closeBottomSheet()
             true
@@ -350,8 +353,7 @@ class DetailActivity : AppuntiActivity() {
     // External Intents
 
     private fun dispatchPickCategoryIntent() {
-        model.entry.value?.let { entry ->
-
+        currentEntry?.let { entry ->
             IntentUtils.Categories
                 .Builder(this)
                 .pickCategory()
@@ -362,7 +364,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun dispatchShareEntryIntent() {
-        model.entry.value?.let { entry ->
+        currentEntry?.let { entry ->
             IntentUtils.createShareEntryIntent(this, entry).also {
                 startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
             }
@@ -382,21 +384,23 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun dispatchTakePictureIntent() {
-        Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
-            takePictureIntent.resolveActivity(packageManager)?.also {
-                val photoFile: File? = try {
-                    FileSystemUtils.createImageFile(this, model.entry.value!!)
-                } catch (ex: IOException) {
-                    ex.printStackTrace()
-                    null
-                }
+        currentEntry?.let { entry ->
+            Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
+                takePictureIntent.resolveActivity(packageManager)?.also {
+                    val photoFile: File? = try {
+                        FileSystemUtils.createImageFile(this, entry)
+                    } catch (ex: IOException) {
+                        ex.printStackTrace()
+                        null
+                    }
 
-                photoFile?.also { file ->
-                    Timber.v("photoFile = ${file.absolutePath}")
-                    mCurrentPhotoPath = file
-                    val photoURI = FileSystemUtils.getFileUri(this, file)
-                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-                    startActivityForResult(takePictureIntent, IMAGE_CAPTURE_REQUEST_CODE)
+                    photoFile?.also { file ->
+                        Timber.v("photoFile = ${file.absolutePath}")
+                        mCurrentPhotoPath = file
+                        val photoURI = FileSystemUtils.getFileUri(this, file)
+                        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+                        startActivityForResult(takePictureIntent, IMAGE_CAPTURE_REQUEST_CODE)
+                    }
                 }
             }
         }
@@ -409,25 +413,16 @@ class DetailActivity : AppuntiActivity() {
         Timber.i("onImageCaptured(${dstFile?.absolutePath})")
 
         dstFile?.let { dstFile ->
-            model.entry.value?.let { entry ->
-
-                DatabaseHelper.addAttachment(
-                    this,
-                    Entry(entry),
-                    dstFile,
-                    FileSystemUtils.JPEG_MIME_TYPE
-                ) { success, throwable ->
-                    doOnMainThread {
-                        throwable?.let {
-                            showConfirmation(it.localizedMessage)
-                        } ?: run {
-                            showConfirmation("File added")
-                        }
+            model.addImage(dstFile) { success, throwable ->
+                doOnMainThread {
+                    throwable?.let {
+                        showConfirmation(it.localizedMessage)
+                    } ?: run {
+                        showConfirmation(getString(R.string.image_added))
                     }
                 }
             }
         }
-
     }
 
 // BOTTOM SHEET BEHAVIORS
@@ -513,7 +508,7 @@ class DetailActivity : AppuntiActivity() {
             } else if (entry.entryType == Entry.EntryType.LIST) {
                 if (diff.typeChanged) {
                     detailListAdapter = DetailListAdapter(this).apply {
-                        setData(entry.entryText)
+                        setData(entry.asList())
                         saveAction = { text ->
                             currentEntry?.let { currentEntry ->
                                 currentEntry.entryText = text
@@ -562,7 +557,7 @@ class DetailActivity : AppuntiActivity() {
         }
 
         if (diff.attachmentsChanged) {
-            updateAttachmentsList(entry.attachments)
+            updateAttachmentsList(entry)
         }
 
         invalidateOptionsMenu()
@@ -586,55 +581,53 @@ class DetailActivity : AppuntiActivity() {
         isUpdating = false
     }
 
-    private fun updateAttachmentsList(attachments: List<Attachment>?) {
+    private fun updateAttachmentsList(entry: Entry) {
         attachmentsContainer.removeAllViews()
 
-        model.entry.value?.let { entry ->
+        val attachments = entry.attachments
+        attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
 
-            attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
+        attachments?.let { attachments ->
+            val cardColor = entry.getAttachmentColor(this)
 
-            attachments?.let { attachments ->
-                val cardColor = entry.getAttachmentColor(this)
+            for (attachment in attachments) {
+                val view = LayoutInflater.from(this)
+                    .inflate(R.layout.appunti_detail_attachment_item, attachmentsContainer, false) as CardView
 
-                for (attachment in attachments) {
-                    val view = LayoutInflater.from(this)
-                        .inflate(R.layout.appunti_detail_attachment_item, attachmentsContainer, false) as CardView
+                view.setCardBackgroundColor(cardColor)
+                view.attachmentTitle.text = attachment.attachmentTitle
+                view.tag = attachment
 
-                    view.setCardBackgroundColor(cardColor)
-                    view.attachmentTitle.text = attachment.attachmentTitle
-                    view.tag = attachment
+                Timber.v("$attachment")
 
-                    Timber.v("$attachment")
+                // TODO(Specify the exact size here)
+                attachment.loadThumbnail(this, view.attachmentImage)
 
-                    // TODO(Specify the exact size here)
-                    attachment.loadThumbnail(this, view.attachmentImage)
-
-                    view.setOnClickListener {
-                        try {
-                            IntentUtils.createAttachmentViewIntent(this, attachment).also {
-                                startActivity(it)
-                            }
-                        } catch (e: Exception) {
-                            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
+                view.setOnClickListener {
+                    try {
+                        IntentUtils.createAttachmentViewIntent(this, attachment).also {
+                            startActivity(it)
                         }
+                    } catch (e: Exception) {
+                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
-
-                    view.attachmentShareButton.setOnClickListener {
-                        try {
-                            IntentUtils.createAttachmentShareIntent(this, attachment).also {
-                                startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
-                            }
-                        } catch (e: Exception) {
-                            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-
-                    view.attachmentRemoveButton.setOnClickListener {
-                        onRemoveAttachment(attachment)
-                    }
-
-                    attachmentsContainer.addView(view)
                 }
+
+                view.attachmentShareButton.setOnClickListener {
+                    try {
+                        IntentUtils.createAttachmentShareIntent(this, attachment).also {
+                            startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                view.attachmentRemoveButton.setOnClickListener {
+                    rmoveAttachment(attachment)
+                }
+
+                attachmentsContainer.addView(view)
             }
         }
     }
@@ -670,9 +663,9 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    private fun onRemoveAttachment(attachment: Attachment) {
-        model.entry.value?.let { entry ->
-            DatabaseHelper.deleteAttachment(this, Entry(entry), Attachment(attachment)) { result, throwable ->
+    private fun rmoveAttachment(attachment: Attachment) {
+        model.removeAttachment(attachment) { result, throwable ->
+            doOnMainThread {
                 throwable?.let { throwable ->
                     showConfirmation(throwable.localizedMessage)
                 } ?: run {
@@ -683,33 +676,24 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    private fun onConvertEntryToList() {
-
-        model.entry.value?.let { entry ->
-            if (entry.entryType == Entry.EntryType.TEXT) {
-                val list =
-                    entry.entryText.split(Regex("((\\.[\\s]*)?\\r?\\n)|(\\r?\\n)"))
-
-                val array = arrayListOf<JsonEntryHolder.EntryJson>()
-                var id = 0L
-                for (item in list) {
-                    if (item.isEmpty() || item.isBlank()) continue
-
-                    JsonEntryHolder.EntryJson(id, id.toInt(), item, false)
-                        .apply {
-                            array.add(this)
-                        }
-
-                    id++
+    private fun convertEntryToList() {
+        currentEntry?.let { entry ->
+            with(Entry(entry)) {
+                if (this.convertToList()) {
+                    this.touch()
+                    this.save()
                 }
+            }
+        }
+    }
 
-                val string = Gson().toJson(array, object : TypeToken<ArrayList<JsonEntryHolder.EntryJson>>() {}.type)
-                Timber.v("string: $string")
-
-
-                with(entry) {
-                    entryType = Entry.EntryType.LIST
-                    entryText = string
+    private fun convertEntryToText() {
+        currentEntry?.let { entry ->
+            if (entry.entryType == Entry.EntryType.LIST) {
+                val text = detailListAdapter?.toString() ?: ""
+                with(Entry(entry)) {
+                    entryText = text
+                    entryType = Entry.EntryType.TEXT
                     touch()
                     save()
                 }
@@ -717,36 +701,20 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    private fun onConvertEntryToText() {
-        Timber.i("onConvertEntryToText")
-        model.entry.value?.let { entry ->
-            if (entry.entryType == Entry.EntryType.LIST) {
-                val text = detailListAdapter?.toString() ?: ""
-                entry.entryText = text
-                entry.entryType = Entry.EntryType.TEXT
-                entry.touch()
-                entry.save()
-            }
-        }
-    }
-
-    private fun onTogglePin() {
-        val currentValue = model.entry.value?.isPinned()
-        val result = model.togglePin()
-
-        if (result) {
+    private fun togglePin() {
+        val currentValue = currentEntry?.isPinned()
+        if (model.togglePin()) {
             showConfirmation(
                 resources.getQuantityString(
                     if (currentValue == true)
                         R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1
                 )
             )
-
         }
     }
 
-    private fun onToggleDelete() {
-        val currentValue = model.entry.value?.isDeleted()
+    private fun toggleDelete() {
+        val currentValue = currentEntry?.isDeleted()
         if (model.toggleDeleted()) {
             showConfirmation(
                 resources.getQuantityString(
@@ -761,8 +729,8 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    private fun onToggleArchive() {
-        val currentValue = model.entry.value?.isArchived()
+    private fun toggleArchive() {
+        val currentValue = currentEntry?.isArchived()
         if (model.toggleArchived()) {
             showConfirmation(
                 resources.getQuantityString(
@@ -777,8 +745,8 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    private fun onToggleReminder() {
-        model.entry.value?.let { entry ->
+    private fun toggleReminder() {
+        currentEntry?.let { entry ->
             if (entry.entryAlarm != null && !entry.isAlarmExpired()) {
                 val date = entry.entryAlarm!!.atZone(ZoneId.systemDefault())
                 val dateFormatted = entry.entryAlarm!!.getLocalizedDateTimeStamp(FormatStyle.FULL)
@@ -826,8 +794,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun updateMenu(menu: Menu?) {
-
-        model.entry.value?.let { entry ->
+        currentEntry?.let { entry ->
             menu?.let { menu ->
                 var menuItem = menu.findItem(R.id.menu_action_pin)
                 menuItem?.apply {
@@ -876,60 +843,6 @@ class DetailActivity : AppuntiActivity() {
             }
         }
     }
-//
-//    @SuppressLint("CheckResult")
-//    private fun onToggleLocation() {
-////        ensurePermissions()
-//        val location = RxLocation(this)
-//        val request = LocationRequest
-//            .create()
-//            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-//            .setNumUpdates(1)
-//            .setInterval(500)
-//
-//        location
-//            .location()
-//            .updates(request)
-//            .flatMap {
-//                Timber.v("updated location: $it")
-//                location.geocoding().fromLocation(it).toObservable()
-//            }.subscribe { address ->
-//                Timber.v("address: $address")
-//            }
-//    }
-//
-//    @SuppressLint("CheckResult")
-//    private fun ensurePermissions() {
-//        val permissionName = Manifest.permission.ACCESS_FINE_LOCATION
-//
-//        if (ContextCompat.checkSelfPermission(this, permissionName) == PackageManager.PERMISSION_DENIED) {
-//            Timber.w("permission is denied!")
-//        } else {
-//
-//            val permissions = RxPermissions(this)
-//
-//            if (permissions.isGranted(permissionName)) {
-//                Timber.v("permission is granted")
-//            } else {
-//
-//                if (permissions.isRevoked(permissionName)) {
-//                    Timber.w("permission is revoked")
-//                } else {
-//                    permissions
-//                        .requestEach(permissionName)
-//                        .subscribe { permission ->
-//                            Timber.v("result = $permission, ${permission.name}")
-//                            if (permission.granted) {
-//                                Timber.v("granted")
-//                            } else if (permission.shouldShowRequestPermissionRationale) {
-//                                Timber.w("shouldShowRequestPermissionRationale")
-//                            }
-//                        }
-//                }
-//            }
-//        }
-//
-//    }
 
     private fun showConfirmation(text: String) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
@@ -993,161 +906,14 @@ class DetailActivity : AppuntiActivity() {
     }
 }
 
-class JsonEntryHolder {
-
-    data class EntryJson(
-        val id: Long = UUIDUtils.randomLongUUID(),
-        val position: Int = 0,
-        var text: String = "",
-        var checked: Boolean = false
-    ) {
-        override fun hashCode(): Int {
-            return id.hashCode()
-        }
-
-        fun toJSon(): String {
-            return Gson().toJson(this)
-        }
-    }
-
-    private val gson = Gson()
-    private var data: MutableList<EntryJson>? = null
-    private var uncheckedList = mutableListOf<EntryJson>()
-    private var checkedList = mutableListOf<EntryJson>()
-
-    companion object {
-        const val TYPE_UNCHECKED = 0
-        const val TYPE_CHECKED = 1
-        const val TYPE_NEW_ENTRY = 2
-    }
-
-    private val listComparator = Comparator<EntryJson> { o1, o2 ->
-        if (o1.checked == o2.checked) {
-            if (o1.position < o2.position) -1 else 1
-        } else {
-            if (o1.checked) 1 else -1
-        }
-    }
-
-    fun fromJson(text: String) {
-        Timber.i("parseString($text)")
-        data = gson.fromJson<MutableList<EntryJson>>(text)
-        data?.let { data ->
-            uncheckedList = (data.filter { entry -> !entry.checked }.sortedWith(listComparator)).toMutableList()
-            checkedList = (data.filter { entry -> entry.checked }.sortedWith(listComparator)).toMutableList()
-        }
-        Timber.i("unchecked size: ${uncheckedList.size}, checked size: ${checkedList.size}")
-    }
-
-    fun toJson(): String {
-        val finalData = mutableListOf<EntryJson>()
-        finalData.addAll(uncheckedList)
-        finalData.addAll(checkedList)
-        val jsonString = gson.toJson(finalData)
-        Timber.v("jsonString = $jsonString")
-        return jsonString
-    }
-
-    override fun toString(): String {
-        return StringBuilder().apply {
-            uncheckedList.forEach { append("${it.text}\n") }
-            checkedList.forEach { append("${it.text}\n") }
-        }.toString()
-    }
-
-    fun size(): Int {
-        return uncheckedList.size + checkedList.size + 1
-    }
-
-    fun getItemId(position: Int): Long {
-        return when {
-            position < uncheckedList.size -> uncheckedList[position].id
-            position == uncheckedList.size -> -1
-            else -> checkedList[position - uncheckedList.size - 1].id
-        }
-    }
-
-    fun getItem(position: Int): EntryJson {
-        return when {
-            position < uncheckedList.size -> uncheckedList[position]
-            else -> checkedList[position - uncheckedList.size - 1]
-        }
-    }
-
-    fun getItemType(position: Int): Int {
-        return when {
-            position < uncheckedList.size -> TYPE_UNCHECKED
-            position == uncheckedList.size -> TYPE_NEW_ENTRY
-            else -> TYPE_CHECKED
-        }
-    }
-
-    fun deleteItem(entry: EntryJson, type: Int): Int? {
-        if (type == TYPE_UNCHECKED) {
-            val index = uncheckedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
-            if (index > -1) {
-                uncheckedList.removeAt(index)
-                return index
-            }
-        } else if (type == TYPE_CHECKED) {
-            val index = checkedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
-            if (index > -1) {
-                checkedList.removeAt(index)
-                return index + uncheckedList.size + 1
-            }
-        }
-        return null
-    }
-
-    fun newItem(): Int {
-        val newEntry =
-            EntryJson(UUIDUtils.randomLongUUID(), (uncheckedList.size + checkedList.size))
-        uncheckedList.add(newEntry)
-        return (uncheckedList.size - 1)
-    }
-
-    fun toggle(entry: EntryJson, type: Int): Pair<Int, Int>? {
-        Timber.i("toggle($entry, $type)")
-
-        if (type == TYPE_UNCHECKED) {
-            val removedIndex = uncheckedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
-            if (removedIndex > -1) {
-                uncheckedList.removeAt(removedIndex)
-                entry.checked = true
-                var addedIndex = checkedList.indexOfFirst { entryJson -> entryJson.position > entry.position }
-                if (addedIndex < 0) addedIndex = checkedList.size
-                checkedList.add(addedIndex, entry)
-
-                Timber.v("removedIndex=$removedIndex, addedIndex=${addedIndex + uncheckedList.size + 1}")
-                return Pair(removedIndex, addedIndex + uncheckedList.size + 1)
-
-            }
-        } else if (type == TYPE_CHECKED) {
-            val removedIndex = checkedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
-            if (removedIndex > -1) {
-                checkedList.removeAt(removedIndex)
-                entry.checked = false
-                var addedIndex = uncheckedList.indexOfFirst { entryJson -> entryJson.position > entry.position }
-                if (addedIndex < 0) addedIndex = uncheckedList.size
-                uncheckedList.add(addedIndex, entry)
-
-                Timber.v("removedIndex=${removedIndex + uncheckedList.size}, addedIndex=${addedIndex}")
-
-                return Pair(removedIndex + uncheckedList.size, addedIndex)
-            }
-        }
-        return null
-    }
-}
-
 
 class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
-    private var dataHolder = JsonEntryHolder()
+    private var dataHolder = EntryListJsonModel()
     private var inflater = LayoutInflater.from(context)
     private var currentEditText: TextView? = null
 
     var saveAction: ((String) -> (Unit))? = null
-    var deleteAction: ((DetailEntryViewHolder, JsonEntryHolder.EntryJson) -> Boolean)? = null
+    var deleteAction: ((DetailEntryViewHolder, EntryListJsonModel.EntryJson) -> Boolean)? = null
 
     init {
         setHasStableIds(true)
@@ -1160,8 +926,8 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         }
     }
 
-    fun setData(text: String) {
-        dataHolder.fromJson(text)
+    fun setData(triple: Triple<MutableList<EntryListJsonModel.EntryJson>, MutableList<EntryListJsonModel.EntryJson>, MutableList<EntryListJsonModel.EntryJson>>?) {
+        dataHolder.setData(triple)
         notifyDataSetChanged()
     }
 
@@ -1177,7 +943,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         return dataHolder.getItemId(position)
     }
 
-    private fun getItem(position: Int): JsonEntryHolder.EntryJson {
+    private fun getItem(position: Int): EntryListJsonModel.EntryJson {
         return dataHolder.getItem(position)
     }
 
@@ -1185,16 +951,19 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         return dataHolder.getItemType(position)
     }
 
+    private var insertedIndex: Int = -1
+
     private fun addItem() {
         doOnMainThread {
             dataHolder.newItem().also { index ->
                 notifyItemInserted(index)
+                insertedIndex = index
                 postSave()
             }
         }
     }
 
-    internal fun deleteItem(entry: JsonEntryHolder.EntryJson, itemViewType: Int) {
+    internal fun deleteItem(entry: EntryListJsonModel.EntryJson, itemViewType: Int) {
         doOnMainThread {
             dataHolder.deleteItem(entry, itemViewType)?.let { index ->
                 notifyItemRemoved(index)
@@ -1203,7 +972,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         }
     }
 
-    private fun toggleItem(entry: JsonEntryHolder.EntryJson, itemViewType: Int) {
+    private fun toggleItem(entry: EntryListJsonModel.EntryJson, itemViewType: Int) {
         doOnMainThread {
             dataHolder.toggle(
                 entry,
@@ -1223,7 +992,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailViewHolder {
-        return if (viewType == JsonEntryHolder.TYPE_NEW_ENTRY) {
+        return if (viewType == EntryListJsonModel.TYPE_NEW_ENTRY) {
             val view = inflater.inflate(R.layout.appunti_detail_new_entry_list_item, parent, false)
             DetailNewEntryViewHolder(view)
         } else {
@@ -1235,7 +1004,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     override fun onBindViewHolder(baseHolder: DetailViewHolder, position: Int) {
         Timber.i("onBindViewHolder(position=$position, type=${baseHolder.itemViewType})")
 
-        if (baseHolder.itemViewType == JsonEntryHolder.TYPE_NEW_ENTRY) {
+        if (baseHolder.itemViewType == EntryListJsonModel.TYPE_NEW_ENTRY) {
             val holder = baseHolder as DetailNewEntryViewHolder
 
             holder.buttonAdd.setOnClickListener {
@@ -1255,7 +1024,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             val entry = getItem(position)
             holder.text.text = entry.text
 
-            if (holder.itemViewType == JsonEntryHolder.TYPE_CHECKED) {
+            if (holder.itemViewType == EntryListJsonModel.TYPE_CHECKED) {
                 holder.checkbox.isChecked = true
                 holder.text.paintFlags = holder.text.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
             } else {
@@ -1277,18 +1046,20 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             }
 
             holder.text.setOnFocusChangeListener { v, hasFocus ->
+                holder.deleteButton.visibility = if (hasFocus) View.VISIBLE else View.INVISIBLE
                 if (hasFocus) {
-                    Timber.v("onFocusChangeListener")
                     currentEditText = holder.text
                 }
             }
 
             holder.text.doOnTextChanged { s, start, count, after ->
-                Timber.v("doOnTextChanged: $s, start=$start, count=$count, after=$after")
+                if (currentEditText == holder.text) {
+                    entry.text = s.toString()
+                    postSave()
+                }
             }
 
             holder.text.setOnKeyListener { v, keyCode, event ->
-                Timber.v("onKeyListener($v, keyCode=$keyCode, event=$event)")
                 var returnType = false
 
                 if (event.action == KeyEvent.ACTION_UP) {
@@ -1303,6 +1074,13 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             holder.text.setOnEditorActionListener { v, actionId, event ->
                 Timber.v("editorAction: $actionId, event=$event")
                 true
+            }
+
+            if (insertedIndex == position) {
+                currentEditText?.clearFocus()
+                holder.text.requestFocus()
+                holder.text.showSoftInput()
+                insertedIndex = -1
             }
 
         }
@@ -1321,9 +1099,6 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         val deleteButton: View = itemView.findViewById(R.id.deleteButton)
 
         init {
-            text.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
-                deleteButton.visibility = if (hasFocus) View.VISIBLE else View.INVISIBLE
-            }
         }
 
     }

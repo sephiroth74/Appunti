@@ -160,7 +160,6 @@ class ItemEntryListAdapter(
         if (baseHolder.itemViewType == TYPE_ENTRY) {
             val holder = baseHolder as EntryViewHolder
             val entryItem = item.entry!!
-//            Timber.i("onBindViewHolder(position=$position, entry=$entryItem)")
 
             holder.bind(entryItem, searchText, selectionCallback?.invoke(holder, position) ?: false)
 
@@ -353,7 +352,13 @@ class ItemEntryListAdapter(
             }
 
             titleTextView.text = entryTitle.toSpannable()
-            contentTextView.text = entry.getTextSummary(100, "...")
+
+            if (entry.entryType == Entry.EntryType.TEXT) {
+                contentTextView.text = entry.getTextSummary(100, "...")
+            } else {
+                contentTextView.text = entry.asList(itemView.context, contentTextView.textSize, 10)
+            }
+
             categoryTextView.text = entry.category?.categoryTitle
 
             alarmView.visibility = if (!entry.isAlarmExpired(ItemEntryListAdapter.NOW)) View.VISIBLE else View.INVISIBLE

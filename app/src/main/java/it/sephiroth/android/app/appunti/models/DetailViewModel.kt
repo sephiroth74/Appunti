@@ -2,6 +2,7 @@ package it.sephiroth.android.app.appunti.models
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,7 +10,10 @@ import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.ChangeAction
 import com.dbflow5.structure.insert
 import com.dbflow5.structure.save
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import io.reactivex.android.schedulers.AndroidSchedulers
+import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Category
@@ -17,9 +21,12 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.ext.doOnMainThread
 import it.sephiroth.android.app.appunti.ext.isMainThread
+import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import timber.log.Timber
+import java.io.File
+import java.util.ArrayList
 
 class DetailViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -130,6 +137,45 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         entry.value?.let {
             return DatabaseHelper.setEntryCategory(Entry(it), category)
         } ?: run { return false }
+    }
+
+    fun addAttachment(uri: Uri, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
+        entry.value?.let { entry ->
+            DatabaseHelper.addAttachmentFromUri(getApplication(), Entry(entry), uri) { success, throwable ->
+                callback?.invoke(success, throwable)
+            }
+        } ?: run {
+            callback?.invoke(false, null)
+        }
+    }
+
+    fun addImage(dstFile: File, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
+        entry.value?.let { entry ->
+            DatabaseHelper.addAttachment(
+                getApplication(),
+                Entry(entry),
+                dstFile,
+                FileSystemUtils.JPEG_MIME_TYPE
+            ) { success, throwable ->
+                callback?.invoke(success, throwable)
+            }
+        } ?: run {
+            callback?.invoke(false, null)
+        }
+    }
+
+    fun removeAttachment(attachment: Attachment, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
+        entry.value?.let { entry ->
+            DatabaseHelper.deleteAttachment(
+                getApplication(),
+                Entry(entry),
+                Attachment(attachment)
+            ) { result, throwable ->
+                callback?.invoke(result, throwable)
+            }
+        } ?: run {
+            callback?.invoke(false, null)
+        }
     }
 
     override fun onCleared() {

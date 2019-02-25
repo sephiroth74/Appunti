@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.content.res.Resources
+import android.hardware.input.InputManager
 import android.os.Build
 import android.os.Looper
 import android.text.Editable
@@ -152,7 +153,8 @@ fun Resources.Theme.resolveAttribute(@AttrRes id: Int): Int {
 
 fun View.showSoftInput() {
     val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
-    inputMethodManager?.showSoftInput(this, 0)
+//    inputMethodManager?.showSoftInput(this, 0)
+    inputMethodManager?.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
 }
 
 fun View.hideSoftInput() {

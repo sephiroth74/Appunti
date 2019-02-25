@@ -90,4 +90,6 @@
     <string name="change">Change</string>
     <string name="remove">Remove</string>
     <string name="view">View</string>
+    <string name="file_added">File added</string>
+    <string name="image_added">Image added</string>
 </resources>
