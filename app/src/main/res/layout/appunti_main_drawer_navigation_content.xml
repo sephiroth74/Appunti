@@ -75,6 +75,12 @@
             layout="@layout/appunti_navigation_item_separator"
             tools:ignore="PrivateResource"/>
 
+    <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/displayAsList"
+            style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
+            android:text="@string/display_as_grid"
+            android:checked="false"/>
+
     <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/settings"
             style="@style/Theme.Appunti.Text.Drawer.NavigationItem"

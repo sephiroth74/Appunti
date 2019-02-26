@@ -16,6 +16,7 @@ import com.google.android.material.navigation.NavigationView
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.models.MainViewModel
+import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import kotlinx.android.synthetic.main.appunti_main_drawer_navigation_content.view.*
 import timber.log.Timber
@@ -93,6 +94,12 @@ class RecyclerNavigationView @JvmOverloads constructor(
             drawable.constantState?.newDrawable() ?: MaterialBackgroundUtils.navigationItemDrawable(context)
         settings.background =
             drawable.constantState?.newDrawable() ?: MaterialBackgroundUtils.navigationItemDrawable(context)
+
+        displayAsList.isChecked = !SettingsManager.getInstance(context).displayAsList
+
+        displayAsList.setOnCheckedChangeListener { buttonView, isChecked ->
+            SettingsManager.getInstance(context).displayAsList = !isChecked
+        }
 
         entriesArchived.setOnClickListener { navigationItemSelectedListener?.invoke(R.id.entriesArchived) }
         entriesDeleted.setOnClickListener { navigationItemSelectedListener?.invoke(R.id.entriesDeleted) }

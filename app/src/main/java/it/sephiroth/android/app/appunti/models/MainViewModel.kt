@@ -116,14 +116,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
     val categoryChanged: LiveData<Boolean> = MutableLiveData()
 
-    val displayAsList: LiveData<Boolean> = MutableLiveData<Boolean>()
-
-    private val settingsManager = SettingsManager.getInstance(application)
-
-    fun setDisplayAsList(value: Boolean) {
-        settingsManager.displayAsList = value
-    }
-
     @SuppressLint("CheckResult")
     private fun updateEntries() {
         Timber.i("updateEntries")
@@ -190,9 +182,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     }
 
     init {
-        (displayAsList as MutableLiveData).value = settingsManager.displayAsList
-        settingsManager.setOnDisplayAsListChanged { value: Boolean -> displayAsList.value = value }
-
         DirectModelNotifier.get().registerForModelStateChanges(Category::class.java, this)
         DirectModelNotifier.get().registerForModelStateChanges(Entry::class.java, this)
         DirectModelNotifier.get().registerForTableChanges(Entry::class.java, this)

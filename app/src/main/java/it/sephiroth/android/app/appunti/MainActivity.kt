@@ -24,11 +24,12 @@ import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
 import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.addListener
 import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.ext.getColor
 import it.sephiroth.android.app.appunti.ext.getColorStateList
+import it.sephiroth.android.app.appunti.ext.setAnimationListener
 import it.sephiroth.android.app.appunti.models.MainViewModel
+import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import it.sephiroth.android.app.appunti.widget.MultiChoiceHelper
@@ -113,6 +114,19 @@ class MainActivity : AppuntiActivityFullscreen() {
         seupNavigationView()
         setupItemTouchHelper()
         setupFloatingActionButton()
+
+
+        setDisplayAsList(SettingsManager.getInstance(this).displayAsList)
+        SettingsManager.getInstance(this).setOnDisplayAsListChanged { setDisplayAsList(it) }
+    }
+
+    private fun setDisplayAsList(value: Boolean) {
+        Timber.i("setDisplayAsList($value)")
+        if (value) {
+            layoutManager.spanCount = resources.getInteger(R.integer.list_items_columns_list)
+        } else {
+            layoutManager.spanCount = resources.getInteger(R.integer.list_items_columns_grid)
+        }
     }
 
     private fun initializeModel() {
@@ -122,14 +136,6 @@ class MainActivity : AppuntiActivityFullscreen() {
             adapter.update(it)
         })
 
-        model.displayAsList.observe(this, Observer {
-            Timber.i("displayAsList -> $it")
-            if (it) {
-                layoutManager.spanCount = resources.getInteger(R.integer.list_items_columns_list)
-            } else {
-                layoutManager.spanCount = resources.getInteger(R.integer.list_items_columns_grid)
-            }
-        })
 
         // handle current intent
         if (intent?.action == ACTION_ENTRIES_BY_CATEGORY) {
@@ -632,12 +638,13 @@ class MainActivity : AppuntiActivityFullscreen() {
                     .animate()
                     .alpha(0f)
                     .setDuration(resources.getInteger(android.R.integer.config_mediumAnimTime).toLong())
-                    .addListener(
-                        onAnimationEnd = { property, _ ->
+                    .setAnimationListener {
+                        onAnimationEnd { property, animator ->
                             actionModeBackground.visibility = View.INVISIBLE
                             property.setListener(null)
                         }
-                    )
+                    }
+
                     .start()
             } else {
                 window.statusBarColor = theme.getColor(this@MainActivity, android.R.attr.statusBarColor)
