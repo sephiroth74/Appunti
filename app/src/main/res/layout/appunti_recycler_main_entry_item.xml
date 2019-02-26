@@ -45,7 +45,7 @@
                 style="@style/Widget.Appunti.Text.EntryListItemTitle"/>
 
         <androidx.appcompat.widget.AppCompatImageView
-                android:visibility="invisible"
+                android:visibility="gone"
                 android:id="@+id/id_alarm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -56,7 +56,7 @@
                 app:layout_constraintBottom_toBottomOf="@+id/id_title"/>
 
         <androidx.appcompat.widget.AppCompatImageView
-                android:visibility="invisible"
+                android:visibility="gone"
                 android:id="@+id/id_attachment"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

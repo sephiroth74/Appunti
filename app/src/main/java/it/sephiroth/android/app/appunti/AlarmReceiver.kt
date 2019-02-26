@@ -83,6 +83,9 @@ class AlarmReceiver : BroadcastReceiver() {
                             .addNextIntent(contentIntent)
                             .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
 
+                        Timber.v("entry = $entry")
+                        Timber.v("entryType = ${entry.entryType}")
+
                         val builder = NotificationCompat
                             .Builder(context, ENTRY_ALARM_CHANNEL_ID)
                             .setSmallIcon(R.drawable.sharp_alarm_24)
@@ -91,8 +94,8 @@ class AlarmReceiver : BroadcastReceiver() {
                                 entry.getSummary(
                                     context,
                                     context.resources.getDimension(R.dimen.text_size_body_1_material),
-                                    50,
-                                    5
+                                    100,
+                                    1
                                 )
                             )
                             .setColor(entry.getColor(context))
@@ -101,7 +104,14 @@ class AlarmReceiver : BroadcastReceiver() {
                             .setPriority(NotificationCompat.PRIORITY_HIGH)
                             .setStyle(
                                 NotificationCompat.BigTextStyle()
-                                    .bigText(entry.entryText)
+                                    .bigText(
+                                        entry.getSummary(
+                                            context,
+                                            context.resources.getDimension(R.dimen.text_size_body_1_material),
+                                            200,
+                                            5
+                                        )
+                                    )
                             )
                             .setAutoCancel(true)
                             .setDeleteIntent(Entry.getDeleteReminderPendingIntent(entry, context))

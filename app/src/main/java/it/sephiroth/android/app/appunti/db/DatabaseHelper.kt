@@ -45,6 +45,7 @@ object DatabaseHelper {
     }
 
     fun setEntryDeleted(entry: Entry, value: Boolean): Boolean {
+        // TODO(Remove reminder)
         Timber.i("setEntryDeleted($entry, $value)")
         entry.entryDeleted = if (value) 1 else 0
         if (value) entry.entryArchived = 0
@@ -100,6 +101,7 @@ object DatabaseHelper {
     }
 
     fun setEntriesDeleted(values: List<Entry>, delete: Boolean): Single<Unit> {
+        // TODO(Remove reminder)
         return rxSingle(Schedulers.io()) {
             update(Entry::class)
                 .set(

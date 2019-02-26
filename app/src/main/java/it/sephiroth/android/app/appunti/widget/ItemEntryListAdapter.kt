@@ -356,8 +356,8 @@ class ItemEntryListAdapter(
             contentTextView.text = entry.getSummary(itemView.context, contentTextView.textSize, 100, 6)
             categoryTextView.text = entry.category?.categoryTitle
 
-            alarmView.visibility = if (!entry.isAlarmExpired(ItemEntryListAdapter.NOW)) View.VISIBLE else View.INVISIBLE
-            attachmentView.visibility = if (entry.attachments?.isEmpty() == true) View.INVISIBLE else View.VISIBLE
+            alarmView.visibility = if (!entry.isAlarmExpired(ItemEntryListAdapter.NOW)) View.VISIBLE else View.GONE
+            attachmentView.visibility = if (entry.attachments?.isEmpty() == true) View.GONE else View.VISIBLE
         }
     }
 
