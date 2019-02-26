@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+      xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/menu_action_delete"
-        android:icon="@drawable/appunti_sharp_delete_24_outline_selector"
-        android:title="@string/delete"
-        app:showAsAction="ifRoom" />
+            android:id="@+id/menu_action_delete"
+            android:icon="@drawable/appunti_sharp_delete_24_outline_selector"
+            android:title="@string/delete"
+            app:showAsAction="ifRoom"/>
 
     <item
-        android:id="@+id/menu_action_archive"
-        android:icon="@drawable/appunti_outline_archive_24_unchecked_selector"
-        android:title="@string/archive"
-        app:showAsAction="ifRoom" />
+            android:id="@+id/menu_action_archive"
+            android:icon="@drawable/appunti_outline_archive_24_unchecked_selector"
+            android:title="@string/archive"
+            app:showAsAction="ifRoom"/>
 
     <item
-        android:id="@+id/menu_action_pin"
-        android:checkable="true"
-        android:icon="@drawable/appunti_sharp_favourite_24_unchecked_selector"
-        android:title="Pin"
-        app:showAsAction="ifRoom" />
+            android:id="@+id/menu_action_pin"
+            android:checkable="true"
+            android:icon="@drawable/appunti_sharp_favourite_24_unchecked_selector"
+            android:title="@string/pin"
+            app:showAsAction="ifRoom"/>
 
 </menu>

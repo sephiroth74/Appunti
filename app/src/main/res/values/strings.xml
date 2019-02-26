@@ -6,13 +6,20 @@
 
 
     <!-- debug -->
-    <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum id fringilla augue, nec convallis
-        mi. Pellentesque auctor iaculis ex nec dignissim. Proin elit magna, mattis at vulputate nec, laoreet ut neque. Morbi
-        venenatis est a elit bibendum accumsan. Etiam condimentum scelerisque dapibus. Praesent ex nibh, mollis ac faucibus ac,
-        congue sit amet ex. Vestibulum facilisis efficitur ante at convallis. Proin condimentum erat lacus, nec gravida dolor
-        rhoncus sit amet. Nunc lobortis, odio id volutpat luctus, ipsum velit mattis tortor, sit amet euismod nisl nisi non lorem.
-        Donec fermentum enim et eleifend maximus. Curabitur dictum molestie hendrerit. Orci varius natoque penatibus et magnis dis
-        parturient montes, nascetur ridiculus mus. Aenean sit amet tellus quis nibh congue consequat. Cras convallis est id ligula
+    <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum id fringilla augue,
+        nec convallis
+        mi. Pellentesque auctor iaculis ex nec dignissim. Proin elit magna, mattis at vulputate nec, laoreet ut neque.
+        Morbi
+        venenatis est a elit bibendum accumsan. Etiam condimentum scelerisque dapibus. Praesent ex nibh, mollis ac
+        faucibus ac,
+        congue sit amet ex. Vestibulum facilisis efficitur ante at convallis. Proin condimentum erat lacus, nec gravida
+        dolor
+        rhoncus sit amet. Nunc lobortis, odio id volutpat luctus, ipsum velit mattis tortor, sit amet euismod nisl nisi
+        non lorem.
+        Donec fermentum enim et eleifend maximus. Curabitur dictum molestie hendrerit. Orci varius natoque penatibus et
+        magnis dis
+        parturient montes, nascetur ridiculus mus. Aenean sit amet tellus quis nibh congue consequat. Cras convallis est
+        id ligula
         facilisis scelerisque.
     </string>
     <string name="search_title">Search</string>
@@ -60,6 +67,12 @@
         <item quantity="other">%d Entries Unpinned</item>
     </plurals>
 
+    <plurals name="entries_selected_count">
+        <item quantity="zero">None Selected</item>
+        <item quantity="one">%d Selected</item>
+        <item quantity="other">%d Selected</item>
+    </plurals>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="restart_required">Restart Required</string>
@@ -84,7 +97,8 @@
     <string name="add_reminder">Add Reminder</string>
     <string name="remove_reminder">Remove Reminder</string>
     <string name="edit_reminder">Edit Reminder</string>
-    <string name="edit_reminder_dialog_text">This Note has a reminder set to\n%s.\nDo you want to change or remove it?</string>
+    <string name="edit_reminder_dialog_text">This Note has a reminder set to\n%s.\nDo you want to change or remove it?
+    </string>
     <string name="reminder_removed">Reminder Removed</string>
     <string name="reminder_set">Reminder Set</string>
     <string name="change">Change</string>

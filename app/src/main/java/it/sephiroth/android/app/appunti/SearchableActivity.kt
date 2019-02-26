@@ -3,6 +3,8 @@ package it.sephiroth.android.app.appunti
 import android.app.SearchManager
 import android.content.Intent
 import android.os.Bundle
+import android.transition.AutoTransition
+import android.transition.Fade
 import android.view.View
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityOptionsCompat
@@ -40,6 +42,12 @@ class SearchableActivity : AppuntiActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        window.sharedElementEnterTransition = Fade()
+        window.sharedElementExitTransition = Fade()
+        window.sharedElementReenterTransition = Fade()
+        window.sharedElementReturnTransition = null
+
         super.onCreate(savedInstanceState)
 
         setupSearchView()
@@ -64,8 +72,8 @@ class SearchableActivity : AppuntiActivity() {
             return
         }
 
-        supportFinishAfterTransition()
-//        super.onBackPressed()
+//        supportFinishAfterTransition()
+        super.onBackPressed()
     }
 
     private fun searchEntries(text: String): Single<MutableList<Entry>> {

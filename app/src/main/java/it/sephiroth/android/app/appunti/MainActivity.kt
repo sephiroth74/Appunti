@@ -24,10 +24,14 @@ import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
 import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.ext.addListener
+import it.sephiroth.android.app.appunti.ext.currentThread
+import it.sephiroth.android.app.appunti.ext.getColor
+import it.sephiroth.android.app.appunti.ext.getColorStateList
 import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
+import it.sephiroth.android.app.appunti.widget.MultiChoiceHelper
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
 import kotlinx.android.synthetic.main.appunti_main_drawer_navigation_content.*
@@ -37,12 +41,21 @@ import java.util.*
 
 class MainActivity : AppuntiActivityFullscreen() {
 
+    // recycler view adapter
     lateinit var adapter: ItemEntryListAdapter
 
-    private lateinit var model: MainViewModel
+    // recycler view layout manager
     private lateinit var layoutManager: StaggeredGridLayoutManager
+
+    // recycler view multi selection tracker
+    private var tracker: MultiChoiceHelper<Entry>? = null
+
+    // main activity view model
+    private lateinit var model: MainViewModel
+
     private var mActionMode: ActionMode? = null
-    private var tracker: MultichoiceHelper<Entry>? = null
+
+    // swipe helper for the recycler view
     private lateinit var itemTouchHelper: ItemTouchHelper
 
     @SuppressLint("CheckResult")
@@ -201,7 +214,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                 Timber.v("actionMode: $mActionMode")
 
                 if (mActionMode == null && entryItem != null) {
-                    tracker = MultichoiceHelper(adapter)
+                    tracker = MultiChoiceHelper(adapter)
                     tracker?.select(holder.adapterPosition.toLong(), entryItem)
                     mActionMode = startSupportActionMode(mActionModeCallback)
                     true
@@ -253,6 +266,7 @@ class MainActivity : AppuntiActivityFullscreen() {
 
             private var swipeBack = false
 
+            @Suppress("NAME_SHADOWING")
             private fun isSwipeEnabled(viewHolder: RecyclerView.ViewHolder): Boolean {
                 when (viewHolder.itemViewType) {
                     ItemEntryListAdapter.TYPE_ENTRY -> {
@@ -269,16 +283,11 @@ class MainActivity : AppuntiActivityFullscreen() {
             }
 
             private fun isValidEntry(viewHolder: RecyclerView.ViewHolder): Boolean {
-                when (viewHolder.itemViewType) {
+                return when (viewHolder.itemViewType) {
                     ItemEntryListAdapter.TYPE_ENTRY -> {
-                        val entry = (viewHolder as ItemEntryListAdapter.EntryViewHolder).entry
-                        entry?.let { entry ->
-                            return true
-                        } ?: run {
-                            return false
-                        }
+                        ((viewHolder as ItemEntryListAdapter.EntryViewHolder).entry != null)
                     }
-                    else -> return false
+                    else -> false
                 }
             }
 
@@ -509,75 +518,31 @@ class MainActivity : AppuntiActivityFullscreen() {
 
     // selection tracker
 
-    class MultichoiceHelper<T>(val adapter: RecyclerView.Adapter<*>) {
-        private val selectedPositions = hashMapOf<Long, T>()
-        private var listener: (() -> Unit)? = null
-
-        fun setListener(action: (() -> Unit)?) {
-            listener = action
-        }
-
-        var selection: HashMap<Long, T>
-            get() = selectedPositions
-            private set(value) {}
-
-        private fun notifyPosition(position: Long) {
-            Timber.i("notifyPosition($position)")
-            adapter.notifyItemChanged(position.toInt())
-            listener?.invoke()
-        }
-
-        fun clearSelection() {
-            if (selectedPositions.size > 0) {
-                selectedPositions.clear()
-                listener?.invoke()
-                adapter.notifyDataSetChanged()
-            }
-        }
-
-        fun select(position: Long, value: T) {
-            if (!isSelected(position)) {
-                selectedPositions[position] = value
-                notifyPosition(position)
-                Timber.v("select(position=$position), isSelected=${isSelected(position)}")
-            }
-        }
-
-        fun deselect(position: Long): T? {
-            var result: T? = null
-            if (isSelected(position)) {
-                result = selectedPositions.remove(position)
-                notifyPosition(position)
-            }
-            return result
-        }
-
-        fun isSelected(position: Long): Boolean {
-            return selectedPositions.containsKey(position)
-        }
-    }
-
     // actionmode callback
 
     private var mActionModeCallback: ActionMode.Callback = object : ActionMode.Callback {
 
+        var actionModeBar: View? = null
+
+        @Suppress("NAME_SHADOWING")
         private fun onTrackerSelectionChanged(selection: HashMap<Long, Entry>, actionMode: ActionMode?) {
             Timber.i("onTrackerSelectionChanged()")
             actionMode?.let { actionMode ->
                 if (selection.isEmpty()) {
                     actionMode.finish()
                 } else {
-                    actionMode.title = "${selection.size} Selected"
+                    actionMode.title =
+                        resources.getQuantityString(R.plurals.entries_selected_count, selection.size, selection.size)
 
                     val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > -1
                     val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > -1
 
-                    Timber.v("pinned=$pinned, unpinned=$unpinned")
                     updatePinnedMenuItem(actionMode.menu, pinned && (pinned && !unpinned))
                 }
             }
         }
 
+        @Suppress("NAME_SHADOWING")
         private fun updatePinnedMenuItem(menu: Menu?, checked: Boolean) {
             menu?.let { menu ->
                 val menuItem = menu.findItem(R.id.menu_action_pin)
@@ -628,16 +593,32 @@ class MainActivity : AppuntiActivityFullscreen() {
             toolbar.animate().alpha(0f).start()
 
             tracker?.let { tracker ->
-                tracker.setListener {
-                    onTrackerSelectionChanged(tracker.selection, mode)
-                }
+                tracker.listener = { onTrackerSelectionChanged(tracker.selection, mode) }
             }
 
             return true
         }
 
         override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+            Timber.i("onPrepareActionMode")
             onTrackerSelectionChanged(tracker?.selection ?: hashMapOf(), mode)
+
+            actionModeBar = window.decorView.findViewById(R.id.action_mode_bar)
+            actionModeBar?.translationY = statusbarHeight.toFloat()
+
+            if (isFullScreen) {
+                actionModeBackground.visibility = View.VISIBLE
+                actionModeBackground.alpha = 0f
+                actionModeBackground
+                    .animate()
+                    .alpha(1f)
+                    .setDuration(resources.getInteger(android.R.integer.config_mediumAnimTime).toLong())
+                    .setListener(null)
+                    .start()
+            } else {
+                window.statusBarColor = theme.getColor(this@MainActivity, R.attr.actionModeBackground)
+            }
+
             return true
         }
 
@@ -645,6 +626,22 @@ class MainActivity : AppuntiActivityFullscreen() {
             Timber.i("onDestroyActionMode")
             tracker?.clearSelection()
             tracker = null
+
+            if (isFullScreen) {
+                actionModeBackground
+                    .animate()
+                    .alpha(0f)
+                    .setDuration(resources.getInteger(android.R.integer.config_mediumAnimTime).toLong())
+                    .addListener(
+                        onAnimationEnd = { property, _ ->
+                            actionModeBackground.visibility = View.INVISIBLE
+                            property.setListener(null)
+                        }
+                    )
+                    .start()
+            } else {
+                window.statusBarColor = theme.getColor(this@MainActivity, android.R.attr.statusBarColor)
+            }
 
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
             toolbar.animate().alpha(1f).start()

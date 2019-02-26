@@ -21,7 +21,6 @@
                 android:layout_marginBottom="0dp"
                 android:layout_marginTop="0dp"
                 app:layout_anchorGravity="top">
-            <!--app:layout_anchor="@id/bottomAppBar"-->
 
             <include layout="@layout/appunti_entries_recycler_view"/>
         </FrameLayout>
@@ -42,7 +41,7 @@
         />
 
         <!-- statusbar background replacement -->
-        <View
+        <FrameLayout
                 android:visibility="visible"
                 android:layout_gravity="top"
                 android:foregroundGravity="bottom"
@@ -50,8 +49,16 @@
                 android:id="@+id/statusbarBackground"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:background="?attr/statusbarBackgroundDrawable"
-        />
+                android:background="?attr/statusbarBackgroundDrawable">
+            <View
+                    android:id="@+id/actionModeBackground"
+                    android:visibility="invisible"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="?attr/actionModeBackground"/>
+
+
+        </FrameLayout>
 
         <!-- navigation background replacement -->
         <View

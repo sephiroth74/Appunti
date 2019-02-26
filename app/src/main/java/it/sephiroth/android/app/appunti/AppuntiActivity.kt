@@ -40,11 +40,8 @@ abstract class AppuntiActivity(
         isDarkTheme = SettingsManager.getInstance(this).darkTheme
         setTheme(if (isDarkTheme) darkTheme else lightTheme)
 
-//        statusbarHeight = getStatusbarHeight()
-//        navigationbarHeight = getNavigationBarSize().y// - statusbarHeight
-
         Timber.v("SDK = ${Build.VERSION.SDK_INT}")
-        Timber.v("fullscreen = ${isFullScreen}")
+        Timber.v("fullscreen = $isFullScreen")
 
         if (isFullScreen) {
             window.setFlags(

@@ -35,7 +35,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.structure.save
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
@@ -55,7 +54,6 @@ import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.TimeUnit
 
 
 @Suppress("NAME_SHADOWING")
@@ -74,9 +72,6 @@ class DetailActivity : AppuntiActivity() {
     private var currentEntry: Entry? = null
 
     private var shouldRemoveAlarm: Boolean = false
-
-    private var changeTitleTimer: Disposable? = null
-    private var changeTextTimer: Disposable? = null
 
     // temporary file used for pictures taken with camera
     private var mCurrentPhotoPath: File? = null

@@ -86,15 +86,15 @@ fun isMainThread() = Thread.currentThread() == Looper.getMainLooper().thread
 fun Date.toUserDate() = ExtensionUtils.dateformat.format(this)
 
 fun Resources.Theme.getColorStateList(context: Context, @AttrRes id: Int): ColorStateList? {
-    val typedValue = TypedValue()
-    context.theme.resolveAttribute(id, typedValue, false)
-    return ContextCompat.getColorStateList(context, typedValue.data)
+    return ContextCompat.getColorStateList(context, context.theme.resolveAttribute(id))
 }
 
 fun Resources.Theme.getColor(context: Context, @AttrRes id: Int): Int {
-    val typedValue = TypedValue()
-    context.theme.resolveAttribute(id, typedValue, false)
-    return ContextCompat.getColor(context, typedValue.data)
+    return ContextCompat.getColor(context, context.theme.resolveAttribute(id))
+}
+
+fun Resources.Theme.getDimensionPixelSize(context: Context, @AttrRes id: Int): Int {
+    return resources.getDimensionPixelSize(context.theme.resolveAttribute(id))
 }
 
 fun Resources.hasSoftwareNavBar(context: Context): Boolean {
@@ -145,9 +145,9 @@ fun Context.isLightTheme(): Boolean {
     return typedValue.data != 0
 }
 
-fun Resources.Theme.resolveAttribute(@AttrRes id: Int): Int {
+fun Resources.Theme.resolveAttribute(@AttrRes id: Int, resolveRefs: Boolean = false): Int {
     val typedValue = TypedValue()
-    resolveAttribute(id, typedValue, false)
+    resolveAttribute(id, typedValue, resolveRefs)
     return typedValue.data
 }
 
