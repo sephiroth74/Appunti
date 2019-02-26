@@ -9,6 +9,7 @@ import android.speech.RecognizerIntent
 import android.view.*
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.util.Pair
 import androidx.drawerlayout.widget.DrawerLayout
@@ -395,6 +396,21 @@ class MainActivity : AppuntiActivityFullscreen() {
         }
     }
 
+    private fun showSnackBack(snackbar: Snackbar): Snackbar {
+        val params = snackbar.view.layoutParams as CoordinatorLayout.LayoutParams
+
+        params.setMargins(
+            params.leftMargin,
+            params.topMargin,
+            params.rightMargin,
+            params.bottomMargin + navigationbarHeight
+        )
+
+        snackbar.view.layoutParams = params
+        snackbar.show()
+        return snackbar
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -466,10 +482,11 @@ class MainActivity : AppuntiActivityFullscreen() {
                 .setAction(getString(R.string.undo_uppercase)) { restoreDeletedEntries(values) }
                 .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
 
-        mSnackbar.show()
+        showSnackBack(mSnackbar)
     }
 
     private fun onEntriesArchived(values: List<Entry>) {
+        Timber.i("onEntriesArchived($values)")
         val mSnackbar =
             Snackbar
                 .make(
@@ -481,7 +498,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                     DatabaseHelper.setEntriesArchived(values, false).subscribe()
                 }
                 .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
-        mSnackbar.show()
+        showSnackBack(mSnackbar)
     }
 
     @SuppressLint("CheckResult")
