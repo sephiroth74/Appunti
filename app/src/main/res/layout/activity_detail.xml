@@ -83,7 +83,6 @@
                     android:id="@+id/entryTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0"
                     android:hint="@string/title"
                     android:nextFocusDown="@id/entryText"
                     android:transitionName="itemTitle"
@@ -99,7 +98,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:hint="@string/content_here"
-                    android:layout_weight="0"
                     android:inputType="textMultiLine"
                     android:focusable="true"
                     android:textIsSelectable="true"
@@ -131,7 +129,6 @@
                     style="@style/Widget.Appunti.Text.CategoryChip"
                     android:id="@+id/entryCategory"
                     android:layout_marginTop="8dp"
-                    android:layout_weight="0"
                     android:transitionName="itemCategory"
             />
 

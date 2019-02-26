@@ -68,11 +68,12 @@ class DetailActivity : AppuntiActivity() {
     private lateinit var model: DetailViewModel
 
     private var isModified = false
-    private var currentEntry: Entry? = null
-    private var shouldRemoveAlarm: Boolean = false
     private var isNewDocument: Boolean = false
-
     private var isUpdating = false
+
+    private var currentEntry: Entry? = null
+
+    private var shouldRemoveAlarm: Boolean = false
 
     private var changeTitleTimer: Disposable? = null
     private var changeTextTimer: Disposable? = null
@@ -127,13 +128,22 @@ class DetailActivity : AppuntiActivity() {
             entryText.setOnClickListener(null)
         }
 
+        entryTitle.setRawInputType(InputType.TYPE_CLASS_TEXT)
+
         // handle the current listener
         // TODO(manage intent when activity is destroyed and recreated)
         onNewIntent(intent)
     }
 
     override fun onDestroy() {
+        Timber.i("onDestroy")
         setProgressVisible(false)
+
+        if (isModified) {
+            currentEntry?.apply { touch().save() }
+            isModified = false
+        }
+
         super.onDestroy()
     }
 
@@ -245,13 +255,10 @@ class DetailActivity : AppuntiActivity() {
 
     @Suppress("UNUSED_PARAMETER")
     private fun onEntryTextChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
-        if (currentFocus == entryText && !isUpdating) {
-            changeTextTimer = rxTimer(changeTextTimer, 2, TimeUnit.SECONDS) {
-                currentEntry?.apply {
-                    entryText = text?.toString() ?: ""
-                    touch()
-                    save()
-                }
+        if (currentFocus == entryText) {
+            currentEntry?.apply {
+                isModified = true
+                entryText = text?.toString() ?: ""
             }
         }
     }
@@ -260,13 +267,10 @@ class DetailActivity : AppuntiActivity() {
 
     @Suppress("UNUSED_PARAMETER")
     private fun onEntryTitleChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
-        if (currentFocus == entryTitle && !isUpdating) {
-            changeTitleTimer = rxTimer(changeTitleTimer, 2, TimeUnit.SECONDS) {
-                currentEntry?.apply {
-                    entryTitle = text?.toString() ?: ""
-                    touch()
-                    save()
-                }
+        if (currentFocus == entryTitle) {
+            currentEntry?.apply {
+                isModified = true
+                entryTitle = text?.toString() ?: ""
             }
         }
     }
@@ -494,7 +498,9 @@ class DetailActivity : AppuntiActivity() {
 
         currentEntry = Entry(entry)
 
-        if (currentEntryIsNull && diff.titleChanged) entryTitle.setText(entry.entryTitle)
+        if (!diff.sameID) {
+            entryTitle.setText(entry.entryTitle)
+        }
 
         if (diff.typeChanged) {
             entryText.visibility = if (entry.entryType == Entry.EntryType.TEXT) View.VISIBLE else View.GONE
@@ -505,24 +511,21 @@ class DetailActivity : AppuntiActivity() {
                 detailListAdapter?.saveAction = null
                 detailListAdapter?.deleteAction = null
                 detailListAdapter = null
-                if (diff.typeChanged) entryText.setText(entry.entryText)
+                entryText.setText(entry.entryText)
 
             } else if (entry.entryType == Entry.EntryType.LIST) {
                 if (diff.typeChanged) {
                     detailListAdapter = DetailListAdapter(this).apply {
                         setData(entry.asList())
                         saveAction = { text ->
-                            currentEntry?.let { currentEntry ->
-                                currentEntry.entryText = text
-                                currentEntry.touch()
-                                currentEntry.save()
-                            }
+                            Timber.i("saveAction")
+                            isModified = true
+                            currentEntry?.entryText = text
                         }
 
                         deleteAction = { holder, entry ->
                             var result = false
                             if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.length() == 0) {
-
                                 removeFocusFromEditText()
                                 deleteItem(entry, holder.itemViewType)
 
@@ -533,14 +536,15 @@ class DetailActivity : AppuntiActivity() {
                                         val previous = detailRecycler.findContainingViewHolder(view)
                                         previous?.let { previous ->
                                             if (previous is DetailListAdapter.DetailEntryViewHolder) {
-                                                previous.text.requestFocus()
-                                                (previous.text as EditText).setSelection(previous.text.length())
-                                                previous.text.showSoftInput()
+                                                with((previous.text as EditText)) {
+                                                    requestFocus()
+                                                    setSelection(length())
+                                                    showSoftInput()
+                                                }
                                             }
                                         }
                                     }
                                 }
-
                                 result = true
                             }
                             result
@@ -562,15 +566,14 @@ class DetailActivity : AppuntiActivity() {
             updateAttachmentsList(entry)
         }
 
-        invalidateOptionsMenu()
-
         if (shouldRemoveAlarm) {
             model.removeReminder()
             shouldRemoveAlarm = false
         }
 
+        // invoke the postponed transition only the first time
+        // when it's not a new document
         if (currentEntryIsNull && !isNewDocument) {
-            Timber.v("startPostponedEnterTransition")
             entryTitle.doOnPreDraw {
                 startPostponedEnterTransition()
                 entryTitle.transitionName = null
@@ -579,8 +582,13 @@ class DetailActivity : AppuntiActivity() {
             }
         }
 
+        if (!diff.sameID || (diff.pinnedChanged || diff.deletedChanged || diff.archivedChanged || diff.alarmChanged)) {
+            invalidateOptionsMenu()
+        }
+
         // resume listeners
         isUpdating = false
+        isNewDocument = false
     }
 
     private fun updateAttachmentsList(entry: Entry) {
@@ -682,8 +690,7 @@ class DetailActivity : AppuntiActivity() {
         currentEntry?.let { entry ->
             with(Entry(entry)) {
                 if (this.convertToList()) {
-                    this.touch()
-                    this.save()
+                    this.touch().save()
                 }
             }
         }
@@ -696,8 +703,7 @@ class DetailActivity : AppuntiActivity() {
                 with(Entry(entry)) {
                     entryText = text
                     entryType = Entry.EntryType.TEXT
-                    touch()
-                    save()
+                    touch().save()
                 }
             }
         }
@@ -874,7 +880,8 @@ class DetailActivity : AppuntiActivity() {
             var priorityChanged: Boolean = true,
             var modifiedDateChanged: Boolean = true,
             var attachmentsChanged: Boolean = true,
-            var typeChanged: Boolean = true
+            var typeChanged: Boolean = true,
+            var alarmChanged: Boolean = true
         )
 
         fun calculateDiff(oldValue: Entry?, newValue: Entry?): Result {
@@ -901,7 +908,8 @@ class DetailActivity : AppuntiActivity() {
                 priorityChanged = oldValue?.entryPriority != newValue?.entryPriority,
                 modifiedDateChanged = oldValue?.entryModifiedDate != newValue?.entryModifiedDate,
                 attachmentsChanged = oldValue?.attachments != newValue?.attachments,
-                typeChanged = oldValue?.entryType != newValue?.entryType
+                typeChanged = oldValue?.entryType != newValue?.entryType,
+                alarmChanged = oldValue?.entryAlarmEnabled != newValue?.entryAlarmEnabled || oldValue?.entryAlarm != newValue?.entryAlarm
             )
 
         }
@@ -1057,7 +1065,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             holder.text.doOnTextChanged { s, start, count, after ->
                 if (currentEditText == holder.text) {
                     entry.text = s.toString()
-//                    postSave()
+                    postSave()
                 }
             }
 
