@@ -19,6 +19,7 @@ import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
 import androidx.core.text.set
@@ -34,6 +35,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -52,6 +54,7 @@ import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 
 @Suppress("NAME_SHADOWING")
@@ -104,6 +107,10 @@ class DetailActivity : AppuntiActivity() {
         setupBottomAppBar()
         setupSharedElementsTransition()
         closeBottomSheet()
+
+        textSwitcher.setFactory {
+            AppCompatTextView(ContextThemeWrapper(this, R.style.Widget_Appunti_Text_TextSwitcher), null, 0)
+        }
 
         linearLayout.requestFocus()
 
@@ -490,6 +497,7 @@ class DetailActivity : AppuntiActivity() {
         updateEntryTypeAndText()
         updateEntryCategory()
         updateEntryAttachmentsList()
+        updateTextSwitcher()
 
         if (shouldRemoveAlarm) {
             if (model.removeReminder()) {
@@ -576,6 +584,16 @@ class DetailActivity : AppuntiActivity() {
             entryCategory.text = entry.category?.categoryTitle
             entryCategory.visibility = if (entry.category == null) View.INVISIBLE else View.VISIBLE
             updateThemeFromEntry()
+        }
+    }
+
+    private fun updateTextSwitcher() {
+        model.entry.whenNotNull { entry ->
+            textSwitcher.setText(Entry.getLocalizedTime(entry.entryModifiedDate, FormatStyle.MEDIUM))
+
+            rxTimer(null, 5, TimeUnit.SECONDS, AndroidSchedulers.mainThread()) {
+                textSwitcher.setText("")
+            }
         }
     }
 

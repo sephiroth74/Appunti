@@ -191,7 +191,14 @@
                 android:layout_marginStart="8dp"
                 app:srcCompat="@drawable/sharp_add_24"/>
 
-        <Space android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
+        <!--<Space android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>-->
+
+        <TextSwitcher android:layout_width="0dp"
+                      android:layout_height="wrap_content"
+                      android:layout_weight="1"
+                      android:inAnimation="@android:anim/fade_in"
+                      android:outAnimation="@android:anim/fade_out"
+                      android:id="@+id/textSwitcher"/>
 
         <androidx.appcompat.widget.AppCompatImageButton
                 android:id="@+id/navigationIcon"
