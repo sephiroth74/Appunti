@@ -79,20 +79,13 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private val attachmentModelListener = object : DirectModelNotifier.ModelChangedListener<Attachment> {
-        override fun onModelChanged(model: Attachment, action: ChangeAction) {
-            Timber.i("onModelChanged($model, $action)")
-        }
-
-        override fun onTableChanged(table: Class<*>?, action: ChangeAction) {
-            Timber.i("onTableChanged($table, $action)")
-        }
-    }
-
     private fun setEntry(value: Entry?) {
         (entry as MutableLiveData).value = value
     }
 
+    /**
+     * Update the entry title (without saving)
+     */
     fun setEntryTitle(title: CharSequence?) {
         entry.whenNotNull {
             it.entryTitle = title?.toString() ?: ""
@@ -100,6 +93,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    /**
+     * Update the entry text (without saving)
+     */
     fun setEntryText(text: CharSequence?) {
         entry.whenNotNull {
             it.entryText = text?.toString() ?: ""
@@ -107,6 +103,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    /**
+     * Save the current entry
+     */
     fun save(): Boolean {
         entry.whenNotNull { entry ->
             val result = entry.touch().save()
@@ -115,6 +114,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         } ?: run { return false }
     }
 
+    /**
+     * Change the Entry category
+     */
     fun setEntryCategory(categoryID: Long): Boolean {
         entry.whenNotNull { entry ->
             if (categoryID > -1) {
@@ -126,6 +128,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         return false
     }
 
+    /**
+     * Convert the [Entry] into a [Entry.EntryType.LIST] entry
+     */
     fun convertEntryToList(): Boolean {
         entry.whenNotNull { entry ->
             if (entry.convertToList()) {
@@ -135,6 +140,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         return false
     }
 
+    /**
+     * Convert the [Entry] into a [Entry.EntryType.TEXT] entry
+     */
     fun convertEntryToText(text: String?): Boolean {
         entry.whenNotNull { entry ->
             if (entry.entryType == Entry.EntryType.LIST) {
@@ -146,30 +154,45 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         return false
     }
 
+    /**
+     * Toggle the [Entry] pin status
+     */
     fun setEntryPinned(value: Boolean): Boolean {
         entry.whenNotNull { entry ->
             return DatabaseHelper.setEntryPinned(entry, value)
         } ?: run { return false }
     }
 
+    /**
+     * Toggle the [Entry archived status
+     */
     fun setEntryArchived(value: Boolean): Boolean {
         entry.whenNotNull { entry ->
             return DatabaseHelper.setEntryArchived(entry, value)
         } ?: run { return false }
     }
 
+    /**
+     * Toggle the [Entry] deleted status
+     */
     fun setEntryDeleted(value: Boolean): Boolean {
         entry.whenNotNull { entry ->
             return DatabaseHelper.setEntryDeleted(getApplication(), entry, value)
         } ?: run { return false }
     }
 
+    /**
+     * Remove the pending reminder from the [Entry]
+     */
     fun removeReminder(): Boolean {
         entry.whenNotNull { entry ->
             return DatabaseHelper.removeReminder(entry, getApplication())
         } ?: run { return false }
     }
 
+    /**
+     * Add a new reminder to the current [Entry]
+     */
     fun addReminder(zone: ZonedDateTime): Boolean {
         entry.whenNotNull { entry ->
             val utc = zone.withZoneSameInstant(ZoneId.of("UTC"))
@@ -177,6 +200,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         } ?: run { return false }
     }
 
+    /**
+     * Add a new [Attachment] to the current [Entry]
+     */
     fun addAttachment(uri: Uri, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
         Timber.i("addAttachment($uri)")
         entry.whenNotNull { entry ->
@@ -188,6 +214,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    /**
+     * Add a new Image [Attachment] to the current [Entry]
+     */
     fun addImage(dstFile: File, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
         Timber.i("addImage($dstFile)")
 
@@ -205,11 +234,14 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    /**
+     * Remove an [Attachment] from the current [Entry]
+     */
     fun removeAttachment(attachment: Attachment, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
-        entry.value?.let { entry ->
+        entry.whenNotNull { entry ->
             DatabaseHelper.deleteAttachment(
                 getApplication(),
-                Entry(entry),
+                entry,
                 Attachment(attachment)
             ) { result, throwable ->
                 callback?.invoke(result, throwable)
@@ -220,13 +252,11 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     override fun onCleared() {
-        DirectModelNotifier.get().unregisterForModelChanges(Entry::class.java, entryModelListener)
-        DirectModelNotifier.get().unregisterForModelChanges(Attachment::class.java, attachmentModelListener)
+//        DirectModelNotifier.get().unregisterForModelChanges(Entry::class.java, entryModelListener)
         super.onCleared()
     }
 
     init {
-        DirectModelNotifier.get().registerForModelChanges(Entry::class.java, entryModelListener)
-        DirectModelNotifier.get().registerForModelChanges(Attachment::class.java, attachmentModelListener)
+//        DirectModelNotifier.get().registerForModelChanges(Entry::class.java, entryModelListener)
     }
 }

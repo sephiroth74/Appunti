@@ -65,8 +65,7 @@ class DetailActivity : AppuntiActivity() {
 
     private var isNewDocument: Boolean = false
     private var isUpdating = false
-
-    private var currentEntry: Entry? = null
+    private var currentEntryID: Long = 0
 
     private var shouldRemoveAlarm: Boolean = false
 
@@ -92,8 +91,6 @@ class DetailActivity : AppuntiActivity() {
         }
 
         model = ViewModelProviders.of(this).get(DetailViewModel::class.java)
-        Timber.i("model=$model")
-
 
         model.entry.observe(this, Observer { entry ->
             Timber.i("Model Entry Changed = $entry")
@@ -112,8 +109,8 @@ class DetailActivity : AppuntiActivity() {
 
         // UI elements listeners
         entryCategory.setOnClickListener { dispatchPickCategoryIntent() }
-        entryTitle.doOnTextChanged { s, start, count, after -> onEntryTitleChanged(s, start, count, after) }
-        entryText.doOnTextChanged { s, start, count, after -> onEntryTextChanged(s, start, count, after) }
+        entryTitle.doOnTextChanged { s, start, count, after -> updateEntryTitle(s, start, count, after) }
+        entryText.doOnTextChanged { s, start, count, after -> updateEntryText(s, start, count, after) }
         entryText.doOnAfterTextChanged { e -> LinkifyCompat.addLinks(e, Linkify.ALL) }
 
         entryCategory.background = MaterialBackgroundUtils.categoryChipClickable(this)
@@ -172,6 +169,28 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.appunti_detail_menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        Timber.i("onPrepareOptionsMenu")
+        updateMenu(menu)
+        updateMenu(navigationView.menu)
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.menu_action_pin -> togglePin()
+            R.id.menu_action_archive -> toggleArchive()
+            R.id.menu_action_alarm -> toggleReminder()
+            android.R.id.home -> onBackPressed()
+        }
+        return true
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         Timber.i("onActivityResult(requestCode=$requestCode, resultCode=$resultCode, data=$data)")
 
@@ -199,10 +218,30 @@ class DetailActivity : AppuntiActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
+    /**
+     * Result from [IMAGE_CAPTURE_REQUEST_CODE]
+     */
+    private fun onImageCaptured(dstFile: File?) {
+        Timber.i("onImageCaptured(${dstFile?.absolutePath})")
+
+        dstFile?.let { dstFile ->
+            model.addImage(dstFile) { success, throwable ->
+                doOnMainThread {
+                    throwable?.let {
+                        showConfirmation(it.localizedMessage)
+                    } ?: run {
+                        showConfirmation(getString(R.string.image_added))
+                    }
+                    updateEntryAttachmentsList()
+                }
+            }
+        }
+    }
+
     private fun changeEntryCategory(categoryID: Long) {
         Timber.i("changeEntryCategory($categoryID)")
         if (model.setEntryCategory(categoryID)) {
-            onEntryCategoryChanged()
+            updateEntryCategory()
         }
     }
 
@@ -218,37 +257,16 @@ class DetailActivity : AppuntiActivity() {
                 } ?: run {
                     showConfirmation(getString(R.string.file_added))
                 }
+                updateEntryAttachmentsList()
             }
             setProgressVisible(false)
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.appunti_detail_menu, menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        Timber.i("onPrepareOptionsMenu")
-        updateMenu(menu)
-        updateMenu(navigationView.menu)
-        return super.onPrepareOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.menu_action_pin -> togglePin()
-            R.id.menu_action_archive -> toggleArchive()
-            R.id.menu_action_alarm -> toggleReminder()
-            android.R.id.home -> onBackPressed()
-        }
-        return true
-    }
-
     // ENTRY TEXT LISTENERS
 
     @Suppress("UNUSED_PARAMETER")
-    private fun onEntryTextChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
+    private fun updateEntryText(text: CharSequence?, start: Int, count: Int, after: Int) {
         if (currentFocus == entryText) {
             model.setEntryText(text)
         }
@@ -257,7 +275,7 @@ class DetailActivity : AppuntiActivity() {
     // ENTRY TITLE LISTENERS
 
     @Suppress("UNUSED_PARAMETER")
-    private fun onEntryTitleChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
+    private fun updateEntryTitle(text: CharSequence?, start: Int, count: Int, after: Int) {
         if (currentFocus == entryTitle) {
             model.setEntryTitle(text)
         }
@@ -400,25 +418,6 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    /**
-     * Result from [IMAGE_CAPTURE_REQUEST_CODE]
-     */
-    private fun onImageCaptured(dstFile: File?) {
-        Timber.i("onImageCaptured(${dstFile?.absolutePath})")
-
-        dstFile?.let { dstFile ->
-            model.addImage(dstFile) { success, throwable ->
-                doOnMainThread {
-                    throwable?.let {
-                        showConfirmation(it.localizedMessage)
-                    } ?: run {
-                        showConfirmation(getString(R.string.image_added))
-                    }
-                }
-            }
-        }
-    }
-
 // BOTTOM SHEET BEHAVIORS
 
     private fun setupBottomSheet() {
@@ -476,24 +475,51 @@ class DetailActivity : AppuntiActivity() {
     private fun onEntryChanged(entry: Entry) {
         Timber.i("onEntryChanged()")
 
+        if (currentEntryID == entry.entryID) {
+            Timber.w("same entry id, skipping updates...")
+            return
+        }
+
+        currentEntryID = entry.entryID
+
         // entry is updating, pause listeners..
         isUpdating = true
 
-        val diff = EntryDiff.calculateDiff(currentEntry, entry)
-        Timber.v("diff=$diff")
+        entryTitle.setText(entry.entryTitle)
 
-        val currentEntryIsNull = currentEntry == null
+        updateEntryText()
+        updateEntryCategory()
+        updateEntryAttachmentsList()
 
-        if (currentEntry.isNull()) {
-            currentEntry = Entry(entry)
+        if (shouldRemoveAlarm) {
+            if (model.removeReminder()) {
+                invalidateOptionsMenu()
+            }
+            shouldRemoveAlarm = false
         }
 
-
-        if (!diff.sameID) {
-            entryTitle.setText(entry.entryTitle)
+        // invoke the postponed transition only the first time
+        // when it's not a new document
+        if (!isNewDocument) {
+            entryTitle.doOnPreDraw {
+                startPostponedEnterTransition()
+                entryTitle.transitionName = null
+                entryText.transitionName = null
+                entryCategory.transitionName = null
+            }
         }
 
-        if (diff.typeChanged) {
+        invalidateOptionsMenu()
+
+        // resume listeners
+        isUpdating = false
+        isNewDocument = false
+    }
+
+    // Atomic updates
+
+    private fun updateEntryText() {
+        model.entry.whenNotNull { entry ->
             entryText.visibility = if (entry.entryType == Entry.EntryType.TEXT) View.VISIBLE else View.GONE
             detailRecycler.visibility = if (entry.entryType == Entry.EntryType.LIST) View.VISIBLE else View.GONE
 
@@ -505,172 +531,142 @@ class DetailActivity : AppuntiActivity() {
                 entryText.setText(entry.entryText)
 
             } else if (entry.entryType == Entry.EntryType.LIST) {
-                if (diff.typeChanged) {
-                    detailListAdapter = DetailListAdapter(this).apply {
-                        setData(entry.asList())
-                        saveAction = { text ->
-                            Timber.i("saveAction")
-                            model.setEntryText(text)
-                        }
 
-                        deleteAction = { holder, entry ->
-                            var result = false
-                            if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.length() == 0) {
-                                removeFocusFromEditText()
-                                deleteItem(entry, holder.itemViewType)
+                detailListAdapter = DetailListAdapter(this).apply {
+                    setData(entry.asList())
+                    saveAction = { text ->
+                        Timber.i("saveAction")
+                        model.setEntryText(text)
+                    }
 
-                                if (holder.adapterPosition > 0) {
-                                    val view =
-                                        (detailRecycler.layoutManager as LinearLayoutManager).findViewByPosition(holder.adapterPosition - 1)
-                                    view?.let { view ->
-                                        val previous = detailRecycler.findContainingViewHolder(view)
-                                        previous?.let { previous ->
-                                            if (previous is DetailListAdapter.DetailEntryViewHolder) {
-                                                with((previous.text as EditText)) {
-                                                    requestFocus()
-                                                    setSelection(length())
-                                                    showSoftInput()
-                                                }
+                    deleteAction = { holder, entry ->
+                        var result = false
+                        if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.length() == 0) {
+                            removeFocusFromEditText()
+                            deleteItem(entry, holder.itemViewType)
+
+                            if (holder.adapterPosition > 0) {
+                                val view =
+                                    (detailRecycler.layoutManager as LinearLayoutManager).findViewByPosition(holder.adapterPosition - 1)
+                                view?.let { view ->
+                                    val previous = detailRecycler.findContainingViewHolder(view)
+                                    previous?.let { previous ->
+                                        if (previous is DetailListAdapter.DetailEntryViewHolder) {
+                                            with((previous.text as EditText)) {
+                                                requestFocus()
+                                                setSelection(length())
+                                                showSoftInput()
                                             }
                                         }
                                     }
                                 }
-                                result = true
                             }
-                            result
+                            result = true
                         }
+                        result
                     }
-                    detailRecycler.adapter = detailListAdapter
                 }
+                detailRecycler.adapter = detailListAdapter
             }
         }
-
-
-        if (diff.categoryChanged) {
-            onEntryCategoryChanged()
-        }
-
-        if (diff.attachmentsChanged) {
-            updateAttachmentsList(entry)
-        }
-
-        if (shouldRemoveAlarm) {
-            model.removeReminder()
-            shouldRemoveAlarm = false
-        }
-
-        // invoke the postponed transition only the first time
-        // when it's not a new document
-        if (currentEntryIsNull && !isNewDocument) {
-            entryTitle.doOnPreDraw {
-                startPostponedEnterTransition()
-                entryTitle.transitionName = null
-                entryText.transitionName = null
-                entryCategory.transitionName = null
-            }
-        }
-
-        if (!diff.sameID || (diff.pinnedChanged || diff.deletedChanged || diff.archivedChanged || diff.alarmChanged)) {
-            invalidateOptionsMenu()
-        }
-
-        // resume listeners
-        isUpdating = false
-        isNewDocument = false
     }
 
-    private fun onEntryCategoryChanged() {
-        Timber.i("onEntryCategoryChanged")
+    private fun updateEntryCategory() {
         model.entry.whenNotNull { entry ->
             entryCategory.text = entry.category?.categoryTitle
             entryCategory.visibility = if (entry.category == null) View.INVISIBLE else View.VISIBLE
-            applyEntryTheme(entry)
+            updateThemeFromEntry()
         }
     }
 
-    private fun updateAttachmentsList(entry: Entry) {
+    private fun updateEntryAttachmentsList() {
         attachmentsContainer.removeAllViews()
 
-        val attachments = entry.attachments
-        attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
+        model.entry.whenNotNull { entry ->
 
-        attachments?.let { attachments ->
-            val cardColor = entry.getAttachmentColor(this)
+            val attachments = entry.attachments
+            attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
 
-            for (attachment in attachments) {
-                val view = LayoutInflater.from(this)
-                    .inflate(R.layout.appunti_detail_attachment_item, attachmentsContainer, false) as CardView
+            attachments?.let { attachments ->
+                val cardColor = entry.getAttachmentColor(this)
 
-                view.setCardBackgroundColor(cardColor)
-                view.attachmentTitle.text = attachment.attachmentTitle
-                view.tag = attachment
+                for (attachment in attachments) {
+                    val view = LayoutInflater.from(this)
+                        .inflate(R.layout.appunti_detail_attachment_item, attachmentsContainer, false) as CardView
 
-                Timber.v("$attachment")
+                    view.setCardBackgroundColor(cardColor)
+                    view.attachmentTitle.text = attachment.attachmentTitle
+                    view.tag = attachment
 
-                // TODO(Specify the exact size here)
-                attachment.loadThumbnail(this, view.attachmentImage)
+                    Timber.v("$attachment")
 
-                view.setOnClickListener {
-                    try {
-                        IntentUtils.createAttachmentViewIntent(this, attachment).also {
-                            startActivity(it)
+                    // TODO(Specify the exact size here)
+                    attachment.loadThumbnail(this, view.attachmentImage)
+
+                    view.setOnClickListener {
+                        try {
+                            IntentUtils.createAttachmentViewIntent(this, attachment).also {
+                                startActivity(it)
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                         }
-                    } catch (e: Exception) {
-                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
-                }
 
-                view.attachmentShareButton.setOnClickListener {
-                    try {
-                        IntentUtils.createAttachmentShareIntent(this, attachment).also {
-                            startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
+                    view.attachmentShareButton.setOnClickListener {
+                        try {
+                            IntentUtils.createAttachmentShareIntent(this, attachment).also {
+                                startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                         }
-                    } catch (e: Exception) {
-                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
-                }
 
-                view.attachmentRemoveButton.setOnClickListener {
-                    rmoveAttachment(attachment)
-                }
+                    view.attachmentRemoveButton.setOnClickListener {
+                        removeEntryAttachment(attachment)
+                    }
 
-                attachmentsContainer.addView(view)
+                    attachmentsContainer.addView(view)
+                }
             }
         }
     }
 
-    private fun applyEntryTheme(entry: Entry) {
-        var color = entry.getColor(this)
-        Timber.i("applyEntryTheme. color=${color.toString(16)}")
+    private fun updateThemeFromEntry() {
+        Timber.i("updateThemeFromEntry")
+        model.entry.whenNotNull { entry ->
+            var color = entry.getColor(this)
+            Timber.i("updateThemeFromEntry. color=${color.toString(16)}")
+            // color = ColorUtils.setAlphaComponent(color, 201)
 
-//        color = ColorUtils.setAlphaComponent(color, 201)
+            coordinator.backgroundTintList = ColorStateList.valueOf(color)
 
-        coordinator.backgroundTintList = ColorStateList.valueOf(color)
+            window.statusBarColor = color
+            window.navigationBarColor = color
 
-        window.statusBarColor = color
-        window.navigationBarColor = color
+            bottomAppBar.backgroundTintList = ColorStateList.valueOf(color)
 
-        bottomAppBar.backgroundTintList = ColorStateList.valueOf(color)
+            if (navigationView.background is ColorDrawable) {
+                navigationView.backgroundTintList = ColorStateList.valueOf(color)
+            } else if (navigationView.background is LayerDrawable) {
+                val drawable: Drawable? =
+                    (navigationView.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
+                drawable?.setTint(color)
+            }
 
-        if (navigationView.background is ColorDrawable) {
-            navigationView.backgroundTintList = ColorStateList.valueOf(color)
-        } else if (navigationView.background is LayerDrawable) {
-            val drawable: Drawable? =
-                (navigationView.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
-            drawable?.setTint(color)
-        }
+            // attachments
 
-        // attachments
-
-        if (attachmentsContainer.childCount > 0) {
-            val cardColor = entry.getAttachmentColor(this)
-            for (view in attachmentsContainer.children) {
-                (view as CardView).setCardBackgroundColor(cardColor)
+            if (attachmentsContainer.childCount > 0) {
+                val cardColor = entry.getAttachmentColor(this)
+                for (view in attachmentsContainer.children) {
+                    (view as CardView).setCardBackgroundColor(cardColor)
+                }
             }
         }
     }
 
-    private fun rmoveAttachment(attachment: Attachment) {
+    private fun removeEntryAttachment(attachment: Attachment) {
         model.removeAttachment(attachment) { result, throwable ->
             doOnMainThread {
                 throwable?.let { throwable ->
@@ -679,6 +675,7 @@ class DetailActivity : AppuntiActivity() {
                     Timber.v("[${currentThread()}] success = $result")
                     showConfirmation("File has been removed")
                 }
+                updateEntryAttachmentsList()
             }
         }
     }
@@ -700,6 +697,7 @@ class DetailActivity : AppuntiActivity() {
                         R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1
                 )
             )
+            invalidateOptionsMenu()
         }
     }
 
@@ -713,6 +711,7 @@ class DetailActivity : AppuntiActivity() {
                             R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1
                     )
                 )
+                invalidateOptionsMenu()
                 if (!currentValue) onBackPressed()
 
             }
@@ -730,9 +729,8 @@ class DetailActivity : AppuntiActivity() {
                     )
                 )
 
-                if (!currentValue) {
-                    onBackPressed()
-                }
+                invalidateOptionsMenu()
+                if (!currentValue) onBackPressed()
             }
         }
     }
@@ -768,6 +766,7 @@ class DetailActivity : AppuntiActivity() {
                         dialog.dismiss()
                         if (model.removeReminder()) {
                             showConfirmation(getString(R.string.reminder_removed))
+                            invalidateOptionsMenu()
                         }
                     }
                     .show()
@@ -779,6 +778,7 @@ class DetailActivity : AppuntiActivity() {
 
                     if (model.addReminder(result)) {
                         showConfirmation(getString(R.string.reminder_set))
+                        invalidateOptionsMenu()
                     }
                 }
             }

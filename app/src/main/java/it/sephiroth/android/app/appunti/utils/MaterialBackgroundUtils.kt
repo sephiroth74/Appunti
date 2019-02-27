@@ -72,17 +72,17 @@ object MaterialBackgroundUtils {
             .Builder()
             .addChecked(
                 MaterialShapeDrawable
-                    .Builder(MaterialShape.Type.ALL)
+                    .Builder(MaterialShape.Type.END)
                     .tint(context.theme.getColor(context, R.attr.colorControlHighlight))
             )
             .addSelected(
                 MaterialShapeDrawable
-                    .Builder(MaterialShape.Type.ALL)
-                    .tint(context.theme.getColor(context, R.attr.colorControlHighlight))
+                    .Builder(MaterialShape.Type.END)
+                    .tint(context.theme.getColor(context, R.attr.colorControlActivated))
             )
             .ripple(
                 context.theme.getColor(context, R.attr.colorControlHighlight),
-                MaterialShapeDrawable.Builder(MaterialShape.Type.ALL)
+                MaterialShapeDrawable.Builder(MaterialShape.Type.END)
             )
             .build()
     }
