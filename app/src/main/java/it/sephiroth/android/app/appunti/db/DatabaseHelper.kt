@@ -44,11 +44,17 @@ object DatabaseHelper {
         return entry.touch().save()
     }
 
-    fun setEntryDeleted(entry: Entry, value: Boolean): Boolean {
-        // TODO(Remove reminder)
+    fun setEntryDeleted(context: Context, entry: Entry, value: Boolean): Boolean {
         Timber.i("setEntryDeleted($entry, $value)")
         entry.entryDeleted = if (value) 1 else 0
-        if (value) entry.entryArchived = 0
+
+        if (value) {
+            entry.entryArchived = 0
+            entry.entryAlarmEnabled = false
+            entry.entryAlarm = null
+            Entry.removeReminder(entry, context)
+        }
+
         return entry.touch().save()
     }
 

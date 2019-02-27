@@ -28,12 +28,12 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.ext.getColor
 import it.sephiroth.android.app.appunti.ext.getColorStateList
-import it.sephiroth.android.app.appunti.ext.setAnimationListener
 import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import it.sephiroth.android.app.appunti.widget.MultiChoiceHelper
+import it.sephiroth.android.library.kotlin_extensions.animation.setAnimationListener
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
 import kotlinx.android.synthetic.main.appunti_main_drawer_navigation_content.*
@@ -346,6 +346,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                 super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
             }
 
+            @Suppress("UNUSED_PARAMETER")
             @SuppressLint("ClickableViewAccessibility")
             private fun setTouchListener(
                 c: Canvas,
@@ -355,7 +356,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                 actionState: Int, isCurrentlyActive: Boolean
             ) {
 
-                recyclerView.setOnTouchListener { v, event ->
+                recyclerView.setOnTouchListener { _, _ ->
                     swipeBack = !isSwipeEnabled(viewHolder)
                     Timber.v("isSwipeEnabled=$swipeBack")
 //                    swipeBack = event.action == MotionEvent.ACTION_CANCEL || event.action == MotionEvent.ACTION_UP

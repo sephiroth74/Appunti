@@ -7,6 +7,7 @@ import android.text.SpannableStringBuilder
 import android.text.style.ImageSpan
 import android.text.style.StrikethroughSpan
 import androidx.core.graphics.ColorUtils
+import androidx.lifecycle.LiveData
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
@@ -15,7 +16,23 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import java.util.ArrayList
 import kotlin.Comparator
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
+@UseExperimental(ExperimentalContracts::class)
+inline fun Entry?.isNull(): Boolean {
+    contract {
+        returns(false) implies (this@isNull != null)
+    }
+
+    return this == null
+}
+
+@UseExperimental(ExperimentalContracts::class)
+inline fun <T, R> LiveData<T>.whenNotNull(block: (T) -> R): R? {
+    return this.value?.let(block)
+}
 
 fun Entry.getAttachmentColor(context: Context): Int {
     val outHSL = floatArrayOf(0f, 0f, 0f)

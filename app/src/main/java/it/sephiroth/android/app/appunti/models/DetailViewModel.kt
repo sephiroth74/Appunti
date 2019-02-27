@@ -21,6 +21,7 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.ext.doOnMainThread
 import it.sephiroth.android.app.appunti.ext.isMainThread
+import it.sephiroth.android.app.appunti.ext.whenNotNull
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
@@ -32,9 +33,12 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
 
     val entry: LiveData<Entry> = MutableLiveData()
 
+    var modified = false
+
     var entryID: Long?
         @SuppressLint("CheckResult")
         set(value) {
+
             value?.let { value ->
                 DatabaseHelper
                     .getEntryById(value)
@@ -75,11 +79,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 }
             } else if (action == ChangeAction.INSERT && null == entryID) {
-//                if (isMainThread()) {
-//                    setEntry(model)
-//                } else {
-//                    doOnMainThread { setEntry(model) }
-//                }
+                // void
             }
         }
 
@@ -88,7 +88,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    val attachmentModelListener = object : DirectModelNotifier.ModelChangedListener<Attachment> {
+    private val attachmentModelListener = object : DirectModelNotifier.ModelChangedListener<Attachment> {
         override fun onModelChanged(model: Attachment, action: ChangeAction) {
             Timber.i("onModelChanged($model, $action)")
         }
@@ -102,27 +102,54 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         (entry as MutableLiveData).value = value
     }
 
-    fun togglePin(): Boolean {
-        entry.value?.let {
-            return DatabaseHelper.setEntryPinned(Entry(it), it.entryPinned == 0)
+    fun setEntryTitle(title: CharSequence?) {
+        entry.whenNotNull {
+            it.entryTitle = title?.toString() ?: ""
+            modified = true
+        }
+    }
+
+    fun setEntryText(text: CharSequence?) {
+        entry.whenNotNull {
+            it.entryText = text?.toString() ?: ""
+            modified = true
+        }
+    }
+
+    fun save(): Boolean {
+        entry.whenNotNull { entry ->
+            val result = entry.touch().save()
+            modified = false
+            return result
         } ?: run { return false }
     }
 
-    fun toggleArchived(): Boolean {
-        entry.value?.let {
-            return DatabaseHelper.setEntryArchived(Entry(it), it.entryArchived == 0)
+    fun setEntryCategory(categoryID: Long): Boolean {
+        entry.whenNotNull { entry ->
+            if (categoryID > -1) {
+                DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
+                    return DatabaseHelper.setEntryCategory(entry, category)
+                }
+            }
+        }
+        return false
+    }
+
+    fun setEntryPinned(value: Boolean): Boolean {
+        entry.whenNotNull { entry ->
+            return DatabaseHelper.setEntryPinned(entry, value)
         } ?: run { return false }
     }
 
-    fun toggleDeleted(): Boolean {
-        entry.value?.let {
-            return DatabaseHelper.setEntryDeleted(Entry(it), it.entryDeleted == 0)
+    fun setEntryArchived(value: Boolean): Boolean {
+        entry.whenNotNull { entry ->
+            return DatabaseHelper.setEntryArchived(entry, value)
         } ?: run { return false }
     }
 
     fun removeReminder(): Boolean {
-        entry.value?.let {
-            return DatabaseHelper.removeReminder(Entry(it), getApplication())
+        entry.whenNotNull { entry ->
+            return DatabaseHelper.removeReminder(entry, getApplication())
         } ?: run { return false }
     }
 
@@ -133,15 +160,10 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         } ?: run { return false }
     }
 
-    fun setEntryCategory(category: Category?): Boolean {
-        entry.value?.let {
-            return DatabaseHelper.setEntryCategory(Entry(it), category)
-        } ?: run { return false }
-    }
-
     fun addAttachment(uri: Uri, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
-        entry.value?.let { entry ->
-            DatabaseHelper.addAttachmentFromUri(getApplication(), Entry(entry), uri) { success, throwable ->
+        Timber.i("addAttachment($uri)")
+        entry.whenNotNull { entry ->
+            DatabaseHelper.addAttachmentFromUri(getApplication(), entry, uri) { success, throwable ->
                 callback?.invoke(success, throwable)
             }
         } ?: run {
@@ -150,10 +172,12 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun addImage(dstFile: File, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
-        entry.value?.let { entry ->
+        Timber.i("addImage($dstFile)")
+
+        entry.whenNotNull { entry ->
             DatabaseHelper.addAttachment(
                 getApplication(),
-                Entry(entry),
+                entry,
                 dstFile,
                 FileSystemUtils.JPEG_MIME_TYPE
             ) { success, throwable ->

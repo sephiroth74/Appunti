@@ -7,7 +7,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "it.sephiroth.android.app.appunti"
-        minSdkVersion 23
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -39,6 +39,8 @@ dependencies {
 //    kapt "androidx.room:room-compiler:$room_version"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation project(':kotlin_extensions')
 
     implementation 'androidx.appcompat:appcompat:1.0.2'
 
@@ -97,8 +99,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.6'
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation 'com.github.barteksc:pdfium-android:1.9.0'
-    implementation 'com.google.code.gson:gson:2.8.0'
-
+    implementation 'com.google.code.gson:gson:2.8.2'
 
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
     implementation 'io.reactivex.rxjava2:rxjava:2.2.6'

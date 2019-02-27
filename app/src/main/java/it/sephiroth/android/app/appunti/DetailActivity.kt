@@ -65,7 +65,6 @@ class DetailActivity : AppuntiActivity() {
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<FrameLayout>
     private lateinit var model: DetailViewModel
 
-    private var isModified = false
     private var isNewDocument: Boolean = false
     private var isUpdating = false
 
@@ -95,6 +94,9 @@ class DetailActivity : AppuntiActivity() {
         }
 
         model = ViewModelProviders.of(this).get(DetailViewModel::class.java)
+        Timber.i("model=$model")
+
+
         model.entry.observe(this, Observer { entry ->
             Timber.i("Model Entry Changed = $entry")
             onEntryChanged(entry)
@@ -134,9 +136,8 @@ class DetailActivity : AppuntiActivity() {
         Timber.i("onDestroy")
         setProgressVisible(false)
 
-        if (isModified) {
-            currentEntry?.apply { touch().save() }
-            isModified = false
+        if (model.modified) {
+            model.save()
         }
 
         super.onDestroy()
@@ -201,18 +202,18 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun changeEntryCategory(categoryID: Long) {
-        if (categoryID > -1) {
-            DatabaseHelper.getCategoryByID(categoryID)?.let { category ->
-                model.setEntryCategory(category)
-            }
+        Timber.i("changeEntryCategory($categoryID)")
+        if (model.setEntryCategory(categoryID)) {
+            onEntryCategoryChanged()
         }
     }
 
     private fun addAttachmentToEntry(uri: Uri) {
+        Timber.i("addAttachmentToEntry($uri)")
         setProgressVisible(true)
 
         model.addAttachment(uri) { success, throwable ->
-            Timber.v("addAttachment: $success")
+            Timber.v("addAttachment result=$success")
             doOnMainThread {
                 throwable?.let {
                     showConfirmation(it.localizedMessage)
@@ -251,10 +252,7 @@ class DetailActivity : AppuntiActivity() {
     @Suppress("UNUSED_PARAMETER")
     private fun onEntryTextChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
         if (currentFocus == entryText) {
-            currentEntry?.apply {
-                isModified = true
-                entryText = text?.toString() ?: ""
-            }
+            model.setEntryText(text)
         }
     }
 
@@ -263,10 +261,7 @@ class DetailActivity : AppuntiActivity() {
     @Suppress("UNUSED_PARAMETER")
     private fun onEntryTitleChanged(text: CharSequence?, start: Int, count: Int, after: Int) {
         if (currentFocus == entryTitle) {
-            currentEntry?.apply {
-                isModified = true
-                entryTitle = text?.toString() ?: ""
-            }
+            model.setEntryTitle(text)
         }
     }
 
@@ -354,7 +349,7 @@ class DetailActivity : AppuntiActivity() {
     // External Intents
 
     private fun dispatchPickCategoryIntent() {
-        currentEntry?.let { entry ->
+        model.entry.whenNotNull { entry ->
             IntentUtils.Categories
                 .Builder(this)
                 .pickCategory()
@@ -365,7 +360,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun dispatchShareEntryIntent() {
-        currentEntry?.let { entry ->
+        model.entry.whenNotNull { entry ->
             IntentUtils.createShareEntryIntent(this, entry).also {
                 startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
             }
@@ -385,7 +380,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun dispatchTakePictureIntent() {
-        currentEntry?.let { entry ->
+        model.entry.whenNotNull { entry ->
             Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
                 takePictureIntent.resolveActivity(packageManager)?.also {
                     val photoFile: File? = try {
@@ -491,7 +486,10 @@ class DetailActivity : AppuntiActivity() {
 
         val currentEntryIsNull = currentEntry == null
 
-        currentEntry = Entry(entry)
+        if (currentEntry.isNull()) {
+            currentEntry = Entry(entry)
+        }
+
 
         if (!diff.sameID) {
             entryTitle.setText(entry.entryTitle)
@@ -514,7 +512,7 @@ class DetailActivity : AppuntiActivity() {
                         setData(entry.asList())
                         saveAction = { text ->
                             Timber.i("saveAction")
-                            isModified = true
+                            model.modified = true
                             currentEntry?.entryText = text
                         }
 
@@ -552,9 +550,7 @@ class DetailActivity : AppuntiActivity() {
 
 
         if (diff.categoryChanged) {
-            entryCategory.text = entry.category?.categoryTitle
-            entryCategory.visibility = if (entry.category == null) View.INVISIBLE else View.VISIBLE
-            applyEntryTheme(entry)
+            onEntryCategoryChanged()
         }
 
         if (diff.attachmentsChanged) {
@@ -584,6 +580,15 @@ class DetailActivity : AppuntiActivity() {
         // resume listeners
         isUpdating = false
         isNewDocument = false
+    }
+
+    private fun onEntryCategoryChanged() {
+        Timber.i("onEntryCategoryChanged")
+        currentEntry?.let { entry ->
+            entryCategory.text = entry.category?.categoryTitle
+            entryCategory.visibility = if (entry.category == null) View.INVISIBLE else View.VISIBLE
+            applyEntryTheme(entry)
+        }
     }
 
     private fun updateAttachmentsList(entry: Entry) {
@@ -706,7 +711,7 @@ class DetailActivity : AppuntiActivity() {
 
     private fun togglePin() {
         val currentValue = currentEntry?.isPinned()
-        if (model.togglePin()) {
+        if (model.setEntryPinned(currentValue == false)) {
             showConfirmation(
                 resources.getQuantityString(
                     if (currentValue == true)
@@ -717,24 +722,26 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun toggleDelete() {
-        val currentValue = currentEntry?.isDeleted()
-        if (model.toggleDeleted()) {
-            showConfirmation(
-                resources.getQuantityString(
-                    if (currentValue == true)
-                        R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1
-                )
-            )
+        currentEntry?.let { entry ->
+            val currentValue = entry.isDeleted()
+            if (DatabaseHelper.setEntryDeleted(this, entry, !currentValue)) {
 
-            if (currentValue == false) {
-                onBackPressed()
+                showConfirmation(
+                    resources.getQuantityString(
+                        if (currentValue)
+                            R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1
+                    )
+                )
+
+                if (!currentValue) onBackPressed()
             }
+
         }
     }
 
     private fun toggleArchive() {
         val currentValue = currentEntry?.isArchived()
-        if (model.toggleArchived()) {
+        if (model.setEntryArchived(currentValue == false)) {
             showConfirmation(
                 resources.getQuantityString(
                     if (currentValue == true)
