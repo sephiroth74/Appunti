@@ -33,10 +33,8 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.dbflow5.structure.save
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.schedulers.Schedulers
-import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
@@ -287,8 +285,8 @@ class DetailActivity : AppuntiActivity() {
             findItem(R.id.menu_action_file).isVisible = value
             findItem(R.id.menu_action_category).isVisible = !value
             findItem(R.id.menu_action_delete).isVisible = !value
-            findItem(R.id.menu_action_list).isVisible = !value && currentEntry?.entryType == Entry.EntryType.TEXT
-            findItem(R.id.menu_action_text).isVisible = !value && currentEntry?.entryType == Entry.EntryType.LIST
+            findItem(R.id.menu_action_list).isVisible = !value && model.entry.value?.entryType == Entry.EntryType.TEXT
+            findItem(R.id.menu_action_text).isVisible = !value && model.entry.value?.entryType == Entry.EntryType.LIST
             findItem(R.id.menu_action_share).setVisible(!value)
         }
     }
@@ -512,8 +510,7 @@ class DetailActivity : AppuntiActivity() {
                         setData(entry.asList())
                         saveAction = { text ->
                             Timber.i("saveAction")
-                            model.modified = true
-                            currentEntry?.entryText = text
+                            model.setEntryText(text)
                         }
 
                         deleteAction = { holder, entry ->
@@ -584,7 +581,7 @@ class DetailActivity : AppuntiActivity() {
 
     private fun onEntryCategoryChanged() {
         Timber.i("onEntryCategoryChanged")
-        currentEntry?.let { entry ->
+        model.entry.whenNotNull { entry ->
             entryCategory.text = entry.category?.categoryTitle
             entryCategory.visibility = if (entry.category == null) View.INVISIBLE else View.VISIBLE
             applyEntryTheme(entry)
@@ -687,30 +684,15 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun convertEntryToList() {
-        currentEntry?.let { entry ->
-            with(Entry(entry)) {
-                if (this.convertToList()) {
-                    this.touch().save()
-                }
-            }
-        }
+        model.convertEntryToList()
     }
 
     private fun convertEntryToText() {
-        currentEntry?.let { entry ->
-            if (entry.entryType == Entry.EntryType.LIST) {
-                val text = detailListAdapter?.toString() ?: ""
-                with(Entry(entry)) {
-                    entryText = text
-                    entryType = Entry.EntryType.TEXT
-                    touch().save()
-                }
-            }
-        }
+        model.convertEntryToText(detailListAdapter.toString())
     }
 
     private fun togglePin() {
-        val currentValue = currentEntry?.isPinned()
+        val currentValue = model.entry.value?.isPinned()
         if (model.setEntryPinned(currentValue == false)) {
             showConfirmation(
                 resources.getQuantityString(
@@ -722,41 +704,41 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun toggleDelete() {
-        currentEntry?.let { entry ->
+        model.entry.whenNotNull { entry ->
             val currentValue = entry.isDeleted()
-            if (DatabaseHelper.setEntryDeleted(this, entry, !currentValue)) {
-
+            if (model.setEntryDeleted(!currentValue)) {
                 showConfirmation(
                     resources.getQuantityString(
                         if (currentValue)
                             R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1
                     )
                 )
-
                 if (!currentValue) onBackPressed()
-            }
 
+            }
         }
     }
 
     private fun toggleArchive() {
-        val currentValue = currentEntry?.isArchived()
-        if (model.setEntryArchived(currentValue == false)) {
-            showConfirmation(
-                resources.getQuantityString(
-                    if (currentValue == true)
-                        R.plurals.entries_unarchived_title else R.plurals.entries_archived_title, 1, 1
+        model.entry.whenNotNull { entry ->
+            val currentValue = entry.isArchived()
+            if (model.setEntryArchived(!currentValue)) {
+                showConfirmation(
+                    resources.getQuantityString(
+                        if (currentValue)
+                            R.plurals.entries_unarchived_title else R.plurals.entries_archived_title, 1, 1
+                    )
                 )
-            )
 
-            if (currentValue == false) {
-                onBackPressed()
+                if (!currentValue) {
+                    onBackPressed()
+                }
             }
         }
     }
 
     private fun toggleReminder() {
-        currentEntry?.let { entry ->
+        model.entry.whenNotNull { entry ->
             if (entry.entryAlarm != null && !entry.isAlarmExpired()) {
                 val date = entry.entryAlarm!!.atZone(ZoneId.systemDefault())
                 val dateFormatted = entry.entryAlarm!!.getLocalizedDateTimeStamp(FormatStyle.FULL)
@@ -804,7 +786,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun updateMenu(menu: Menu?) {
-        currentEntry?.let { entry ->
+        model.entry.whenNotNull { entry ->
             menu?.let { menu ->
                 var menuItem = menu.findItem(R.id.menu_action_pin)
                 menuItem?.apply {

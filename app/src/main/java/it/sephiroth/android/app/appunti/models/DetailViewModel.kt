@@ -8,26 +8,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.ChangeAction
-import com.dbflow5.structure.insert
 import com.dbflow5.structure.save
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import io.reactivex.android.schedulers.AndroidSchedulers
-import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
-import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.currentThread
-import it.sephiroth.android.app.appunti.ext.doOnMainThread
-import it.sephiroth.android.app.appunti.ext.isMainThread
-import it.sephiroth.android.app.appunti.ext.whenNotNull
+import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import timber.log.Timber
 import java.io.File
-import java.util.ArrayList
 
 class DetailViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -135,6 +126,26 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         return false
     }
 
+    fun convertEntryToList(): Boolean {
+        entry.whenNotNull { entry ->
+            if (entry.convertToList()) {
+                return save()
+            }
+        }
+        return false
+    }
+
+    fun convertEntryToText(text: String?): Boolean {
+        entry.whenNotNull { entry ->
+            if (entry.entryType == Entry.EntryType.LIST) {
+                entry.entryText = text ?: ""
+                entry.entryType = Entry.EntryType.TEXT
+                return save()
+            }
+        }
+        return false
+    }
+
     fun setEntryPinned(value: Boolean): Boolean {
         entry.whenNotNull { entry ->
             return DatabaseHelper.setEntryPinned(entry, value)
@@ -147,6 +158,12 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         } ?: run { return false }
     }
 
+    fun setEntryDeleted(value: Boolean): Boolean {
+        entry.whenNotNull { entry ->
+            return DatabaseHelper.setEntryDeleted(getApplication(), entry, value)
+        } ?: run { return false }
+    }
+
     fun removeReminder(): Boolean {
         entry.whenNotNull { entry ->
             return DatabaseHelper.removeReminder(entry, getApplication())
@@ -154,9 +171,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun addReminder(zone: ZonedDateTime): Boolean {
-        entry.value?.let { entry ->
+        entry.whenNotNull { entry ->
             val utc = zone.withZoneSameInstant(ZoneId.of("UTC"))
-            return DatabaseHelper.addReminder(Entry(entry), utc.toInstant(), getApplication())
+            return DatabaseHelper.addReminder(entry, utc.toInstant(), getApplication())
         } ?: run { return false }
     }
 
