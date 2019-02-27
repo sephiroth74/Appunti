@@ -487,7 +487,7 @@ class DetailActivity : AppuntiActivity() {
 
         entryTitle.setText(entry.entryTitle)
 
-        updateEntryText()
+        updateEntryTypeAndText()
         updateEntryCategory()
         updateEntryAttachmentsList()
 
@@ -518,7 +518,7 @@ class DetailActivity : AppuntiActivity() {
 
     // Atomic updates
 
-    private fun updateEntryText() {
+    private fun updateEntryTypeAndText() {
         model.entry.whenNotNull { entry ->
             entryText.visibility = if (entry.entryType == Entry.EntryType.TEXT) View.VISIBLE else View.GONE
             detailRecycler.visibility = if (entry.entryType == Entry.EntryType.LIST) View.VISIBLE else View.GONE
@@ -681,11 +681,11 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun convertEntryToList() {
-        model.convertEntryToList()
+        if (model.convertEntryToList()) updateEntryTypeAndText()
     }
 
     private fun convertEntryToText() {
-        model.convertEntryToText(detailListAdapter.toString())
+        if (model.convertEntryToText(detailListAdapter.toString())) updateEntryTypeAndText()
     }
 
     private fun togglePin() {
@@ -988,7 +988,9 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailViewHolder {
         return if (viewType == EntryListJsonModel.TYPE_NEW_ENTRY) {
             val view = inflater.inflate(R.layout.appunti_detail_new_entry_list_item, parent, false)
-            DetailNewEntryViewHolder(view)
+            DetailNewEntryViewHolder(view).apply {
+                buttonAdd.background = MaterialBackgroundUtils.newEntryListItem(context)
+            }
         } else {
             val view = inflater.inflate(R.layout.appunti_detail_entry_list_item_checkable, parent, false)
             DetailEntryViewHolder(view)
@@ -1002,11 +1004,6 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             val holder = baseHolder as DetailNewEntryViewHolder
 
             holder.buttonAdd.setOnClickListener {
-                removeFocusFromEditText()
-                addItem()
-            }
-
-            holder.text.setOnClickListener {
                 removeFocusFromEditText()
                 addItem()
             }

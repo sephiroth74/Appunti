@@ -1,36 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
         android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
-    <androidx.appcompat.widget.AppCompatImageView
-            android:layout_margin="4dp"
+    <LinearLayout
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:clickable="true"
             android:id="@+id/buttonAdd"
-            android:src="@drawable/appunti_sharp_add_24_selector"
-            android:background="@drawable/material_background_ripple"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-    <FrameLayout
-            android:id="@+id/frameLayout"
-            android:layout_width="0dp"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1">
+            android:orientation="horizontal">
+
+
+        <androidx.appcompat.widget.AppCompatImageView
+                android:layout_margin="4dp"
+                android:src="@drawable/sharp_add_24"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
 
         <androidx.appcompat.widget.AppCompatTextView
+                android:layout_margin="4dp"
+                style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
                 android:id="@android:id/text1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:focusableInTouchMode="false"
+                android:focusable="false"
+                android:clickable="false"
                 android:maxLines="1"
                 android:lines="1"
-                android:maxEms="255"
                 android:textSize="@dimen/text_size_body_1_material"
-                android:text="Voce Elenco"
-                android:visibility="visible"/>
+                android:text="Voce Elenco"/>
 
-    </FrameLayout>
+    </LinearLayout>
+
+    <Space android:layout_width="match_parent" android:layout_height="4dp"/>
+
+    <include
+            layout="@layout/appunti_navigation_item_separator"
+            tools:ignore="PrivateResource"/>
+
 </LinearLayout>

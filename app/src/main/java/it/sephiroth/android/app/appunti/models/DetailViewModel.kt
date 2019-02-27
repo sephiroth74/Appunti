@@ -107,6 +107,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
      * Save the current entry
      */
     fun save(): Boolean {
+        Timber.i("save")
         entry.whenNotNull { entry ->
             val result = entry.touch().save()
             modified = false

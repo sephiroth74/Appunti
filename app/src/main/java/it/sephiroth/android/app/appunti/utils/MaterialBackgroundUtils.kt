@@ -67,6 +67,16 @@ object MaterialBackgroundUtils {
             .build()
     }
 
+    fun newEntryListItem(context: Context): Drawable {
+        return MaterialBackgroundDrawable
+            .Builder()
+            .ripple(
+                context.theme.getColor(context, R.attr.colorControlHighlight),
+                MaterialShapeDrawable.Builder(MaterialShape.Type.ALL)
+            )
+            .build()
+    }
+
     fun categoryItemDrawable(context: Context): Drawable {
         return MaterialBackgroundDrawable
             .Builder()
