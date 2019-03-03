@@ -17,7 +17,6 @@ import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import java.util.ArrayList
 import kotlin.Comparator
 import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 @UseExperimental(ExperimentalContracts::class)

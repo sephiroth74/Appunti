@@ -24,11 +24,15 @@ import com.dbflow5.structure.delete
 import com.dbflow5.structure.insert
 import com.dbflow5.structure.update
 import com.google.android.material.snackbar.Snackbar
+import getColorStateList
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
-import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.ext.doOnMainThread
+import it.sephiroth.android.app.appunti.ext.hideSoftInput
+import it.sephiroth.android.app.appunti.ext.rxSingle
+import it.sephiroth.android.app.appunti.ext.showSoftInput
 import it.sephiroth.android.app.appunti.graphics.CategoryColorDrawable
 import it.sephiroth.android.app.appunti.utils.CategoriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.IntentUtils

@@ -3,8 +3,8 @@ package it.sephiroth.android.app.appunti.utils
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
+import getColor
 import it.sephiroth.android.app.appunti.R
-import it.sephiroth.android.app.appunti.ext.getColor
 import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
 import it.sephiroth.android.app.appunti.graphics.MaterialShape
 import it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable

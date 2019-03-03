@@ -20,7 +20,10 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.circularreveal.cardview.CircularRevealCardView
+import getColorStateList
 import io.reactivex.schedulers.Schedulers
+import isPortrait
+import isTablet
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*

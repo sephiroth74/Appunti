@@ -9,7 +9,10 @@ import android.view.WindowManager
 import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import it.sephiroth.android.app.appunti.ext.*
+import getColor
+import isNavBarAtBottom
+import it.sephiroth.android.app.appunti.ext.isAPI
+import it.sephiroth.android.app.appunti.ext.isInMultiWindow
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import org.threeten.bp.ZonedDateTime
 import timber.log.Timber

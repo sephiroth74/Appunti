@@ -153,14 +153,15 @@ class DetailActivity : AppuntiActivity() {
         super.onNewIntent(intent)
 
         Timber.i("onNewIntent($intent)")
-        var entryID = 0L
+        var entryID: Long? = null
+        var newEntryText: String? = null
 
         intent?.let { intent ->
             Timber.v("action=${intent.action}")
             when (intent.action) {
                 Intent.ACTION_CREATE_DOCUMENT -> {
                     isNewDocument = true
-                    entryID = 0
+                    entryID = 0L
                 }
 
                 Intent.ACTION_EDIT -> {
@@ -168,15 +169,23 @@ class DetailActivity : AppuntiActivity() {
                     shouldRemoveAlarm = intent.getBooleanExtra(IntentUtils.KEY_REMOVE_ALARM, false)
                     isNewDocument = false
                 }
+
+                Intent.ACTION_SEND -> {
+                    entryID = 0
+                    isNewDocument = true
+                    newEntryText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                }
             }
         }
 
         // don't delay the transition if it's a new document
-        if (!isNewDocument) {
-            postponeEnterTransition()
-            model.entryID = entryID
-        } else {
-            model.createNewEntry()
+        entryID?.let {
+            if (!isNewDocument) {
+                postponeEnterTransition()
+                model.entryID = it
+            } else {
+                model.createNewEntry(newEntryText)
+            }
         }
     }
 
