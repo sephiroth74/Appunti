@@ -2,12 +2,14 @@ package it.sephiroth.android.app.appunti.utils
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import it.sephiroth.android.app.appunti.db.tables.Entry
+import it.sephiroth.android.app.appunti.ext.asList
 import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import timber.log.Timber
 import java.util.*
 import java.util.regex.Pattern
 
-object EntryUtils {
+object EntryIOUtils {
 
     /**
      * Given a text, this methods try to convert into a entry list json
@@ -43,11 +45,30 @@ object EntryUtils {
                     id++
                 }
             }
-            val jsonString = Gson().toJson(array, object : TypeToken<ArrayList<EntryListJsonModel.EntryJson>>() {}.type)
-            return jsonString
+            return Gson().toJson(array, object : TypeToken<ArrayList<EntryListJsonModel.EntryJson>>() {}.type)
+        }
+        return null
+    }
+
+    @Suppress("UNUSED_ANONYMOUS_PARAMETER")
+    fun convertEntryToString(entry: Entry): String {
+        if (entry.entryType == Entry.EntryType.TEXT) return entry.entryText
+        val result = entry.asList()
+
+        result?.let { result ->
+            val builder = StringBuilder()
+
+            for (item in result.second) {
+                builder.append("[ ] ${item.text}\n")
+            }
+
+            for (item in result.third) {
+                builder.append("[x] ${item.text}\n")
+            }
+
+            return builder.toString()
         }
 
-        return null
-
+        return entry.entryText
     }
 }

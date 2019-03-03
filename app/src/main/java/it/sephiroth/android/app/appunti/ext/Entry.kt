@@ -42,7 +42,6 @@ fun Entry.getAttachmentColor(context: Context): Int {
 
 fun Entry.asList(): Triple<MutableList<EntryListJsonModel.EntryJson>, MutableList<EntryListJsonModel.EntryJson>, MutableList<EntryListJsonModel.EntryJson>>? {
     if (entryType == Entry.EntryType.LIST) {
-
         val listComparator = Comparator<EntryListJsonModel.EntryJson> { o1, o2 ->
             if (o1.checked == o2.checked) {
                 if (o1.position < o2.position) -1 else 1

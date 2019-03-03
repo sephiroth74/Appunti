@@ -15,7 +15,6 @@ import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.io.RelativePath
-import it.sephiroth.android.app.appunti.utils.EntryUtils
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
@@ -45,23 +44,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
             return entry.value?.entryID
         }
 
-    fun createNewEntry(text: String? = null) {
-        Entry().apply {
-            text?.let { text ->
-                val jsonString = EntryUtils.convertStringToList(text)
-                jsonString?.let { jsonString ->
-                    entryText = jsonString
-                    entryType = Entry.EntryType.LIST
-                } ?: run {
-                    entryText = text
-                    entryType = Entry.EntryType.TEXT
-                }
-            }
-
-            save().also {
-                Timber.i("Entry saved. $this")
-                setEntry(this)
-            }
+    fun createNewEntry(entry: Entry) {
+        if (entry.save()) {
+            setEntry(entry)
         }
     }
 

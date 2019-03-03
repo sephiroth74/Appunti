@@ -41,7 +41,7 @@ object IntentUtils {
         return Intent(android.content.Intent.ACTION_SEND).apply {
             type = FileSystemUtils.TEXT_MIME_TYPE
             putExtra(android.content.Intent.EXTRA_SUBJECT, entry.entryTitle)
-            putExtra(android.content.Intent.EXTRA_TEXT, entry.entryText)
+            putExtra(android.content.Intent.EXTRA_TEXT, EntryIOUtils.convertEntryToString(entry))
         }
     }
 

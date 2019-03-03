@@ -17,6 +17,7 @@ import it.sephiroth.android.app.appunti.AlarmReceiver
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.EntryTypeConverter
 import it.sephiroth.android.app.appunti.db.InstantTypeConverter
+import it.sephiroth.android.app.appunti.utils.EntryIOUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
@@ -260,6 +261,26 @@ class Entry() : BaseRXModel() {
             return time.format(DateTimeFormatter.ofLocalizedDateTime(format))
         }
 
+
+        @Suppress("NAME_SHADOWING")
+        fun fromString(text: String?): Entry {
+            text?.let { text ->
+                val jsonString = EntryIOUtils.convertStringToList(text)
+                jsonString?.let { jsonString ->
+                    return Entry().apply {
+                        entryText = jsonString
+                        entryType = EntryType.LIST
+                    }
+                } ?: run {
+                    return Entry().apply {
+                        entryText = text
+                        entryType = EntryType.TEXT
+                    }
+                }
+            } ?: run {
+                return Entry()
+            }
+        }
     }
 
     enum class EntryType {

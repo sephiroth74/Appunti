@@ -154,26 +154,30 @@ class DetailActivity : AppuntiActivity() {
 
         Timber.i("onNewIntent($intent)")
         var entryID: Long? = null
-        var newEntryText: String? = null
+        var newEntry: Entry? = null
 
         intent?.let { intent ->
             Timber.v("action=${intent.action}")
             when (intent.action) {
                 Intent.ACTION_CREATE_DOCUMENT -> {
                     isNewDocument = true
-                    entryID = 0L
+                    newEntry = Entry()
                 }
 
                 Intent.ACTION_EDIT -> {
+                    isNewDocument = false
                     entryID = intent.getLongExtra(IntentUtils.KEY_ENTRY_ID, 0)
                     shouldRemoveAlarm = intent.getBooleanExtra(IntentUtils.KEY_REMOVE_ALARM, false)
-                    isNewDocument = false
                 }
 
                 Intent.ACTION_SEND -> {
-                    entryID = 0
                     isNewDocument = true
-                    newEntryText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                    newEntry = Entry
+                        .fromString(intent.getStringExtra(Intent.EXTRA_TEXT))
+                        .apply {
+                            entryTitle =
+                                if (intent.hasExtra(Intent.EXTRA_SUBJECT)) intent.getStringExtra(Intent.EXTRA_SUBJECT) else ""
+                        }
                 }
             }
         }
@@ -183,8 +187,10 @@ class DetailActivity : AppuntiActivity() {
             if (!isNewDocument) {
                 postponeEnterTransition()
                 model.entryID = it
-            } else {
-                model.createNewEntry(newEntryText)
+            }
+        } ?: run {
+            newEntry?.let {
+                model.createNewEntry(it)
             }
         }
     }

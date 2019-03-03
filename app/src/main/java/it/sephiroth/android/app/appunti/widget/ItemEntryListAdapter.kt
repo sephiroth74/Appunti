@@ -172,10 +172,15 @@ class ItemEntryListAdapter(
             var color = 0
 
             if (entryFullSpan) {
-                if ((position + 1 < itemCount)) {
-                    baseHolder.isFullSpan = getItemViewType(position + 1) != baseHolder.itemViewType
+                if (position > 0) {
+                    val prevItemType = getItemViewType(position - 1)
+                    if (prevItemType == TYPE_PINNED || prevItemType == TYPE_OTHERS || prevItemType == TYPE_ARCHIVED || prevItemType == TYPE_DELETED) {
+                        baseHolder.isFullSpan = getItemViewType(position + 1) != baseHolder.itemViewType
+                    } else {
+                        baseHolder.isFullSpan = false
+                    }
                 } else {
-                    baseHolder.isFullSpan = true
+                    baseHolder.isFullSpan = false
                 }
             }
 
