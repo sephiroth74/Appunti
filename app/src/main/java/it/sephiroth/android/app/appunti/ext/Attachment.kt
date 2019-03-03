@@ -1,20 +1,14 @@
 package it.sephiroth.android.app.appunti.ext
 
 import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
-import android.os.ParcelFileDescriptor
 import android.widget.ImageView
 import androidx.core.content.FileProvider
-import com.shockwave.pdfium.PdfiumCore
 import com.squareup.picasso.Callback
-import com.squareup.picasso.MemoryPolicy
-import com.squareup.picasso.Picasso
 import it.sephiroth.android.app.appunti.R
-import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
+import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.PicassoUtils
 import timber.log.Timber
@@ -23,6 +17,10 @@ import java.io.File
 
 fun Attachment.getFile(context: Context): File {
     return File(FileSystemUtils.getPrivateFilesDir(context), attachmentPath)
+}
+
+fun Attachment.getPath(context: Context): RelativePath {
+    return RelativePath(FileSystemUtils.getPrivateFilesDir(context), attachmentPath)
 }
 
 fun Attachment.getFileUri(context: Context): Uri? {
@@ -34,9 +32,6 @@ fun Attachment.getFileUri(context: Context): Uri? {
         file
     )
 }
-
-
-
 
 fun Attachment.loadThumbnail(context: Context, view: ImageView) {
     Timber.i("loadThumbnail($attachmentPath, $attachmentMime)")

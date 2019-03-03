@@ -5,7 +5,6 @@
       <module fileurl="file://$PROJECT_DIR$/Appunti.iml" filepath="$PROJECT_DIR$/Appunti.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/kotlin_extensions/kotlin_extensions.iml" filepath="$PROJECT_DIR$/kotlin_extensions/kotlin_extensions.iml" />
-      <module fileurl="file://$PROJECT_DIR$/kotlin_extensions/kotlin_extensions.iml" filepath="$PROJECT_DIR$/kotlin_extensions/kotlin_extensions.iml" />
     </modules>
   </component>
 </project>

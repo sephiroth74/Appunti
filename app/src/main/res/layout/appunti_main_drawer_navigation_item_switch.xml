@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.SwitchCompat
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/displayAsList"
+        style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
+        android:text="@string/display_as_grid"
+        android:checked="false"
+        tools:showIn="@layout/appunti_main_drawer_navigation_content"/>

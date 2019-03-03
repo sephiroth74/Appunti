@@ -107,4 +107,9 @@
     <string name="file_added">File added</string>
     <string name="image_added">Image added</string>
     <string name="display_as_grid">Display as Grid</string>
+    <string name="today_at">Today at %s</string>
+    <string name="yesterday_at">Yesterday at %s</string>
+    <string name="tomorrow_at">Tomorrow at %s</string>
+    <string name="last_modified">Modified %s</string>
+    <string name="created_at">Created %s</string>
 </resources>

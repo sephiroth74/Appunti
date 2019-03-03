@@ -1,11 +1,6 @@
 package it.sephiroth.android.app.appunti.db.tables
 
-import android.webkit.MimeTypeMap
-import androidx.core.content.MimeTypeFilter
-import com.dbflow5.annotation.ForeignKey
-import com.dbflow5.annotation.ForeignKeyAction
-import com.dbflow5.annotation.PrimaryKey
-import com.dbflow5.annotation.Table
+import com.dbflow5.annotation.*
 import com.dbflow5.reactivestreams.structure.BaseRXModel
 import it.sephiroth.android.app.appunti.db.AppDatabase
 
@@ -33,7 +28,8 @@ class Attachment() : BaseRXModel() {
     var attachmentMime: String? = null
 
     /** relative path */
-    var attachmentPath: String? = null
+    @Column(defaultValue = "")
+    var attachmentPath: String = ""
 
     /** original file/content path */
     var attachmentOriginalPath: String? = null

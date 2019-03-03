@@ -12,11 +12,11 @@ import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.*
 import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import org.apache.commons.io.FileUtils
 import org.threeten.bp.Instant
 import timber.log.Timber
-import java.io.File
 import java.util.*
 
 object DatabaseHelper {
@@ -153,14 +153,15 @@ object DatabaseHelper {
 
         FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
             Timber.i("[${currentThread()}] onRemoveAttachment($attachment)")
-
             val file = attachment.getFile(context)
             Timber.v("deleting ${file.absolutePath}")
-            if (attachment.delete()) {
-                entry.load()?.touch()?.save()
+
+            val result: Boolean = attachment.delete()
+            if (result) {
+                FileUtils.deleteQuietly(file)
             }
 
-            FileUtils.deleteQuietly(file)
+            result
         }.success { _, result ->
             callback?.invoke(result, null)
         }.error { _, throwable ->
@@ -186,7 +187,7 @@ object DatabaseHelper {
         val filesDir = FileSystemUtils.getPrivateFilesDir(context)
         val attachmentsDir = FileSystemUtils.getAttachmentFilesDir(context, entry)
         val dstFile = FileSystemUtils.getNextFile(attachmentsDir, FileSystemUtils.normalizeFileName(displayName))
-        val relativePath = filesDir.toURI().relativize(dstFile.toURI())
+        val relativePath = dstFile.path
 
         Timber.v("filesDir=${filesDir.absolutePath}")
         Timber.v("attachmentsDir=${attachmentsDir.absolutePath}")
@@ -196,12 +197,12 @@ object DatabaseHelper {
         doOnScheduler(Schedulers.io()) {
             try {
                 val stream = context.contentResolver.openInputStream(uri)
-                FileUtils.copyInputStreamToFile(stream, dstFile)
+                FileUtils.copyInputStreamToFile(stream, dstFile.file)
 
                 FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
                     val attachment = Attachment()
                     attachment.attachmentEntryID = entry.entryID
-                    attachment.attachmentPath = relativePath.toString()
+                    attachment.attachmentPath = relativePath
                     attachment.attachmentTitle = displayName
                     attachment.attachmentMime = mimeType
                     attachment.attachmentOriginalPath = uri.toString()
@@ -222,7 +223,7 @@ object DatabaseHelper {
     fun addAttachment(
         context: Context,
         entry: Entry,
-        dstFile: File,
+        dstFile: RelativePath,
         dstFileMimeType: String?,
         callback: ((Boolean, Throwable?) -> (Unit))? = null
     ) {

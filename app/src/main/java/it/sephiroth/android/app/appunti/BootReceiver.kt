@@ -44,9 +44,9 @@ class BootReceiver : BroadcastReceiver() {
     }
 
     private fun scheduleAlarm(context: Context, entry: Entry) {
-        if (entry.hasAlarm()) {
+        if (entry.hasReminder()) {
             Timber.i("scheduleAlarm($entry)")
-            if (!entry.isAlarmExpired()) {
+            if (!entry.isReminderExpired()) {
                 Entry.addReminder(entry, context)
             } else {
                 Timber.v("alarm is expired")

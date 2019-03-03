@@ -8,9 +8,11 @@ import android.content.Intent
 import android.net.Uri
 import androidx.core.app.AlarmManagerCompat
 import com.dbflow5.annotation.*
+import com.dbflow5.config.FlowManager
+import com.dbflow5.query.list
 import com.dbflow5.query.select
+import com.dbflow5.query.selectCountOf
 import com.dbflow5.reactivestreams.structure.BaseRXModel
-import com.dbflow5.structure.oneToMany
 import it.sephiroth.android.app.appunti.AlarmReceiver
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.EntryTypeConverter
@@ -25,7 +27,7 @@ import timber.log.Timber
 @Table(
     database = AppDatabase::class, indexGroups = [
         IndexGroup(number = 1, name = "firstIndex")
-    ]
+    ], allFields = false
 )
 class Entry() : BaseRXModel() {
 
@@ -41,21 +43,25 @@ class Entry() : BaseRXModel() {
         entryModifiedDate = other.entryModifiedDate
         entryDeleted = other.entryDeleted
         entryArchived = other.entryArchived
-        attachments = other.attachments
+        attachmentList = other.attachmentList?.toList()
+        hasAttachments = other.hasAttachments()
         entryAlarm = other.entryAlarm
         entryAlarmEnabled = other.entryAlarmEnabled
     }
 
     @PrimaryKey(autoincrement = true)
     @Index(indexGroups = [1])
+    @Column
     var entryID: Long = 0
 
     @Column(defaultValue = "")
     var entryTitle: String = ""
 
+    @Column
     var entryPriority: Int = 5
 
     @ForeignKey(onDelete = ForeignKeyAction.SET_NULL)
+    @Column
     var category: Category? = null
 
     @Index(indexGroups = [1])
@@ -68,10 +74,13 @@ class Entry() : BaseRXModel() {
     @Column(typeConverter = EntryTypeConverter::class)
     var entryType: EntryType = EntryType.TEXT
 
+    @Column
     var entryPinned: Int = 0
 
+    @Column
     var entryArchived: Int = 0
 
+    @Column
     var entryDeleted: Int = 0
 
     @Index(indexGroups = [1])
@@ -81,27 +90,57 @@ class Entry() : BaseRXModel() {
     @Column(typeConverter = InstantTypeConverter::class)
     var entryAlarm: Instant? = null // UTC
 
+    @Column
     var entryAlarmEnabled: Boolean = false
 
-    @get:OneToMany
-    var attachments by oneToMany {
-        select from Attachment::class where (Attachment_Table.attachmentEntryID_entryID.eq(
-            entryID
-        ))
+    // attachments
+
+    private var attachmentList: List<Attachment>? = null
+    private var hasAttachments: Boolean? = null
+
+    @OneToMany(oneToManyMethods = [OneToManyMethod.ALL], variableName = "attachmentList")
+    fun getAttachments(): List<Attachment>? {
+        if (attachmentList == null) {
+            attachmentList =
+                (select from Attachment::class where (Attachment_Table.attachmentEntryID_entryID.eq(entryID))).list
+        }
+        return attachmentList
+    }
+
+    fun setAttachmentList(value: List<Attachment>?) {
+        invalidateAttachments()
+        attachmentList = value
+    }
+
+    fun invalidateAttachments() {
+        Timber.i("invalidateAttachments")
+        hasAttachments = null
+        attachmentList = null
+    }
+
+    fun hasAttachments(): Boolean {
+        hasAttachments?.let {
+            return it
+        } ?: run {
+            val result = selectCountOf(Attachment_Table.attachmentEntryID_entryID)
+                .from(Attachment::class)
+                .where(Attachment_Table.attachmentEntryID_entryID.eq(entryID))
+                .hasData(FlowManager.getDatabase(AppDatabase::class.java))
+            hasAttachments = result
+            return result
+        }
     }
 
     override fun toString(): String {
         return "Entry(id=$entryID, title=$entryTitle, category=$category, pinned=$entryPinned, archived=$entryArchived, " +
                 "deleted=$entryDeleted, priority=$entryPriority, modified=${entryModifiedDate.toEpochMilli()}, " +
-                "attachments=$attachments)"
+                "attachments=${hasAttachments()})"
     }
 
     fun touch(): Entry {
         entryModifiedDate = Instant.now()
         return this
     }
-
-    fun isEntryAlarmEnabled() = entryAlarmEnabled
 
     override fun equals(other: Any?): Boolean {
         when (other) {
@@ -114,7 +153,7 @@ class Entry() : BaseRXModel() {
                         && entryModifiedDate == other.entryModifiedDate
                         && entryPinned == other.entryPinned
                         && category == other.category
-                        && attachments == other.attachments)
+                        && attachmentList == other.attachmentList)
             }
         }
         return super.equals(other)
@@ -151,18 +190,21 @@ class Entry() : BaseRXModel() {
     fun isDeleted() = entryDeleted == 1
     fun isArchived() = entryArchived == 1
     fun isPinned() = entryPinned == 1
-    fun hasAlarm() = entryAlarmEnabled && entryAlarm != null
+    fun hasReminder() = entryAlarmEnabled && entryAlarm != null
 
-    fun isAlarmExpired(): Boolean {
-        return isAlarmExpired(Instant.now())
+    fun isReminderExpired(): Boolean {
+        return isReminderExpired(Instant.now())
     }
 
-    fun isAlarmExpired(now: Instant): Boolean {
-        if (hasAlarm()) {
+    fun isReminderExpired(now: Instant): Boolean {
+        if (hasReminder()) {
             return entryAlarm!!.isBefore(now)
         }
         return true
     }
+
+    @Suppress("unused")
+    fun isEntryAlarmEnabled() = entryAlarmEnabled
 
     companion object {
         private fun getViewReminderPendingIntent(entry: Entry, context: Context): PendingIntent {
@@ -189,7 +231,7 @@ class Entry() : BaseRXModel() {
         }
 
         fun addReminder(entry: Entry, context: Context): Boolean {
-            if (entry.hasAlarm()) {
+            if (entry.hasReminder()) {
                 val millis = entry.entryAlarm!!.toEpochMilli()
                 return addReminderAt(entry, context, millis)
             }
@@ -197,7 +239,7 @@ class Entry() : BaseRXModel() {
         }
 
         fun addReminderAt(entry: Entry, context: Context, millis: Long): Boolean {
-            if (entry.hasAlarm()) {
+            if (entry.hasReminder()) {
                 Timber.i("addReminderAt($entry, $millis)")
                 Timber.v("now=${System.currentTimeMillis()}")
                 val alarmManager = context.getSystemService(Activity.ALARM_SERVICE) as AlarmManager

@@ -14,11 +14,11 @@ import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import timber.log.Timber
-import java.io.File
 
 class DetailViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -208,6 +208,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
         Timber.i("addAttachment($uri)")
         entry.whenNotNull { entry ->
             DatabaseHelper.addAttachmentFromUri(getApplication(), entry, uri) { success, throwable ->
+                entry.invalidateAttachments()
                 callback?.invoke(success, throwable)
             }
         } ?: run {
@@ -218,8 +219,8 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     /**
      * Add a new Image [Attachment] to the current [Entry]
      */
-    fun addImage(dstFile: File, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
-        Timber.i("addImage($dstFile)")
+    fun addAttachment(dstFile: RelativePath, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
+        Timber.i("addAttachment($dstFile)")
 
         entry.whenNotNull { entry ->
             DatabaseHelper.addAttachment(
@@ -228,6 +229,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
                 dstFile,
                 FileSystemUtils.JPEG_MIME_TYPE
             ) { success, throwable ->
+                entry.invalidateAttachments()
                 callback?.invoke(success, throwable)
             }
         } ?: run {
@@ -245,8 +247,10 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
                 entry,
                 Attachment(attachment)
             ) { result, throwable ->
+                entry.invalidateAttachments()
                 callback?.invoke(result, throwable)
             }
+
         } ?: run {
             callback?.invoke(false, null)
         }

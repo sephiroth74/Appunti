@@ -2,7 +2,6 @@
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/navigationViewContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -16,15 +15,7 @@
             android:layout_margin="24dp"
             android:text="@string/app_name_complete"
             style="@style/Widget.Appunti.Text.Drawer.Title"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:text="@string/categories"
-            style="@style/Widget.Appunti.Text.Drawer.Label"/>
+    <!--<include layout="@layout/appunti_main_drawer_navigation_item_category_header"/>-->
 
     <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/navigationRecycler"
@@ -35,57 +26,45 @@
 
     </androidx.recyclerview.widget.RecyclerView>
 
-    <include
-            layout="@layout/appunti_navigation_item_separator"
-            tools:ignore="PrivateResource"/>
+    <!--<include-->
+    <!--layout="@layout/appunti_navigation_item_separator"-->
+    <!--tools:ignore="PrivateResource"/>-->
+    <!--<include layout="@layout/appunti_main_drawer_navigation_item_menu_with_drawable"/>-->
 
-    <androidx.appcompat.widget.AppCompatCheckedTextView
-            android:id="@+id/entriesArchived"
-            style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
-            android:drawableStart="@drawable/outline_archive_24"
-            android:text="@string/archived"
-            app:paddingStart="16dp"/>
+    <!--<androidx.appcompat.widget.AppCompatCheckedTextView-->
+    <!--android:id="@+id/entriesDeleted"-->
+    <!--style="@style/Theme.Appunti.Text.Drawer.NavigationItem"-->
+    <!--android:drawableStart="@drawable/sharp_delete_outline_24"-->
+    <!--android:text="@string/deleted"-->
+    <!--app:paddingStart="16dp"/>-->
 
+    <!--<include-->
+    <!--layout="@layout/appunti_navigation_item_separator"-->
+    <!--tools:ignore="PrivateResource"/>-->
 
-    <androidx.appcompat.widget.AppCompatCheckedTextView
-            android:id="@+id/entriesDeleted"
-            style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
-            android:drawableStart="@drawable/sharp_delete_outline_24"
-            android:text="@string/deleted"
-            app:paddingStart="16dp"/>
+    <!--<androidx.appcompat.widget.AppCompatTextView-->
+    <!--android:id="@+id/newLabel"-->
+    <!--style="@style/Theme.Appunti.Text.Drawer.NavigationItem"-->
+    <!--android:drawableStart="@drawable/sharp_playlist_add_24"-->
+    <!--android:text="@string/add_new_category"-->
+    <!--app:paddingStart="16dp"/>-->
 
-    <include
-            layout="@layout/appunti_navigation_item_separator"
-            tools:ignore="PrivateResource"/>
+    <!--<androidx.appcompat.widget.AppCompatTextView-->
+    <!--android:id="@+id/editLabels"-->
+    <!--style="@style/Theme.Appunti.Text.Drawer.NavigationItem"-->
+    <!--android:drawableStart="@drawable/sharp_edit_24"-->
+    <!--android:text="@string/edit_categories"/>-->
 
-    <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/newLabel"
-            style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
-            android:drawableStart="@drawable/sharp_playlist_add_24"
-            android:text="@string/add_new_category"
-            app:paddingStart="16dp"/>
+    <!--<include-->
+    <!--layout="@layout/appunti_navigation_item_separator"-->
+    <!--tools:ignore="PrivateResource"/>-->
+    <!--<include layout="@layout/appunti_main_drawer_navigation_item_switch"/>-->
 
-    <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/editLabels"
-            style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
-            android:drawableStart="@drawable/sharp_edit_24"
-            android:text="@string/edit_categories"/>
-
-    <include
-            layout="@layout/appunti_navigation_item_separator"
-            tools:ignore="PrivateResource"/>
-
-    <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/displayAsList"
-            style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
-            android:text="@string/display_as_grid"
-            android:checked="false"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/settings"
-            style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
-            android:drawableStart="@drawable/sharp_settings_24"
-            android:text="@string/settings"/>
+    <!--<androidx.appcompat.widget.AppCompatTextView-->
+    <!--android:id="@+id/settings"-->
+    <!--style="@style/Theme.Appunti.Text.Drawer.NavigationItem"-->
+    <!--android:drawableStart="@drawable/sharp_settings_24"-->
+    <!--android:text="@string/settings"/>-->
 
 
 </LinearLayout>

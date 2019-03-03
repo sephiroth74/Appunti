@@ -36,10 +36,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
@@ -52,7 +54,6 @@ import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
-import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -67,15 +68,16 @@ class DetailActivity : AppuntiActivity() {
     private lateinit var model: DetailViewModel
 
     private var isNewDocument: Boolean = false
-    private var isUpdating = false
     private var currentEntryID: Long = 0
 
     private var shouldRemoveAlarm: Boolean = false
 
     // temporary file used for pictures taken with camera
-    private var mCurrentPhotoPath: File? = null
+    private var mCurrentPhotoPath: RelativePath? = null
 
     private var detailListAdapter: DetailListAdapter? = null
+
+    private var tickTimer: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
 //        window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS)
@@ -138,6 +140,8 @@ class DetailActivity : AppuntiActivity() {
         Timber.i("onDestroy")
         setProgressVisible(false)
 
+        tickTimer?.dispose()
+
         if (model.modified) {
             model.save()
         }
@@ -183,8 +187,11 @@ class DetailActivity : AppuntiActivity() {
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         Timber.i("onPrepareOptionsMenu")
-        updateMenu(menu)
-        updateMenu(navigationView.menu)
+
+        model.entry.whenNotNull { entry ->
+            updateMenu(menu, entry)
+            updateMenu(navigationView.menu, entry)
+        }
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -228,18 +235,18 @@ class DetailActivity : AppuntiActivity() {
     /**
      * Result from [IMAGE_CAPTURE_REQUEST_CODE]
      */
-    private fun onImageCaptured(dstFile: File?) {
+    private fun onImageCaptured(dstFile: RelativePath?) {
         Timber.i("onImageCaptured(${dstFile?.absolutePath})")
 
         dstFile?.let { dstFile ->
-            model.addImage(dstFile) { success, throwable ->
+            model.addAttachment(dstFile) { success, throwable ->
                 doOnMainThread {
                     throwable?.let {
                         showConfirmation(it.localizedMessage)
                     } ?: run {
                         showConfirmation(getString(R.string.image_added))
                     }
-                    updateEntryAttachmentsList()
+                    invalidate(UPDATE_ATTACHMENTS)
                 }
             }
         }
@@ -248,7 +255,7 @@ class DetailActivity : AppuntiActivity() {
     private fun changeEntryCategory(categoryID: Long) {
         Timber.i("changeEntryCategory($categoryID)")
         if (model.setEntryCategory(categoryID)) {
-            updateEntryCategory()
+            invalidate(UPDATE_CATEGORY)
         }
     }
 
@@ -264,7 +271,7 @@ class DetailActivity : AppuntiActivity() {
                 } ?: run {
                     showConfirmation(getString(R.string.file_added))
                 }
-                updateEntryAttachmentsList()
+                invalidate(UPDATE_ATTACHMENTS)
             }
             setProgressVisible(false)
         }
@@ -406,7 +413,7 @@ class DetailActivity : AppuntiActivity() {
         model.entry.whenNotNull { entry ->
             Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
                 takePictureIntent.resolveActivity(packageManager)?.also {
-                    val photoFile: File? = try {
+                    val photoFile = try {
                         FileSystemUtils.createImageFile(this, entry)
                     } catch (ex: IOException) {
                         ex.printStackTrace()
@@ -414,7 +421,7 @@ class DetailActivity : AppuntiActivity() {
                     }
 
                     photoFile?.also { file ->
-                        Timber.v("photoFile = ${file.absolutePath}")
+                        Timber.v("photoFile = ${file.toString()}")
                         mCurrentPhotoPath = file
                         val photoURI = FileSystemUtils.getFileUri(this, file)
                         takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
@@ -479,6 +486,60 @@ class DetailActivity : AppuntiActivity() {
         return bottomSheetBehavior.state == BottomSheetBehavior.STATE_HIDDEN
     }
 
+    val UPDATE_TITLE = 1 shl 0
+    val UPDATE_TYPE_AND_TEXT = 1 shl 1
+    val UPDATE_CATEGORY = 1 shl 2
+    val UPDATE_ATTACHMENTS = 1 shl 3
+
+    val UPDATE_CREATION_DATE = 1 shl 4
+    val UPDATE_MODIFIED_DATE = 1 shl 5
+
+    val UPDATE_PINNED = 1 shl 6
+    val UPDATE_ARCHIVED = 1 shl 7
+    val UPDATE_DELETED = 1 shl 8
+    val UPDATE_REMINDER = 1 shl 9
+
+    val UPDATE_MENU = UPDATE_PINNED or UPDATE_ARCHIVED or UPDATE_DELETED or UPDATE_REMINDER
+
+    private fun invalidate(bits: Int) {
+        model.entry.whenNotNull { entry ->
+            Timber.i("invalidate($bits)")
+            Timber.v("entry: ${model.entry.value}")
+
+            if (UPDATE_MENU hasBits bits) {
+                invalidateOptionsMenu()
+
+                if (!(bits hasBits UPDATE_CREATION_DATE)) {
+                    tickNext(TICKER_STEP_MODIFIED)
+                }
+            }
+
+            if (bits hasBits UPDATE_CREATION_DATE) {
+                updateTextSwitcher()
+            }
+
+            if (bits hasBits UPDATE_TITLE) {
+                entryTitle.setText(entry.entryTitle)
+            }
+
+            if (bits hasBits UPDATE_CATEGORY) {
+                updateEntryCategory(entry)
+                tickNext(TICKER_STEP_MODIFIED)
+            }
+
+            if (bits hasBits UPDATE_ATTACHMENTS) {
+                updateEntryAttachmentsList(entry)
+                tickNext(TICKER_STEP_MODIFIED)
+            }
+
+            if (bits hasBits UPDATE_TYPE_AND_TEXT) {
+                updateEntryTypeAndText(entry)
+            }
+        }
+    }
+
+    // Entry Changed/Updated
+
     private fun onEntryChanged(entry: Entry) {
         Timber.i("onEntryChanged()")
 
@@ -489,19 +550,18 @@ class DetailActivity : AppuntiActivity() {
 
         currentEntryID = entry.entryID
 
-        // entry is updating, pause listeners..
-        isUpdating = true
-
-        entryTitle.setText(entry.entryTitle)
-
-        updateEntryTypeAndText()
-        updateEntryCategory()
-        updateEntryAttachmentsList()
-        updateTextSwitcher()
+        invalidate(
+            UPDATE_TITLE
+                    or UPDATE_TYPE_AND_TEXT
+                    or UPDATE_CATEGORY
+                    or UPDATE_ATTACHMENTS
+                    or UPDATE_CREATION_DATE
+                    or UPDATE_MENU
+        )
 
         if (shouldRemoveAlarm) {
             if (model.removeReminder()) {
-                invalidateOptionsMenu()
+                invalidate(UPDATE_REMINDER)
             }
             shouldRemoveAlarm = false
         }
@@ -517,172 +577,265 @@ class DetailActivity : AppuntiActivity() {
             }
         }
 
-        invalidateOptionsMenu()
-
-        // resume listeners
-        isUpdating = false
         isNewDocument = false
     }
 
-    // Atomic updates
 
-    private fun updateEntryTypeAndText() {
-        model.entry.whenNotNull { entry ->
-            entryText.visibility = if (entry.entryType == Entry.EntryType.TEXT) View.VISIBLE else View.GONE
-            detailRecycler.visibility = if (entry.entryType == Entry.EntryType.LIST) View.VISIBLE else View.GONE
+    /**
+     * update entry type (list/text) and content
+     */
+    private fun updateEntryTypeAndText(entry: Entry) {
+        entryText.visibility = if (entry.entryType == Entry.EntryType.TEXT) View.VISIBLE else View.GONE
+        detailRecycler.visibility = if (entry.entryType == Entry.EntryType.LIST) View.VISIBLE else View.GONE
 
-            if (entry.entryType == Entry.EntryType.TEXT) {
-                detailRecycler.adapter = null
-                detailListAdapter?.saveAction = null
-                detailListAdapter?.deleteAction = null
-                detailListAdapter = null
-                entryText.setText(entry.entryText)
+        if (entry.entryType == Entry.EntryType.TEXT) {
+            detailRecycler.adapter = null
+            detailListAdapter?.saveAction = null
+            detailListAdapter?.deleteAction = null
+            detailListAdapter = null
+            entryText.setText(entry.entryText)
 
-            } else if (entry.entryType == Entry.EntryType.LIST) {
+        } else if (entry.entryType == Entry.EntryType.LIST) {
 
-                detailListAdapter = DetailListAdapter(this).apply {
-                    setData(entry.asList())
-                    saveAction = { text ->
-                        Timber.i("saveAction")
-                        model.setEntryText(text)
-                    }
+            detailListAdapter = DetailListAdapter(this).apply {
+                setData(entry.asList())
+                saveAction = { text ->
+                    Timber.i("saveAction")
+                    model.setEntryText(text)
+                }
 
-                    deleteAction = { holder, entry ->
-                        var result = false
-                        if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.length() == 0) {
-                            removeFocusFromEditText()
-                            deleteItem(entry, holder.itemViewType)
+                deleteAction = { holder, entry ->
+                    var result = false
+                    if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.length() == 0) {
+                        removeFocusFromEditText()
+                        deleteItem(entry, holder.itemViewType)
 
-                            if (holder.adapterPosition > 0) {
-                                val view =
-                                    (detailRecycler.layoutManager as LinearLayoutManager).findViewByPosition(holder.adapterPosition - 1)
-                                view?.let { view ->
-                                    val previous = detailRecycler.findContainingViewHolder(view)
-                                    previous?.let { previous ->
-                                        if (previous is DetailListAdapter.DetailEntryViewHolder) {
-                                            with((previous.text as EditText)) {
-                                                requestFocus()
-                                                setSelection(length())
-                                                showSoftInput()
-                                            }
+                        if (holder.adapterPosition > 0) {
+                            val view =
+                                (detailRecycler.layoutManager as LinearLayoutManager).findViewByPosition(holder.adapterPosition - 1)
+                            view?.let { view ->
+                                val previous = detailRecycler.findContainingViewHolder(view)
+                                previous?.let { previous ->
+                                    if (previous is DetailListAdapter.DetailEntryViewHolder) {
+                                        with((previous.text as EditText)) {
+                                            requestFocus()
+                                            setSelection(length())
+                                            showSoftInput()
                                         }
                                     }
                                 }
                             }
-                            result = true
                         }
-                        result
+                        result = true
                     }
+                    result
                 }
-                detailRecycler.adapter = detailListAdapter
             }
+            detailRecycler.adapter = detailListAdapter
         }
     }
 
-    private fun updateEntryCategory() {
-        model.entry.whenNotNull { entry ->
-            entryCategory.text = entry.category?.categoryTitle
-            entryCategory.visibility = if (entry.category == null) View.INVISIBLE else View.VISIBLE
-            updateThemeFromEntry()
-        }
+    /**
+     * Updated entry category
+     */
+    private fun updateEntryCategory(entry: Entry) {
+        entryCategory.text = entry.category?.categoryTitle
+        entryCategory.visibility = if (entry.category == null) View.INVISIBLE else View.VISIBLE
+        updateThemeFromEntry(entry)
     }
+
+    // text switcher ticker
 
     private fun updateTextSwitcher() {
-        model.entry.whenNotNull { entry ->
-            textSwitcher.setText(Entry.getLocalizedTime(entry.entryModifiedDate, FormatStyle.MEDIUM))
+        tickNext(TICKER_STEP_CREATED)
+    }
 
-            rxTimer(null, 5, TimeUnit.SECONDS, AndroidSchedulers.mainThread()) {
-                textSwitcher.setText("")
+    private fun tickNext(step: Int) {
+        when (step) {
+            TICKER_STEP_CREATED -> {
+                tickTimer?.dispose()
+                tickCurrent(step)
+            }
+            TICKER_STEP_MODIFIED,
+            TICKER_STEP_ALARM -> tickTimer = rxTimer(
+                tickTimer,
+                4,
+                TimeUnit.SECONDS,
+                Schedulers.computation(),
+                AndroidSchedulers.mainThread()
+            ) { tickCurrent(step) }
+        }
+    }
+
+    private fun tickCurrent(step: Int) {
+        model.entry.whenNotNull { entry ->
+            when (step) {
+                TICKER_STEP_CREATED -> {
+                    val lastModifiedString = resources.getString(
+                        R.string.created_at,
+                        entry.entryCreationDate.atZone().formatDiff(this, FormatStyle.MEDIUM, FormatStyle.SHORT)
+                    )
+                    textSwitcher.setText(lastModifiedString)
+                    tickNext(TICKER_STEP_MODIFIED)
+                }
+
+                TICKER_STEP_MODIFIED -> {
+                    val lastModifiedString = resources.getString(
+                        R.string.last_modified,
+                        entry.entryModifiedDate.atZone().formatDiff(this, FormatStyle.MEDIUM, FormatStyle.SHORT)
+                    )
+                    textSwitcher.setText(lastModifiedString)
+                    tickNext(TICKER_STEP_ALARM)
+                }
+
+                TICKER_STEP_ALARM -> {
+                    if (entry.hasReminder()) {
+                        val reminderDate = entry.entryAlarm!!.atZone()
+                        textSwitcher.setText(reminderDate.formatDiff(this, FormatStyle.MEDIUM, FormatStyle.SHORT))
+                        val textView = textSwitcher.currentView as TextView
+
+                        val drawable = resources.getDrawable(R.drawable.sharp_alarm_24, theme)
+                        drawable.setBounds(0, 0, textSwitcher.height, textSwitcher.height)
+                        textView.setCompoundDrawablesRelative(drawable, null, null, null)
+                    }
+                }
             }
         }
     }
 
-    private fun updateEntryAttachmentsList() {
+    // text switcher ticker end
+
+    private fun updateEntryAttachmentsList(entry: Entry) {
         attachmentsContainer.removeAllViews()
 
-        model.entry.whenNotNull { entry ->
+        val attachments = entry.getAttachments()
+        attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
 
-            val attachments = entry.attachments
-            attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
+        attachments?.let { attachments ->
+            val cardColor = entry.getAttachmentColor(this)
 
-            attachments?.let { attachments ->
-                val cardColor = entry.getAttachmentColor(this)
+            for (attachment in attachments) {
+                val view = LayoutInflater.from(this)
+                    .inflate(R.layout.appunti_detail_attachment_item, attachmentsContainer, false) as CardView
 
-                for (attachment in attachments) {
-                    val view = LayoutInflater.from(this)
-                        .inflate(R.layout.appunti_detail_attachment_item, attachmentsContainer, false) as CardView
+                view.setCardBackgroundColor(cardColor)
+                view.attachmentTitle.text = attachment.attachmentTitle
+                view.tag = attachment
 
-                    view.setCardBackgroundColor(cardColor)
-                    view.attachmentTitle.text = attachment.attachmentTitle
-                    view.tag = attachment
+                Timber.v("$attachment")
 
-                    Timber.v("$attachment")
+                // TODO(Specify the exact size here)
+                attachment.loadThumbnail(this, view.attachmentImage)
 
-                    // TODO(Specify the exact size here)
-                    attachment.loadThumbnail(this, view.attachmentImage)
-
-                    view.setOnClickListener {
-                        try {
-                            IntentUtils.createAttachmentViewIntent(this, attachment).also {
-                                startActivity(it)
-                            }
-                        } catch (e: Exception) {
-                            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
+                view.setOnClickListener {
+                    try {
+                        IntentUtils.createAttachmentViewIntent(this, attachment).also {
+                            startActivity(it)
                         }
+                    } catch (e: Exception) {
+                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
+                }
 
-                    view.attachmentShareButton.setOnClickListener {
-                        try {
-                            IntentUtils.createAttachmentShareIntent(this, attachment).also {
-                                startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
-                            }
-                        } catch (e: Exception) {
-                            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
+                view.attachmentShareButton.setOnClickListener {
+                    try {
+                        IntentUtils.createAttachmentShareIntent(this, attachment).also {
+                            startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
                         }
+                    } catch (e: Exception) {
+                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
+                }
 
-                    view.attachmentRemoveButton.setOnClickListener {
-                        removeEntryAttachment(attachment)
-                    }
+                view.attachmentRemoveButton.setOnClickListener {
+                    removeEntryAttachment(attachment)
+                }
 
-                    attachmentsContainer.addView(view)
+                attachmentsContainer.addView(view)
+            }
+        }
+    }
+
+    private fun updateThemeFromEntry(entry: Entry) {
+        val color = entry.getColor(this)
+        // color = ColorUtils.setAlphaComponent(color, 201)
+
+        Timber.i("updateThemeFromEntry. color=${color.toString(16)}")
+
+        coordinator.backgroundTintList = ColorStateList.valueOf(color)
+
+        window.statusBarColor = color
+        window.navigationBarColor = color
+
+        bottomAppBar.backgroundTintList = ColorStateList.valueOf(color)
+
+        if (navigationView.background is ColorDrawable) {
+            navigationView.backgroundTintList = ColorStateList.valueOf(color)
+        } else if (navigationView.background is LayerDrawable) {
+            val drawable: Drawable? =
+                (navigationView.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
+            drawable?.setTint(color)
+        }
+
+        // attachments
+
+        if (attachmentsContainer.childCount > 0) {
+            val cardColor = entry.getAttachmentColor(this)
+            for (view in attachmentsContainer.children) {
+                (view as CardView).setCardBackgroundColor(cardColor)
+            }
+        }
+    }
+
+    private fun updateMenu(menu: Menu?, entry: Entry) {
+        menu?.let { menu ->
+            var menuItem = menu.findItem(R.id.menu_action_pin)
+            menuItem?.apply {
+                setIcon(
+                    if (entry.isPinned())
+                        R.drawable.appunti_sharp_favourite_24_checked_selector
+                    else
+                        R.drawable.appunti_sharp_favourite_24_unchecked_selector
+                )
+            }
+
+            menuItem = menu.findItem(R.id.menu_action_archive)
+            menuItem?.apply {
+                setIcon(
+                    if (entry.isArchived())
+                        R.drawable.appunti_outline_archive_24_checked_selector
+                    else R.drawable.appunti_outline_archive_24_unchecked_selector
+                )
+
+                setTitle(if (entry.isArchived()) R.string.unarchive else R.string.archive)
+            }
+
+            menuItem = menu.findItem(R.id.menu_action_delete)
+            menuItem?.apply {
+                setIcon(
+                    if (entry.isDeleted())
+                        R.drawable.appunti_sharp_restore_from_trash_24_selector
+                    else R.drawable.appunti_sharp_delete_24_outline_selector
+                )
+
+                setTitle(if (entry.isDeleted()) R.string.restore else R.string.delete)
+            }
+
+            menuItem = menu.findItem(R.id.menu_action_alarm)
+            menuItem?.apply {
+
+                if (entry.hasReminder() && !entry.isReminderExpired()) {
+                    setIcon(R.drawable.twotone_alarm_24)
+                    setTitle(R.string.remove_reminder)
+                } else {
+                    setIcon(R.drawable.sharp_alarm_24)
+                    setTitle(R.string.add_reminder)
                 }
             }
         }
     }
 
-    private fun updateThemeFromEntry() {
-        Timber.i("updateThemeFromEntry")
-        model.entry.whenNotNull { entry ->
-            var color = entry.getColor(this)
-            Timber.i("updateThemeFromEntry. color=${color.toString(16)}")
-            // color = ColorUtils.setAlphaComponent(color, 201)
-
-            coordinator.backgroundTintList = ColorStateList.valueOf(color)
-
-            window.statusBarColor = color
-            window.navigationBarColor = color
-
-            bottomAppBar.backgroundTintList = ColorStateList.valueOf(color)
-
-            if (navigationView.background is ColorDrawable) {
-                navigationView.backgroundTintList = ColorStateList.valueOf(color)
-            } else if (navigationView.background is LayerDrawable) {
-                val drawable: Drawable? =
-                    (navigationView.background as LayerDrawable).findDrawableByLayerId(R.id.layer_background)
-                drawable?.setTint(color)
-            }
-
-            // attachments
-
-            if (attachmentsContainer.childCount > 0) {
-                val cardColor = entry.getAttachmentColor(this)
-                for (view in attachmentsContainer.children) {
-                    (view as CardView).setCardBackgroundColor(cardColor)
-                }
-            }
-        }
-    }
+    // END ENTRY UPDATE
 
     private fun removeEntryAttachment(attachment: Attachment) {
         model.removeAttachment(attachment) { result, throwable ->
@@ -693,17 +846,21 @@ class DetailActivity : AppuntiActivity() {
                     Timber.v("[${currentThread()}] success = $result")
                     showConfirmation("File has been removed")
                 }
-                updateEntryAttachmentsList()
+                invalidate(UPDATE_ATTACHMENTS)
             }
         }
     }
 
     private fun convertEntryToList() {
-        if (model.convertEntryToList()) updateEntryTypeAndText()
+        if (model.convertEntryToList()) {
+            invalidate(UPDATE_TYPE_AND_TEXT)
+        }
     }
 
     private fun convertEntryToText() {
-        if (model.convertEntryToText(detailListAdapter.toString())) updateEntryTypeAndText()
+        if (model.convertEntryToText(detailListAdapter.toString())) {
+            invalidate(UPDATE_TYPE_AND_TEXT)
+        }
     }
 
     private fun togglePin() {
@@ -715,7 +872,7 @@ class DetailActivity : AppuntiActivity() {
                         R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1
                 )
             )
-            invalidateOptionsMenu()
+            invalidate(UPDATE_PINNED)
         }
     }
 
@@ -729,9 +886,12 @@ class DetailActivity : AppuntiActivity() {
                             R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1
                     )
                 )
-                invalidateOptionsMenu()
-                if (!currentValue) onBackPressed()
 
+                if (!currentValue) {
+                    onBackPressed()
+                } else {
+                    invalidate(UPDATE_DELETED)
+                }
             }
         }
     }
@@ -747,15 +907,18 @@ class DetailActivity : AppuntiActivity() {
                     )
                 )
 
-                invalidateOptionsMenu()
-                if (!currentValue) onBackPressed()
+                if (!currentValue) {
+                    onBackPressed()
+                } else {
+                    invalidate(UPDATE_ARCHIVED)
+                }
             }
         }
     }
 
     private fun toggleReminder() {
         model.entry.whenNotNull { entry ->
-            if (entry.entryAlarm != null && !entry.isAlarmExpired()) {
+            if (entry.entryAlarm != null && !entry.isReminderExpired()) {
                 val date = entry.entryAlarm!!.atZone(ZoneId.systemDefault())
                 val dateFormatted = entry.entryAlarm!!.getLocalizedDateTimeStamp(FormatStyle.FULL)
                 val reminderText = getString(R.string.edit_reminder_dialog_text, dateFormatted)
@@ -784,7 +947,7 @@ class DetailActivity : AppuntiActivity() {
                         dialog.dismiss()
                         if (model.removeReminder()) {
                             showConfirmation(getString(R.string.reminder_removed))
-                            invalidateOptionsMenu()
+                            invalidate(UPDATE_REMINDER)
                         }
                     }
                     .show()
@@ -796,58 +959,7 @@ class DetailActivity : AppuntiActivity() {
 
                     if (model.addReminder(result)) {
                         showConfirmation(getString(R.string.reminder_set))
-                        invalidateOptionsMenu()
-                    }
-                }
-            }
-        }
-    }
-
-    private fun updateMenu(menu: Menu?) {
-        model.entry.whenNotNull { entry ->
-            menu?.let { menu ->
-                var menuItem = menu.findItem(R.id.menu_action_pin)
-                menuItem?.apply {
-                    setIcon(
-                        if (entry.isPinned())
-                            R.drawable.appunti_sharp_favourite_24_checked_selector
-                        else
-                            R.drawable.appunti_sharp_favourite_24_unchecked_selector
-                    )
-
-                }
-
-                menuItem = menu.findItem(R.id.menu_action_archive)
-                menuItem?.apply {
-                    setIcon(
-                        if (entry.isArchived())
-                            R.drawable.appunti_outline_archive_24_checked_selector
-                        else R.drawable.appunti_outline_archive_24_unchecked_selector
-                    )
-
-                    setTitle(if (entry.isArchived()) R.string.unarchive else R.string.archive)
-                }
-
-                menuItem = menu.findItem(R.id.menu_action_delete)
-                menuItem?.apply {
-                    setIcon(
-                        if (entry.isDeleted())
-                            R.drawable.appunti_sharp_restore_from_trash_24_selector
-                        else R.drawable.appunti_sharp_delete_24_outline_selector
-                    )
-
-                    setTitle(if (entry.isDeleted()) R.string.restore else R.string.delete)
-                }
-
-                menuItem = menu.findItem(R.id.menu_action_alarm)
-                menuItem?.apply {
-
-                    if (entry.hasAlarm() && !entry.isAlarmExpired()) {
-                        setIcon(R.drawable.twotone_alarm_24)
-                        setTitle(R.string.remove_reminder)
-                    } else {
-                        setIcon(R.drawable.sharp_alarm_24)
-                        setTitle(R.string.add_reminder)
+                        invalidate(UPDATE_REMINDER)
                     }
                 }
             }
@@ -863,11 +975,19 @@ class DetailActivity : AppuntiActivity() {
     }
 
     companion object {
+        // pick new category
         const val CATEGORY_PICK_REQUEST_CODE = 1
 
+        // pick file
         const val OPEN_FILE_REQUEST_CODE = 2
 
+        // take picture
         const val IMAGE_CAPTURE_REQUEST_CODE = 3
+
+        // text switcher consts
+        private const val TICKER_STEP_CREATED = 1
+        private const val TICKER_STEP_MODIFIED = 2
+        private const val TICKER_STEP_ALARM = 3
     }
 
     object EntryDiff {
@@ -909,7 +1029,7 @@ class DetailActivity : AppuntiActivity() {
                 categoryChanged = oldValue?.category != newValue?.category,
                 priorityChanged = oldValue?.entryPriority != newValue?.entryPriority,
                 modifiedDateChanged = oldValue?.entryModifiedDate != newValue?.entryModifiedDate,
-                attachmentsChanged = oldValue?.attachments != newValue?.attachments,
+                attachmentsChanged = oldValue?.getAttachments() != newValue?.getAttachments(),
                 typeChanged = oldValue?.entryType != newValue?.entryType,
                 alarmChanged = oldValue?.entryAlarmEnabled != newValue?.entryAlarmEnabled || oldValue?.entryAlarm != newValue?.entryAlarm
             )
@@ -1016,8 +1136,6 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     }
 
     override fun onBindViewHolder(baseHolder: DetailViewHolder, position: Int) {
-        Timber.i("onBindViewHolder(position=$position, type=${baseHolder.itemViewType})")
-
         if (baseHolder.itemViewType == EntryListJsonModel.TYPE_NEW_ENTRY) {
             val holder = baseHolder as DetailNewEntryViewHolder
 

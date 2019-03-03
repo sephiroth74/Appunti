@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.appcompat.widget.AppCompatCheckedTextView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/entriesArchived"
+        style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
+        android:drawableStart="@drawable/outline_archive_24"
+        android:text="@string/archived"
+        app:paddingStart="16dp"
+        tools:showIn="@layout/appunti_main_drawer_navigation_content"/>

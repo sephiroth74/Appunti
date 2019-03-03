@@ -48,6 +48,16 @@ class ItemEntryListAdapter(
     private var cardForegroundStroke: Drawable
     private var cardForegroundNoStroke: Drawable
 
+    var spanCount: Int = 1
+        set(value) {
+            field = value
+            entryFullSpan =
+                (!context.resources.isTablet && value > 1) || (context.resources.isTablet && context.resources.isPortrait)
+        }
+
+    private var entryFullSpan =
+        (!context.resources.isTablet && spanCount > 1) || (context.resources.isTablet && context.resources.isPortrait)
+
     companion object {
         var NOW = Instant.now()
 
@@ -94,7 +104,6 @@ class ItemEntryListAdapter(
 
         return when (viewType) {
             TYPE_EMPTY_START -> {
-
                 view = inflater.inflate(R.layout.item_list_empty, parent, false)
                 val searchViewHeight = context.resources.getDimensionPixelSize(
                     R.dimen.search_height_view
@@ -110,10 +119,8 @@ class ItemEntryListAdapter(
 
                 val params =
                     StaggeredGridLayoutManager
-                        .LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, marginTop)
-                params.isFullSpan = true
-                view.layoutParams = params
-                BaseViewHolder(view)
+                        .LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, marginTop).also { it.isFullSpan = true }
+                BaseViewHolder(view, params)
             }
 
             TYPE_EMPTY_END -> {
@@ -124,10 +131,8 @@ class ItemEntryListAdapter(
                     StaggeredGridLayoutManager.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         marginBottom + context.resources.getDimensionPixelOffset(R.dimen.appunti_main_recycler_margins_vertical)
-                    )
-                params.isFullSpan = true
-                view.layoutParams = params
-                BaseViewHolder(view)
+                    ).also { it.isFullSpan = true }
+                BaseViewHolder(view, params)
             }
 
             TYPE_ENTRY -> {
@@ -148,7 +153,8 @@ class ItemEntryListAdapter(
                         else -> R.string.others
                     }
                 )
-                BaseViewHolder(view)
+
+                BaseViewHolder(view, params)
             }
         }
     }
@@ -160,6 +166,15 @@ class ItemEntryListAdapter(
         if (baseHolder.itemViewType == TYPE_ENTRY) {
             val holder = baseHolder as EntryViewHolder
             val entryItem = item.entry!!
+            var color = 0
+
+            if (entryFullSpan) {
+                if ((position + 1 < itemCount)) {
+                    baseHolder.isFullSpan = getItemViewType(position + 1) != baseHolder.itemViewType
+                } else {
+                    baseHolder.isFullSpan = true
+                }
+            }
 
             holder.bind(entryItem, searchText, selectionCallback?.invoke(holder, position) ?: false)
 
@@ -167,8 +182,6 @@ class ItemEntryListAdapter(
                 cardBackgroundColorDefault = holder.cardView.cardBackgroundColor
                 textColorDefault = holder.titleTextView.textColors
             }
-
-            var color = 0
 
             entryItem.category?.let {
                 if (it.categoryColorIndex != 0) {
@@ -183,7 +196,6 @@ class ItemEntryListAdapter(
                 holder.cardView.setCardBackgroundColor(color)
                 holder.cardView.foreground = cardForegroundNoStroke.constantState?.newDrawable()
                 // val luminance = ColorUtils.calculateLuminance(color)
-
             } else {
                 holder.cardView.setCardBackgroundColor(cardBackgroundColorDefault)
                 holder.cardView.foreground = cardForegroundStroke.constantState?.newDrawable()
@@ -314,14 +326,31 @@ class ItemEntryListAdapter(
             }
 
         }
-
     }
 
-    open class BaseViewHolder(view: View) : RecyclerView.ViewHolder(view)
+    open class BaseViewHolder(
+        view: View, params: StaggeredGridLayoutManager.LayoutParams? = null
+    ) : RecyclerView.ViewHolder(view) {
 
-    class EntryViewHolder(view: View) : BaseViewHolder(view) {
+        init {
+            params?.let { view.layoutParams = params }
+        }
+
+        private fun getLayoutParams() = itemView.layoutParams as StaggeredGridLayoutManager.LayoutParams
+
+        var isFullSpan: Boolean
+            get() = getLayoutParams().isFullSpan
+            set(value) {
+                if (value != getLayoutParams().isFullSpan) {
+                    var params = getLayoutParams()
+                    params.isFullSpan = value
+                    itemView.layoutParams = params
+                }
+            }
+    }
+
+    class EntryViewHolder(view: View) : BaseViewHolder(view, null) {
         internal var entry: Entry? = null
-
 
         val titleTextView: TextView by lazy { view.id_title }
         val contentTextView: TextView by lazy { view.id_content }
@@ -356,8 +385,8 @@ class ItemEntryListAdapter(
             contentTextView.text = entry.getSummary(itemView.context, contentTextView.textSize, 100, 6)
             categoryTextView.text = entry.category?.categoryTitle
 
-            alarmView.visibility = if (!entry.isAlarmExpired(ItemEntryListAdapter.NOW)) View.VISIBLE else View.GONE
-            attachmentView.visibility = if (entry.attachments?.isEmpty() == true) View.GONE else View.VISIBLE
+            alarmView.visibility = if (!entry.isReminderExpired(ItemEntryListAdapter.NOW)) View.VISIBLE else View.GONE
+            attachmentView.visibility = if (entry.hasAttachments()) View.VISIBLE else View.GONE
         }
     }
 

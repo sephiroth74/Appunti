@@ -3,6 +3,7 @@ package it.sephiroth.android.app.appunti
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.os.Bundle
 import android.speech.RecognizerIntent
@@ -33,6 +34,7 @@ import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import it.sephiroth.android.app.appunti.widget.MultiChoiceHelper
+import it.sephiroth.android.app.appunti.widget.RecyclerNavigationView
 import it.sephiroth.android.library.kotlin_extensions.animation.setAnimationListener
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
@@ -116,18 +118,17 @@ class MainActivity : AppuntiActivityFullscreen() {
         setupItemTouchHelper()
         setupFloatingActionButton()
 
-
         setDisplayAsList(SettingsManager.getInstance(this).displayAsList)
         SettingsManager.getInstance(this).setOnDisplayAsListChanged { setDisplayAsList(it) }
     }
 
     private fun setDisplayAsList(value: Boolean) {
         Timber.i("setDisplayAsList($value)")
-        if (value) {
-            layoutManager.spanCount = resources.getInteger(R.integer.list_items_columns_list)
-        } else {
-            layoutManager.spanCount = resources.getInteger(R.integer.list_items_columns_grid)
-        }
+        val spanCount =
+            if (value) resources.getInteger(R.integer.list_items_columns_list) else resources.getInteger(R.integer.list_items_columns_grid)
+
+        adapter.spanCount = spanCount
+        layoutManager.spanCount = spanCount
     }
 
     private fun initializeModel() {
@@ -152,6 +153,10 @@ class MainActivity : AppuntiActivityFullscreen() {
             statusbarBackground.layoutParams.height = statusbarHeight
             navigationBackground.visibility = View.VISIBLE
             statusbarBackground.visibility = View.VISIBLE
+
+            val color = theme.getColor(this, android.R.attr.windowBackground)
+            statusbarBackground.backgroundTintList = ColorStateList.valueOf(color)
+
         } else {
             navigationBackground.visibility = View.INVISIBLE
             statusbarBackground.visibility = View.INVISIBLE
@@ -244,17 +249,26 @@ class MainActivity : AppuntiActivityFullscreen() {
 
         navigationView.setNavigationItemSelectedListener { id ->
             when (id) {
-                R.id.newLabel -> startCategoriesEditActivity(true)
-                R.id.editLabels -> startCategoriesEditActivity(false)
-                R.id.entriesArchived -> {
+                RecyclerNavigationView.TYPE_LABEL_CATEGORY_ARCHIVED -> {
                     model.group.setIsArchived(true)
                     closeDrawerIfOpened()
                 }
-                R.id.entriesDeleted -> {
+
+                RecyclerNavigationView.TYPE_LABEL_CATEGORY_DELETED -> {
                     model.group.setDeleted(true)
                     closeDrawerIfOpened()
+
                 }
-                R.id.settings -> {
+
+                RecyclerNavigationView.TYPE_LABEL_NEW_CATEGORY -> {
+                    startCategoriesEditActivity(true)
+                }
+
+                RecyclerNavigationView.TYPE_LABEL_EDIT_CATEGORY -> {
+                    startCategoriesEditActivity(false)
+                }
+
+                RecyclerNavigationView.TYPE_SETTINGS -> {
                     startActivity(IntentUtils.createPerferencesIntent(this))
                 }
             }

@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.content.res.Resources
-import android.hardware.input.InputManager
 import android.os.Build
 import android.os.Looper
 import android.text.Editable
@@ -14,13 +13,11 @@ import android.util.TypedValue
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.View
-import android.view.ViewConfiguration
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.annotation.AttrRes
 import androidx.annotation.Px
 import androidx.core.content.ContextCompat
-import com.dbflow5.isNotNullOrEmpty
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.Single
@@ -114,10 +111,12 @@ inline val Resources.isNavBarAtBottom: Boolean
     get() {
         // Navbar is always on the bottom of the screen in portrait mode, but may
         // rotate with device if its category is sw600dp or above.
-        return this.isTablet || this.configuration.orientation == ORIENTATION_PORTRAIT
+        return this.isTablet || this.isPortrait
     }
 
 inline val Resources.isTablet: Boolean get() = getBoolean(R.bool.is_tablet)
+
+inline val Resources.isPortrait: Boolean get() = this.configuration.orientation == ORIENTATION_PORTRAIT
 
 val Resources.statusBarHeight: Int
     @Px get() {
@@ -195,6 +194,10 @@ inline fun TextView.addTextChangedListener(
 
     addTextChangedListener(listener)
     return listener
+}
+
+infix fun Int.hasBits(value: Int): Boolean {
+    return this and value == value
 }
 
 
