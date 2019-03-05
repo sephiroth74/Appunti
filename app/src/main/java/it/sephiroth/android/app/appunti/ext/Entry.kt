@@ -15,6 +15,7 @@ import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import java.util.ArrayList
+import java.util.regex.Pattern
 import kotlin.Comparator
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -143,4 +144,20 @@ fun Entry.asList(context: Context, textSize: Float, maxLines: Int = 10): Spannab
     }
 
     return spannable
+}
+
+fun Entry.parseRemoteUrls(): List<String> {
+    val result = mutableListOf<String>()
+    val pattern = Pattern.compile(
+        "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?\n",
+        Pattern.CASE_INSENSITIVE or Pattern.DOTALL
+    )
+
+    val m = pattern.matcher(entryText)
+
+    while (m.find()) {
+        result.add(m.group())
+    }
+
+    return result.toList()
 }

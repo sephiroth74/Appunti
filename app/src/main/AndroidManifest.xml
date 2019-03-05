@@ -6,6 +6,7 @@
 
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <uses-feature
             android:name="android.hardware.camera"
@@ -24,6 +25,7 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/Theme.Appunti.Default.NoActionbar"
+            android:usesCleartextTraffic="true"
             tools:ignore="GoogleAppIndexingWarning">
 
         <provider

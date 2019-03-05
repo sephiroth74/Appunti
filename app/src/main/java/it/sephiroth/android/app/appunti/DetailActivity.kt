@@ -35,11 +35,13 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import getColor
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
+import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.models.DetailViewModel
@@ -50,6 +52,7 @@ import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
+import kotlinx.android.synthetic.main.appunti_detail_remoteurl_item.view.*
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
@@ -608,65 +611,6 @@ class DetailActivity : AppuntiActivity() {
         }
 
         isNewDocument = false
-
-//        doOnScheduler(Schedulers.computation()) {
-//
-//            val pattern = Pattern.compile(
-//                "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?\n",
-//                Pattern.CASE_INSENSITIVE or Pattern.DOTALL
-//            )
-//
-//            val m = pattern.matcher(entry.entryText)
-//
-//            while (m.find()) {
-//                Timber.v("find")
-//                Timber.v("group: ${m.group()}")
-//
-//                val attachment = Attachment().apply {
-//                    this.attachmentEntryID = entry.entryID
-//                    this.attachmentDescription = "Grubenstrasse 28, 8045 Zürich, Switzerland"
-//                    this.attachmentMime = "text/html"
-//                    this.attachmentTitle = "Lidl Schweiz"
-//                    this.attachmentType = Attachment.AttachmentType.REMOTE_URL
-//                    this.attachmentOriginalPath = m.group()
-//                }
-//
-//            }
-
-
-        /*
-        val doc = Jsoup.connect("https://maps.app.goo.gl/hi4An").get()
-        val elements = doc.select("meta")
-        for (e in elements) {
-
-            Timber.v("attr = ${e.attributes()}")
-
-            //OR more specifically you can check meta property.
-            if (e.attr("property").equals("og:image", true)) {
-                val imageUrl = e.attr("content")
-                Timber.v("imageUrl: $imageUrl")
-//                    break
-            }
-
-            if (e.attr("property").equals("og:title", true)) {
-                val title = e.attr("content")
-                Timber.v("title: $title")
-            }
-
-            if (e.attr("itemprop").equals("name", true)) {
-                val title = e.attr("content")
-                Timber.v("title: $title")
-            }
-
-            if (e.attr("property").equals("og:description", true)
-                || e.attr("itemprop").equals("description", true)
-            ) {
-                Timber.v("description: ${e.attr("content")}")
-            }
-
-        }
-        */
-//        }
     }
 
 
@@ -798,7 +742,41 @@ class DetailActivity : AppuntiActivity() {
         attachmentsContainer.removeAllViews()
 
         val attachments = entry.getAttachments()
-        attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
+        val remoteUrls = entry.getRemoteUrls()
+        attachmentsContainer.visibility =
+            if (attachments.isNullOrEmpty() && remoteUrls.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+        remoteUrls?.let { remoteUrls ->
+            val cardColor = theme.getColor(this, android.R.attr.windowBackground)
+
+            for (remoteUrl in remoteUrls) {
+                val view = LayoutInflater.from(this)
+                    .inflate(R.layout.appunti_detail_remoteurl_item, attachmentsContainer, false) as CardView
+
+                view.setCardBackgroundColor(cardColor)
+                view.remoteUrlTitle.text = remoteUrl.remoteUrlTitle
+                view.remoteUrlDescription.text = remoteUrl.remoteUrlDescription
+                view.tag = remoteUrl
+
+                remoteUrl.loadThumbnail(this, view.remoteUrlImage)
+
+                view.setOnClickListener {
+                    try {
+                        IntentUtils.createRemoteUrlViewIntent(this, remoteUrl).also {
+                            startActivity(it)
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                view.remoteUrlRemoveButton.setOnClickListener {
+                    removeEntryRemoteUrl(remoteUrl)
+                }
+
+                attachmentsContainer.addView(view)
+            }
+        }
 
         attachments?.let { attachments ->
             val cardColor = entry.getAttachmentColor(this)
@@ -925,6 +903,18 @@ class DetailActivity : AppuntiActivity() {
     }
 
     // END ENTRY UPDATE
+
+    private fun removeEntryRemoteUrl(remoteUrl: RemoteUrl) {
+        model.hideRemoteUrl(remoteUrl) { result, throwable ->
+            doOnMainThread {
+                throwable?.let {
+                    showConfirmation(throwable.localizedMessage)
+                } ?: run {
+                    invalidate(UPDATE_ATTACHMENTS)
+                }
+            }
+        }
+    }
 
     private fun removeEntryAttachment(attachment: Attachment) {
         model.removeAttachment(attachment) { result, throwable ->

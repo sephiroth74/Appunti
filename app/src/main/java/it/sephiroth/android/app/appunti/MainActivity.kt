@@ -35,6 +35,7 @@ import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import it.sephiroth.android.app.appunti.widget.MultiChoiceHelper
 import it.sephiroth.android.app.appunti.widget.RecyclerNavigationView
+import it.sephiroth.android.app.appunti.workers.RemoteUrlParserWorker
 import it.sephiroth.android.library.kotlin_extensions.animation.setAnimationListener
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
@@ -94,6 +95,9 @@ class MainActivity : AppuntiActivityFullscreen() {
             initializeUI()
             initializeModel()
         }
+
+        initializeWorkers()
+
 //        drawerLayout.setStatusBarBackgroundColor(theme.getColor(this, android.R.attr.windowBackground))
     }
 
@@ -161,6 +165,10 @@ class MainActivity : AppuntiActivityFullscreen() {
             navigationBackground.visibility = View.INVISIBLE
             statusbarBackground.visibility = View.INVISIBLE
         }
+    }
+
+    private fun initializeWorkers() {
+        RemoteUrlParserWorker.createPeriodicWorker()
     }
 
     private fun setupFloatingActionButton() {

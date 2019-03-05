@@ -9,6 +9,7 @@ import android.net.Uri
 import androidx.core.app.AlarmManagerCompat
 import com.dbflow5.annotation.*
 import com.dbflow5.config.FlowManager
+import com.dbflow5.query.and
 import com.dbflow5.query.list
 import com.dbflow5.query.select
 import com.dbflow5.query.selectCountOf
@@ -108,17 +109,6 @@ class Entry() : BaseRXModel() {
         return attachmentList
     }
 
-    fun setAttachmentList(value: List<Attachment>?) {
-        invalidateAttachments()
-        attachmentList = value
-    }
-
-    fun invalidateAttachments() {
-        Timber.i("invalidateAttachments")
-        hasAttachments = null
-        attachmentList = null
-    }
-
     fun hasAttachments(): Boolean {
         hasAttachments?.let {
             return it
@@ -130,6 +120,69 @@ class Entry() : BaseRXModel() {
             hasAttachments = result
             return result
         }
+    }
+
+    fun setAttachmentList(value: List<Attachment>?) {
+        invalidateAttachments()
+        attachmentList = value
+    }
+
+    fun invalidateAttachments() {
+        Timber.i("invalidateAttachments")
+        hasAttachments = null
+        attachmentList = null
+    }
+
+    // remote urls
+
+    private var remoteUrlList: List<RemoteUrl>? = null
+    private var hasRemoteUrls: Boolean? = null
+
+    @OneToMany(oneToManyMethods = [OneToManyMethod.ALL], variableName = "remoteUrlList")
+    fun getRemoteUrls(): List<RemoteUrl>? {
+        if (remoteUrlList == null) {
+            remoteUrlList =
+                (select from RemoteUrl::class where (RemoteUrl_Table.remoteUrlEntryID_entryID.eq(entryID))
+                    .and(
+                        RemoteUrl_Table.remoteUrlVisible.eq(true)
+                    )).list
+        }
+        return remoteUrlList
+    }
+
+    /**
+     * Returns all the remote urls, not matter if they are visible or not
+     * and doesn't cache the result
+     */
+    fun getAllRemoteUrls(): List<RemoteUrl>? {
+        return (select from RemoteUrl::class where (RemoteUrl_Table.remoteUrlEntryID_entryID.eq(entryID))).list
+    }
+
+    fun hasRemoteUrls(): Boolean {
+        hasRemoteUrls?.let {
+            return it
+        } ?: run {
+            val result = selectCountOf(RemoteUrl_Table.remoteUrlEntryID_entryID)
+                .from(RemoteUrl::class)
+                .where(
+                    RemoteUrl_Table.remoteUrlEntryID_entryID.eq(entryID)
+                        .and(RemoteUrl_Table.remoteUrlVisible.eq(true))
+                )
+                .hasData(FlowManager.getDatabase(AppDatabase::class.java))
+            hasRemoteUrls = result
+            return result
+        }
+    }
+
+    fun invalidateRemoteUrls() {
+        Timber.i("invalidateRemoteUrls")
+        hasRemoteUrls = null
+        remoteUrlList = null
+    }
+
+    fun setRemoteUrlList(value: List<RemoteUrl>?) {
+        invalidateRemoteUrls()
+        remoteUrlList = value
     }
 
     override fun toString(): String {

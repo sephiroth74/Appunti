@@ -17,6 +17,8 @@ class Attachment() : BaseRXModel() {
         attachmentOriginalPath = other.attachmentOriginalPath
     }
 
+    enum class AttachmentType { LOCAL }
+
     @PrimaryKey(autoincrement = true)
     var attachmentID: Long = 0
 
@@ -25,7 +27,11 @@ class Attachment() : BaseRXModel() {
 
     var attachmentTitle: String? = null
 
+    var attachmentDescription: String? = null
+
     var attachmentMime: String? = null
+
+    var attachmentType: AttachmentType = AttachmentType.LOCAL
 
     /** relative path */
     @Column(defaultValue = "")

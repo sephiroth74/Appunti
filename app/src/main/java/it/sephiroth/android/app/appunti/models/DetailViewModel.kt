@@ -13,6 +13,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
+import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
@@ -252,6 +253,15 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
 
         } ?: run {
             callback?.invoke(false, null)
+        }
+    }
+
+    fun hideRemoteUrl(remoteUrl: RemoteUrl, callback: ((Boolean, Throwable?) -> Unit)? = null) {
+        entry.whenNotNull { entry ->
+            DatabaseHelper.hideRemoteUrl(getApplication(), entry, remoteUrl) { result, throwable ->
+                entry.invalidateRemoteUrls()
+                callback?.invoke(result, throwable)
+            }
         }
     }
 

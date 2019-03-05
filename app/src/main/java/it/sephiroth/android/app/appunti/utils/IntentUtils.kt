@@ -3,12 +3,14 @@ package it.sephiroth.android.app.appunti.utils
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import it.sephiroth.android.app.appunti.CategoriesEditActivity
 import it.sephiroth.android.app.appunti.DetailActivity
 import it.sephiroth.android.app.appunti.PreferencesActivity
 import it.sephiroth.android.app.appunti.SearchableActivity
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
+import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
 import it.sephiroth.android.app.appunti.ext.getFileUri
 import timber.log.Timber
 
@@ -117,6 +119,13 @@ object IntentUtils {
         return Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(finalUri, attachment.attachmentMime)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+    }
+
+    fun createRemoteUrlViewIntent(context: Context, remoteUrl: RemoteUrl): Intent {
+        return Intent(Intent.ACTION_VIEW).apply {
+            Timber.v("remoteUrlOriginalUri = ${remoteUrl.remoteUrlOriginalUri}")
+            data = Uri.parse(remoteUrl.remoteUrlOriginalUri)
         }
     }
 

@@ -171,6 +171,31 @@ object DatabaseHelper {
             .execute()
     }
 
+    fun hideRemoteUrl(
+        context: Context,
+        entry: Entry,
+        remoteUrl: RemoteUrl,
+        callback: ((Boolean, Throwable?) -> (Unit))? = null
+    ) {
+        Timber.i("hideRemoteUrl($remoteUrl")
+
+        if (remoteUrl.remoteUrlEntryID != entry.entryID) {
+            callback?.invoke(false, IllegalArgumentException("This attachment doesn't belong to the provided entry!"))
+            return
+        }
+
+        FlowManager.getDatabase(AppDatabase::class.java).beginTransactionAsync {
+            remoteUrl.remoteUrlVisible = false
+            remoteUrl.save()
+        }.success { _, result ->
+            callback?.invoke(result, null)
+        }.error { _, throwable ->
+            callback?.invoke(false, throwable)
+        }
+            .build()
+            .execute()
+    }
+
     fun addAttachmentFromUri(
         context: Context,
         entry: Entry,
