@@ -45,17 +45,19 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
         Timber.i("parseEntry($entry)")
 
         val remoteUrls = entry.parseRemoteUrls()
-        Timber.v("remoteUrls = $remoteUrls")
 
         if (remoteUrls.isNotEmpty()) {
+            Timber.v("remoteUrls = $remoteUrls")
+            val entryRemoteUrls = entry.getAllRemoteUrls()?.toMutableList() ?: mutableListOf()
+            Timber.v("entry remote urls = ${entryRemoteUrls.size}")
             for (urlString in remoteUrls) {
-                Timber.v("entry remote urls = ${entry.getAllRemoteUrls()?.size}")
 
-                if (entry.getAllRemoteUrls()?.map { it.remoteUrlOriginalUri }?.contains(urlString) == false) {
+                if (!entryRemoteUrls.map { it.remoteUrlOriginalUri }.contains(urlString)) {
                     retrieveUrl(urlString)?.let { remoteUrl ->
                         remoteUrl.remoteUrlEntryID = entry.entryID
                         if (remoteUrl.save()) {
                             Timber.v("added $remoteUrl to ${entry.entryID}")
+                            entryRemoteUrls.add(remoteUrl)
                             entry.invalidateRemoteUrls()
                         }
                     }

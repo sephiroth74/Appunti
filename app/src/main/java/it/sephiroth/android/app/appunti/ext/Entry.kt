@@ -93,14 +93,14 @@ fun Entry.convertToList(): Boolean {
 
 fun Entry.getSummary(context: Context, textSize: Float, maxChars: Int = 100, maxLines: Int = 10): Spannable {
     return when (entryType) {
-        Entry.EntryType.TEXT -> getTextSummary(maxChars)
+        Entry.EntryType.TEXT -> getTextSummary(maxChars, "...")
         Entry.EntryType.LIST -> asList(context, textSize, maxLines)
     }
 }
 
 fun Entry.getTextSummary(maxLength: Int = 100, postfix: String? = null): Spannable {
     return if (entryText.length <= maxLength) SpannableString(entryText)
-    else SpannableString(entryText.substring(0, maxLength) + postfix)
+    else SpannableString(entryText.substring(0, maxLength) + (postfix ?: ""))
 }
 
 fun Entry.asList(context: Context, textSize: Float, maxLines: Int = 10): Spannable {

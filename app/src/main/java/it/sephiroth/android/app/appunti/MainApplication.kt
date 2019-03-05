@@ -31,7 +31,7 @@ class MainApplication : Application() {
 
         AndroidThreeTen.init(this)
 
-        FlowLog.setMinimumLoggingLevel(FlowLog.Level.V)
+//        FlowLog.setMinimumLoggingLevel(FlowLog.Level.V)
 
         FlowManager.init(FlowConfig.Builder(this)
                 .database(DatabaseConfig.Builder(AppDatabase::class.java)
