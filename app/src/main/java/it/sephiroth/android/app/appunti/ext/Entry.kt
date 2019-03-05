@@ -149,8 +149,8 @@ fun Entry.asList(context: Context, textSize: Float, maxLines: Int = 10): Spannab
 fun Entry.parseRemoteUrls(): List<String> {
     val result = mutableListOf<String>()
     val pattern = Pattern.compile(
-        "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?\n",
-        Pattern.CASE_INSENSITIVE or Pattern.DOTALL
+        "(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/[^\\s\\n]*)?",
+        Pattern.CASE_INSENSITIVE
     )
 
     val m = pattern.matcher(entryText)

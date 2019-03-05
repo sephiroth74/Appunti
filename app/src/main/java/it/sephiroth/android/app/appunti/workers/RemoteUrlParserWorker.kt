@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.work.*
 import com.dbflow5.structure.save
+import it.sephiroth.android.app.appunti.BuildConfig
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
@@ -131,11 +132,15 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
         fun createPeriodicWorker() {
             Timber.i("createPeriodicWorker")
             val saveRequest =
-                PeriodicWorkRequestBuilder<RemoteUrlParserWorker>(5, TimeUnit.MINUTES)
+                PeriodicWorkRequestBuilder<RemoteUrlParserWorker>(
+                    if (BuildConfig.DEBUG) 10L else 5L,
+                    if (BuildConfig.DEBUG) TimeUnit.MINUTES else TimeUnit.HOURS
+                )
                     .setConstraints(
                         Constraints.Builder()
                             .setRequiresCharging(true)
                             .setRequiredNetworkType(NetworkType.UNMETERED)
+                            .setRequiresBatteryNotLow(true)
                             .build()
                     )
                     .build()

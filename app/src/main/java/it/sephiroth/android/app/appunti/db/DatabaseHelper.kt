@@ -338,7 +338,7 @@ object DatabaseHelper {
                             OrderBy(Entry_Table.entryArchived.nameAlias, false),
                             OrderBy(Entry_Table.entryDeleted.nameAlias, false),
                             OrderBy(Entry_Table.entryPinned.nameAlias, false),
-                            OrderBy(Entry_Table.entryPriority.nameAlias, false),
+//                            OrderBy(Entry_Table.entryPriority.nameAlias, false),
                             OrderBy(Entry_Table.entryModifiedDate.nameAlias, false)
                         )
                     ).list
