@@ -31,7 +31,6 @@ class CategoryTypeConverter : com.dbflow5.converter.TypeConverter<Int, Category.
             return Category.CategoryType.values()[it]
         } ?: run { return null }
     }
-
 }
 
 @TypeConverter

@@ -44,10 +44,12 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
             return entry.value?.entryID
         }
 
-    fun createNewEntry(entry: Entry) {
+    fun createNewEntry(entry: Entry): Long? {
         if (entry.save()) {
             setEntry(entry)
+            return entry.entryID
         }
+        return null
     }
 
     private val entryModelListener = object : DirectModelNotifier.ModelChangedListener<Entry> {
@@ -254,11 +256,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     override fun onCleared() {
-//        DirectModelNotifier.get().unregisterForModelChanges(Entry::class.java, entryModelListener)
+        Timber.i("onCleared")
         super.onCleared()
-    }
-
-    init {
-//        DirectModelNotifier.get().registerForModelChanges(Entry::class.java, entryModelListener)
     }
 }

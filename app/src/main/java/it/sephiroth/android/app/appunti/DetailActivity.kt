@@ -68,7 +68,7 @@ class DetailActivity : AppuntiActivity() {
     private lateinit var model: DetailViewModel
 
     private var isNewDocument: Boolean = false
-    private var currentEntryID: Long = 0
+    private var currentEntryID: Long? = null
 
     private var shouldRemoveAlarm: Boolean = false
 
@@ -96,11 +96,6 @@ class DetailActivity : AppuntiActivity() {
         }
 
         model = ViewModelProviders.of(this).get(DetailViewModel::class.java)
-
-        model.entry.observe(this, Observer { entry ->
-            Timber.i("Model Entry Changed = $entry")
-            onEntryChanged(entry)
-        })
 
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
 
@@ -131,9 +126,23 @@ class DetailActivity : AppuntiActivity() {
 
         entryTitle.setRawInputType(InputType.TYPE_CLASS_TEXT)
 
-        // handle the current listener
-        // TODO(manage intent when activity is destroyed and recreated)
-        onNewIntent(intent)
+        model.entry.observe(this, Observer { entry ->
+            Timber.i("Model Entry Changed = $entry")
+            onEntryChanged(entry)
+        })
+
+        if (model.entry.value == null) {
+            handleIntent(intent, savedInstanceState)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        outState?.apply {
+            currentEntryID?.let {
+                this.putLong(IntentUtils.KEY_ENTRY_ID, it)
+            }
+        }
+        super.onSaveInstanceState(outState)
     }
 
     override fun onDestroy() {
@@ -149,15 +158,21 @@ class DetailActivity : AppuntiActivity() {
         super.onDestroy()
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-
-        Timber.i("onNewIntent($intent)")
+    private fun handleIntent(intent: Intent, savedInstanceState: Bundle?) {
+        Timber.i("handleIntent($intent, $savedInstanceState)")
         var entryID: Long? = null
         var newEntry: Entry? = null
 
-        intent?.let { intent ->
-            Timber.v("action=${intent.action}")
+        Timber.v("action=${intent.action}")
+
+        savedInstanceState?.let { bundle ->
+            if (bundle.containsKey(IntentUtils.KEY_ENTRY_ID)) {
+                entryID = bundle.getLong(IntentUtils.KEY_ENTRY_ID)
+                isNewDocument = false
+            }
+        }
+
+        if (null == entryID) {
             when (intent.action) {
                 Intent.ACTION_CREATE_DOCUMENT -> {
                     isNewDocument = true
@@ -182,17 +197,17 @@ class DetailActivity : AppuntiActivity() {
             }
         }
 
+
         // don't delay the transition if it's a new document
         entryID?.let {
-            if (!isNewDocument) {
-                postponeEnterTransition()
-                model.entryID = it
-            }
+            postponeEnterTransition()
+            model.entryID = it
         } ?: run {
             newEntry?.let {
                 model.createNewEntry(it)
             }
         }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -593,6 +608,65 @@ class DetailActivity : AppuntiActivity() {
         }
 
         isNewDocument = false
+
+//        doOnScheduler(Schedulers.computation()) {
+//
+//            val pattern = Pattern.compile(
+//                "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?\n",
+//                Pattern.CASE_INSENSITIVE or Pattern.DOTALL
+//            )
+//
+//            val m = pattern.matcher(entry.entryText)
+//
+//            while (m.find()) {
+//                Timber.v("find")
+//                Timber.v("group: ${m.group()}")
+//
+//                val attachment = Attachment().apply {
+//                    this.attachmentEntryID = entry.entryID
+//                    this.attachmentDescription = "Grubenstrasse 28, 8045 Zürich, Switzerland"
+//                    this.attachmentMime = "text/html"
+//                    this.attachmentTitle = "Lidl Schweiz"
+//                    this.attachmentType = Attachment.AttachmentType.REMOTE_URL
+//                    this.attachmentOriginalPath = m.group()
+//                }
+//
+//            }
+
+
+        /*
+        val doc = Jsoup.connect("https://maps.app.goo.gl/hi4An").get()
+        val elements = doc.select("meta")
+        for (e in elements) {
+
+            Timber.v("attr = ${e.attributes()}")
+
+            //OR more specifically you can check meta property.
+            if (e.attr("property").equals("og:image", true)) {
+                val imageUrl = e.attr("content")
+                Timber.v("imageUrl: $imageUrl")
+//                    break
+            }
+
+            if (e.attr("property").equals("og:title", true)) {
+                val title = e.attr("content")
+                Timber.v("title: $title")
+            }
+
+            if (e.attr("itemprop").equals("name", true)) {
+                val title = e.attr("content")
+                Timber.v("title: $title")
+            }
+
+            if (e.attr("property").equals("og:description", true)
+                || e.attr("itemprop").equals("description", true)
+            ) {
+                Timber.v("description: ${e.attr("content")}")
+            }
+
+        }
+        */
+//        }
     }
 
 

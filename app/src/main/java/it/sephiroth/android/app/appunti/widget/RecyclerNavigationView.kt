@@ -33,7 +33,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
     private var navigationItemSelectedListener: ((Int) -> Unit)? = null
 
     init {
-        Timber.i("init")
         mLifecycleRegistry.markState(Lifecycle.State.INITIALIZED)
         adapter = NavigationItemsAdapter(context, mutableListOf())
     }
@@ -218,7 +217,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
                 TYPE_LABEL_CATEGORY_ITEM -> getItem(position)?.categoryID ?: -1
                 else -> -1
             }
-            Timber.v("getItemId(position=$position, type=$type, id=$itemId)")
             return itemId
         }
 
@@ -228,8 +226,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
         }
 
         override fun onBindViewHolder(baseHolder: ViewHolderBase, position: Int) {
-            Timber.i("onBindViewHolder(position=$position, type=${baseHolder.itemViewType})")
-
             when {
                 baseHolder.itemViewType == TYPE_LABEL_CATEGORY_ITEM -> {
                     val holder = baseHolder as ViewHolderCategoryItem
