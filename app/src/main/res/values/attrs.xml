@@ -5,8 +5,8 @@
     <attr name="categoryColors"
           format="reference"/>
 
-    <attr name="navigationbarBackgroundDrawable" format="reference" />
-    <attr name="statusbarBackgroundDrawable" format="reference" />
+    <attr name="navigationbarBackgroundDrawable" format="reference"/>
+    <attr name="statusbarBackgroundDrawable" format="reference"/>
 
     <!--<attr name="fontFamilyThin" format="reference" />-->
     <!--<attr name="fontFamilyLight" format="reference" />-->
@@ -59,6 +59,10 @@
 
     <declare-styleable name="MaterialShapeSolid">
         <attr name="android:color"/>
+    </declare-styleable>
+
+    <declare-styleable name="CollapsingLinearLayout">
+        <attr name="android:content"/>
     </declare-styleable>
 
 </resources>

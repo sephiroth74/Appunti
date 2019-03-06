@@ -523,6 +523,7 @@ class DetailActivity : AppuntiActivity() {
     val UPDATE_TYPE_AND_TEXT = 1 shl 1
     val UPDATE_CATEGORY = 1 shl 2
     val UPDATE_ATTACHMENTS = 1 shl 3
+    val UPDATE_REMOTE_URLS = 1 shl 10
 
     val UPDATE_CREATION_DATE = 1 shl 4
     val UPDATE_MODIFIED_DATE = 1 shl 5
@@ -565,6 +566,10 @@ class DetailActivity : AppuntiActivity() {
                 tickNext(TICKER_STEP_MODIFIED)
             }
 
+            if (bits hasBits UPDATE_REMOTE_URLS) {
+                updateEntryRemoteUrls(entry)
+            }
+
             if (bits hasBits UPDATE_TYPE_AND_TEXT) {
                 updateEntryTypeAndText(entry)
             }
@@ -588,6 +593,7 @@ class DetailActivity : AppuntiActivity() {
                     or UPDATE_TYPE_AND_TEXT
                     or UPDATE_CATEGORY
                     or UPDATE_ATTACHMENTS
+                    or UPDATE_REMOTE_URLS
                     or UPDATE_CREATION_DATE
                     or UPDATE_MENU
         )
@@ -738,13 +744,11 @@ class DetailActivity : AppuntiActivity() {
 
     // text switcher ticker end
 
-    private fun updateEntryAttachmentsList(entry: Entry) {
-        attachmentsContainer.removeAllViews()
-
-        val attachments = entry.getAttachments()
+    private fun updateEntryRemoteUrls(entry: Entry) {
+        remoteUrlsContainer.removeAllViews()
         val remoteUrls = entry.getRemoteUrls()
-        attachmentsContainer.visibility =
-            if (attachments.isNullOrEmpty() && remoteUrls.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+        remoteUrlsContainer.visibility = if (remoteUrls.isNullOrEmpty()) View.GONE else View.VISIBLE
 
         remoteUrls?.let { remoteUrls ->
             val cardColor = theme.getColor(this, android.R.attr.windowBackground)
@@ -773,10 +777,16 @@ class DetailActivity : AppuntiActivity() {
                 view.remoteUrlRemoveButton.setOnClickListener {
                     removeEntryRemoteUrl(remoteUrl)
                 }
-
-                attachmentsContainer.addView(view)
+                remoteUrlsContainer.addView(view)
             }
         }
+    }
+
+    private fun updateEntryAttachmentsList(entry: Entry) {
+        attachmentsContainer.removeAllViews()
+
+        val attachments = entry.getAttachments()
+        attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
 
         attachments?.let { attachments ->
             val cardColor = entry.getAttachmentColor(this)
@@ -910,7 +920,7 @@ class DetailActivity : AppuntiActivity() {
                 throwable?.let {
                     showConfirmation(throwable.localizedMessage)
                 } ?: run {
-                    invalidate(UPDATE_ATTACHMENTS)
+                    invalidate(UPDATE_REMOTE_URLS)
                 }
             }
         }

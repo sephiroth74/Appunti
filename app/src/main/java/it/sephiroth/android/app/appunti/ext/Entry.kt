@@ -149,14 +149,25 @@ fun Entry.asList(context: Context, textSize: Float, maxLines: Int = 10): Spannab
 fun Entry.parseRemoteUrls(): List<String> {
     val result = mutableListOf<String>()
     val pattern = Pattern.compile(
-        "(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/[^\\s\\n]*)?",
+        "(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/[^\\s\\n\\\"\\']*)?",
         Pattern.CASE_INSENSITIVE
     )
 
-    val m = pattern.matcher(entryText)
+    if (entryType == Entry.EntryType.TEXT) {
+        val m = pattern.matcher(entryText)
 
-    while (m.find()) {
-        result.add(m.group())
+        while (m.find()) {
+            result.add(m.group())
+        }
+    } else {
+        asList()?.let { triple ->
+            for (line in triple.first) {
+                val m = pattern.matcher(line.text)
+                while (m.find()) {
+                    result.add(m.group())
+                }
+            }
+        }
     }
 
     return result.toList()
