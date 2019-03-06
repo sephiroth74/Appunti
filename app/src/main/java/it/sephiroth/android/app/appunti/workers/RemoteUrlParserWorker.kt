@@ -67,7 +67,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
     }
 
     private fun retrieveUrl(urlString: String): RemoteUrl? {
-        val connection = Jsoup.connect(urlString)
+        val connection = Jsoup.connect(urlString).followRedirects(true)
         val doc: Document
         val url: URL
         try {
@@ -84,8 +84,6 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
         var description: String? = null
 
         for (e in elements) {
-            // Timber.v("attr = ${e.attributes()}")
-
             if (e.attr("property").equals("og:image", true)
                 || e.attr("itemprop").equals("image", true)
             ) {

@@ -1165,10 +1165,11 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     private var insertedIndex: Int = -1
 
     private fun addItem() {
+        Timber.v("addItem")
         doOnMainThread {
             dataHolder.newItem().also { index ->
-                notifyItemInserted(index)
                 insertedIndex = index
+                notifyItemInserted(index)
                 postSave()
             }
         }
@@ -1195,7 +1196,6 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         }
     }
 
-
     internal fun removeFocusFromEditText() {
         currentEditText?.clearFocus()
         currentEditText?.hideSoftInput()
@@ -1205,9 +1205,17 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailViewHolder {
         return if (viewType == EntryListJsonModel.TYPE_NEW_ENTRY) {
             val view = inflater.inflate(R.layout.appunti_detail_new_entry_list_item, parent, false)
+
+            view.setOnClickListener {
+                Timber.v("buttonAdd onClick")
+                removeFocusFromEditText()
+                addItem()
+            }
+
             DetailNewEntryViewHolder(view).apply {
                 buttonAdd.background = MaterialBackgroundUtils.newEntryListItem(context)
             }
+
         } else {
             val view = inflater.inflate(R.layout.appunti_detail_entry_list_item_checkable, parent, false)
             DetailEntryViewHolder(view)
@@ -1217,12 +1225,6 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     override fun onBindViewHolder(baseHolder: DetailViewHolder, position: Int) {
         if (baseHolder.itemViewType == EntryListJsonModel.TYPE_NEW_ENTRY) {
             val holder = baseHolder as DetailNewEntryViewHolder
-
-            holder.buttonAdd.setOnClickListener {
-                removeFocusFromEditText()
-                addItem()
-            }
-
         } else {
             val holder = baseHolder as DetailEntryViewHolder
             holder.checkbox.setOnCheckedChangeListener(null)

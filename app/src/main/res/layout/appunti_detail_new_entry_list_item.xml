@@ -2,22 +2,21 @@
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginTop="8dp"
         android:gravity="center"
         android:orientation="vertical">
 
     <LinearLayout
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:clickable="true"
             android:id="@+id/buttonAdd"
             android:gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             android:orientation="horizontal">
-
 
         <androidx.appcompat.widget.AppCompatImageView
                 android:layout_margin="4dp"
@@ -32,17 +31,15 @@
                 android:id="@android:id/text1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusableInTouchMode="false"
-                android:focusable="false"
-                android:clickable="false"
+                android:textIsSelectable="false"
                 android:maxLines="1"
                 android:lines="1"
                 android:textSize="@dimen/text_size_body_1_material"
-                android:text="Voce Elenco"/>
+                android:text="@string/new_entry_item"/>
 
     </LinearLayout>
 
-    <Space android:layout_width="match_parent" android:layout_height="4dp"/>
+    <Space android:layout_width="match_parent" android:layout_height="8dp"/>
 
     <include
             layout="@layout/appunti_navigation_item_separator"
