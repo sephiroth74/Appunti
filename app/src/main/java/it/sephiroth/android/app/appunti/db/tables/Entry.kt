@@ -142,10 +142,10 @@ class Entry() : BaseRXModel() {
     fun getRemoteUrls(): List<RemoteUrl>? {
         if (remoteUrlList == null) {
             remoteUrlList =
-                (select from RemoteUrl::class where (RemoteUrl_Table.remoteUrlEntryID_entryID.eq(entryID))
+                (select().from(RemoteUrl::class).where(RemoteUrl_Table.remoteUrlEntryID_entryID.eq(entryID))
                     .and(
                         RemoteUrl_Table.remoteUrlVisible.eq(true)
-                    )).list
+                    ).limit(1)).list
         }
         return remoteUrlList
     }

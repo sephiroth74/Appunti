@@ -44,6 +44,11 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
     private fun parseEntry(entry: Entry) {
         Timber.i("parseEntry($entry)")
 
+        if (entry.hasRemoteUrls()) {
+            Timber.v("entry has already a remote url. skipping...")
+            return
+        }
+
         val remoteUrls = entry.parseRemoteUrls()
 
         if (remoteUrls.isNotEmpty()) {
@@ -51,7 +56,6 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
             val entryRemoteUrls = entry.getAllRemoteUrls()?.toMutableList() ?: mutableListOf()
             Timber.v("entry remote urls = ${entryRemoteUrls.size}")
             for (urlString in remoteUrls) {
-
                 if (!entryRemoteUrls.map { it.remoteUrlOriginalUri }.contains(urlString)) {
                     retrieveUrl(urlString)?.let { remoteUrl ->
                         remoteUrl.remoteUrlEntryID = entry.entryID
@@ -59,6 +63,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
                             Timber.v("added $remoteUrl to ${entry.entryID}")
                             entryRemoteUrls.add(remoteUrl)
                             entry.invalidateRemoteUrls()
+                            return
                         }
                     }
                 }
@@ -145,7 +150,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
                     )
                     .build()
             WorkManager.getInstance()
-                .enqueueUniquePeriodicWork("remoteUrlWorker", ExistingPeriodicWorkPolicy.REPLACE, saveRequest)
+                .enqueueUniquePeriodicWork("remoteUrlWorker", ExistingPeriodicWorkPolicy.KEEP, saveRequest)
         }
     }
 }
