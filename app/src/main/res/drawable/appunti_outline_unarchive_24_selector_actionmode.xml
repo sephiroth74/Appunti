@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+          android:constantSize="true"
+          android:enterFadeDuration="@android:integer/config_shortAnimTime"
+          android:exitFadeDuration="@android:integer/config_shortAnimTime">
+
+    <item android:drawable="@drawable/outline_unarchive_24_actionmode" android:state_pressed="true"/>
+
+    <item android:drawable="@drawable/outline_unarchive_24_disabled_actionmode" android:state_enabled="false"/>
+
+    <item android:drawable="@drawable/outline_unarchive_24_actionmode"/>
+</selector>

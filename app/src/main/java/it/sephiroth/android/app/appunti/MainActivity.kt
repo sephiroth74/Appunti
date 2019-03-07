@@ -597,8 +597,13 @@ class MainActivity : AppuntiActivityFullscreen() {
         private fun updatePinnedMenuItem(menu: Menu?, checked: Boolean) {
             menu?.let { menu ->
                 val menuItem = menu.findItem(R.id.menu_action_pin)
-                if (checked) menuItem.setIcon(R.drawable.appunti_sharp_favourite_24_checked_selector_actionmode)
-                else menuItem.setIcon(R.drawable.appunti_sharp_favourite_24_unchecked_selector_actionmode)
+                if (checked) {
+                    menuItem.setIcon(R.drawable.appunti_sharp_favourite_24_checked_selector_actionmode)
+                    menuItem.setTitle(R.string.unpin)
+                } else {
+                    menuItem.setIcon(R.drawable.appunti_sharp_favourite_24_unchecked_selector_actionmode)
+                    menuItem.setTitle(R.string.pin)
+                }
             }
         }
 
@@ -606,8 +611,13 @@ class MainActivity : AppuntiActivityFullscreen() {
         private fun updateArchivedMenuItem(menu: Menu?, checked: Boolean) {
             menu?.let { menu ->
                 val menuItem = menu.findItem(R.id.menu_action_archive)
-                if (checked) menuItem.setIcon(R.drawable.appunti_outline_archive_24_checked_selector)
-                else menuItem.setIcon(R.drawable.appunti_outline_archive_24_unchecked_selector_actionmode)
+                if (checked) {
+                    menuItem.setIcon(R.drawable.appunti_outline_unarchive_24_selector_actionmode)
+                    menuItem.setTitle(R.string.unarchive)
+                } else {
+                    menuItem.setIcon(R.drawable.appunti_outline_archive_24_selector_actionmode)
+                    menuItem.setTitle(R.string.archive)
+                }
             }
         }
 
@@ -615,8 +625,13 @@ class MainActivity : AppuntiActivityFullscreen() {
         private fun updateDeletedMenuItem(menu: Menu?, checked: Boolean) {
             menu?.let { menu ->
                 val menuItem = menu.findItem(R.id.menu_action_delete)
-                if (checked) menuItem.setIcon(R.drawable.appunti_sharp_restore_from_trash_24_selector)
-                else menuItem.setIcon(R.drawable.appunti_sharp_delete_24_outline_selector_actionmode)
+                if (checked) {
+                    menuItem.setIcon(R.drawable.appunti_sharp_restore_from_trash_24_selector_actionmode)
+                    menuItem.setTitle(R.string.restore)
+                } else {
+                    menuItem.setIcon(R.drawable.appunti_sharp_delete_24_outline_selector_actionmode)
+                    menuItem.setTitle(R.string.delete)
+                }
             }
         }
 

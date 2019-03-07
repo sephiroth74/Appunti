@@ -87,6 +87,7 @@
     <string name="deleted">Deleted</string>
     <string name="archived">Archived</string>
     <string name="pin">Pin</string>
+    <string name="unpin">Unpin</string>
     <string name="share">Share</string>
     <string name="restore">Restore</string>
     <string name="category">Category</string>
