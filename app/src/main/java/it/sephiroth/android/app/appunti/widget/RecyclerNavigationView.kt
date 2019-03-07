@@ -2,6 +2,7 @@ package it.sephiroth.android.app.appunti.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +15,7 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
+import getColor
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.models.MainViewModel
@@ -31,6 +33,8 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
     private var categorySelectedListener: ((Category?) -> Unit)? = null
     private var navigationItemSelectedListener: ((Int) -> Unit)? = null
+
+    private val accentColorStateList = ColorStateList.valueOf(context.theme.getColor(context, R.attr.colorAccent))
 
     init {
         mLifecycleRegistry.markState(Lifecycle.State.INITIALIZED)
@@ -236,9 +240,11 @@ class RecyclerNavigationView @JvmOverloads constructor(
                     item?.let { category ->
                         holder.textView.text = category.categoryTitle
                         holder.textView.isChecked = model?.group?.getCategoryID() == category.categoryID
+                        holder.itemView.backgroundTintList = ColorStateList.valueOf(category.getColor(context))
                     } ?: kotlin.run {
                         holder.textView.text = context.getString(R.string.categories_all)
                         holder.textView.isChecked = model?.let {
+                            holder.itemView.backgroundTintList = accentColorStateList
                             !it.group.isDeleted() && !it.group.isArchived() && it.group.getCategoryID() == null
                         } ?: false
                     }
@@ -246,6 +252,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
                     holder.itemView.setOnClickListener {
                         categorySelectedListener?.invoke(item)
                     }
+
                 }
                 baseHolder.itemViewType == TYPE_LABEL_CATEGORY_ARCHIVED -> (baseHolder as ViewHolderSelectableCategory).textView.isChecked =
                     model?.group?.isArchived() ?: false

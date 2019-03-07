@@ -102,6 +102,16 @@ class MaterialShapeDrawable(s: Shape?) : ShapeDrawable(s) {
             return this
         }
 
+        fun alpha(alpha: Int): Builder {
+            drawable.alpha = alpha
+            return this
+        }
+
+        fun alpha(alpha: Float): Builder {
+            drawable.alpha = (alpha * 255).toInt()
+            return this
+        }
+
         fun strokeWidth(width: Float): Builder {
             drawable.paint.strokeWidth = width
             return this

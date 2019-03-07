@@ -1,6 +1,7 @@
 package it.sephiroth.android.app.appunti.db.tables
 
 import android.content.Context
+import androidx.core.graphics.ColorUtils
 import com.dbflow5.annotation.Column
 import com.dbflow5.annotation.PrimaryKey
 import com.dbflow5.annotation.Table
@@ -8,7 +9,6 @@ import com.dbflow5.reactivestreams.structure.BaseRXModel
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.CategoryTypeConverter
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
-import timber.log.Timber
 
 @Table(database = AppDatabase::class)
 class Category() : BaseRXModel() {
@@ -63,6 +63,11 @@ class Category() : BaseRXModel() {
 
     fun getColor(context: Context): Int {
         return ResourceUtils.getCategoryColors(context)[categoryColorIndex]
+    }
+
+    fun getDimmedColor(context: Context): Int {
+        val color = ResourceUtils.getCategoryColors(context)[categoryColorIndex]
+        return ColorUtils.setAlphaComponent(color, 127)
     }
 
     enum class CategoryType {

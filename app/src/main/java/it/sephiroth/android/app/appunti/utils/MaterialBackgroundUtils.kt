@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import getColor
+import getFloat
+import getInteger
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
 import it.sephiroth.android.app.appunti.graphics.MaterialShape
@@ -16,19 +18,13 @@ object MaterialBackgroundUtils {
             .Builder()
             .addChecked(
                 MaterialShapeDrawable.Builder(MaterialShape.Type.START).tint(
-                    context.theme.getColor(
-                        context,
-                        R.attr.colorAccent
-                    )
-                )
+                    context.theme.getColor(context, R.attr.colorAccent)
+                ).alpha(context.theme.getFloat(context, android.R.attr.disabledAlpha) ?: 1f)
             )
             .addSelected(
                 MaterialShapeDrawable.Builder(MaterialShape.Type.START).tint(
-                    context.theme.getColor(
-                        context,
-                        R.attr.colorAccent
-                    )
-                )
+                    context.theme.getColor(context, R.attr.colorAccent)
+                ).alpha(context.theme.getFloat(context, android.R.attr.disabledAlpha) ?: 1f)
             )
             .ripple(
                 context.theme.getColor(context, R.attr.colorControlHighlight),

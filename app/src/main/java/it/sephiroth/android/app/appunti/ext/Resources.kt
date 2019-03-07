@@ -53,6 +53,18 @@ fun Resources.Theme.getColor(context: Context, @AttrRes id: Int): Int {
     return ContextCompat.getColor(context, context.theme.resolveAttribute(id))
 }
 
+fun Resources.Theme.getInteger(context: Context, @AttrRes id: Int): Int {
+    return context.resources.getInteger(context.theme.resolveAttribute(id))
+}
+
+fun Resources.Theme.getFloat(context: Context, @AttrRes id: Int): Float? {
+    val typedValue = getTypedValue(id, true)
+    if (typedValue.type == TypedValue.TYPE_FLOAT) {
+        return typedValue.float
+    }
+    return null
+}
+
 fun Resources.Theme.getDimensionPixelSize(context: Context, @AttrRes id: Int): Int {
     return resources.getDimensionPixelSize(context.theme.resolveAttribute(id))
 }
@@ -61,4 +73,10 @@ fun Resources.Theme.resolveAttribute(@AttrRes id: Int, resolveRefs: Boolean = fa
     val typedValue = TypedValue()
     resolveAttribute(id, typedValue, resolveRefs)
     return typedValue.data
+}
+
+fun Resources.Theme.getTypedValue(@AttrRes id: Int, resolveRefs: Boolean = false): TypedValue {
+    val typedValue = TypedValue()
+    resolveAttribute(id, typedValue, resolveRefs)
+    return typedValue
 }
