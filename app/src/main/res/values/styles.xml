@@ -51,18 +51,18 @@
     </style>
 
     <style name="Widget.Appunti.Text.CategoryChip">
+        <item name="android:minWidth">55dp</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <!--<item name="android:background">@drawable/category_chip_background</item>-->
         <item name="android:padding">8dp</item>
         <item name="android:textAppearance">?attr/textAppearanceListItemSmall</item>
         <item name="android:textSize">@dimen/text_size_caption_material</item>
+        <item name="android:gravity">center</item>
         <item name="fontFamily">@font/nunito_light</item>
         <item name="android:fontFamily">@font/nunito_light</item>
     </style>
 
     <style name="Widget.Appunti.Text.CategoryChip.NonClickable">
-        <!--<item name="android:background">@drawable/category_chip_background_no_ripple</item>-->
         <item name="android:clickable">false</item>
     </style>
 

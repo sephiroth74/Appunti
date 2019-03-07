@@ -42,7 +42,7 @@
     <dimen name="appunti_bottombar_elevation">6dp</dimen>
 
     <!-- stroke size for the category chip widget -->
-    <dimen name="appunti_category_chip_strokeWidth">0.5dp</dimen>
+    <dimen name="appunti_category_chip_strokeWidth">0.75dp</dimen>
 
     <dimen name="text_size_display_4_material">71sp</dimen>
     <dimen name="text_size_display_3_material">44sp</dimen>

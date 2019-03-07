@@ -63,7 +63,9 @@ class MaterialShapeDrawable(s: Shape?) : ShapeDrawable(s) {
     constructor() : this(null)
 
     init {
-        paint.flags = Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG
+        paint.flags = Paint.ANTI_ALIAS_FLAG
+        paint.strokeCap = Paint.Cap.SQUARE
+        paint.strokeJoin = Paint.Join.ROUND
     }
 
     override fun onBoundsChange(bounds: Rect?) {
@@ -71,6 +73,14 @@ class MaterialShapeDrawable(s: Shape?) : ShapeDrawable(s) {
             bounds?.inset(paint.strokeWidth.roundToInt(), paint.strokeWidth.roundToInt())
         }
         super.onBoundsChange(bounds)
+    }
+
+    override fun getMinimumWidth(): Int {
+        return super.getMinimumWidth()
+    }
+
+    override fun getMinimumHeight(): Int {
+        return super.getMinimumHeight()
     }
 
     class Builder(type: MaterialShape.Type) {
@@ -110,7 +120,8 @@ class MaterialShape(private val type: Type) : Shape() {
     private val bounds = RectF()
 
     private fun invalidatePath() {
-        path.rewind()
+//        path.rewind()
+        path.reset()
 
         when (type) {
             Type.ALL -> invalidatePathAll()
@@ -121,26 +132,30 @@ class MaterialShape(private val type: Type) : Shape() {
 
     private fun invalidatePathStart() {
         path.moveTo(0f, 0f)
-        path.lineTo(bounds.right - bounds.height(), 0f)
+        path.lineTo(bounds.right - bounds.height() / 2, 0f)
         path.arcTo(RectF(bounds.right - bounds.height(), 0f, bounds.right, bounds.height()), 270f, 180f)
         path.lineTo(0f, bounds.height())
         path.close()
     }
 
     private fun invalidatePathAll() {
-        path.moveTo(bounds.height(), 0f)
-        path.lineTo(bounds.right - bounds.height(), 0f)
-        path.arcTo(RectF(bounds.right - bounds.height(), 0f, bounds.right, bounds.height()), 270f, 180f)
-        path.lineTo(bounds.height(), bounds.height())
-        path.arcTo(RectF(0f, 0f, bounds.height(), bounds.height()), 90f, 180f)
+        val h = bounds.height()
+        val w = bounds.width()
+        val r = bounds.right
+
+        path.moveTo(h / 2, 0f)
+        path.lineTo(w - h / 2, 0f)
+        path.arcTo(RectF(r - h, 0f, r, h), 270f, 180f)
+        path.lineTo(h / 2, h)
+        path.arcTo(RectF(0f, 0f, h, h), 90f, 180f)
         path.close()
     }
 
     private fun invalidatePathEnd() {
-        path.moveTo(bounds.height(), 0f)
+        path.moveTo(bounds.height() / 2, 0f)
         path.lineTo(bounds.right, 0f)
         path.lineTo(bounds.right, bounds.height())
-        path.lineTo(bounds.height(), bounds.height())
+        path.lineTo(bounds.height() / 2, bounds.height())
         path.arcTo(RectF(0f, 0f, bounds.height(), bounds.height()), 90f, 180f)
         path.close()
     }
@@ -149,7 +164,6 @@ class MaterialShape(private val type: Type) : Shape() {
         super.onResize(width, height)
         bounds.set(0f, 0f, width, height)
         invalidatePath()
-
     }
 
     override fun draw(canvas: Canvas, paint: Paint) {
