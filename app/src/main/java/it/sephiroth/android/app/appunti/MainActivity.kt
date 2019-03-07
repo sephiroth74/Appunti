@@ -583,7 +583,12 @@ class MainActivity : AppuntiActivityFullscreen() {
                     val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > -1
                     val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > -1
 
+                    val archived = selection.values.indexOfFirst { it.entryArchived == 1 } > -1
+                    val deleted = selection.values.indexOfFirst { it.entryDeleted == 1 } > -1
+
                     updatePinnedMenuItem(actionMode.menu, pinned && (pinned && !unpinned))
+                    updateArchivedMenuItem(actionMode.menu, archived)
+                    updateDeletedMenuItem(actionMode.menu, deleted)
                 }
             }
         }
@@ -592,8 +597,26 @@ class MainActivity : AppuntiActivityFullscreen() {
         private fun updatePinnedMenuItem(menu: Menu?, checked: Boolean) {
             menu?.let { menu ->
                 val menuItem = menu.findItem(R.id.menu_action_pin)
-                if (checked) menuItem.setIcon(R.drawable.appunti_sharp_favourite_24_checked_selector)
-                else menuItem.setIcon(R.drawable.appunti_sharp_favourite_24_unchecked_selector)
+                if (checked) menuItem.setIcon(R.drawable.appunti_sharp_favourite_24_checked_selector_actionmode)
+                else menuItem.setIcon(R.drawable.appunti_sharp_favourite_24_unchecked_selector_actionmode)
+            }
+        }
+
+        @Suppress("NAME_SHADOWING")
+        private fun updateArchivedMenuItem(menu: Menu?, checked: Boolean) {
+            menu?.let { menu ->
+                val menuItem = menu.findItem(R.id.menu_action_archive)
+                if (checked) menuItem.setIcon(R.drawable.appunti_outline_archive_24_checked_selector)
+                else menuItem.setIcon(R.drawable.appunti_outline_archive_24_unchecked_selector_actionmode)
+            }
+        }
+
+        @Suppress("NAME_SHADOWING")
+        private fun updateDeletedMenuItem(menu: Menu?, checked: Boolean) {
+            menu?.let { menu ->
+                val menuItem = menu.findItem(R.id.menu_action_delete)
+                if (checked) menuItem.setIcon(R.drawable.appunti_sharp_restore_from_trash_24_selector)
+                else menuItem.setIcon(R.drawable.appunti_sharp_delete_24_outline_selector_actionmode)
             }
         }
 

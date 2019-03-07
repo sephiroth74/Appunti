@@ -7,6 +7,7 @@
 
     <attr name="navigationbarBackgroundDrawable" format="reference"/>
     <attr name="statusbarBackgroundDrawable" format="reference"/>
+    <attr name="colorAccentDisabled" format="color"/>
 
     <!--<attr name="fontFamilyThin" format="reference" />-->
     <!--<attr name="fontFamilyLight" format="reference" />-->

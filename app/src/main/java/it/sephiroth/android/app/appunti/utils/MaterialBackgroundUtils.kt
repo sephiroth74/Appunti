@@ -18,7 +18,7 @@ object MaterialBackgroundUtils {
                 MaterialShapeDrawable.Builder(MaterialShape.Type.START).tint(
                     context.theme.getColor(
                         context,
-                        R.attr.colorControlActivated
+                        R.attr.colorAccent
                     )
                 )
             )
@@ -26,7 +26,7 @@ object MaterialBackgroundUtils {
                 MaterialShapeDrawable.Builder(MaterialShape.Type.START).tint(
                     context.theme.getColor(
                         context,
-                        R.attr.colorControlActivated
+                        R.attr.colorAccent
                     )
                 )
             )
@@ -88,7 +88,7 @@ object MaterialBackgroundUtils {
             .addSelected(
                 MaterialShapeDrawable
                     .Builder(MaterialShape.Type.END)
-                    .tint(context.theme.getColor(context, R.attr.colorControlActivated))
+                    .tint(context.theme.getColor(context, R.attr.colorAccent))
             )
             .ripple(
                 context.theme.getColor(context, R.attr.colorControlHighlight),

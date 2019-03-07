@@ -7,9 +7,10 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="colorControlActivated">@color/colorControlActivated</item>
+        <item name="colorAccentDisabled">@color/colorAccentDisabled</item>
+        <item name="colorControlActivated">@color/material_grey_850</item>
+        <item name="android:textColorLink">?android:textColorPrimary</item>
 
-        <!--<item name="android:navigationBarColor">?android:attr/windowBackground</item>-->
         <item name="android:windowBackground">@color/background_material_light</item>
         <item name="android:navigationBarColor">@color/background_material_light</item>
         <item name="android:colorForegroundInverse">@color/background_material_dark</item>
@@ -31,7 +32,7 @@
         <!--<item name="alertDialogTheme">@style/Theme.MaterialComponents.Light.Dialog.MinWidth</item>-->
 
         <item name="windowActionModeOverlay">true</item>
-        <item name="actionModeBackground">?attr/colorAccent</item>
+        <item name="actionModeBackground">@color/material_grey_50</item>
         <item name="actionModeStyle">@style/Widget.Appunti.ActionMode</item>
 
         <item name="android:fontFamily">@font/nunito_semibold</item>
@@ -135,11 +136,12 @@
 
     <!-- ActionMode -->
     <style name="Widget.Appunti.ActionMode" parent="Base.Widget.AppCompat.ActionMode">
-        <item name="background">?attr/actionModeBackground</item>
-        <item name="backgroundSplit">?attr/actionModeSplitBackground</item>
+        <item name="background">@color/material_grey_50</item>
+        <item name="backgroundSplit">@color/material_grey_50</item>
         <item name="height">?attr/actionBarSize</item>
         <item name="titleTextStyle">@style/TextAppearance.AppCompat.Widget.ActionMode.Title</item>
         <item name="subtitleTextStyle">@style/TextAppearance.AppCompat.Widget.ActionMode.Subtitle</item>
+        <item name="android:elevation">6dp</item>
     </style>
 
 </resources>
