@@ -80,11 +80,13 @@ object MaterialBackgroundUtils {
                 MaterialShapeDrawable
                     .Builder(MaterialShape.Type.END)
                     .tint(context.theme.getColor(context, R.attr.colorControlHighlight))
+                    .alpha(context.theme.getFloat(context, android.R.attr.disabledAlpha) ?: 1f)
             )
             .addSelected(
                 MaterialShapeDrawable
                     .Builder(MaterialShape.Type.END)
                     .tint(context.theme.getColor(context, R.attr.colorAccent))
+                    .alpha(context.theme.getFloat(context, android.R.attr.disabledAlpha) ?: 1f)
             )
             .ripple(
                 context.theme.getColor(context, R.attr.colorControlHighlight),
