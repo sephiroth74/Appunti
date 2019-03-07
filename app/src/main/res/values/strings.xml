@@ -114,4 +114,5 @@
     <string name="last_modified">Modified %s</string>
     <string name="created_at">Created %s</string>
     <string name="new_entry_item">New Entry Item</string>
+    <string name="entries_restored">Entries Restored</string>
 </resources>

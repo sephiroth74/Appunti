@@ -8,6 +8,7 @@ import android.graphics.Canvas
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.view.*
+import android.widget.Toast
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -344,7 +345,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                 if (viewHolder.itemViewType == ItemEntryListAdapter.TYPE_ENTRY) {
                     val entry = (viewHolder as ItemEntryListAdapter.EntryViewHolder).entry
                     entry?.let { entry ->
-                        archiveEntries(listOf(entry))
+                        setEntriesArchived(listOf(entry), true)
                     }
                 }
             }
@@ -502,7 +503,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                     Snackbar
                         .LENGTH_LONG
                 )
-                .setAction(getString(R.string.undo_uppercase)) { restoreDeletedEntries(values) }
+                .setAction(getString(R.string.undo_uppercase)) { setEntriesDeleted(values, false) }
                 .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
 
         showSnackBack(mSnackbar)
@@ -518,46 +519,43 @@ class MainActivity : AppuntiActivityFullscreen() {
                     Snackbar.LENGTH_LONG
                 )
                 .setAction(getString(R.string.undo_uppercase)) {
-                    DatabaseHelper.setEntriesArchived(values, false).subscribe()
+                    setEntriesArchived(values, false)
                 }
                 .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
         showSnackBack(mSnackbar)
     }
 
     @SuppressLint("CheckResult")
-    private fun archiveEntries(entries: List<Entry>) {
+    private fun setEntriesArchived(entries: List<Entry>, archived: Boolean) {
         DatabaseHelper
-            .setEntriesArchived(entries, true)
+            .setEntriesArchived(entries, archived)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { result, error ->
                 error?.let {
                     Timber.e(error)
                 } ?: run {
-                    onEntriesArchived(entries)
+                    if (archived) {
+                        onEntriesArchived(entries)
+                    } else {
+                        Toast.makeText(this, R.string.entries_restored, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
     }
 
     @SuppressLint("CheckResult")
-    private fun deleteEntries(entries: List<Entry>) {
-        DatabaseHelper.setEntriesDeleted(entries, true)
+    private fun setEntriesDeleted(entries: List<Entry>, deleted: Boolean) {
+        DatabaseHelper.setEntriesDeleted(entries, deleted)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { success, error ->
                 error?.let {
                     Timber.e("error=$error")
                 } ?: run {
-                    onEntriesDeleted(entries)
-                }
-            }
-    }
-
-    @SuppressLint("CheckResult")
-    private fun restoreDeletedEntries(entries: List<Entry>) {
-        DatabaseHelper.setEntriesDeleted(entries, false)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { success, error ->
-                error?.let {
-                    Timber.e("error=$error")
+                    if (deleted) {
+                        onEntriesDeleted(entries)
+                    } else {
+                        Toast.makeText(this, R.string.entries_restored, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
     }
@@ -653,15 +651,25 @@ class MainActivity : AppuntiActivityFullscreen() {
 
                 R.id.menu_action_delete -> {
                     tracker?.let { tracker ->
+                        val hasDeleted = tracker.selection.values.indexOfFirst { it.entryDeleted == 1 } > -1
                         val entries = tracker.selection.values.toList()
-                        deleteEntries(entries)
+                        if (hasDeleted) {
+                            setEntriesDeleted(entries, false)
+                        } else {
+                            setEntriesDeleted(entries, true)
+                        }
                     }
                 }
 
                 R.id.menu_action_archive -> {
                     tracker?.let { tracker ->
+                        val hasArchived = tracker.selection.values.indexOfFirst { it.entryArchived == 1 } > -1
                         val entries = tracker.selection.values.toList()
-                        archiveEntries(entries)
+                        if (hasArchived) {
+                            setEntriesArchived(entries, false)
+                        } else {
+                            setEntriesArchived(entries, true)
+                        }
                     }
 
                 }
