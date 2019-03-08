@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.os.Bundle
+import android.os.Parcelable
 import android.speech.RecognizerIntent
 import android.view.*
 import android.widget.Toast
@@ -24,6 +25,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
+import com.leinardi.android.speeddial.SpeedDialActionItem
 import getColor
 import getColorStateList
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -102,6 +104,38 @@ class MainActivity : AppuntiActivityFullscreen() {
 //        drawerLayout.setStatusBarBackgroundColor(theme.getColor(this, android.R.attr.windowBackground))
     }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+
+        val listState = itemsRecycler.layoutManager?.onSaveInstanceState()
+        outState?.putParcelable("LIST_STATE_KEY", listState)
+    }
+
+    private var mListState: Parcelable? = null
+
+    override fun onRestoreInstanceState(state: Bundle?) {
+        super.onRestoreInstanceState(state)
+
+        if (state != null)
+            mListState = state.getParcelable("LIST_STATE_KEY")
+
+    }
+
+    override fun onPause() {
+        super.onPause()
+        speedDial.close()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        mListState?.let {
+            itemsRecycler.layoutManager?.onRestoreInstanceState(it)
+        }
+
+        mListState = null
+    }
+
     override fun onNewIntent(intent: Intent?) {
         Timber.i("onNewIntent($intent)")
         super.onNewIntent(intent)
@@ -177,10 +211,33 @@ class MainActivity : AppuntiActivityFullscreen() {
     }
 
     private fun setupFloatingActionButton() {
-        val params = floatingActionButton.layoutParams as ViewGroup.MarginLayoutParams
+//        val params = floatingActionButton.layoutParams as ViewGroup.MarginLayoutParams
+//        params.bottomMargin += navigationbarHeight
+
+//        floatingActionButton.setOnClickListener { startDetailActivity() }
+
+        val params = speedDial.layoutParams as ViewGroup.MarginLayoutParams
         params.bottomMargin += navigationbarHeight
 
-        floatingActionButton.setOnClickListener { startDetailActivity() }
+        speedDial.addAllActionItems(
+            mutableListOf(
+                SpeedDialActionItem.Builder(R.id.fab_menu_new_text_note, R.drawable.sharp_text_fields_24)
+                    .setLabel("New Text Note")
+                    .create(),
+                SpeedDialActionItem.Builder(R.id.fab_menu_new_list_note, R.drawable.sharp_format_list_bulleted_24)
+                    .setLabel("New List Note")
+                    .create()
+            )
+        )
+
+        speedDial.setOnActionSelectedListener { it ->
+            when (it.id) {
+                R.id.fab_menu_new_text_note -> startDetailActivity(Entry.EntryType.TEXT)
+                R.id.fab_menu_new_list_note -> startDetailActivity(Entry.EntryType.LIST)
+            }
+            speedDial.close(true)
+            true
+        }
     }
 
     private fun setupRecyclerView() {
@@ -455,8 +512,8 @@ class MainActivity : AppuntiActivityFullscreen() {
         }
     }
 
-    private fun startDetailActivity() {
-        startDetailActivityFromIntent(IntentUtils.createNewEntryIntent(this), null)
+    private fun startDetailActivity(type: Entry.EntryType) {
+        startDetailActivityFromIntent(IntentUtils.createNewEntryIntent(this, type), null)
     }
 
     private fun startDetailActivity(holder: ItemEntryListAdapter.EntryViewHolder, entry: Entry) {

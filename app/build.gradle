@@ -7,7 +7,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "it.sephiroth.android.app.appunti"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -109,6 +109,8 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.11.3'
 
     implementation 'com.jakewharton.timber:timber:4.7.1'
+
+    implementation 'com.leinardi.android:speed-dial:2.0.1'
 
     testImplementation 'junit:junit:4.12'
 

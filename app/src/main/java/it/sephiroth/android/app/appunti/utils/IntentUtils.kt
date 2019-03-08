@@ -17,15 +17,17 @@ import timber.log.Timber
 object IntentUtils {
 
     const val KEY_ENTRY_ID = "entryID"
+    const val KEY_ENTRY_TYPE = "entryType"
     const val KEY_REMOVE_ALARM = "removeAlarm"
     const val KEY_QUERY = SearchManager.QUERY
     const val KEY_CATEGORY_ID = "categoryID"
 
     const val ACTION_ASK_NEW_CATEGORY_STARTUP = "ask_for_new_category_startup"
 
-    fun createNewEntryIntent(context: Context): Intent {
+    fun createNewEntryIntent(context: Context, type: Entry.EntryType = Entry.EntryType.TEXT): Intent {
         return Intent(context, DetailActivity::class.java).apply {
             action = Intent.ACTION_CREATE_DOCUMENT
+            putExtra(KEY_ENTRY_TYPE, type.ordinal)
         }
     }
 

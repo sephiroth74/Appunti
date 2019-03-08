@@ -188,6 +188,13 @@ class DetailActivity : AppuntiActivity() {
                     isNewDocument = true
                     disablePostponedTransitions = true
                     newEntry = Entry()
+
+                    if(intent.hasExtra(IntentUtils.KEY_ENTRY_TYPE)) {
+                        val type = Entry.EntryType.values()[intent.getIntExtra(IntentUtils.KEY_ENTRY_TYPE, 0)]
+                        if(type == Entry.EntryType.LIST) {
+                            newEntry.convertToList()
+                        }
+                    }
                 }
 
                 Intent.ACTION_EDIT -> {
