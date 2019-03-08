@@ -13,6 +13,7 @@ import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
+import it.sephiroth.android.app.appunti.ext.convertToList
 import it.sephiroth.android.app.appunti.ext.ioThread
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.ShortcutHelper
@@ -70,18 +71,28 @@ class MainApplication : Application() {
 
         Entry().apply {
             this.entryTitle = "Welcome to your first Note"
-            this.entryText = "This is an simple text note so show you how simple it is"
+            this.entryText =
+                "This is an simple text note so show you how simple it is.\n\nAlessandro\nhttp://blog.sephiroth.it"
             this.category = category
             this.entryPinned = 1
             this.touch()
             this.save()
         }
 
-        Category().apply {
+        category = Category().apply {
             categoryTitle = getString(R.string.demo_category_work)
             categoryColorIndex = 6
             save()
         }
+
+        Entry.fromString("[ ] First entry\n[ ] Second entry\n[x] Also an be marked as done\n")
+            .apply {
+                this.entryTitle = "You can create also lists"
+                this.category = category
+                this.entryPinned = 0
+                this.touch()
+                this.save()
+            }
 
         Category().apply {
             categoryTitle = getString(R.string.demo_category_other)
@@ -89,6 +100,5 @@ class MainApplication : Application() {
             save()
         }
 
-//        }.build().execute()
     }
 }
