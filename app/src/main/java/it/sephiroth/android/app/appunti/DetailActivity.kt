@@ -189,9 +189,9 @@ class DetailActivity : AppuntiActivity() {
                     disablePostponedTransitions = true
                     newEntry = Entry()
 
-                    if(intent.hasExtra(IntentUtils.KEY_ENTRY_TYPE)) {
+                    if (intent.hasExtra(IntentUtils.KEY_ENTRY_TYPE)) {
                         val type = Entry.EntryType.values()[intent.getIntExtra(IntentUtils.KEY_ENTRY_TYPE, 0)]
-                        if(type == Entry.EntryType.LIST) {
+                        if (type == Entry.EntryType.LIST) {
                             newEntry.convertToList()
                         }
                     }
