@@ -4,17 +4,17 @@ import android.app.Application
 import android.os.Build
 import com.dbflow5.config.DatabaseConfig
 import com.dbflow5.config.FlowConfig
-import com.dbflow5.config.FlowLog
 import com.dbflow5.config.FlowManager
-import com.dbflow5.query.list
-import com.dbflow5.query.select
+import com.dbflow5.query.selectCountOf
 import com.dbflow5.runtime.DirectModelNotifier
-import com.dbflow5.structure.insert
+import com.dbflow5.structure.save
 import com.jakewharton.threetenabp.AndroidThreeTen
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
+import it.sephiroth.android.app.appunti.db.tables.Entry_Table
 import it.sephiroth.android.app.appunti.ext.ioThread
+import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.ShortcutHelper
 import timber.log.Timber
 
@@ -33,50 +33,62 @@ class MainApplication : Application() {
 
 //        FlowLog.setMinimumLoggingLevel(FlowLog.Level.V)
 
-        FlowManager.init(FlowConfig.Builder(this)
-                .database(DatabaseConfig.Builder(AppDatabase::class.java)
+        FlowManager.init(
+            FlowConfig.Builder(this)
+                .database(
+                    DatabaseConfig.Builder(AppDatabase::class.java)
                         .modelNotifier(DirectModelNotifier.get())
-                        .build())
-                .build())
+                        .build()
+                )
+                .build()
+        )
 
         ShortcutHelper.getInstance(this).updateShortcuts()
 
         ioThread {
-            val size = select().from(Entry::class).list.size
-            var categories = select().from(Category::class).list.toList()
+            if (SettingsManager.getInstance(this).isFirstLaunch) {
 
-            Timber.d("entries size: $size")
+                val hasData = selectCountOf(Entry_Table.entryID)
+                    .from(Entry::class)
+                    .hasData(FlowManager.getDatabase(AppDatabase::class.java))
 
-            if (categories.isEmpty()) {
-                for (i in 0..3) {
-                    val category = Category()
-                    category.categoryTitle = "Category $i"
-                    category.categoryType = Category.CategoryType.USER
-                    category.categoryColorIndex = i
-                    val id =
-                            category.insert()
-
-                    Timber.v("added category = $id")
-                }
-
-                categories = select().from(Category::class).list.toList()
-            }
-
-
-            if (size < 3) {
-                for (i in 0..3) {
-                    val entry = Entry()
-                    entry.entryTitle = "Entry ${size + i}"
-                    entry.entryPinned = 0
-                    entry.entryPriority = 0
-                    entry.entryText = getString(R.string.lorem_ipsum)
-                    entry.category = categories[i]
-                    val id = entry.insert()
-
-                    Timber.v("added entry = $id")
+                if (!hasData) {
+                    prepopulateDatabase()
                 }
             }
-
         }
+    }
+
+    private fun prepopulateDatabase() {
+        Timber.i("prepopulateDatabase")
+
+        var category = Category().apply {
+            categoryTitle = getString(R.string.demo_category_personal)
+            categoryColorIndex = 9
+        }
+        category.save()
+
+        Entry().apply {
+            this.entryTitle = "Welcome to your first Note"
+            this.entryText = "This is an simple text note so show you how simple it is"
+            this.category = category
+            this.entryPinned = 1
+            this.touch()
+            this.save()
+        }
+
+        Category().apply {
+            categoryTitle = getString(R.string.demo_category_work)
+            categoryColorIndex = 6
+            save()
+        }
+
+        Category().apply {
+            categoryTitle = getString(R.string.demo_category_other)
+            categoryColorIndex = 2
+            save()
+        }
+
+//        }.build().execute()
     }
 }

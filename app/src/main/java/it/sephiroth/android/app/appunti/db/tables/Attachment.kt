@@ -15,6 +15,7 @@ class Attachment() : BaseRXModel() {
         attachmentMime = other.attachmentMime
         attachmentPath = other.attachmentPath
         attachmentOriginalPath = other.attachmentOriginalPath
+        attachmentDescription = other.attachmentDescription
     }
 
     enum class AttachmentType { LOCAL }

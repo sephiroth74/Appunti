@@ -27,19 +27,6 @@
 
         <include layout="@layout/appunti_search_view_toolbar"/>
 
-        <!--<com.google.android.material.floatingactionbutton.FloatingActionButton-->
-        <!--android:id="@+id/floatingActionButton"-->
-        <!--style="@style/Widget.MaterialComponents.FloatingActionButton"-->
-        <!--app:borderWidth="0dp"-->
-        <!--app:backgroundTint="?android:attr/windowBackground"-->
-        <!--app:rippleColor="?attr/colorControlActivated"-->
-        <!--android:layout_gravity="bottom|end"-->
-        <!--android:layout_margin="16dp"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--app:srcCompat="@drawable/sharp_add_24"-->
-        <!--/>-->
-
         <com.leinardi.android.speeddial.SpeedDialView
                 android:id="@+id/speedDial"
                 android:layout_marginEnd="16dp"

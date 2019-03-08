@@ -85,7 +85,7 @@
 
     <style name="Theme.Appunti.Dark.Base.NoActionbar.FullScreen">
         <item name="android:fitsSystemWindows">@bool/fullscreen_style_fit_system_windows</item>
-        <item name="navigationbarBackgroundDrawable">@drawable/appunti_navigationbar_background_light</item>
+        <item name="navigationbarBackgroundDrawable">@drawable/appunti_navigationbar_background_dark</item>
         <item name="statusbarBackgroundDrawable">@drawable/appunti_statusbar_background_light</item>
     </style>
 

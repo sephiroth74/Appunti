@@ -58,6 +58,9 @@
     <string name="edit_reminder_dialog_text">Questo Appunto ha un alarme impostato per\\n%s.\\nVuoi cambiarlo o
         rimuoverlo?
     </string>
+    <string name="demo_category_personal">Personale</string>
+    <string name="demo_category_work">Lavoro</string>
+    <string name="demo_category_other">Altro</string>
 
     <plurals name="entries_archived_title">
         <item quantity="one">Appunto Archiviato</item>

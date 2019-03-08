@@ -122,7 +122,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         DatabaseHelper
             .getEntries { group.buildQuery(this) }
             .observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
-                Timber.v("[${currentThread()}] entries returned = ${result.size}")
+                Timber.v("[${currentThread()}] entries returned = ${result?.size}")
                 (entries as MutableLiveData).value = result
 
                 error?.let {
