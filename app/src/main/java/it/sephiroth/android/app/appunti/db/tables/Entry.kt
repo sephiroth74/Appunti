@@ -18,6 +18,7 @@ import it.sephiroth.android.app.appunti.AlarmReceiver
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.EntryTypeConverter
 import it.sephiroth.android.app.appunti.db.InstantTypeConverter
+import it.sephiroth.android.app.appunti.ext.asList
 import it.sephiroth.android.app.appunti.utils.EntryIOUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import org.threeten.bp.Instant
@@ -113,13 +114,17 @@ class Entry() : BaseRXModel() {
         hasAttachments?.let {
             return it
         } ?: run {
-            val result = selectCountOf(Attachment_Table.attachmentEntryID_entryID)
-                .from(Attachment::class)
-                .where(Attachment_Table.attachmentEntryID_entryID.eq(entryID))
-                .hasData(FlowManager.getDatabase(AppDatabase::class.java))
+            val result = hasAttachmentsInternal()
             hasAttachments = result
             return result
         }
+    }
+
+    private fun hasAttachmentsInternal(): Boolean {
+        return selectCountOf(Attachment_Table.attachmentEntryID_entryID)
+            .from(Attachment::class)
+            .where(Attachment_Table.attachmentEntryID_entryID.eq(entryID))
+            .hasData(FlowManager.getDatabase(AppDatabase::class.java))
     }
 
     fun setAttachmentList(value: List<Attachment>?) {
@@ -238,6 +243,21 @@ class Entry() : BaseRXModel() {
 
     fun getColor(context: Context): Int {
         return ResourceUtils.getCategoryColors(context)[category?.categoryColorIndex ?: 0]
+    }
+
+    fun isEmpty(): Boolean {
+        val titleEmpty = entryTitle.isBlank()
+        val hasAttachments = hasAttachmentsInternal()
+
+        val textEmpty = if (entryType == EntryType.TEXT) {
+            entryText.isBlank()
+        } else {
+            asList()?.first.isNullOrEmpty()
+        }
+
+        Timber.v("title=$titleEmpty, attachments=$hasAttachments, text=$textEmpty")
+
+        return titleEmpty && !hasAttachments && textEmpty
     }
 
     fun isNew() = entryID == 0L

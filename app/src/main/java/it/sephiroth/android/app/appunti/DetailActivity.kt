@@ -34,6 +34,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.dbflow5.structure.delete
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import getColor
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -70,7 +71,7 @@ class DetailActivity : AppuntiActivity() {
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<FrameLayout>
     private lateinit var model: DetailViewModel
 
-    private var isNewDocument: Boolean = false
+    private var disablePostponedTransitions: Boolean = false
     private var currentEntryID: Long? = null
 
     private var shouldRemoveAlarm: Boolean = false
@@ -154,8 +155,13 @@ class DetailActivity : AppuntiActivity() {
 
         tickTimer?.dispose()
 
-        if (model.modified) {
-            model.save()
+        if (model.isNew && model.entry.value?.isEmpty() == true) {
+            Timber.v("new entry is empty. delete it")
+            model.entry.value?.delete()
+        } else {
+            if (model.modified) {
+                model.save()
+            }
         }
 
         super.onDestroy()
@@ -165,13 +171,14 @@ class DetailActivity : AppuntiActivity() {
         Timber.i("handleIntent($intent, $savedInstanceState)")
         var entryID: Long? = null
         var newEntry: Entry? = null
+        var isNewDocument = false
 
         Timber.v("action=${intent.action}")
 
         savedInstanceState?.let { bundle ->
             if (bundle.containsKey(IntentUtils.KEY_ENTRY_ID)) {
                 entryID = bundle.getLong(IntentUtils.KEY_ENTRY_ID)
-                isNewDocument = false
+                disablePostponedTransitions = false
             }
         }
 
@@ -179,17 +186,19 @@ class DetailActivity : AppuntiActivity() {
             when (intent.action) {
                 Intent.ACTION_CREATE_DOCUMENT -> {
                     isNewDocument = true
+                    disablePostponedTransitions = true
                     newEntry = Entry()
                 }
 
                 Intent.ACTION_EDIT -> {
-                    isNewDocument = false
+                    disablePostponedTransitions = false
                     entryID = intent.getLongExtra(IntentUtils.KEY_ENTRY_ID, 0)
                     shouldRemoveAlarm = intent.getBooleanExtra(IntentUtils.KEY_REMOVE_ALARM, false)
                 }
 
                 Intent.ACTION_SEND -> {
                     isNewDocument = true
+                    disablePostponedTransitions = true
                     newEntry = Entry
                         .fromString(intent.getStringExtra(Intent.EXTRA_TEXT))
                         .apply {
@@ -207,7 +216,7 @@ class DetailActivity : AppuntiActivity() {
             model.entryID = it
         } ?: run {
             newEntry?.let {
-                model.createNewEntry(it)
+                model.createNewEntry(it, isNewDocument)
             }
         }
 
@@ -607,7 +616,7 @@ class DetailActivity : AppuntiActivity() {
 
         // invoke the postponed transition only the first time
         // when it's not a new document
-        if (!isNewDocument) {
+        if (!disablePostponedTransitions) {
             entryTitle.doOnPreDraw {
                 startPostponedEnterTransition()
                 entryTitle.transitionName = null
@@ -616,7 +625,7 @@ class DetailActivity : AppuntiActivity() {
             }
         }
 
-        isNewDocument = false
+        disablePostponedTransitions = false
     }
 
 

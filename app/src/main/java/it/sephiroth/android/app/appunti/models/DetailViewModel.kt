@@ -27,6 +27,8 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
 
     var modified = false
 
+    var isNew = false
+
     var entryID: Long?
         @SuppressLint("CheckResult")
         set(value) {
@@ -37,6 +39,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe { result, error ->
                         error?.printStackTrace()
+                        isNew = false
                         setEntry(result)
                     }
             }
@@ -45,8 +48,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
             return entry.value?.entryID
         }
 
-    fun createNewEntry(entry: Entry): Long? {
+    fun createNewEntry(entry: Entry, isNewEntry: Boolean): Long? {
         if (entry.save()) {
+            isNew = isNewEntry
             setEntry(entry)
             return entry.entryID
         }
