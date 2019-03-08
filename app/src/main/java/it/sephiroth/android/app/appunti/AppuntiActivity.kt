@@ -38,24 +38,38 @@ abstract class AppuntiActivity(
         super.onCreate(savedInstanceState)
 
         isFullScreen =
-            wantsFullscreen && !isInMultiWindow && !resources.getBoolean(R.bool.fullscreen_style_fit_system_windows) && resources.isNavBarAtBottom
+            wantsFullscreen && !isInMultiWindow && !resources.getBoolean(R.bool.fullscreen_style_fit_system_windows) &&
+                    resources.isNavBarAtBottom
+//                    (if (resources.isTablet) resources.isNavBarAtBottom else true)
 
         isDarkTheme = SettingsManager.getInstance(this).darkTheme
         setTheme(if (isDarkTheme) darkTheme else lightTheme)
 
         Timber.v("SDK = ${Build.VERSION.SDK_INT}")
-        Timber.v("fullscreen = $isFullScreen")
+        if (BuildConfig.DEBUG) {
+            Timber.v("wantsFullscreen = $wantsFullscreen")
+            Timber.v("fullscreen = $isFullScreen")
+            Timber.v("resources.isNavBarAtBottom = ${resources.isNavBarAtBottom}")
+            Timber.v("isInMultiWindow = $isInMultiWindow")
+            Timber.v("fullscreen_style_fit_system_windows = ${resources.getBoolean(R.bool.fullscreen_style_fit_system_windows)}")
+        }
 
         if (isFullScreen) {
             window.setFlags(
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
             )
+
             window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+            window.statusBarColor = theme.getColor(this, android.R.attr.statusBarColor)
+            window.navigationBarColor = theme.getColor(this, android.R.attr.navigationBarColor)
+        } else {
+            if(!isInMultiWindow) {
+                window.statusBarColor = theme.getColor(this, android.R.attr.navigationBarColor)
+                window.navigationBarColor = theme.getColor(this, android.R.attr.navigationBarColor)
+            }
         }
 
-        window.statusBarColor = theme.getColor(this, android.R.attr.statusBarColor)
-        window.navigationBarColor = theme.getColor(this, android.R.attr.navigationBarColor)
 
         fitSystemWindows = !isFullScreen //if (isInMultiWindow) true else isFullScreen
 
