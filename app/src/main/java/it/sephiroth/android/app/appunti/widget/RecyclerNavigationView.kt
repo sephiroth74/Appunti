@@ -34,8 +34,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
     private var categorySelectedListener: ((Category?) -> Unit)? = null
     private var navigationItemSelectedListener: ((Int) -> Unit)? = null
 
-    private val accentColorStateList = ColorStateList.valueOf(context.theme.getColor(context, R.attr.colorAccent))
-
     init {
         mLifecycleRegistry.markState(Lifecycle.State.INITIALIZED)
         adapter = NavigationItemsAdapter(context, mutableListOf())
@@ -136,7 +134,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
                     false
                 )
 
-                view.background = MaterialBackgroundUtils.navigationItemDrawable(context)
                 view.setOnClickListener {
                     navigationItemSelectedListener?.invoke(viewType)
                 }
@@ -182,7 +179,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
                 }
             } else {
                 val view = layoutInflater.inflate(R.layout.appunti_main_drawer_navigation_item_checkable, parent, false)
-                view.background = MaterialBackgroundUtils.navigationItemDrawable(context)
                 return ViewHolderCategoryItem(view)
             }
         }
@@ -236,15 +232,10 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
                     val item = getItem(position)
                     holder.category = item
-
-                    item?.let { category ->
-                        holder.textView.text = category.categoryTitle
-                        holder.textView.isChecked = model?.group?.getCategoryID() == category.categoryID
-                        holder.itemView.backgroundTintList = ColorStateList.valueOf(category.getColor(context))
+                    holder.isChecked = item?.let { category ->
+                        model?.group?.getCategoryID() == category.categoryID
                     } ?: kotlin.run {
-                        holder.textView.text = context.getString(R.string.categories_all)
-                        holder.textView.isChecked = model?.let {
-                            holder.itemView.backgroundTintList = accentColorStateList
+                        model?.let {
                             !it.group.isDeleted() && !it.group.isArchived() && it.group.getCategoryID() == null
                         } ?: false
                     }
@@ -273,11 +264,68 @@ class RecyclerNavigationView @JvmOverloads constructor(
     class ViewHolderCategoryHeader(view: View) : ViewHolderBase(view)
 
     class ViewHolderCategoryItem(view: View) : ViewHolderSelectableCategory(view) {
+        val colorStateListCache = hashMapOf<Int, ColorStateList>()
+
+        private fun getColorStateList(context: Context, category: Category?): ColorStateList? {
+            category?.let { category ->
+                return if (colorStateListCache.containsKey(category.categoryColorIndex)) {
+                    colorStateListCache[category.categoryColorIndex]
+                } else {
+                    colorStateListCache[category.categoryColorIndex] =
+                        ColorStateList.valueOf(category.getColor(context))
+                    colorStateListCache[category.categoryColorIndex]
+                }
+            } ?: run {
+                return accentColorStateList
+            }
+        }
+
         var category: Category? = null
+            set(value) {
+                if (field != value) {
+                    field = value
+//                    itemView.backgroundTintList = getColorStateList(context, category)
+//
+                    value?.let { category ->
+                        textView.text = category.categoryTitle
+
+                    } ?: run {
+                        textView.text = context.getString(R.string.categories_all)
+                    }
+                }
+            }
+
+        var isChecked: Boolean
+            get() = textView.isChecked
+            set(value) {
+                if (true) {
+                    textView.isChecked = value
+                    //textView.setTextColor(if (value) getColorStateList(context, category) else textColors)
+                    //textView.compoundDrawableTintList = if (value) getColorStateList(context, category) else null
+                    textView.backgroundTintList = if (value) getColorStateList(context, category) else null
+                }
+            }
+
+        init {
+            itemView.backgroundTintList = accentColorStateList
+            textView.text = context.getString(R.string.categories_all)
+        }
     }
 
     open class ViewHolderSelectableCategory(view: View) : ViewHolderBase(view) {
+
+        val accentColorStateList by lazy {
+            ColorStateList.valueOf(context.theme.getColor(context, R.attr.colorAccent))
+        }
+
+        val context by lazy { itemView.context }
         val textView = view as CheckedTextView
+        val drawableTint = textView.compoundDrawableTintList
+        val textColors = textView.textColors
+
+        init {
+            itemView.background = MaterialBackgroundUtils.navigationItemDrawable(context)
+        }
     }
 
     open class ViewHolderSwitch(view: View) : ViewHolderBase(view) {
