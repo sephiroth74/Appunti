@@ -329,7 +329,10 @@ class ItemEntryListAdapter(
                     searchText = searchQuery
                     notifyDataSetChanged()
                 } else {
-                    result.dispatchUpdatesTo(this)
+
+                    // https://stackoverflow.com/a/37110764
+                    // result.dispatchUpdatesTo(this)
+                    notifyDataSetChanged()
                 }
             }
 

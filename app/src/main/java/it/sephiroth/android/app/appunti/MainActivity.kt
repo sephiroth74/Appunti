@@ -140,6 +140,10 @@ class MainActivity : AppuntiActivityFullscreen() {
         model.entries.observe(this, Observer {
             Timber.i("[${currentThread()}] entries changed")
             tracker?.clearSelection()
+
+            // https://stackoverflow.com/a/37110764
+            itemsRecycler.recycledViewPool.clear()
+
             adapter.update(it)
         })
 
