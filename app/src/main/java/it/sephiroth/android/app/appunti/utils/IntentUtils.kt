@@ -42,10 +42,36 @@ object IntentUtils {
     }
 
     fun createShareEntryIntent(context: Context, entry: Entry): Intent {
-        return Intent(android.content.Intent.ACTION_SEND).apply {
-            type = FileSystemUtils.TEXT_MIME_TYPE
-            putExtra(android.content.Intent.EXTRA_SUBJECT, entry.entryTitle)
-            putExtra(android.content.Intent.EXTRA_TEXT, EntryIOUtils.convertEntryToString(entry))
+        val attachments = entry.getAttachments()
+
+        if (attachments.isNullOrEmpty()) {
+            return Intent(android.content.Intent.ACTION_SEND).apply {
+                type = FileSystemUtils.TEXT_MIME_TYPE
+                putExtra(android.content.Intent.EXTRA_SUBJECT, entry.entryTitle)
+                putExtra(android.content.Intent.EXTRA_TEXT, EntryIOUtils.convertEntryToString(entry))
+            }
+        } else {
+            if (attachments.size > 1) {
+                val list = arrayListOf<Uri>()
+                attachments.forEach { attachment ->
+                    attachment.getFileUri(context)?.let { list.add(it) }
+                }
+
+                return Intent(android.content.Intent.ACTION_SEND_MULTIPLE).apply {
+                    type = "*/*"
+                    putExtra(android.content.Intent.EXTRA_SUBJECT, entry.entryTitle)
+                    putExtra(android.content.Intent.EXTRA_TEXT, EntryIOUtils.convertEntryToString(entry))
+                    putParcelableArrayListExtra(Intent.EXTRA_STREAM, list)
+                }
+            } else {
+                val attachment = attachments.get(0)
+                return Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = attachment.attachmentMime
+                    putExtra(android.content.Intent.EXTRA_SUBJECT, entry.entryTitle)
+                    putExtra(android.content.Intent.EXTRA_TEXT, EntryIOUtils.convertEntryToString(entry))
+                    putExtra(Intent.EXTRA_STREAM, attachment.getFileUri(context))
+                }
+            }
         }
     }
 
