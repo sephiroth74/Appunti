@@ -16,6 +16,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
 import getColor
+import isTablet
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.models.MainViewModel
@@ -108,6 +109,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
     inner class NavigationItemsAdapter(context: Context, var values: List<Category>) :
         RecyclerView.Adapter<ViewHolderBase>() {
+        val isTablet = context.resources.isTablet
 
         init {
             setHasStableIds(true)
@@ -174,6 +176,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
                 }
             } else if (viewType == TYPE_DISPLAY_TYPE) {
                 val view = layoutInflater.inflate(R.layout.appunti_main_drawer_navigation_item_switch, parent, false)
+
                 return ViewHolderSwitch(view).also {
                     it.switchView.setText(R.string.display_as_grid)
                 }
@@ -184,7 +187,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
         }
 
         override fun getItemCount(): Int {
-            return values.size + 11
+            return values.size + if (isTablet) 10 else 11
         }
 
         override fun getItemViewType(position: Int): Int {
@@ -197,7 +200,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
                 values.size + 6 -> TYPE_LABEL_NEW_CATEGORY
                 values.size + 7 -> TYPE_LABEL_EDIT_CATEGORY
                 values.size + 8 -> TYPE_SEPARATOR
-                values.size + 9 -> TYPE_DISPLAY_TYPE
+                values.size + 9 -> if (isTablet) TYPE_SETTINGS else TYPE_DISPLAY_TYPE
                 values.size + 10 -> TYPE_SETTINGS
                 else -> TYPE_LABEL_CATEGORY_ITEM
             }
@@ -284,8 +287,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
             set(value) {
                 if (field != value) {
                     field = value
-//                    itemView.backgroundTintList = getColorStateList(context, category)
-//
                     value?.let { category ->
                         textView.text = category.categoryTitle
 
@@ -300,8 +301,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
             set(value) {
                 if (true) {
                     textView.isChecked = value
-                    //textView.setTextColor(if (value) getColorStateList(context, category) else textColors)
-                    //textView.compoundDrawableTintList = if (value) getColorStateList(context, category) else null
                     textView.backgroundTintList = if (value) getColorStateList(context, category) else null
                 }
             }
@@ -320,8 +319,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
         val context by lazy { itemView.context }
         val textView = view as CheckedTextView
-        val drawableTint = textView.compoundDrawableTintList
-        val textColors = textView.textColors
 
         init {
             itemView.background = MaterialBackgroundUtils.navigationItemDrawable(context)

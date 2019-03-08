@@ -23,7 +23,7 @@ fun Attachment.getPath(context: Context): RelativePath {
     return RelativePath(FileSystemUtils.getPrivateFilesDir(context), attachmentPath)
 }
 
-fun Attachment.getFileUri(context: Context): Uri? {
+fun Attachment.getFileUri(context: Context): Uri {
     val file = getFile(context)
     Timber.v("file: $file")
     return FileProvider.getUriForFile(

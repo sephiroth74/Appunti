@@ -5,7 +5,8 @@
     <string name="category_default">Uncategorized</string>
 
     <!-- debug -->
-    <string name="lorem_ipsum" translatable="false">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum id fringilla augue,
+    <string name="lorem_ipsum" translatable="false">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum
+        id fringilla augue,
         nec convallis
         mi. Pellentesque auctor iaculis ex nec dignissim. Proin elit magna, mattis at vulputate nec, laoreet ut neque.
         Morbi
@@ -78,7 +79,7 @@
     <string name="demo_category_personal">Personal</string>
     <string name="demo_category_work">Work</string>
     <string name="demo_category_other">Other</string>
-
+    <string name="dark_theme">Dark Theme</string>
 
     <plurals name="entries_archived_title">
         <item quantity="one">Entry Archived</item>

@@ -218,11 +218,9 @@ class MainActivity : AppuntiActivityFullscreen() {
             mutableListOf(
                 SpeedDialActionItem.Builder(R.id.fab_menu_new_text_note, R.drawable.sharp_text_fields_24)
                     .setLabel("New Text Note")
-                    .setLabelBackgroundColor(0)
                     .create(),
                 SpeedDialActionItem.Builder(R.id.fab_menu_new_list_note, R.drawable.sharp_format_list_bulleted_24)
                     .setLabel("New List Note")
-                    .setLabelBackgroundColor(0)
                     .create()
             )
         )

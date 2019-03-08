@@ -375,6 +375,9 @@ class ItemEntryListAdapter(
         val alarmView: ImageView by lazy { view.id_alarm }
         val attachmentView: ImageView by lazy { view.id_attachment }
 
+        val maxLines: Int by lazy { view.context.resources.getInteger(R.integer.list_items_max_lines_display) }
+        val maxChars: Int by lazy { view.context.resources.getInteger(R.integer.list_items_max_chars_display) }
+
         init {
             val context = categoryTextView.context
             categoryTextView.background = MaterialBackgroundUtils.categoryChip(context)
@@ -398,7 +401,7 @@ class ItemEntryListAdapter(
 
             titleTextView.text = entryTitle.toSpannable()
 
-            contentTextView.text = entry.getSummary(itemView.context, contentTextView.textSize, 100, 6)
+            contentTextView.text = entry.getSummary(itemView.context, contentTextView.textSize, maxChars, maxLines)
             categoryTextView.text = entry.category?.categoryTitle
 
             alarmView.visibility = if (!entry.isReminderExpired(ItemEntryListAdapter.NOW)) View.VISIBLE else View.GONE

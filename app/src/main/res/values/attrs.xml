@@ -9,6 +9,9 @@
     <attr name="statusbarBackgroundDrawable" format="reference"/>
     <attr name="colorAccentDisabled" format="color"/>
 
+    <attr name="fabBackgroundColorClosed" format="color"/>
+    <attr name="fabBackgroundColorOpened" format="color"/>
+
     <!--<attr name="fontFamilyThin" format="reference" />-->
     <!--<attr name="fontFamilyLight" format="reference" />-->
     <!--<attr name="fontFamilyBook" format="reference" />-->

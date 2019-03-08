@@ -35,6 +35,11 @@
 
         <item name="android:fontFamily">@font/nunito_semibold</item>
         <item name="fontFamily">@font/nunito_semibold</item>
+
+        <!-- custom attributes -->
+        <item name="fabBackgroundColorClosed">@color/material_grey_300</item>
+        <item name="fabBackgroundColorOpened">@color/material_grey_300</item>
+
     </style>
 
     <style name="Theme.Appunti.Light.Base.NoActionbar">

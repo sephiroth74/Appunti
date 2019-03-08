@@ -13,6 +13,7 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
 import it.sephiroth.android.app.appunti.ext.getFileUri
 import timber.log.Timber
+import java.util.*
 
 object IntentUtils {
 
@@ -52,16 +53,14 @@ object IntentUtils {
             }
         } else {
             if (attachments.size > 1) {
-                val list = arrayListOf<Uri>()
-                attachments.forEach { attachment ->
-                    attachment.getFileUri(context)?.let { list.add(it) }
-                }
-
                 return Intent(android.content.Intent.ACTION_SEND_MULTIPLE).apply {
                     type = "*/*"
                     putExtra(android.content.Intent.EXTRA_SUBJECT, entry.entryTitle)
                     putExtra(android.content.Intent.EXTRA_TEXT, EntryIOUtils.convertEntryToString(entry))
-                    putParcelableArrayListExtra(Intent.EXTRA_STREAM, list)
+                    putParcelableArrayListExtra(
+                        Intent.EXTRA_STREAM,
+                        ArrayList(attachments.map { it.getFileUri(context) })
+                    )
                 }
             } else {
                 val attachment = attachments.get(0)

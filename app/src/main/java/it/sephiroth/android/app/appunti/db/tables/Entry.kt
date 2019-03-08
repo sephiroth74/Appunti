@@ -96,6 +96,8 @@ class Entry() : BaseRXModel() {
     @Column
     var entryAlarmEnabled: Boolean = false
 
+    var entryStream: Uri? = null
+
     // attachments
 
     private var attachmentList: List<Attachment>? = null

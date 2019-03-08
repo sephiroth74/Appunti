@@ -6,7 +6,7 @@
         <SwitchPreferenceCompat
             app:defaultValue="false"
             app:key="main.isDarkTheme"
-            app:title="Dark Theme" />
+            app:title="@string/dark_theme" />
 
     </PreferenceCategory>
 </PreferenceScreen>

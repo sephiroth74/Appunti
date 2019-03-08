@@ -211,6 +211,11 @@ class DetailActivity : AppuntiActivity() {
                         .apply {
                             entryTitle =
                                 if (intent.hasExtra(Intent.EXTRA_SUBJECT)) intent.getStringExtra(Intent.EXTRA_SUBJECT) else ""
+                        }.also { entry ->
+                            if (intent.hasExtra(Intent.EXTRA_STREAM)) {
+                                val streamUri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                                entry.entryStream = streamUri
+                            }
                         }
                 }
             }
@@ -226,7 +231,6 @@ class DetailActivity : AppuntiActivity() {
                 model.createNewEntry(it, isNewDocument)
             }
         }
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -633,6 +637,13 @@ class DetailActivity : AppuntiActivity() {
         }
 
         disablePostponedTransitions = false
+
+        // temporary
+        // add the attachment if the original intent had the EXTRA_STREAM extra
+        entry.entryStream?.let {
+            entry.entryStream = null
+            addAttachmentToEntry(it)
+        }
     }
 
 

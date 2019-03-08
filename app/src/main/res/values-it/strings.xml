@@ -97,4 +97,5 @@
         <item quantity="one">%d Selezionato</item>
         <item quantity="other">%d Selezionati</item>
     </plurals>
+    <string name="dark_theme">Tema Scuro</string>
 </resources>

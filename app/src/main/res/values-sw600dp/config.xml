@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="list_items_columns">3</integer>
+
+    <integer name="list_items_columns_grid">3</integer>
+    <integer name="list_items_columns_list">3</integer>
+
+    <integer name="list_items_max_lines_display">7</integer>
+    <integer name="list_items_max_chars_display">150</integer>
+
+    <!-- allow to draw outside the dedicated area -->
+    <bool name="fullscreen_style_fit_system_windows">false</bool>
+    <bool name="is_tablet">true</bool>
+</resources>
