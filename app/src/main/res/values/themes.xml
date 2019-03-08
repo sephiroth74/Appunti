@@ -1,7 +1,4 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- main themes-->
-
     <style name="Theme.Appunti.Light.Base"
            parent="Theme.MaterialComponents.Light">
         <item name="colorPrimary">@color/colorPrimary</item>
@@ -9,7 +6,9 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="colorAccentDisabled">@color/colorAccentDisabled</item>
         <item name="colorControlActivated">@color/material_grey_850</item>
+
         <item name="android:textColorLink">?android:textColorPrimary</item>
+        <item name="android:textColorLinkInverse">?android:textColorPrimaryInverse</item>
 
         <item name="android:windowBackground">@color/background_material_light</item>
         <item name="android:navigationBarColor">@color/background_material_light</item>
@@ -21,15 +20,14 @@
         <item name="android:windowLightStatusBar"
               tools:ignore="NewApi">true
         </item>
-        <item name="android:windowContentTransitions">true</item>
 
-        <!-- default colors -->
+        <item name="android:windowContentTransitions">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
         <item name="search_theme">play</item>
         <item name="categoryColors">@array/category_colors_light</item>
 
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
-        <!--<item name="alertDialogTheme">@style/Theme.MaterialComponents.Light.Dialog.MinWidth</item>-->
 
         <item name="windowActionModeOverlay">true</item>
         <item name="actionModeBackground">@color/material_grey_50</item>
@@ -51,58 +49,14 @@
         <!--<item name="android:windowTranslucentNavigation">false</item>-->
     </style>
 
-    <style name="Theme.Appunti.Dark.Base"
-           parent="Theme.MaterialComponents">
-        <item name="colorPrimary">@color/darkColorPrimary</item>
-        <item name="colorPrimaryDark">@color/darkColorPrimaryDark</item>
-        <item name="colorAccent">@color/darkColorAccent</item>
-        <item name="colorControlActivated">@color/darkColorControlActivated</item>
-
-        <item name="windowActionModeOverlay">true</item>
-        <item name="android:windowBackground">@color/background_material_dark</item>
-        <item name="android:navigationBarColor">@color/background_material_dark</item>
-        <item name="android:colorForegroundInverse">@color/background_material_light</item>
-        <item name="android:windowLightNavigationBar"
-              tools:ignore="NewApi">false
-        </item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar"
-              tools:ignore="NewApi">false
-        </item>
-        <item name="android:windowContentTransitions">true</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="search_theme">dark</item>
-        <item name="categoryColors">@array/category_colors_dark</item>
-        <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
-        <item name="android:fontFamily">@font/nunito_semibold</item>
-        <item name="fontFamily">@font/nunito_semibold</item>
-    </style>
-
-    <style name="Theme.Appunti.Dark.Base.NoActionbar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style>
-
-    <style name="Theme.Appunti.Dark.Base.NoActionbar.FullScreen">
-        <item name="android:fitsSystemWindows">@bool/fullscreen_style_fit_system_windows</item>
-        <item name="navigationbarBackgroundDrawable">@drawable/appunti_navigationbar_background_dark</item>
-        <item name="statusbarBackgroundDrawable">@drawable/appunti_statusbar_background_light</item>
-    </style>
-
     <style name="Theme.Appunti.Light"
            parent="Theme.Appunti.Light.Base"/>
-
-    <style name="Theme.Appunti.Dark"
-           parent="Theme.Appunti.Dark.Base"/>
 
     <style name="Theme.Appunti.DayNight"
            parent="Theme.Appunti.Default"/>
 
     <style name="Theme.Appunti.Light.NoActionbar"
            parent="Theme.Appunti.Light.Base.NoActionbar"/>
-
-    <style name="Theme.Appunti.Dark.NoActionbar"
-           parent="Theme.Appunti.Dark.Base.NoActionbar"/>
 
     <style name="Theme.Appunti.DayNight.NoActionbar"
            parent="Theme.Appunti.Default.NoActionbar"/>
@@ -130,8 +84,6 @@
 
     <style name="Theme.Appunti.Default.PopupOverlay"
            parent="ThemeOverlay.AppCompat.Light"/>
-
-    <!-- TextAppearance -->
 
 
     <!-- ActionMode -->

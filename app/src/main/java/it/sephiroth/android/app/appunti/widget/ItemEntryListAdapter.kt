@@ -167,6 +167,7 @@ class ItemEntryListAdapter(
         val item = getItem(position)
 
         if (baseHolder.itemViewType == TYPE_ENTRY) {
+            Timber.v("onBindViewHolder($position)")
             val holder = baseHolder as EntryViewHolder
             val entryItem = item.entry!!
             var color = 0
@@ -211,7 +212,11 @@ class ItemEntryListAdapter(
 
             with(holder.itemView) {
                 tag = entryItem
+
+
                 setOnClickListener {
+                    Timber.v("onClick!!")
+
                     itemClickListener?.invoke(holder)
                 }
 

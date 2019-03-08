@@ -3,13 +3,11 @@
     <color name="colorPrimary">#FFA726</color>
     <color name="colorPrimaryDark">#FFC400</color>
     <color name="colorAccent">#1E88E5</color>
-    <color name="colorControlActivated">#FFA726</color>
     <color name="colorAccentDisabled">#661E88E5</color>
 
     <color name="darkColorPrimary">#FF6F00</color>
     <color name="darkColorPrimaryDark">#E65100</color>
-    <color name="darkColorAccent">#0D47A1</color>
-    <color name="darkColorControlActivated">#FF6F00</color>
+    <color name="darkColorAccent">#1E88E5</color>
 
     <color name="material_grey_50">#fffafafa</color>
     <color name="material_grey_100">#fff5f5f5</color>

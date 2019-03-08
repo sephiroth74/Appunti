@@ -211,11 +211,6 @@ class MainActivity : AppuntiActivityFullscreen() {
     }
 
     private fun setupFloatingActionButton() {
-//        val params = floatingActionButton.layoutParams as ViewGroup.MarginLayoutParams
-//        params.bottomMargin += navigationbarHeight
-
-//        floatingActionButton.setOnClickListener { startDetailActivity() }
-
         val params = speedDial.layoutParams as ViewGroup.MarginLayoutParams
         params.bottomMargin += navigationbarHeight
 
@@ -223,9 +218,11 @@ class MainActivity : AppuntiActivityFullscreen() {
             mutableListOf(
                 SpeedDialActionItem.Builder(R.id.fab_menu_new_text_note, R.drawable.sharp_text_fields_24)
                     .setLabel("New Text Note")
+                    .setLabelBackgroundColor(0)
                     .create(),
                 SpeedDialActionItem.Builder(R.id.fab_menu_new_list_note, R.drawable.sharp_format_list_bulleted_24)
                     .setLabel("New List Note")
+                    .setLabelBackgroundColor(0)
                     .create()
             )
         )

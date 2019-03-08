@@ -15,15 +15,15 @@
             android:layout_height="match_parent"
             tools:context=".MainActivity">
 
-        <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginBottom="0dp"
-                android:layout_marginTop="0dp"
-                app:layout_anchorGravity="top">
+        <!--<FrameLayout-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:layout_marginBottom="0dp"-->
+                <!--android:layout_marginTop="0dp"-->
+                <!--app:layout_anchorGravity="top">-->
 
             <include layout="@layout/appunti_entries_recycler_view"/>
-        </FrameLayout>
+        <!--</FrameLayout>-->
 
         <include layout="@layout/appunti_search_view_toolbar"/>
 
@@ -33,8 +33,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
-                app:sdMainFabClosedBackgroundColor="?android:attr/windowBackground"
-                app:sdMainFabOpenedBackgroundColor="?android:attr/windowBackground"
+                app:sdMainFabClosedBackgroundColor="?attr/colorControlActivated"
+                app:sdMainFabOpenedBackgroundColor="?attr/colorControlActivated"
                 app:rippleColor="?attr/colorControlActivated"
                 app:sdMainFabClosedSrc="@drawable/sharp_add_24"/>
 
