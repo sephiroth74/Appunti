@@ -83,12 +83,11 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
             return null
         }
 
-        val elements = doc.select("meta")
         var imageUrl: String? = null
         var title: String? = null
         var description: String? = null
 
-        for (e in elements) {
+        doc.select("meta").forEach { e ->
             if (e.attr("property").equals("og:image", true)
                 || e.attr("itemprop").equals("image", true)
             ) {
@@ -105,6 +104,12 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
                 || e.attr("itemprop").equals("description", true)
             ) {
                 description = e.attr("content")
+            }
+        }
+
+        if (null == imageUrl) {
+            doc.select("link[rel=icon]").forEach { element ->
+                imageUrl = element.attr("href")
             }
         }
 
