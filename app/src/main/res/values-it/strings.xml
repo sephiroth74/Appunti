@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Appunti</string>
+    <string name="add_new_category">Aggiungi Categoria</string>
+    <string name="add_new_note">Aggiungi Nota</string>
+    <string name="add_reminder">Imposta Alarme</string>
+    <string name="app_name_complete">{ Appunti }</string>
+    <string name="archive">Archivia</string>
+    <string name="archived">Archiviate</string>
+    <string name="categories">Categorie</string>
+    <string name="categories_all">Tutte</string>
+    <string name="category">Categoria</string>
+    <string name="category_default">Nessuna</string>
+    <string name="category_deleted_snackbar_title">Categoria Eliminata</string>
+    <string name="category_title_dialog">Inserisci Nome Categoria</string>
+    <string name="change">Cambia</string>
+    <string name="channel_description">Alarme</string>
+    <string name="channel_name">Appunto</string>
+    <string name="content_here">Inserisci il contenuto...</string>
+    <string name="created_at">Creata %s</string>
+    <string name="delete">Elimina</string>
+    <string name="deleted">Eliminate</string>
+    <string name="display_as_grid">Visualizza come griglia</string>
+    <string name="edit_categories">Modifica Categorie</string>
+    <string name="edit_reminder">Modifica Alarme</string>
+    <string name="entries_restored">Appunti Ripristinati</string>
+    <string name="file_added">File aggiunto</string>
+    <string name="image_added">Immagine aggiunta</string>
+    <string name="last_modified">Modificata %s</string>
+    <string name="new_entry_item">Aggiungi Voce</string>
+    <string name="others">Altre</string>
+    <string name="pick_a_color">Scegli il Colore</string>
+    <string name="pin">Imposta come Preferita</string>
+    <string name="pinned">Preferite</string>
+    <string name="reminder_removed">Alarme Rimosso</string>
+    <string name="reminder_set">Alarme Impostato</string>
+    <string name="remove">Rimuovi</string>
+    <string name="remove_reminder">Rimuovi Alarme</string>
+    <string name="restart">Riavvia</string>
+    <string name="restart_required">Riavvio Necessario</string>
+    <string name="restart_required_body">Il Riavvio dell\'applicazione è necessario per applicare le modifiche</string>
+    <string name="restore">Ripristina</string>
+    <string name="search_title">Cerca</string>
+    <string name="search_view_hint_text">Cerca negli Appunti</string>
+    <string name="settings">Impostazioni</string>
+    <string name="share">Condividi</string>
+    <string name="sort_by">Ordina per...</string>
+    <string name="title">Titolo</string>
+    <string name="title_activity_categories">Modifica Categorie</string>
+    <string name="title_item_detail">Dettagli</string>
+    <string name="today_at">Oggi alle %s</string>
+    <string name="tomorrow_at">Domani alle %s</string>
+    <string name="unarchive">Ripristina</string>
+    <string name="undo_uppercase">Annulla</string>
+    <string name="unpin">Rimuovi dal Preferiti</string>
+    <string name="view">Visualizza</string>
+    <string name="yesterday_at">Ieri alle %s</string>
+    <string name="edit_reminder_dialog_text">Questo Appunto ha un alarme impostato per\\n%s.\\nVuoi cambiarlo o
+        rimuoverlo?
+    </string>
+
+    <plurals name="entries_archived_title">
+        <item quantity="one">Appunto Archiviato</item>
+        <item quantity="other">%d Appunti Archiviati</item>
+    </plurals>
+
+    <plurals name="entries_unarchived_title">
+        <item quantity="one">Appunto Ripristinato</item>
+        <item quantity="other">%d Appunti Ripristinati</item>
+    </plurals>
+
+    <plurals name="entries_deleted_title">
+        <item quantity="one">Appunto Eliminato</item>
+        <item quantity="other">%d Appunti Eliminati</item>
+    </plurals>
+
+    <plurals name="entries_restored_title">
+        <item quantity="one">Appunto Ripristinato</item>
+        <item quantity="other">%d Appunti Ripristinati</item>
+    </plurals>
+
+    <plurals name="entries_pinned_title">
+        <item quantity="one">Impostato come preferito</item>
+        <item quantity="other">%d Appunti impostati come preferiti</item>
+    </plurals>
+
+    <plurals name="entries_unpinned_title">
+        <item quantity="one">Rimosso dai preferiti</item>
+        <item quantity="other">%d Appunti rimossi dai preferiti</item>
+    </plurals>
+
+    <plurals name="entries_selected_count" tools:ignore="UnusedQuantity">
+        <item quantity="zero">Nessuno selezionato</item>
+        <item quantity="one">%d Selezionato</item>
+        <item quantity="other">%d Selezionati</item>
+    </plurals>
+</resources>
