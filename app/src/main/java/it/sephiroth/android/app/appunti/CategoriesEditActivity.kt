@@ -6,13 +6,17 @@ import android.content.Intent
 import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.query.OrderBy
@@ -98,30 +102,38 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     }
 
     private fun presentNewCategoryDialog() {
-
         val alertDialog: AlertDialog = AlertDialog
             .Builder(this)
             .setCancelable(true)
             .setTitle(getString(R.string.category_title_dialog))
             .setView(R.layout.appunti_alertdialog_category_input)
-            .create()
+            .create().also { dialog ->
 
-        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, _ ->
-            val title = alertDialog.findViewById<TextView>(android.R.id.text1)?.text.toString()
-            val colorIndex =
-                alertDialog.findViewById<GridLayoutColorChooser>(R.id.colorChooser)?.getSelectedColorIndex()
-            createCategory(title, colorIndex ?: 0)
-        }
+                dialog.setOnShowListener {
+                    val textview = dialog.findViewById<TextView>(android.R.id.text1)
+                    textview?.postDelayed(300) {
+                        textview.requestFocus()
+                        textview.showSoftInput()
+                    }
+                }
 
-        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(android.R.string.cancel)) { dialog, _ ->
-            dialog.dismiss()
-        }
+                dialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, _ ->
+                    val title = dialog.findViewById<TextView>(android.R.id.text1)?.text.toString()
+                    val colorIndex =
+                        dialog.findViewById<GridLayoutColorChooser>(R.id.colorChooser)?.getSelectedColorIndex()
+                    createCategory(title, colorIndex ?: 0)
+                }
 
-        alertDialog.setOnDismissListener {
-            alertDialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN)
-        }
+                dialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(android.R.string.cancel)) { dialog, _ ->
+                    dialog.dismiss()
+                }
 
-        alertDialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+                dialog.setOnDismissListener {
+                    Timber.v("dismiss")
+                    dialog.findViewById<TextView>(android.R.id.text1)?.hideSoftInput()
+                }
+            }
+
         alertDialog.show()
     }
 
