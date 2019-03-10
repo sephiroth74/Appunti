@@ -36,22 +36,22 @@
 
     <integer-array name="category_colors_light">
         <item>0xFFFFFFFF</item>
-        <item>0xFFFF8A65</item>
+        <item>0xFFFA9C7E</item>
         <item>0xFFFFB74D</item>
         <item>0xFFFFD54F</item>
         <item>0xFFFFF176</item>
         <item>0xFFDCE775</item>
         <item>0xFFAED581</item>
-        <item>0xFF81C784</item>
-        <item>0xFF4DB6AC</item>
+        <item>0xff8DCA90</item>
+        <item>0xff52B3A9</item>
         <item>0xFF4DD0E1</item>
         <item>0xFF4FC3F7</item>
-        <item>0xFF64B5F6</item>
-        <item>0xFF7986CB</item>
-        <item>0xFF9575CD</item>
-        <item>0xFFBA68C8</item>
-        <item>0xFFF06292</item>
-        <item>0xFFE57373</item>
+        <item>0xff73BBF5</item>
+        <item>0xff929DD6</item>
+        <item>0xffA58BD3</item>
+        <item>0xffBF7CCA</item>
+        <item>0xffEC80A4</item>
+        <item>0xffE28888</item>
     </integer-array>
 
 </resources>
