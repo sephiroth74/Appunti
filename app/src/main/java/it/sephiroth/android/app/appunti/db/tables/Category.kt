@@ -9,6 +9,7 @@ import com.dbflow5.reactivestreams.structure.BaseRXModel
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.CategoryTypeConverter
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
+import timber.log.Timber
 
 @Table(database = AppDatabase::class)
 class Category() : BaseRXModel() {
@@ -72,5 +73,12 @@ class Category() : BaseRXModel() {
 
     enum class CategoryType {
         SYSTEM, USER
+    }
+
+    companion object {
+        fun getColor(context: Context, categoryColorIndex: Int): Int {
+            Timber.v("getColor($categoryColorIndex) = ${ResourceUtils.getCategoryColors(context)[categoryColorIndex]}")
+            return ResourceUtils.getCategoryColors(context)[categoryColorIndex]
+        }
     }
 }

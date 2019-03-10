@@ -6,7 +6,6 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import it.sephiroth.android.app.appunti.R
-import it.sephiroth.android.app.appunti.ext.isLightTheme
 import timber.log.Timber
 import kotlin.properties.Delegates
 
@@ -36,9 +35,10 @@ class SettingsManager(val context: Context) {
     var darkTheme: Boolean = true
         get() {
             if (prefs.contains(PREFS_KEY_DARK_THEME)) return prefs.getBoolean(PREFS_KEY_DARK_THEME, false)
-            return !context.isLightTheme()
+            return false
         }
         set(value) {
+            Timber.i("setDarkTheme: $value")
             field = value
             prefs.edit { putBoolean(PREFS_KEY_DARK_THEME, value) }
             themeChangedListener?.invoke(value)

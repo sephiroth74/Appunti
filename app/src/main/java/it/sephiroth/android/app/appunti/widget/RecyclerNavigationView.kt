@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckedTextView
+import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -19,9 +20,11 @@ import getColor
 import isTablet
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Category
+import it.sephiroth.android.app.appunti.db.views.EntryWithCategory
 import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
+import it.sephiroth.android.app.appunti.view.CheckableLinearLayout
 import kotlinx.android.synthetic.main.appunti_main_drawer_navigation_content.view.*
 import timber.log.Timber
 
@@ -58,8 +61,8 @@ class RecyclerNavigationView @JvmOverloads constructor(
     private fun onModelChanged(model: MainViewModel?) {
         Timber.i("onModelChanged: $model")
         model?.let { model ->
-            model.categories.observe(this, Observer {
-                Timber.v("categories changed")
+            model.categoriesWithEntries.observe(this, Observer {
+                Timber.v("categoriesWithEntries changed")
                 adapter.values = it
                 adapter.notifyDataSetChanged()
             })
@@ -90,7 +93,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
     @SuppressLint("RestrictedApi")
     override fun onAttachedToWindow() {
-        Timber.i("onAttachedToWindow")
         super.onAttachedToWindow()
         mLifecycleRegistry.markState(Lifecycle.State.RESUMED)
     }
@@ -107,7 +109,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
         const val TYPE_SETTINGS = 8
     }
 
-    inner class NavigationItemsAdapter(context: Context, var values: List<Category>) :
+    inner class NavigationItemsAdapter(context: Context, var values: List<EntryWithCategory>) :
         RecyclerView.Adapter<ViewHolderBase>() {
         val isTablet = context.resources.isTablet
 
@@ -124,9 +126,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
                 return ViewHolderCategoryHeader(view)
             } else if (viewType == TYPE_SEPARATOR) {
                 return ViewHolderBase(layoutInflater.inflate(R.layout.appunti_navigation_item_separator, parent, false))
-            } else if (viewType == TYPE_LABEL_CATEGORY_ARCHIVED
-                || viewType == TYPE_LABEL_CATEGORY_DELETED
-                || viewType == TYPE_LABEL_NEW_CATEGORY
+            } else if (viewType == TYPE_LABEL_NEW_CATEGORY
                 || viewType == TYPE_LABEL_EDIT_CATEGORY
                 || viewType == TYPE_SETTINGS
             ) {
@@ -140,15 +140,11 @@ class RecyclerNavigationView @JvmOverloads constructor(
                     navigationItemSelectedListener?.invoke(viewType)
                 }
 
-                return ViewHolderSelectableCategory(view).also {
+                return ViewHolderCheckable(view).also {
                     val text: Int
                     val drawableRes: Int
 
                     when (viewType) {
-                        TYPE_LABEL_CATEGORY_ARCHIVED -> {
-                            text = R.string.archived
-                            drawableRes = R.drawable.outline_archive_24
-                        }
                         TYPE_LABEL_NEW_CATEGORY -> {
                             text = R.string.add_new_category
                             drawableRes = R.drawable.sharp_playlist_add_24
@@ -157,13 +153,9 @@ class RecyclerNavigationView @JvmOverloads constructor(
                             text = R.string.edit_categories
                             drawableRes = R.drawable.sharp_edit_24
                         }
-                        TYPE_SETTINGS -> {
+                        else -> {
                             text = R.string.settings
                             drawableRes = R.drawable.sharp_settings_24
-                        }
-                        else -> {
-                            text = R.string.deleted
-                            drawableRes = R.drawable.sharp_delete_outline_24
                         }
                     }
 
@@ -179,6 +171,35 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
                 return ViewHolderSwitch(view).also {
                     it.switchView.setText(R.string.display_as_grid)
+                }
+            } else if (viewType == TYPE_LABEL_CATEGORY_ARCHIVED || viewType == TYPE_LABEL_CATEGORY_DELETED) {
+                val view = layoutInflater.inflate(R.layout.appunti_main_drawer_navigation_item_checkable, parent, false)
+                    .apply {
+                        setOnClickListener {
+                            navigationItemSelectedListener?.invoke(viewType)
+                        }
+                    }
+                return ViewHolderCheckableWithBadge(view).apply {
+                    val text: Int
+                    val drawableRes: Int
+
+                    when (viewType) {
+                        TYPE_LABEL_CATEGORY_ARCHIVED -> {
+                            text = R.string.archived
+                            drawableRes = R.drawable.outline_archive_24
+                        }
+                        else -> {
+                            text = R.string.deleted
+                            drawableRes = R.drawable.sharp_delete_outline_24
+                        }
+                    }
+
+                    val drawable = resources.getDrawable(drawableRes, context.theme).apply {
+                        setBounds(0, 0, intrinsicWidth, intrinsicHeight)
+                    }
+
+                    textView.setText(text)
+                    textView.setCompoundDrawablesRelative(drawable, null, null, null)
                 }
             } else {
                 val view = layoutInflater.inflate(R.layout.appunti_main_drawer_navigation_item_checkable, parent, false)
@@ -223,7 +244,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
             return itemId
         }
 
-        private fun getItem(position: Int): Category? {
+        private fun getItem(position: Int): EntryWithCategory? {
             if (position > 1 && position <= values.size + 1) return values[position - 2]
             return null
         }
@@ -234,6 +255,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
                     val holder = baseHolder as ViewHolderCategoryItem
 
                     val item = getItem(position)
+
                     holder.category = item
                     holder.isChecked = item?.let { category ->
                         model?.group?.getCategoryID() == category.categoryID
@@ -244,18 +266,29 @@ class RecyclerNavigationView @JvmOverloads constructor(
                     }
 
                     holder.itemView.setOnClickListener {
-                        categorySelectedListener?.invoke(item)
+                        categorySelectedListener?.invoke(item?.category())
                     }
 
                 }
-                baseHolder.itemViewType == TYPE_LABEL_CATEGORY_ARCHIVED -> (baseHolder as ViewHolderSelectableCategory).textView.isChecked =
-                    model?.group?.isArchived() ?: false
-                baseHolder.itemViewType == TYPE_LABEL_CATEGORY_DELETED -> (baseHolder as ViewHolderSelectableCategory).textView.isChecked =
-                    model?.group?.isDeleted() ?: false
+
+                baseHolder.itemViewType == TYPE_LABEL_CATEGORY_ARCHIVED -> {
+                    (baseHolder as ViewHolderCheckableWithBadge).apply {
+                        this.isChecked = model?.group?.isArchived() ?: false
+                        this.setCount(model?.entriesArchivedCount)
+                    }
+                }
+
+                baseHolder.itemViewType == TYPE_LABEL_CATEGORY_DELETED -> {
+                    (baseHolder as ViewHolderCheckableWithBadge).apply {
+                        this.isChecked = model?.group?.isDeleted() ?: false
+                        this.setCount(model?.entriesDeletedCount)
+                    }
+                }
+
                 baseHolder.itemViewType == TYPE_DISPLAY_TYPE -> {
                     val holder = baseHolder as ViewHolderSwitch
                     holder.switchView.setOnCheckedChangeListener(null)
-                    holder.switchView.isChecked = !SettingsManager.getInstance(context).displayAsList
+                    holder.isChecked = !SettingsManager.getInstance(context).displayAsList
                     holder.switchView.setOnCheckedChangeListener { _, isChecked ->
                         SettingsManager.getInstance(context).displayAsList = !isChecked
                     }
@@ -264,45 +297,44 @@ class RecyclerNavigationView @JvmOverloads constructor(
         }
     }
 
-    class ViewHolderCategoryHeader(view: View) : ViewHolderBase(view)
+    class ViewHolderCategoryItem(view: View) : ViewHolderCheckableWithBadge(view) {
+        private val colorStateListCache = hashMapOf<Int, ColorStateList>()
 
-    class ViewHolderCategoryItem(view: View) : ViewHolderSelectableCategory(view) {
-        val colorStateListCache = hashMapOf<Int, ColorStateList>()
-
-        private fun getColorStateList(context: Context, category: Category?): ColorStateList? {
-            category?.let { category ->
-                return if (colorStateListCache.containsKey(category.categoryColorIndex)) {
-                    colorStateListCache[category.categoryColorIndex]
+        private fun getColorStateList(context: Context, categoryColorIndex: Int?): ColorStateList? {
+            categoryColorIndex?.let { categoryColorIndex ->
+                return if (colorStateListCache.containsKey(categoryColorIndex)) {
+                    colorStateListCache[categoryColorIndex]
                 } else {
-                    colorStateListCache[category.categoryColorIndex] =
-                        ColorStateList.valueOf(category.getColor(context))
-                    colorStateListCache[category.categoryColorIndex]
+                    colorStateListCache[categoryColorIndex] =
+                        ColorStateList.valueOf(Category.getColor(context, categoryColorIndex))
+                    colorStateListCache[categoryColorIndex]
                 }
             } ?: run {
                 return accentColorStateList
             }
         }
 
-        var category: Category? = null
+        var category: EntryWithCategory? = null
             set(value) {
                 if (field != value) {
                     field = value
                     value?.let { category ->
                         textView.text = category.categoryTitle
+                        setCount(category.entriesCount.toLong())
 
                     } ?: run {
                         textView.text = context.getString(R.string.categories_all)
+                        setCount(0)
                     }
                 }
             }
 
-        var isChecked: Boolean
-            get() = textView.isChecked
+        override var isChecked: Boolean
+            get() = checkableItemView.isChecked
             set(value) {
-                if (true) {
-                    textView.isChecked = value
-                    textView.backgroundTintList = if (value) getColorStateList(context, category) else null
-                }
+                checkableItemView.isChecked = value
+                itemView.backgroundTintList =
+                    if (value) getColorStateList(context, category?.categoryColorIndex) else null
             }
 
         init {
@@ -311,23 +343,66 @@ class RecyclerNavigationView @JvmOverloads constructor(
         }
     }
 
-    open class ViewHolderSelectableCategory(view: View) : ViewHolderBase(view) {
+    open class ViewHolderCheckableWithBadge(view: View) : ViewHolderSelectableItem(view), ViewHolderCheckableBase {
+        val numEntriesText = view.findViewById<TextView>(android.R.id.text2)
+        val textView = view.findViewById<TextView>(android.R.id.text1)
+        val checkableItemView = itemView as CheckableLinearLayout
 
-        val accentColorStateList by lazy {
-            ColorStateList.valueOf(context.theme.getColor(context, R.attr.colorAccent))
+        override var isChecked: Boolean
+            get() = checkableItemView.isChecked
+            set(value) {
+                checkableItemView.isChecked = value
+            }
+
+        fun setCount(value: Long?) {
+            numEntriesText.text = value?.let {
+                if (it > 0) it.toString() else ""
+            } ?: run {
+                ""
+            }
         }
 
-        val context by lazy { itemView.context }
+        init {
+            itemView.backgroundTintList = accentColorStateList
+            textView.text = context.getString(R.string.categories_all)
+        }
+    }
+
+    @Suppress("UsePropertyAccessSyntax")
+    open class ViewHolderCheckable(view: View) : ViewHolderSelectableItem(view), ViewHolderCheckableBase {
         val textView = view as CheckedTextView
 
+        override var isChecked: Boolean
+            get() = textView.isChecked
+            set(value) = textView.setChecked(value)
+    }
+
+    @Suppress("UsePropertyAccessSyntax")
+    class ViewHolderSwitch(view: View) : ViewHolderBase(view), ViewHolderCheckableBase {
+        val switchView = view as SwitchCompat
+
+        override var isChecked: Boolean
+            get() = switchView.isChecked
+            set(value) = switchView.setChecked(value)
+    }
+
+    class ViewHolderCategoryHeader(view: View) : ViewHolderBase(view)
+
+    abstract class ViewHolderSelectableItem(view: View) : ViewHolderBase(view) {
         init {
             itemView.background = MaterialBackgroundUtils.navigationItemDrawable(context)
         }
     }
 
-    open class ViewHolderSwitch(view: View) : ViewHolderBase(view) {
-        val switchView = view as SwitchCompat
+    open class ViewHolderBase(view: View) : RecyclerView.ViewHolder(view) {
+        val context: Context by lazy { itemView.context }
+
+        val accentColorStateList: ColorStateList by lazy {
+            ColorStateList.valueOf(context.theme.getColor(context, R.attr.colorAccent))
+        }
     }
 
-    open class ViewHolderBase(view: View) : RecyclerView.ViewHolder(view)
+    interface ViewHolderCheckableBase {
+        var isChecked: Boolean
+    }
 }

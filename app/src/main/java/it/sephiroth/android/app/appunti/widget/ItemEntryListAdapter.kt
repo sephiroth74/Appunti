@@ -26,7 +26,11 @@ import isPortrait
 import isTablet
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.ext.currentThread
+import it.sephiroth.android.app.appunti.ext.doOnMainThread
+import it.sephiroth.android.app.appunti.ext.doOnScheduler
+import it.sephiroth.android.app.appunti.ext.getSummary
+import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
@@ -78,7 +82,7 @@ class ItemEntryListAdapter(
     var itemLongClickListener: ((ItemEntryListAdapter, BaseViewHolder) -> (Boolean))? = null
 
     init {
-        val isLightTheme = context.isLightTheme()
+        val isLightTheme = !SettingsManager.getInstance(context).darkTheme
         textColorInverse =
             context.theme.getColorStateList(
                 context,

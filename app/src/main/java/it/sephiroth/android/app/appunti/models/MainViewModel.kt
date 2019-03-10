@@ -17,6 +17,7 @@ import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
+import it.sephiroth.android.app.appunti.db.views.EntryWithCategory
 import it.sephiroth.android.app.appunti.ext.currentThread
 import timber.log.Timber
 
@@ -24,7 +25,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     DirectModelNotifier.OnModelStateChangedListener<BaseRXModel>, OnTableChangedListener {
 
     class Group(private val callback: (() -> (Unit))? = null) {
-        //        private var mCategory: Category? = null
         private var mCategoryID: Long? = null
         private var mArchived: Boolean = false
         private var mDeleted: Boolean = false
@@ -34,6 +34,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         }
 
         fun setCategoryID(id: Long?) {
+            Timber.i("setCategoryID = $id")
             mCategoryID = id
             mArchived = false
             mDeleted = false
@@ -93,24 +94,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
     private val handler: Handler = Handler()
 
-    private val updateEntriesRunnable = Runnable {
-        updateEntries()
-    }
-
+    private val updateEntriesRunnable = Runnable { updateEntries() }
     private val updateCategoriesRunnable = Runnable { updateCategories() }
 
     val group: Group = Group {
         (categoryChanged as MutableLiveData).value = true
         updateEntries()
+        updateCategories()
     }
 
-    val categories: LiveData<List<Category>> by lazy {
-        val data = MutableLiveData<List<Category>>()
-        DatabaseHelper.getCategories().subscribe { result, error ->
-            data.postValue(result)
-        }
+    val categoriesWithEntries: LiveData<List<EntryWithCategory>> by lazy {
+        val data = MutableLiveData<List<EntryWithCategory>>()
         data
     }
+
+    var entriesDeletedCount: Long = 0
+        private set
+
+    var entriesArchivedCount: Long = 0
+        private set
 
     val entries: LiveData<MutableList<Entry>> = MutableLiveData<MutableList<Entry>>()
 
@@ -118,7 +120,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
     @SuppressLint("CheckResult")
     private fun updateEntries() {
-        Timber.i("updateEntries")
+        Timber.i("[${currentThread()}] updateEntries")
         DatabaseHelper
             .getEntries { group.buildQuery(this) }
             .observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
@@ -133,10 +135,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
     @SuppressLint("CheckResult")
     private fun updateCategories() {
-        Timber.i("updateCategories")
-        DatabaseHelper.getCategories().observeOn(AndroidSchedulers.mainThread()).subscribe { result, error ->
-            (categories as MutableLiveData).value = result
-        }
+        Timber.i("[${currentThread()}] updateCategories")
+
+        DatabaseHelper
+            .getCategoriesWithNumEntriesAsync()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { result, error ->
+                (categoriesWithEntries as MutableLiveData).value = result.first
+                entriesArchivedCount = result.second
+                entriesDeletedCount = result.third
+            }
     }
 
     override fun onCleared() {
@@ -161,7 +169,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
         } else if (model is Entry) {
             handler.removeCallbacks(updateEntriesRunnable)
+            handler.removeCallbacks(updateCategoriesRunnable)
             handler.post(updateEntriesRunnable)
+            handler.post(updateCategoriesRunnable)
         }
     }
 
@@ -172,8 +182,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
                 when (action) {
                     ChangeAction.UPDATE, ChangeAction.DELETE -> {
                         handler.removeCallbacks(updateEntriesRunnable)
+                        handler.removeCallbacks(updateCategoriesRunnable)
                         handler.post(updateEntriesRunnable)
+                        handler.post(updateCategoriesRunnable)
                     }
+
                     ChangeAction.INSERT, ChangeAction.CHANGE -> {
 
                     }

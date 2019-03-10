@@ -16,6 +16,7 @@ import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import timber.log.Timber
 import java.text.DateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -54,8 +55,13 @@ fun ioThread(func: () -> Unit) {
     }
 }
 
-fun doOnScheduler(scheduler: Scheduler, func: () -> Unit) {
-    scheduler.scheduleDirect(func)
+fun doOnScheduler(scheduler: Scheduler, func: () -> Unit): Disposable {
+    return scheduler.scheduleDirect(func)
+}
+
+fun doOnScheduler(scheduler: Scheduler, disposable: Disposable? = null, func: () -> Unit): Disposable {
+    disposable?.dispose()
+    return scheduler.scheduleDirect(func)
 }
 
 fun doOnMainThread(func: () -> Unit) {
@@ -80,14 +86,6 @@ inline val Activity.isInMultiWindow: Boolean
             false
         }
     }
-
-
-fun Context.isLightTheme(): Boolean {
-    val typedValue = TypedValue()
-    val identifier = resources.getIdentifier("isLightTheme", "attr", this.packageName)
-    theme.resolveAttribute(identifier, typedValue, false)
-    return typedValue.data != 0
-}
 
 fun View.showSoftInput() {
     val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?

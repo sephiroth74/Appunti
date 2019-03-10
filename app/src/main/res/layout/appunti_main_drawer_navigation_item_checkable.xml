@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.AppCompatCheckedTextView
+<it.sephiroth.android.app.appunti.view.CheckableLinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@android:id/text1"
-        style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
-        android:drawableStart="@drawable/outline_label_24"/>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+    <androidx.appcompat.widget.AppCompatTextView
+            android:id="@android:id/text1"
+            style="@style/Theme.Appunti.Text.Drawer.NavigationItem"
+            android:layout_weight="1"
+            android:drawableStart="@drawable/outline_label_24"/>
+
+    <androidx.appcompat.widget.AppCompatTextView
+            android:layout_weight="0"
+            android:layout_width="wrap_content"
+            android:gravity="center"
+            android:id="@android:id/text2"
+            style="@style/Theme.Appunti.Text.Drawer.NavigationItem"/>
+</it.sephiroth.android.app.appunti.view.CheckableLinearLayout>

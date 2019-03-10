@@ -11,6 +11,7 @@ import com.dbflow5.structure.save
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.*
+import it.sephiroth.android.app.appunti.db.views.EntryWithCategory
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
@@ -25,6 +26,36 @@ object DatabaseHelper {
         return rxSingle(Schedulers.io()) {
             select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
         }
+    }
+
+    fun getCategoriesWithNumEntriesAsync(): Single<Triple<MutableList<EntryWithCategory>, Long, Long>> {
+        return rxSingle(Schedulers.io()) {
+            val archived = getEntriesArchivedCount()
+            val deleted = getEntriesDeletedCount()
+            Triple(select().from(EntryWithCategory::class).list, archived, deleted)
+        }
+    }
+
+    fun getEntriesArchivedCountAsync(): Single<Long> {
+        return rxSingle(Schedulers.io()) { getEntriesArchivedCount() }
+    }
+
+    fun getEntriesDeletedCountAsync(): Single<Long> {
+        return rxSingle(Schedulers.io()) { getEntriesDeletedCount() }
+    }
+
+    fun getEntriesArchivedCount(): Long {
+        return selectCountOf(Entry_Table.entryID)
+            .from(Entry::class)
+            .where(Entry_Table.entryArchived.eq(1))
+            .longValue(FlowManager.getDatabase(AppDatabase::class.java))
+    }
+
+    fun getEntriesDeletedCount(): Long {
+        return selectCountOf(Entry_Table.entryID)
+            .from(Entry::class)
+            .where(Entry_Table.entryDeleted.eq(1))
+            .longValue(FlowManager.getDatabase(AppDatabase::class.java))
     }
 
     fun getCategoryByID(id: Long): Category? {
