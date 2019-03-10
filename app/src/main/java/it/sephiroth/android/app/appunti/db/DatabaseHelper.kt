@@ -31,7 +31,9 @@ object DatabaseHelper {
     fun getCategoriesWithNumEntriesAsync(): Single<Triple<MutableList<EntryWithCategory>, Long, Long>> {
         return rxSingle(Schedulers.io()) {
             val archived = getEntriesArchivedCount()
+            Timber.v("archived = $archived")
             val deleted = getEntriesDeletedCount()
+            Timber.v("deleted = $deleted")
             Triple(select().from(EntryWithCategory::class).list, archived, deleted)
         }
     }

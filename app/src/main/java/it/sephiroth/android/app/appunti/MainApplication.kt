@@ -5,17 +5,12 @@ import android.os.Build
 import com.dbflow5.config.DatabaseConfig
 import com.dbflow5.config.FlowConfig
 import com.dbflow5.config.FlowManager
-import com.dbflow5.query.selectCountOf
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.save
 import com.jakewharton.threetenabp.AndroidThreeTen
 import it.sephiroth.android.app.appunti.db.AppDatabase
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.db.tables.Entry_Table
-import it.sephiroth.android.app.appunti.ext.convertToList
-import it.sephiroth.android.app.appunti.ext.ioThread
-import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.ShortcutHelper
 import timber.log.Timber
 
@@ -32,7 +27,9 @@ class MainApplication : Application() {
 
         AndroidThreeTen.init(this)
 
-//        FlowLog.setMinimumLoggingLevel(FlowLog.Level.V)
+//        if (BuildConfig.DEBUG) {
+//            FlowLog.setMinimumLoggingLevel(FlowLog.Level.V)
+//        }
 
         FlowManager.init(
             FlowConfig.Builder(this)
@@ -41,23 +38,24 @@ class MainApplication : Application() {
                         .modelNotifier(DirectModelNotifier.get())
                         .build()
                 )
+                .openDatabasesOnInit(true)
                 .build()
         )
 
         ShortcutHelper.getInstance(this).updateShortcuts()
 
-        ioThread {
-            if (SettingsManager.getInstance(this).isFirstLaunch) {
-
-                val hasData = selectCountOf(Entry_Table.entryID)
-                    .from(Entry::class)
-                    .hasData(FlowManager.getDatabase(AppDatabase::class.java))
-
-                if (!hasData) {
-                    prepopulateDatabase()
-                }
-            }
-        }
+//        ioThread {
+//            if (SettingsManager.getInstance(this).isFirstLaunch) {
+//
+//                val hasData = selectCountOf(Entry_Table.entryID)
+//                    .from(Entry::class)
+//                    .hasData(FlowManager.getDatabase(AppDatabase::class.java))
+//
+//                if (!hasData) {
+//                    prepopulateDatabase()
+//                }
+//            }
+//        }
     }
 
     private fun prepopulateDatabase() {

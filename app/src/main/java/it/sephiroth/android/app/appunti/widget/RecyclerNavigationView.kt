@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -337,18 +338,9 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
                 if (value) {
                     val colorStateList = getColorStateList(context, category?.categoryColorIndex)
-                    val color = colorStateList.defaultColor
-
-                    itemView.backgroundTintList = colorStateList
-                    textView.compoundDrawables.filter { it != null }
-                        .forEach { it.setColorFilter(color, PorterDuff.Mode.SRC_IN) }
-                    textView.setTextColor(colorStateList)
-                    numEntriesText.setTextColor(colorStateList)
+                    setTintAndColor(colorStateList)
                 } else {
-                    itemView.backgroundTintList = null
-                    textView.compoundDrawables.filter { it != null }.forEach { it.colorFilter = null }
-                    textView.setTextColor(textColors)
-                    numEntriesText.setTextColor(textColors)
+                    setTintAndColor(null)
                 }
             }
 
@@ -368,22 +360,36 @@ class RecyclerNavigationView @JvmOverloads constructor(
             get() = checkableItemView.isChecked
             set(value) {
                 checkableItemView.isChecked = value
-
                 if (value) {
-                    val color = accentColorStateList.defaultColor
-
-                    itemView.backgroundTintList = accentColorStateList
-                    textView.compoundDrawables.filter { it != null }
-                        .forEach { it.setColorFilter(color, PorterDuff.Mode.SRC_IN) }
-                    textView.setTextColor(accentColorStateList)
-                    numEntriesText.setTextColor(accentColorStateList)
+                    setTintAndColor(accentColorStateList)
                 } else {
-                    itemView.backgroundTintList = null
-                    textView.compoundDrawables.filter { it != null }.forEach { it.colorFilter = null }
-                    textView.setTextColor(textColors)
-                    numEntriesText.setTextColor(textColors)
+                    setTintAndColor(null)
                 }
             }
+
+        protected fun setTintAndColor(colorStateList: ColorStateList?) {
+            colorStateList?.let { colorStateList ->
+
+                itemView.backgroundTintList = colorStateList
+                setTextCompoundDrawablesColorFilter(
+                    PorterDuffColorFilter(
+                        colorStateList.defaultColor,
+                        PorterDuff.Mode.SRC_IN
+                    )
+                )
+                textView.setTextColor(colorStateList)
+                numEntriesText.setTextColor(colorStateList)
+            } ?: run {
+                itemView.backgroundTintList = null
+                setTextCompoundDrawablesColorFilter(null)
+                textView.setTextColor(textColors)
+                numEntriesText.setTextColor(textColors)
+            }
+        }
+
+        protected fun setTextCompoundDrawablesColorFilter(colorFilter: PorterDuffColorFilter?) {
+            textView.compoundDrawables.filter { it != null }.forEach { it.colorFilter = colorFilter }
+        }
 
         fun setCount(value: Long?) {
             numEntriesText.text = value?.let {
