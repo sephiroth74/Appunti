@@ -3,6 +3,7 @@ package it.sephiroth.android.app.appunti.widget
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.PorterDuff
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -300,14 +301,14 @@ class RecyclerNavigationView @JvmOverloads constructor(
     class ViewHolderCategoryItem(view: View) : ViewHolderCheckableWithBadge(view) {
         private val colorStateListCache = hashMapOf<Int, ColorStateList>()
 
-        private fun getColorStateList(context: Context, categoryColorIndex: Int?): ColorStateList? {
+        private fun getColorStateList(context: Context, categoryColorIndex: Int?): ColorStateList {
             categoryColorIndex?.let { categoryColorIndex ->
                 return if (colorStateListCache.containsKey(categoryColorIndex)) {
-                    colorStateListCache[categoryColorIndex]
+                    colorStateListCache[categoryColorIndex]!!
                 } else {
                     colorStateListCache[categoryColorIndex] =
                         ColorStateList.valueOf(Category.getColor(context, categoryColorIndex))
-                    colorStateListCache[categoryColorIndex]
+                    colorStateListCache[categoryColorIndex]!!
                 }
             } ?: run {
                 return accentColorStateList
@@ -333,8 +334,22 @@ class RecyclerNavigationView @JvmOverloads constructor(
             get() = checkableItemView.isChecked
             set(value) {
                 checkableItemView.isChecked = value
-                itemView.backgroundTintList =
-                    if (value) getColorStateList(context, category?.categoryColorIndex) else null
+
+                if (value) {
+                    val colorStateList = getColorStateList(context, category?.categoryColorIndex)
+                    val color = colorStateList.defaultColor
+
+                    itemView.backgroundTintList = colorStateList
+                    textView.compoundDrawables.filter { it != null }
+                        .forEach { it.setColorFilter(color, PorterDuff.Mode.SRC_IN) }
+                    textView.setTextColor(colorStateList)
+                    numEntriesText.setTextColor(colorStateList)
+                } else {
+                    itemView.backgroundTintList = null
+                    textView.compoundDrawables.filter { it != null }.forEach { it.colorFilter = null }
+                    textView.setTextColor(textColors)
+                    numEntriesText.setTextColor(textColors)
+                }
             }
 
         init {
@@ -347,11 +362,27 @@ class RecyclerNavigationView @JvmOverloads constructor(
         val numEntriesText = view.findViewById<TextView>(android.R.id.text2)
         val textView = view.findViewById<TextView>(android.R.id.text1)
         val checkableItemView = itemView as CheckableLinearLayout
+        val textColors = textView.textColors
 
         override var isChecked: Boolean
             get() = checkableItemView.isChecked
             set(value) {
                 checkableItemView.isChecked = value
+
+                if (value) {
+                    val color = accentColorStateList.defaultColor
+
+                    itemView.backgroundTintList = accentColorStateList
+                    textView.compoundDrawables.filter { it != null }
+                        .forEach { it.setColorFilter(color, PorterDuff.Mode.SRC_IN) }
+                    textView.setTextColor(accentColorStateList)
+                    numEntriesText.setTextColor(accentColorStateList)
+                } else {
+                    itemView.backgroundTintList = null
+                    textView.compoundDrawables.filter { it != null }.forEach { it.colorFilter = null }
+                    textView.setTextColor(textColors)
+                    numEntriesText.setTextColor(textColors)
+                }
             }
 
         fun setCount(value: Long?) {
@@ -364,7 +395,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
         init {
             itemView.backgroundTintList = accentColorStateList
-            textView.text = context.getString(R.string.categories_all)
         }
     }
 
@@ -387,6 +417,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
     }
 
     class ViewHolderCategoryHeader(view: View) : ViewHolderBase(view)
+
 
     abstract class ViewHolderSelectableItem(view: View) : ViewHolderBase(view) {
         init {
