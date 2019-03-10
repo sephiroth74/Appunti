@@ -159,7 +159,7 @@
     </style>
 
     <style name="Widget.Appunti.Text.EntryContent.List">
-        <item name="android:inputType">text|textCapWords|textMultiLine|textCapSentences|textAutoCorrect</item>
+        <item name="android:inputType">textCapSentences|textAutoComplete|textAutoCorrect|textMultiLine</item>
     </style>
 
     <style name="Widget.Appunti.Text.EntryTitle">

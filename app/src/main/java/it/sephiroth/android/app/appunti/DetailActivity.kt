@@ -29,6 +29,7 @@ import androidx.core.transition.doOnEnd
 import androidx.core.transition.doOnStart
 import androidx.core.view.children
 import androidx.core.view.doOnPreDraw
+import androidx.core.view.postDelayed
 import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -1325,12 +1326,17 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
                 }
             }
 
-            holder.text.setRawInputType(InputType.TYPE_CLASS_TEXT)
+//            holder.text.setRawInputType(InputType.TYPE_CLASS_TEXT)
 
             if (insertedIndex == position) {
                 currentEditText?.clearFocus()
-                holder.text.requestFocus()
-                holder.text.showSoftInput()
+
+                // force keyboard to open
+                holder.text.postDelayed(300) {
+                    holder.text.requestFocus()
+                    holder.text.showSoftInput()
+                }
+
                 insertedIndex = -1
             }
 
