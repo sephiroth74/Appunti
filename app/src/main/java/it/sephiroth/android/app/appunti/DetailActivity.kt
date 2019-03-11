@@ -13,6 +13,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.InputType
+import android.text.TextWatcher
 import android.text.style.StyleSpan
 import android.text.util.Linkify
 import android.view.*
@@ -51,6 +52,9 @@ import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
+import it.sephiroth.android.library.kotlin_extensions.animation.addTextWatcherListener
+import it.sephiroth.android.library.kotlin_extensions.animation.doOnAfterTextChanged
+import it.sephiroth.android.library.kotlin_extensions.animation.doOnTextChanged
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
@@ -665,7 +669,7 @@ class DetailActivity : AppuntiActivity() {
         } else if (entry.entryType == Entry.EntryType.LIST) {
 
             detailListAdapter = DetailListAdapter(this).apply {
-                setData(entry.asList())
+                setData(entry)
                 saveAction = { text ->
                     Timber.i("saveAction")
                     model.setEntryText(text)
@@ -1175,8 +1179,8 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         }
     }
 
-    fun setData(triple: Triple<MutableList<EntryListJsonModel.EntryJson>, MutableList<EntryListJsonModel.EntryJson>, MutableList<EntryListJsonModel.EntryJson>>?) {
-        dataHolder.setData(triple)
+    fun setData(entry: Entry) {
+        dataHolder.setData(entry.asList())
         notifyDataSetChanged()
     }
 
@@ -1205,9 +1209,24 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     private fun addItem() {
         Timber.v("addItem")
         doOnMainThread {
-            dataHolder.newItem().also { index ->
+            dataHolder.addItem(checked = false).also { index ->
                 insertedIndex = index
+                Timber.v("insertedIndex = $insertedIndex")
                 notifyItemInserted(index)
+                postSave()
+            }
+        }
+    }
+
+    private fun insertItemAfter(entry: EntryListJsonModel.EntryJson) {
+        Timber.i("insertItemAfter($entry)")
+        val id = entry.id
+        doOnMainThread {
+            insertedIndex = dataHolder.insertItem(id)
+            Timber.v("insertedIndex = $insertedIndex")
+
+            if (insertedIndex > -1) {
+                notifyDataSetChanged()
                 postSave()
             }
         }
@@ -1247,7 +1266,8 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             view.setOnClickListener {
                 Timber.v("buttonAdd onClick")
                 removeFocusFromEditText()
-                addItem()
+                 addItem()
+//                insertItemAfter(getItem(3))
             }
 
             DetailNewEntryViewHolder(view).apply {
@@ -1298,15 +1318,48 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
                 }
             }
 
-            holder.text.doOnTextChanged { s, start, count, after ->
-                if (currentEditText == holder.text) {
-                    entry.text = s.toString()
-                    postSave()
+            holder.text.removeTextChangedListener(holder.textListener)
+
+            holder.textListener = holder.text.addTextWatcherListener {
+                afterTextChanged { textView, s ->
+                    if (currentEditText == textView) {
+                        Timber.i("afterTextChanged($s, ${currentEditText?.selectionStart}, ${currentEditText?.selectionEnd})")
+//                        for (i in (s!!.length - 1) downTo 0 step 1) {
+//                            if (s!![i] == '\n') {
+//                                s.delete(i, i + 1)
+//                                Timber.v("final string = '$s'")
+//                                return@afterTextChanged
+//                            }
+//                        }
+                    }
+                }
+
+                onTextChanged { textView, s, start, before, count ->
+                    if (currentEditText == textView) {
+                        Timber.i("onTextChanged('$s', $start, $before, $count)")
+
+                        s?.let { s ->
+                            if (count == 1 && before == 0) {
+                                if (s[start] == '\n') {
+                                    Timber.w("it's a newline!!!!")
+                                    Timber.v("replace with = '${s.substring(0, start)}'")
+                                    textView.text = s.substring(0, start)
+                                    return@let
+                                }
+                            }
+                            Timber.v("final text = $s")
+                            entry.text = s.toString()
+                            postSave()
+                        }
+                    }
                 }
             }
 
+
             holder.text.setOnKeyListener { v, keyCode, event ->
                 var returnType = false
+
+                Timber.i("setOnKeyListener = $keyCode")
 
                 if (event.action == KeyEvent.ACTION_UP) {
                     if (keyCode == KeyEvent.KEYCODE_DEL) {
@@ -1317,6 +1370,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             }
 
             holder.text.setOnEditorActionListener { v, actionId, event ->
+                Timber.i("setOnEditorActionListener = $actionId")
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     removeFocusFromEditText()
                     postSave()
@@ -1325,8 +1379,6 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
                     false
                 }
             }
-
-//            holder.text.setRawInputType(InputType.TYPE_CLASS_TEXT)
 
             if (insertedIndex == position) {
                 currentEditText?.clearFocus()
@@ -1354,9 +1406,6 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     class DetailEntryViewHolder(itemView: View) : DetailViewHolder(itemView) {
         val checkbox: CheckBox = itemView.findViewById(R.id.checkbox)
         val deleteButton: View = itemView.findViewById(R.id.deleteButton)
-
-        init {
-        }
-
+        var textListener: TextWatcher? = null
     }
 }

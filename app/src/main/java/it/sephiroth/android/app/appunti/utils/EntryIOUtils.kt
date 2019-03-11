@@ -37,7 +37,7 @@ object EntryIOUtils {
             while (matcher2.find()) {
                 if (matcher2.groupCount() == 2) {
                     val checked = matcher2.group(1) == "x"
-                    EntryListJsonModel.EntryJson(id, id.toInt(), matcher2.group(2), checked)
+                    EntryListJsonModel.EntryJson(id.toInt(), matcher2.group(2), checked)
                         .apply {
                             array.add(this)
                         }

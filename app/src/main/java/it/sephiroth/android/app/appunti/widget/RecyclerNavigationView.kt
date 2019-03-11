@@ -387,7 +387,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
             }
         }
 
-        protected fun setTextCompoundDrawablesColorFilter(colorFilter: PorterDuffColorFilter?) {
+        private fun setTextCompoundDrawablesColorFilter(colorFilter: PorterDuffColorFilter?) {
             textView.compoundDrawables.filter { it != null }.forEach { it.colorFilter = colorFilter }
         }
 

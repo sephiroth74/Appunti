@@ -1,18 +1,22 @@
 package it.sephiroth.android.app.appunti.models
 
 import com.google.gson.Gson
-import it.sephiroth.android.app.appunti.ext.fromJson
+import com.google.gson.GsonBuilder
 import it.sephiroth.android.app.appunti.utils.UUIDUtils
 import timber.log.Timber
+import java.util.*
 
 class EntryListJsonModel {
 
     data class EntryJson(
-        val id: Long = UUIDUtils.randomLongUUID(),
-        val position: Int = 0,
+        var position: Int = 0,
         var text: String = "",
         var checked: Boolean = false
     ) {
+
+        @Transient
+        val id: Long = UUIDUtils.randomLongUUID()
+
         override fun hashCode(): Int {
             return id.hashCode()
         }
@@ -20,10 +24,15 @@ class EntryListJsonModel {
         fun toJSon(): String {
             return Gson().toJson(this)
         }
+
+        override fun toString(): String {
+            return "EntryJson(id=$id, position=$position, text='$text', checked=$checked)"
+        }
+
+
     }
 
-    private val gson = Gson()
-    private var data: MutableList<EntryJson>? = null
+    private val gson = GsonBuilder().setPrettyPrinting().create()
     private var uncheckedList = mutableListOf<EntryJson>()
     private var checkedList = mutableListOf<EntryJson>()
 
@@ -31,24 +40,18 @@ class EntryListJsonModel {
         const val TYPE_UNCHECKED = 0
         const val TYPE_CHECKED = 1
         const val TYPE_NEW_ENTRY = 2
-    }
 
-    private val listComparator = Comparator<EntryJson> { o1, o2 ->
-        if (o1.checked == o2.checked) {
-            if (o1.position < o2.position) -1 else 1
-        } else {
-            if (o1.checked) 1 else -1
+        val listComparator = Comparator<EntryJson> { o1, o2 ->
+            if (o1.checked == o2.checked) {
+                when {
+                    o1.position < o2.position -> -1
+                    o1.position > o2.position -> 1
+                    else -> 0
+                }
+            } else {
+                if (o1.checked) 1 else -1
+            }
         }
-    }
-
-    fun fromJson(text: String) {
-        Timber.i("parseString($text)")
-        data = gson.fromJson<MutableList<EntryJson>>(text)
-        data?.let { data ->
-            uncheckedList = (data.filter { entry -> !entry.checked }.sortedWith(listComparator)).toMutableList()
-            checkedList = (data.filter { entry -> entry.checked }.sortedWith(listComparator)).toMutableList()
-        }
-        Timber.i("unchecked size: ${uncheckedList.size}, checked size: ${checkedList.size}")
     }
 
     fun toJson(): String {
@@ -72,6 +75,7 @@ class EntryListJsonModel {
     }
 
     fun getItemId(position: Int): Long {
+        Timber.i("getItemId($position)")
         return when {
             position < uncheckedList.size -> uncheckedList[position].id
             position == uncheckedList.size -> -1
@@ -80,6 +84,7 @@ class EntryListJsonModel {
     }
 
     fun getItem(position: Int): EntryJson {
+        Timber.i("getItem($position)")
         return when {
             position < uncheckedList.size -> uncheckedList[position]
             else -> checkedList[position - uncheckedList.size - 1]
@@ -92,6 +97,32 @@ class EntryListJsonModel {
             position == uncheckedList.size -> TYPE_NEW_ENTRY
             else -> TYPE_CHECKED
         }
+    }
+
+    private fun getNextPosition(): Int {
+        val pos1 = checkedList.sortedByDescending { it.position }.first().position
+        val pos2 = uncheckedList.sortedByDescending { it.position }.first().position
+        return if (pos1 > pos2) pos1 + 1 else pos2 + 1
+    }
+
+    private fun getItemById(id: Long): EntryJson? {
+        return uncheckedList.find { it.id == id }
+            ?: run {
+                checkedList.find { it.id == id }
+            }
+    }
+
+    private fun getItemIndex(item: EntryJson): Int? {
+        return if (item.checked) {
+            checkedList.indexOf(item)
+        } else {
+            uncheckedList.indexOf(item)
+        }
+    }
+
+    private fun increaseItemsPositions(position: Int) {
+        uncheckedList.filter { it.position >= position }.forEach { it.position = it.position + 1 }
+        checkedList.filter { it.position >= position }.forEach { it.position = it.position + 1 }
     }
 
     fun deleteItem(entry: EntryJson, type: Int): Int? {
@@ -111,11 +142,52 @@ class EntryListJsonModel {
         return null
     }
 
-    fun newItem(): Int {
-        val newEntry =
-            EntryJson(UUIDUtils.randomLongUUID(), (uncheckedList.size + checkedList.size))
-        uncheckedList.add(newEntry)
-        return (uncheckedList.size - 1)
+    fun addItem(text: String? = null, checked: Boolean = false): Int {
+        Timber.i("addItem($checked)")
+        val nextPosition = getNextPosition()
+        Timber.v("next position = $nextPosition")
+
+        val newEntry = EntryJson(nextPosition, text ?: "", checked)
+
+        return if (checked) {
+            checkedList.add(newEntry)
+            uncheckedList.size + checkedList.size
+        } else {
+            uncheckedList.add(newEntry)
+            uncheckedList.size - 1
+        }
+    }
+
+    @Suppress("NAME_SHADOWING")
+    fun insertItem(id: Long, text: String? = ""): Int {
+        Timber.i("insertItem($id)")
+        val itemBefore = getItemById(id)
+        Timber.v("itemBefore; $itemBefore")
+
+        itemBefore?.let { itemBefore ->
+            val position = itemBefore.position + 1
+            val checked = itemBefore.checked
+            val index = getItemIndex(itemBefore)
+
+            index?.let { index ->
+                Timber.v("index before = $index")
+                Timber.v("checked before = $checked")
+
+                val newEntry = EntryJson(position = position, checked = checked, text = text ?: "")
+                increaseItemsPositions(position)
+
+                return if (checked) {
+                    checkedList.add(index + 1, newEntry)
+                    index + 1 + uncheckedList.size + 1
+                } else {
+                    uncheckedList.add(index + 1, newEntry)
+                    index + 1
+                }
+            }
+        }
+
+        return -1
+
     }
 
     fun toggle(entry: EntryJson, type: Int): Pair<Int, Int>? {
@@ -151,13 +223,17 @@ class EntryListJsonModel {
         return null
     }
 
+    @Suppress("NAME_SHADOWING")
     fun setData(triple: Triple<MutableList<EntryJson>, MutableList<EntryJson>, MutableList<EntryJson>>?) {
+
+
         triple?.let { triple ->
-            data = triple.first
+            Timber.v("uncheckedList = ${triple.second}")
+            Timber.v("checkedList = ${triple.third}")
+
             uncheckedList = triple.second
             checkedList = triple.third
         } ?: run {
-            data?.clear()
             uncheckedList.clear()
             checkedList.clear()
         }

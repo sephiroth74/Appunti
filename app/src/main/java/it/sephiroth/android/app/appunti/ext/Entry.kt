@@ -14,9 +14,9 @@ import com.google.gson.reflect.TypeToken
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.models.EntryListJsonModel
-import java.util.ArrayList
+import timber.log.Timber
+import java.util.*
 import java.util.regex.Pattern
-import kotlin.Comparator
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -43,22 +43,33 @@ fun Entry.getAttachmentColor(context: Context): Int {
 
 fun Entry.asList(): Triple<MutableList<EntryListJsonModel.EntryJson>, MutableList<EntryListJsonModel.EntryJson>, MutableList<EntryListJsonModel.EntryJson>>? {
     if (entryType == Entry.EntryType.LIST) {
-        val listComparator = Comparator<EntryListJsonModel.EntryJson> { o1, o2 ->
-            if (o1.checked == o2.checked) {
-                if (o1.position < o2.position) -1 else 1
-            } else {
-                if (o1.checked) 1 else -1
-            }
-        }
+        Timber.v("asList(), entryText = $entryText")
 
-        try {
+        return try {
             val data = Gson().fromJson<MutableList<EntryListJsonModel.EntryJson>>(entryText)
-            val uncheckedList = (data.filter { entry -> !entry.checked }.sortedWith(listComparator)).toMutableList()
-            val checkedList = (data.filter { entry -> entry.checked }.sortedWith(listComparator)).toMutableList()
-            return Triple(data, uncheckedList, checkedList)
+            val sortedData = data.sortedWith(EntryListJsonModel.listComparator)
+
+            sortedData.forEachIndexed { index, entryJson ->
+                if (index > 0) {
+                    val prevPosition = sortedData[index - 1].position
+                    val currentPosition = entryJson.position
+
+                    if (prevPosition >= currentPosition) {
+                        entryJson.position = prevPosition + 1
+                    }
+                }
+            }
+
+            Timber.v("sortedData = $sortedData")
+
+            val uncheckedList =
+                (sortedData.filter { entry -> !entry.checked }.sortedWith(EntryListJsonModel.listComparator)).toMutableList()
+            val checkedList =
+                (sortedData.filter { entry -> entry.checked }.sortedWith(EntryListJsonModel.listComparator)).toMutableList()
+            Triple(sortedData.toMutableList(), uncheckedList, checkedList)
         } catch (e: JsonSyntaxException) {
             e.printStackTrace()
-            return Triple(mutableListOf(), mutableListOf(), mutableListOf())
+            Triple(mutableListOf(), mutableListOf(), mutableListOf())
         }
     }
     return null
@@ -72,7 +83,7 @@ fun Entry.convertToList(): Boolean {
         for (item in list) {
             if (item.isEmpty() || item.isBlank()) continue
 
-            EntryListJsonModel.EntryJson(id, id.toInt(), item, false)
+            EntryListJsonModel.EntryJson(id.toInt(), item, false)
                 .apply {
                     array.add(this)
                 }

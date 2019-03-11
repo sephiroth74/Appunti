@@ -155,7 +155,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
                     )
                     .build()
             WorkManager.getInstance()
-                .enqueueUniquePeriodicWork("remoteUrlWorker", ExistingPeriodicWorkPolicy.KEEP, saveRequest)
+                .enqueueUniquePeriodicWork("remoteUrlWorker", ExistingPeriodicWorkPolicy.REPLACE, saveRequest)
         }
     }
 }
