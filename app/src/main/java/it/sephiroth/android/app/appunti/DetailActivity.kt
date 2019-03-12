@@ -52,6 +52,9 @@ import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import it.sephiroth.android.library.kotlin_extensions.content.res.getColor
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnMainThread
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnScheduler
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxTimer
 import it.sephiroth.android.library.kotlin_extensions.kotlin.hasBits
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import it.sephiroth.android.library.kotlin_extensions.view.hideSoftInput
@@ -1284,8 +1287,10 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             this.clearFocus()
             this.hideSoftInput()
         }
-
         currentEditText = null
+
+
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailViewHolder {

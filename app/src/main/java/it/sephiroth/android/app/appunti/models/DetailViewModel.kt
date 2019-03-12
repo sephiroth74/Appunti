@@ -15,10 +15,10 @@ import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
 import it.sephiroth.android.app.appunti.ext.convertToList
-import it.sephiroth.android.app.appunti.ext.doOnMainThread
 import it.sephiroth.android.app.appunti.ext.whenNotNull
 import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnMainThread
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import it.sephiroth.android.library.kotlin_extensions.lang.isMainThread
 import org.threeten.bp.ZoneId

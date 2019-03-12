@@ -16,7 +16,6 @@ import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.text.set
 import androidx.core.text.toSpannable
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.circularreveal.cardview.CircularRevealCardView
@@ -24,8 +23,6 @@ import io.reactivex.schedulers.Schedulers
 import isTablet
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.doOnMainThread
-import it.sephiroth.android.app.appunti.ext.doOnScheduler
 import it.sephiroth.android.app.appunti.ext.getSummary
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
@@ -33,6 +30,8 @@ import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import it.sephiroth.android.library.kotlin_extensions.content.res.getColorStateList
 import it.sephiroth.android.library.kotlin_extensions.content.res.isPortrait
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnMainThread
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnScheduler
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import kotlinx.android.synthetic.main.appunti_recycler_main_entry_item.view.*
 import org.threeten.bp.Instant
@@ -327,7 +326,7 @@ class ItemEntryListAdapter(
             finalData.add(EntryItem(null, EntryItem.ItemType.EMPTY_END))
 
             val callback = EntriesDiffCallback(values, finalData)
-            val result = DiffUtil.calculateDiff(callback, true)
+            // val result = DiffUtil.calculateDiff(callback, true)
 
             values = finalData
 

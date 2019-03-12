@@ -3,7 +3,6 @@ package it.sephiroth.android.app.appunti
 import android.app.SearchManager
 import android.content.Intent
 import android.os.Bundle
-import android.transition.AutoTransition
 import android.transition.Fade
 import android.view.View
 import androidx.appcompat.widget.Toolbar
@@ -22,9 +21,9 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
-import it.sephiroth.android.app.appunti.ext.rxSingle
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxSingle
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
 import kotlinx.android.synthetic.main.appunti_search_view_toolbar_arrow_only.*
 import timber.log.Timber

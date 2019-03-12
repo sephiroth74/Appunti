@@ -1,4 +1,4 @@
-package it.sephiroth.android.app.appunti.ext
+package it.sephiroth.android.library.kotlin_extensions.io.reactivex
 
 import io.reactivex.Observable
 import io.reactivex.Scheduler
@@ -6,8 +6,6 @@ import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import java.text.DateFormat
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 fun <T> rxSingle(thread: Scheduler, func: () -> T): Single<T> {
@@ -27,9 +25,7 @@ fun rxTimer(
     thread: Scheduler = Schedulers.computation(),
     observerThread: Scheduler = AndroidSchedulers.mainThread(), action: ((Long) -> Unit)
 ): Disposable? {
-
     oldTimer?.dispose()
-
     return Observable
         .timer(time, unit, thread)
         .observeOn(observerThread)
@@ -38,27 +34,19 @@ fun rxTimer(
         }
 }
 
-fun ioThread(func: () -> Unit) {
-    Schedulers.io().scheduleDirect {
-        func.invoke()
-    }
-}
-
 fun doOnScheduler(scheduler: Scheduler, func: () -> Unit): Disposable {
     return scheduler.scheduleDirect(func)
 }
 
-fun doOnScheduler(scheduler: Scheduler, disposable: Disposable? = null, func: () -> Unit): Disposable {
-    disposable?.dispose()
-    return scheduler.scheduleDirect(func)
+fun doOnMainThread(func: () -> Unit): Disposable {
+    return doOnScheduler(AndroidSchedulers.mainThread(), func)
 }
 
-fun doOnMainThread(func: () -> Unit) {
-    AndroidSchedulers.mainThread().scheduleDirect(func)
+fun doOnIOThread(func: () -> Unit): Disposable {
+    return doOnScheduler(Schedulers.io(), func)
 }
 
-fun Date.toUserDate() = ExtensionUtils.dateformat.format(this)
-
-object ExtensionUtils {
-    val dateformat: DateFormat = java.text.DateFormat.getDateTimeInstance()
+fun doOnComputation(func: () -> Unit): Disposable {
+    return doOnScheduler(Schedulers.computation(), func)
 }
+

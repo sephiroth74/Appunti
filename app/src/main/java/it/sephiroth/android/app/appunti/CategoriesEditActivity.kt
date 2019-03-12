@@ -32,8 +32,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Category_Table
-import it.sephiroth.android.app.appunti.ext.doOnMainThread
-import it.sephiroth.android.app.appunti.ext.rxSingle
 import it.sephiroth.android.app.appunti.graphics.CategoryColorDrawable
 import it.sephiroth.android.app.appunti.utils.CategoriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.IntentUtils
@@ -41,6 +39,8 @@ import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import it.sephiroth.android.app.appunti.widget.GridLayoutColorChooser
 import it.sephiroth.android.library.kotlin_extensions.content.res.getColorStateList
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnMainThread
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxSingle
 import it.sephiroth.android.library.kotlin_extensions.view.hideSoftInput
 import it.sephiroth.android.library.kotlin_extensions.view.showSoftInput
 import kotlinx.android.synthetic.main.activity_categories.*

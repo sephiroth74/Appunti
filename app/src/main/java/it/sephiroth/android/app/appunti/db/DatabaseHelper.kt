@@ -12,11 +12,11 @@ import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.*
 import it.sephiroth.android.app.appunti.db.views.EntryWithCategory
-import it.sephiroth.android.app.appunti.ext.doOnScheduler
 import it.sephiroth.android.app.appunti.ext.getFile
-import it.sephiroth.android.app.appunti.ext.rxSingle
 import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnScheduler
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxSingle
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import it.sephiroth.android.library.kotlin_extensions.net.resolveDisplayName
 import it.sephiroth.android.library.kotlin_extensions.net.resolveMimeType

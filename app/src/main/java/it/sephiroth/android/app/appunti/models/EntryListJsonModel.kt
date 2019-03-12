@@ -2,9 +2,10 @@ package it.sephiroth.android.app.appunti.models
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import it.sephiroth.android.app.appunti.utils.UUIDUtils
+import it.sephiroth.android.app.appunti.BuildConfig
 import timber.log.Timber
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
 
 class EntryListJsonModel {
 
@@ -15,28 +16,43 @@ class EntryListJsonModel {
     ) {
 
         @Transient
-        val id: Long = UUIDUtils.randomLongUUID()
+        val id: Long = generateID()
 
         override fun hashCode(): Int {
             return id.hashCode()
-        }
-
-        fun toJSon(): String {
-            return Gson().toJson(this)
         }
 
         override fun toString(): String {
             return "EntryJson(id=$id, position=$position, text='$text', checked=$checked)"
         }
 
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
 
+            other as EntryJson
+
+            if (position != other.position) return false
+            if (text != other.text) return false
+            if (checked != other.checked) return false
+            if (id != other.id) return false
+
+            return true
+        }
+
+        companion object {
+            private val nextID = AtomicLong(0)
+
+            fun generateID(): Long = nextID.incrementAndGet()
+        }
     }
 
-    private val gson = GsonBuilder().setPrettyPrinting().create()
+    private val gson = if (BuildConfig.DEBUG) GsonBuilder().setPrettyPrinting().create() else Gson()
     private var uncheckedList = mutableListOf<EntryJson>()
     private var checkedList = mutableListOf<EntryJson>()
 
     companion object {
+
         const val TYPE_UNCHECKED = 0
         const val TYPE_CHECKED = 1
         const val TYPE_NEW_ENTRY = 2
