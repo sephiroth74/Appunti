@@ -17,10 +17,7 @@ import android.text.style.StyleSpan
 import android.text.util.Linkify
 import android.view.*
 import android.view.inputmethod.EditorInfo
-import android.widget.CheckBox
-import android.widget.FrameLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
@@ -1299,6 +1296,14 @@ class DetailListAdapter(var activity: AppCompatActivity) : RecyclerView.Adapter<
                 holder.deleteButton.setOnClickListener {
                     deleteItem(getItem(holder.adapterPosition), holder.itemViewType)
                 }
+
+                holder.checkedActionListener = { _, _ ->
+                    clearCurrentFocus()
+                    toggleItem(
+                        getItem(holder.adapterPosition),
+                        holder.itemViewType
+                    )
+                }
             }
         }
     }
@@ -1308,26 +1313,10 @@ class DetailListAdapter(var activity: AppCompatActivity) : RecyclerView.Adapter<
             // empty on purpose
         } else {
             val holder = baseHolder as DetailEntryViewHolder
-            holder.checkbox.setOnCheckedChangeListener(null)
-
             val entry = getItem(position)
+
             holder.text.text = entry.text
-
-            if (holder.itemViewType == EntryListJsonModel.TYPE_CHECKED) {
-                holder.checkbox.isChecked = true
-                holder.text.paintFlags = holder.text.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-            } else {
-                holder.checkbox.isChecked = false
-                holder.text.paintFlags = holder.text.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-            }
-
-            holder.checkbox.setOnCheckedChangeListener { buttonView, isChecked ->
-                clearCurrentFocus()
-                toggleItem(
-                    entry,
-                    holder.itemViewType
-                )
-            }
+            holder.isChecked = holder.itemViewType == EntryListJsonModel.TYPE_CHECKED
 
             holder.text.removeTextChangedListener(holder.textListener)
 
@@ -1417,5 +1406,29 @@ class DetailListAdapter(var activity: AppCompatActivity) : RecyclerView.Adapter<
         val checkbox: CheckBox = itemView.findViewById(R.id.checkbox)
         val deleteButton: View = itemView.findViewById(R.id.deleteButton)
         var textListener: TextWatcher? = null
+
+        var checkedActionListener: ((DetailEntryViewHolder, Boolean) -> Unit)? = null
+
+        private val checkedChangeListener = CompoundButton.OnCheckedChangeListener { view, checked ->
+            checkedActionListener?.invoke(this, checked)
+        }
+
+        var isChecked: Boolean
+            get() = itemViewType == EntryListJsonModel.TYPE_CHECKED
+            set(value) {
+                // remove the checked listener before setting at runtime
+                checkbox.setOnCheckedChangeListener(null)
+
+                if (value) {
+                    checkbox.isChecked = true
+                    text.paintFlags = text.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                } else {
+                    checkbox.isChecked = false
+                    text.paintFlags = text.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                }
+
+                // restore the checked listener
+                checkbox.setOnCheckedChangeListener(checkedChangeListener)
+            }
     }
 }
