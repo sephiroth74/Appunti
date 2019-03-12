@@ -25,18 +25,22 @@ import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import timber.log.Timber
 
+@Suppress("NAME_SHADOWING")
 class DetailViewModel(application: Application) : AndroidViewModel(application) {
 
+    // current edited entry
     val entry: LiveData<Entry> = MutableLiveData()
 
+    // set/get entry dirty
     var modified = false
 
+    // is a new entry
     var isNew = false
+        private set
 
     var entryID: Long?
         @SuppressLint("CheckResult")
         set(value) {
-
             value?.let { value ->
                 DatabaseHelper
                     .getEntryById(value)

@@ -244,7 +244,6 @@ class EntryListJsonModel {
         triple?.let { triple ->
             Timber.v("uncheckedList = ${triple.second}")
             Timber.v("checkedList = ${triple.third}")
-
             uncheckedList = triple.second
             checkedList = triple.third
         } ?: run {
