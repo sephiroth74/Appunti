@@ -16,10 +16,11 @@ import it.sephiroth.android.app.appunti.MainActivity
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Category
+import it.sephiroth.android.library.kotlin_extensions.os.isAtLeastAPI
+import it.sephiroth.android.library.kotlin_extensions.util.Singleton
 import timber.log.Timber
 
 class ShortcutHelper private constructor(private val context: Context) {
-
     private val categoriesModelListener = object : DirectModelNotifier.ModelChangedListener<Category> {
         override fun onModelChanged(model: Category, action: ChangeAction) {
             Timber.i("onModelChanged($action)")
@@ -34,11 +35,12 @@ class ShortcutHelper private constructor(private val context: Context) {
     }
 
     fun updateShortcuts() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
+        if (isAtLeastAPI(Build.VERSION_CODES.N_MR1)) {
             updateShortcutsApi25()
         }
     }
 
+    @Suppress("NAME_SHADOWING")
     @SuppressLint("CheckResult")
     @RequiresApi(Build.VERSION_CODES.N_MR1)
     fun updateShortcutsApi25() {
@@ -75,5 +77,5 @@ class ShortcutHelper private constructor(private val context: Context) {
 
     }
 
-    companion object : SingletonHolder<ShortcutHelper, Context>(::ShortcutHelper)
+    companion object : Singleton<ShortcutHelper, Context>(::ShortcutHelper)
 }

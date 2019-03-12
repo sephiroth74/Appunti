@@ -1,6 +1,6 @@
-package it.sephiroth.android.app.appunti.utils
+package it.sephiroth.android.library.kotlin_extensions.util
 
-open class SingletonHolder<out T, in A>(creator: (A) -> T) {
+open class Singleton<out T, in A>(creator: (A) -> T) {
     private var creator: ((A) -> T)? = creator
     @Volatile private var instance: T? = null
 

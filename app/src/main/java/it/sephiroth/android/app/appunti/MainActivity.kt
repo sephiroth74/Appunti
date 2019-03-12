@@ -66,6 +66,9 @@ class MainActivity : AppuntiActivityFullscreen() {
     // swipe helper for the recycler view
     private lateinit var itemTouchHelper: ItemTouchHelper
 
+    // save instance state for the main recyclerview
+    private var mListState: Parcelable? = null
+
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,8 +113,6 @@ class MainActivity : AppuntiActivityFullscreen() {
         val listState = itemsRecycler.layoutManager?.onSaveInstanceState()
         outState?.putParcelable("LIST_STATE_KEY", listState)
     }
-
-    private var mListState: Parcelable? = null
 
     override fun onRestoreInstanceState(state: Bundle?) {
         super.onRestoreInstanceState(state)
@@ -240,13 +241,6 @@ class MainActivity : AppuntiActivityFullscreen() {
         var top = 0
         var bottom = 0
         if (isFullScreen) {
-            // Inset bottom of content if drawing under the translucent navbar, but
-            // only if the navbar is a software bar and is on the bottom of the screen.
-//            Timber.v("resources.showsSoftwareNavBar = ${resources.hasSoftwareNavBar(this)}")
-//            Timber.v("resources.isNavBarAtBottom = ${resources.isNavBarAtBottom}")
-//            if (resources.hasSoftwareNavBar(this) && resources.isNavBarAtBottom) {
-//                bottom = navigationbarHeight
-//            }
             bottom = navigationbarHeight
             top = statusbarHeight
         }
@@ -586,7 +580,7 @@ class MainActivity : AppuntiActivityFullscreen() {
         DatabaseHelper
             .setEntriesArchived(entries, archived)
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { result, error ->
+            .subscribe { _, error ->
                 error?.let {
                     Timber.e(error)
                 } ?: run {
@@ -603,7 +597,7 @@ class MainActivity : AppuntiActivityFullscreen() {
     private fun setEntriesDeleted(entries: List<Entry>, deleted: Boolean) {
         DatabaseHelper.setEntriesDeleted(entries, deleted)
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { success, error ->
+            .subscribe { _, error ->
                 error?.let {
                     Timber.e("error=$error")
                 } ?: run {
