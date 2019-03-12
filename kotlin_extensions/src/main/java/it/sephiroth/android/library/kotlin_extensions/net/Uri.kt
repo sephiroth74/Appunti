@@ -1,4 +1,4 @@
-package it.sephiroth.android.app.appunti.ext
+package it.sephiroth.android.library.kotlin_extensions.net
 
 import android.content.ContentResolver
 import android.content.Context
@@ -6,11 +6,10 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
-import timber.log.Timber
 import java.io.File
 
 
-fun Uri.getMimeType(context: Context): String? {
+fun Uri.resolveMimeType(context: Context): String? {
     val mimeType: String?
     mimeType = if (scheme == ContentResolver.SCHEME_CONTENT) {
         val cr = context.contentResolver
@@ -25,12 +24,12 @@ fun Uri.getMimeType(context: Context): String? {
 /**
  * Tries to return the mime type from the file path
  */
-fun Uri.getMimeTypeFromFilePart(): String? {
+fun Uri.resolveMimeTypeFromFilePart(): String? {
     val fileExtension = MimeTypeMap.getFileExtensionFromUrl(toString())
     return MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase())
 }
 
-fun Uri.getDisplayName(context: Context): String? {
+fun Uri.resolveDisplayName(context: Context): String? {
     val uriString = toString()
     if (uriString.startsWith("content://", true)) {
         var cursor: Cursor? = null
@@ -38,7 +37,6 @@ fun Uri.getDisplayName(context: Context): String? {
             cursor = context.contentResolver.query(this, null, null, null, null);
             if (cursor != null && cursor.moveToFirst()) {
                 val columnIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                Timber.v("columnIndex = $columnIndex")
                 if (columnIndex > -1) {
                     return cursor.getString(columnIndex)
                 }

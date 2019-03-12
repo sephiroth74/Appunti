@@ -18,7 +18,7 @@ import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
 import it.sephiroth.android.app.appunti.db.views.EntryWithCategory
-import it.sephiroth.android.app.appunti.ext.currentThread
+import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import timber.log.Timber
 
 class MainViewModel(application: Application) : AndroidViewModel(application),

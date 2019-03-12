@@ -9,8 +9,8 @@ import com.shockwave.pdfium.PdfiumCore
 import com.squareup.picasso.*
 import com.squareup.picasso.Picasso.LoadedFrom
 import it.sephiroth.android.app.appunti.BuildConfig
-import it.sephiroth.android.app.appunti.ext.getMimeTypeFromFilePart
-import it.sephiroth.android.app.appunti.ext.sha1
+import it.sephiroth.android.library.kotlin_extensions.net.resolveMimeTypeFromFilePart
+import sha1
 import timber.log.Timber
 import java.io.IOException
 
@@ -26,7 +26,7 @@ object PicassoUtils {
         override fun canHandleRequest(data: Request): Boolean {
             Timber.i("canHandleRequest(uri=${data.uri}, scheme=${data.uri.scheme})")
             val scheme = data.uri.scheme
-            return SCHEME_VIDEO == scheme || data.uri.getMimeTypeFromFilePart()?.startsWith("video/", true) == true
+            return SCHEME_VIDEO == scheme || data.uri.resolveMimeTypeFromFilePart()?.startsWith("video/", true) == true
         }
 
         @Throws(IOException::class)
@@ -47,7 +47,7 @@ object PicassoUtils {
 
         override fun canHandleRequest(data: Request): Boolean {
             Timber.i("canHandleRequest(uri=${data.uri}, scheme=${data.uri.scheme})")
-            return data.uri.getMimeTypeFromFilePart()?.startsWith(MIME_TYPE, true) == true
+            return data.uri.resolveMimeTypeFromFilePart()?.startsWith(MIME_TYPE, true) == true
         }
 
         override fun load(request: Request, networkPolicy: Int): Result? {

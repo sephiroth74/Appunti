@@ -3,8 +3,8 @@ package it.sephiroth.android.app.appunti.graphics
 import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.ColorDrawable
-import getColor
 import it.sephiroth.android.app.appunti.R
+import it.sephiroth.android.library.kotlin_extensions.content.res.getColor
 
 class CategoryColorDrawable(context: Context, color: Int) : ColorDrawable(color) {
     val strokeColorNormal = context.theme.getColor(context, R.attr.colorControlNormal)

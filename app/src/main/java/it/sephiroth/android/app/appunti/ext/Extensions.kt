@@ -1,11 +1,5 @@
 package it.sephiroth.android.app.appunti.ext
 
-import android.app.Activity
-import android.content.Context
-import android.os.Build
-import android.os.Looper
-import android.view.View
-import android.view.inputmethod.InputMethodManager
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.Single
@@ -63,41 +57,7 @@ fun doOnMainThread(func: () -> Unit) {
     AndroidSchedulers.mainThread().scheduleDirect(func)
 }
 
-fun isAPI(value: Int) = Build.VERSION.SDK_INT == value
-
-fun isAtLeastAPI(value: Int) = Build.VERSION.SDK_INT >= value
-
-fun currentThread() = Thread.currentThread()
-
-fun isMainThread() = Thread.currentThread() == Looper.getMainLooper().thread
-
 fun Date.toUserDate() = ExtensionUtils.dateformat.format(this)
-
-inline val Activity.isInMultiWindow: Boolean
-    get() {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            isInMultiWindowMode
-        } else {
-            false
-        }
-    }
-
-fun View.showSoftInput() {
-    val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
-//    inputMethodManager?.showSoftInput(this, 0)
-    inputMethodManager?.toggleSoftInputFromWindow(windowToken, 0, 0)
-//    inputMethodManager?.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
-}
-
-fun View.hideSoftInput() {
-    val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
-    inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
-}
-
-infix fun Int.hasBits(value: Int): Boolean {
-    return this and value == value
-}
-
 
 object ExtensionUtils {
     val dateformat: DateFormat = java.text.DateFormat.getDateTimeInstance()

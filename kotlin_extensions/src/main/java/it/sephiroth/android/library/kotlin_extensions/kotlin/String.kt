@@ -1,5 +1,3 @@
-package it.sephiroth.android.app.appunti.ext
-
 import java.security.MessageDigest
 
 

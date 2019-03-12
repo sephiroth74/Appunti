@@ -9,8 +9,8 @@ import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
-import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.ext.parseRemoteUrls
+import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import timber.log.Timber

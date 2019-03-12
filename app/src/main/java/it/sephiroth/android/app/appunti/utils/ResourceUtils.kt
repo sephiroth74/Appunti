@@ -2,7 +2,7 @@ package it.sephiroth.android.app.appunti.utils
 
 import android.content.Context
 import it.sephiroth.android.app.appunti.R
-import resolveAttribute
+import it.sephiroth.android.library.kotlin_extensions.content.res.resolveAttribute
 
 
 object ResourceUtils {

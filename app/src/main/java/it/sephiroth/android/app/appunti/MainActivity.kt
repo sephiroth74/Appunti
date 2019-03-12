@@ -26,12 +26,9 @@ import com.google.android.material.snackbar.Snackbar
 import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
 import com.leinardi.android.speeddial.SpeedDialActionItem
-import getColor
-import getColorStateList
 import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
-import it.sephiroth.android.app.appunti.ext.currentThread
 import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.IntentUtils
@@ -39,7 +36,10 @@ import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import it.sephiroth.android.app.appunti.widget.MultiChoiceHelper
 import it.sephiroth.android.app.appunti.widget.RecyclerNavigationView
 import it.sephiroth.android.app.appunti.workers.RemoteUrlParserWorker
-import it.sephiroth.android.library.kotlin_extensions.animation.setAnimationListener
+import it.sephiroth.android.library.kotlin_extensions.content.res.getColor
+import it.sephiroth.android.library.kotlin_extensions.content.res.getColorStateList
+import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
+import it.sephiroth.android.library.kotlin_extensions.view.setAnimationListener
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
 import kotlinx.android.synthetic.main.appunti_main_drawer_navigation_content.*
@@ -786,7 +786,6 @@ class MainActivity : AppuntiActivityFullscreen() {
                             property.setListener(null)
                         }
                     }
-
                     .start()
             } else {
                 window.statusBarColor = theme.getColor(this@MainActivity, android.R.attr.statusBarColor)

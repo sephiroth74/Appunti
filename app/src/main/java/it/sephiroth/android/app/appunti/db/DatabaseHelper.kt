@@ -12,9 +12,14 @@ import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.*
 import it.sephiroth.android.app.appunti.db.views.EntryWithCategory
-import it.sephiroth.android.app.appunti.ext.*
+import it.sephiroth.android.app.appunti.ext.doOnScheduler
+import it.sephiroth.android.app.appunti.ext.getFile
+import it.sephiroth.android.app.appunti.ext.rxSingle
 import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
+import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
+import it.sephiroth.android.library.kotlin_extensions.net.resolveDisplayName
+import it.sephiroth.android.library.kotlin_extensions.net.resolveMimeType
 import org.apache.commons.io.FileUtils
 import org.threeten.bp.Instant
 import timber.log.Timber
@@ -237,8 +242,8 @@ object DatabaseHelper {
     ) {
         Timber.i("addAttachmentFromUri($entry, $uri)")
 
-        val displayName: String = uri.getDisplayName(context) ?: UUID.randomUUID().toString()
-        val mimeType = uri.getMimeType(context)
+        val displayName: String = uri.resolveDisplayName(context) ?: UUID.randomUUID().toString()
+        val mimeType = uri.resolveMimeType(context)
 
         Timber.v("displayName: $displayName, mimeType: $mimeType")
 

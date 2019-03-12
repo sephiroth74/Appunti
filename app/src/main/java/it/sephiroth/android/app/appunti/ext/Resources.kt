@@ -1,14 +1,13 @@
 import android.content.Context
-import android.content.res.ColorStateList
-import android.content.res.Configuration
 import android.content.res.Resources
 import android.util.TypedValue
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import androidx.annotation.AttrRes
 import androidx.annotation.Px
-import androidx.core.content.ContextCompat
 import it.sephiroth.android.app.appunti.R
+import it.sephiroth.android.library.kotlin_extensions.content.res.getTypedValue
+import it.sephiroth.android.library.kotlin_extensions.content.res.isPortrait
 import timber.log.Timber
 
 fun Resources.hasSoftwareNavBar(context: Context): Boolean {
@@ -33,7 +32,6 @@ inline val Resources.isNavBarAtBottom: Boolean
 
 inline val Resources.isTablet: Boolean get() = getBoolean(R.bool.is_tablet)
 
-inline val Resources.isPortrait: Boolean get() = this.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
 
 val Resources.statusBarHeight: Int
     @Px get() {
@@ -45,18 +43,6 @@ val Resources.statusBarHeight: Int
     }
 
 
-fun Resources.Theme.getColorStateList(context: Context, @AttrRes id: Int): ColorStateList? {
-    return ContextCompat.getColorStateList(context, context.theme.resolveAttribute(id))
-}
-
-fun Resources.Theme.getColor(context: Context, @AttrRes id: Int): Int {
-    return ContextCompat.getColor(context, context.theme.resolveAttribute(id))
-}
-
-fun Resources.Theme.getInteger(context: Context, @AttrRes id: Int): Int {
-    return context.resources.getInteger(context.theme.resolveAttribute(id))
-}
-
 fun Resources.Theme.getFloat(context: Context, @AttrRes id: Int): Float? {
     val typedValue = getTypedValue(id, true)
     if (typedValue.type == TypedValue.TYPE_FLOAT) {
@@ -65,18 +51,3 @@ fun Resources.Theme.getFloat(context: Context, @AttrRes id: Int): Float? {
     return null
 }
 
-fun Resources.Theme.getDimensionPixelSize(context: Context, @AttrRes id: Int): Int {
-    return resources.getDimensionPixelSize(context.theme.resolveAttribute(id))
-}
-
-fun Resources.Theme.resolveAttribute(@AttrRes id: Int, resolveRefs: Boolean = false): Int {
-    val typedValue = TypedValue()
-    resolveAttribute(id, typedValue, resolveRefs)
-    return typedValue.data
-}
-
-fun Resources.Theme.getTypedValue(@AttrRes id: Int, resolveRefs: Boolean = false): TypedValue {
-    val typedValue = TypedValue()
-    resolveAttribute(id, typedValue, resolveRefs)
-    return typedValue
-}

@@ -1,4 +1,4 @@
-package it.sephiroth.android.library.kotlin_extensions.animation
+package it.sephiroth.android.library.kotlin_extensions.util
 
 import java.math.BigInteger
 import java.nio.ByteBuffer

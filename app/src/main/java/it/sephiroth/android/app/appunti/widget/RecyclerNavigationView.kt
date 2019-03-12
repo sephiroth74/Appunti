@@ -18,7 +18,6 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
-import getColor
 import isTablet
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Category
@@ -27,6 +26,7 @@ import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import it.sephiroth.android.app.appunti.view.CheckableLinearLayout
+import it.sephiroth.android.library.kotlin_extensions.content.res.getColor
 import kotlinx.android.synthetic.main.appunti_main_drawer_navigation_content.view.*
 import timber.log.Timber
 

@@ -3,13 +3,12 @@ package it.sephiroth.android.app.appunti.utils
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
-import getColor
 import getFloat
-import getInteger
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
 import it.sephiroth.android.app.appunti.graphics.MaterialShape
 import it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable
+import it.sephiroth.android.library.kotlin_extensions.content.res.getColor
 
 object MaterialBackgroundUtils {
 

@@ -1,10 +1,10 @@
-package it.sephiroth.android.library.kotlin_extensions.animation
+package it.sephiroth.android.library.kotlin_extensions.view
 
 import android.animation.Animator
 import android.view.ViewPropertyAnimator
 
 @Suppress("unused")
-class ViewPropertyAnimatorAnimatorListener(private val viewPropertyAnimator: ViewPropertyAnimator) :
+class AnimatorListenerImpl(private val viewPropertyAnimator: ViewPropertyAnimator) :
     Animator.AnimatorListener {
 
     private var _onAnimationRepeat: ((viewPropertyAnimator: ViewPropertyAnimator, animation: Animator) -> Unit)? = null
@@ -45,8 +45,8 @@ class ViewPropertyAnimatorAnimatorListener(private val viewPropertyAnimator: Vie
     }
 }
 
-inline fun ViewPropertyAnimator.setAnimationListener(func: ViewPropertyAnimatorAnimatorListener.() -> Unit): ViewPropertyAnimator {
-    val listener = ViewPropertyAnimatorAnimatorListener(this)
+inline fun ViewPropertyAnimator.setAnimationListener(func: AnimatorListenerImpl.() -> Unit): ViewPropertyAnimator {
+    val listener = AnimatorListenerImpl(this)
     listener.func()
     setListener(listener)
     return this

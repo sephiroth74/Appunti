@@ -38,7 +38,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.structure.delete
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import getColor
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
@@ -52,9 +51,14 @@ import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
-import it.sephiroth.android.library.kotlin_extensions.animation.addTextWatcherListener
-import it.sephiroth.android.library.kotlin_extensions.animation.doOnAfterTextChanged
-import it.sephiroth.android.library.kotlin_extensions.animation.doOnTextChanged
+import it.sephiroth.android.library.kotlin_extensions.content.res.getColor
+import it.sephiroth.android.library.kotlin_extensions.kotlin.hasBits
+import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
+import it.sephiroth.android.library.kotlin_extensions.view.hideSoftInput
+import it.sephiroth.android.library.kotlin_extensions.view.showSoftInput
+import it.sephiroth.android.library.kotlin_extensions.widget.addTextWatcherListener
+import it.sephiroth.android.library.kotlin_extensions.widget.doOnAfterTextChanged
+import it.sephiroth.android.library.kotlin_extensions.widget.doOnTextChanged
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
