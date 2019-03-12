@@ -1239,8 +1239,13 @@ class DetailListAdapter(var activity: AppCompatActivity) : RecyclerView.Adapter<
         }
     }
 
+    /**
+     * Delete the passed [Entry] and remove the current focus
+     */
     internal fun deleteItem(entry: EntryListJsonModel.EntryJson, itemViewType: Int) {
+        Timber.i("deleteItem($entry, $itemViewType)")
         doOnMainThread {
+            clearCurrentFocus()
             dataHolder.deleteItem(entry, itemViewType)?.let { index ->
                 notifyItemRemoved(index)
                 postSave()
@@ -1289,13 +1294,18 @@ class DetailListAdapter(var activity: AppCompatActivity) : RecyclerView.Adapter<
                 holder.text.setOnFocusChangeListener { _, hasFocus ->
                     holder.deleteButton.visibility = if (hasFocus) View.VISIBLE else View.INVISIBLE
                 }
+
+                // delete the current entry item
+                holder.deleteButton.setOnClickListener {
+                    deleteItem(getItem(holder.adapterPosition), holder.itemViewType)
+                }
             }
         }
     }
 
     override fun onBindViewHolder(baseHolder: DetailViewHolder, position: Int) {
         if (baseHolder.itemViewType == EntryListJsonModel.TYPE_NEW_ENTRY) {
-            val holder = baseHolder as DetailNewEntryViewHolder
+            // empty on purpose
         } else {
             val holder = baseHolder as DetailEntryViewHolder
             holder.checkbox.setOnCheckedChangeListener(null)
@@ -1317,11 +1327,6 @@ class DetailListAdapter(var activity: AppCompatActivity) : RecyclerView.Adapter<
                     entry,
                     holder.itemViewType
                 )
-            }
-
-            holder.deleteButton.setOnClickListener {
-                clearCurrentFocus()
-                deleteItem(entry, holder.itemViewType)
             }
 
             holder.text.removeTextChangedListener(holder.textListener)
