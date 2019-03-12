@@ -118,7 +118,7 @@ class DetailActivity : AppuntiActivity() {
             AppCompatTextView(ContextThemeWrapper(this, R.style.Widget_Appunti_Text_TextSwitcher), null, 0)
         }
 
-        linearLayout.requestFocus()
+        nestedScrollView.requestFocusFromTouch()
 
         // UI elements listeners
         entryCategory.setOnClickListener { dispatchPickCategoryIntent() }
@@ -668,6 +668,21 @@ class DetailActivity : AppuntiActivity() {
 
         } else if (entry.entryType == Entry.EntryType.LIST) {
 
+            nestedScrollView.setOnTouchListener { v, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> {
+                        Timber.v("clearing focus")
+
+                        if (currentFocus is TextView) {
+                            currentFocus?.hideSoftInput()
+                            currentFocus?.clearFocus()
+                        }
+                        false
+                    }
+                    else -> false
+                }
+            }
+
             detailListAdapter = DetailListAdapter(this).apply {
                 setData(entry)
                 saveAction = { text ->
@@ -677,7 +692,11 @@ class DetailActivity : AppuntiActivity() {
 
                 deleteAction = { holder, entry ->
                     var result = false
-                    if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.length() == 0) {
+                    if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.selectionEnd == 0 && holder.adapterPosition == 0) {
+                        result = false
+                    } else if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.selectionEnd == 0) {
+
+                        val spareText = holder.text.text
                         removeFocusFromEditText()
                         deleteItem(entry, holder.itemViewType)
 
@@ -689,9 +708,10 @@ class DetailActivity : AppuntiActivity() {
                                 previous?.let { previous ->
                                     if (previous is DetailListAdapter.DetailEntryViewHolder) {
                                         with((previous.text as EditText)) {
-                                            requestFocus()
-                                            setSelection(length())
-                                            showSoftInput()
+                                            this.requestFocusFromTouch()
+                                            this.text.append(spareText)
+                                            this.setSelection(this.length() - spareText.length)
+                                            this.showSoftInput()
                                         }
                                     }
                                 }
@@ -1218,11 +1238,11 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
         }
     }
 
-    private fun insertItemAfter(entry: EntryListJsonModel.EntryJson) {
+    private fun insertItemAfter(entry: EntryListJsonModel.EntryJson, text: String?) {
         Timber.i("insertItemAfter($entry)")
         val id = entry.id
         doOnMainThread {
-            insertedIndex = dataHolder.insertItem(id)
+            insertedIndex = dataHolder.insertItem(id, text)
             Timber.v("insertedIndex = $insertedIndex")
 
             if (insertedIndex > -1) {
@@ -1254,8 +1274,13 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
     }
 
     internal fun removeFocusFromEditText() {
-        currentEditText?.clearFocus()
-        currentEditText?.hideSoftInput()
+        Timber.i("removeFocusFromEditText")
+
+        currentEditText?.apply {
+            this.clearFocus()
+            this.hideSoftInput()
+        }
+
         currentEditText = null
     }
 
@@ -1265,9 +1290,8 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
 
             view.setOnClickListener {
                 Timber.v("buttonAdd onClick")
-                removeFocusFromEditText()
-                 addItem()
-//                insertItemAfter(getItem(3))
+                //removeFocusFromEditText()
+                addItem()
             }
 
             DetailNewEntryViewHolder(view).apply {
@@ -1312,6 +1336,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             }
 
             holder.text.setOnFocusChangeListener { v, hasFocus ->
+                Timber.v("setOnFocusChangeListener($hasFocus)")
                 holder.deleteButton.visibility = if (hasFocus) View.VISIBLE else View.INVISIBLE
                 if (hasFocus) {
                     currentEditText = holder.text
@@ -1323,7 +1348,7 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             holder.textListener = holder.text.addTextWatcherListener {
                 afterTextChanged { textView, s ->
                     if (currentEditText == textView) {
-                        Timber.i("afterTextChanged($s, ${currentEditText?.selectionStart}, ${currentEditText?.selectionEnd})")
+//                        Timber.i("afterTextChanged($s, ${currentEditText?.selectionStart}, ${currentEditText?.selectionEnd})")
 //                        for (i in (s!!.length - 1) downTo 0 step 1) {
 //                            if (s!![i] == '\n') {
 //                                s.delete(i, i + 1)
@@ -1343,8 +1368,9 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
                                 if (s[start] == '\n') {
                                     Timber.w("it's a newline!!!!")
                                     Timber.v("replace with = '${s.substring(0, start)}'")
-                                    textView.text = s.substring(0, start)
-                                    return@let
+                                    entry.text = s.substring(0, start)
+                                    insertItemAfter(entry, s.substring(start).trimStart())
+                                    return@onTextChanged
                                 }
                             }
                             Timber.v("final text = $s")
@@ -1358,9 +1384,6 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
 
             holder.text.setOnKeyListener { v, keyCode, event ->
                 var returnType = false
-
-                Timber.i("setOnKeyListener = $keyCode")
-
                 if (event.action == KeyEvent.ACTION_UP) {
                     if (keyCode == KeyEvent.KEYCODE_DEL) {
                         returnType = deleteAction?.invoke(holder, entry) ?: true
@@ -1381,11 +1404,14 @@ class DetailListAdapter(var context: Context) : RecyclerView.Adapter<DetailListA
             }
 
             if (insertedIndex == position) {
-                currentEditText?.clearFocus()
+                Timber.v("insertedIndex found!")
+
+                removeFocusFromEditText()
 
                 // force keyboard to open
-                holder.text.postDelayed(300) {
-                    holder.text.requestFocus()
+                holder.text.postDelayed(400) {
+                    Timber.v("setting the new focus")
+                    holder.text.requestFocusFromTouch()
                     holder.text.showSoftInput()
                 }
 

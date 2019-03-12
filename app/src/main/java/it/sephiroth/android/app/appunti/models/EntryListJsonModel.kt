@@ -75,7 +75,6 @@ class EntryListJsonModel {
     }
 
     fun getItemId(position: Int): Long {
-        Timber.i("getItemId($position)")
         return when {
             position < uncheckedList.size -> uncheckedList[position].id
             position == uncheckedList.size -> -1
@@ -84,7 +83,6 @@ class EntryListJsonModel {
     }
 
     fun getItem(position: Int): EntryJson {
-        Timber.i("getItem($position)")
         return when {
             position < uncheckedList.size -> uncheckedList[position]
             else -> checkedList[position - uncheckedList.size - 1]
@@ -159,7 +157,7 @@ class EntryListJsonModel {
     }
 
     @Suppress("NAME_SHADOWING")
-    fun insertItem(id: Long, text: String? = ""): Int {
+    fun insertItem(id: Long, text: String?): Int {
         Timber.i("insertItem($id)")
         val itemBefore = getItemById(id)
         Timber.v("itemBefore; $itemBefore")

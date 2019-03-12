@@ -50,8 +50,8 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-
     <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedScrollView"
             app:layout_constraintTop_toBottomOf="@+id/toolbar"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             app:layout_anchor="@id/bottomAppBar"
@@ -59,8 +59,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-
         <LinearLayout
+                android:clickable="false"
                 android:id="@+id/linearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -68,9 +68,6 @@
                 android:layout_marginEnd="20dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginTop="8dp"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:clickable="true"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
