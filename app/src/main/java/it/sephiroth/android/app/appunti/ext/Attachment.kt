@@ -1,7 +1,6 @@
 package it.sephiroth.android.app.appunti.ext
 
 import android.content.Context
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.widget.ImageView
 import androidx.core.content.FileProvider
@@ -50,9 +49,7 @@ fun Attachment.loadThumbnail(context: Context, view: ImageView) {
                     view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
                 }
 
-                override fun onSuccess() {
-                    Timber.v("success=${(view.drawable as BitmapDrawable).bounds}")
-                }
+                override fun onSuccess() {}
             })
     } else if (isPdf()) {
         view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
