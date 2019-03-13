@@ -1094,15 +1094,7 @@ class DetailActivity : AppuntiActivity() {
                     result = false
                 } else {
                     result = true
-                    val index = adapter.getPreviousEntry(entry)
-                    Timber.v("item index = ${holder.adapterPosition}")
-                    Timber.v("previous item index = $index")
-
-                    val nextItem = InsertedItem(
-                        index, if (holder.text.length() > 0) holder.text.text.toString() else null, false
-                    )
-
-                    adapter.deleteItem(entry, holder.itemViewType, nextItem)
+                    adapter.mergeWithPrevious(entry)
                 }
             }
 
@@ -1162,8 +1154,7 @@ class DetailActivity : AppuntiActivity() {
 
 data class InsertedItem(
     val index: Int,
-    val appendedText: CharSequence? = null,
-    val setSelectionToStart: Boolean? = null
+    val selectionStart: Int? = null
 )
 
 class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
@@ -1227,11 +1218,11 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
         Timber.i("insertItemAfter($entry)")
         val id = entry.id
         doOnMainThread {
-            dataHolder.insertItem(id, null).also { nextIndex ->
+            dataHolder.insertItem(id, text).also { nextIndex ->
                 Timber.v("nextIndex = $nextIndex")
 
                 if (nextIndex > -1) {
-                    insertedItem = InsertedItem(nextIndex, text, true)
+                    insertedItem = InsertedItem(nextIndex, 0)
                 }
 
                 notifyDataSetChanged()
@@ -1243,32 +1234,40 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
     /**
      * Delete the passed [Entry] and remove the current focus
      */
-    internal fun deleteItem(entry: EntryListJsonModel.EntryJson, itemViewType: Int, nextItem: InsertedItem? = null) {
-        Timber.i("deleteItem($entry, $itemViewType)")
+    internal fun deleteItem(entry: EntryListJsonModel.EntryJson) {
+        Timber.i("deleteItem($entry)")
         doOnMainThread {
-
-            if (nextItem == null) {
-                activity.clearCurrentFocus()
-            }
-
-            dataHolder.deleteItem(entry, itemViewType)?.let { index ->
-                nextItem?.let {
-                    insertedItem = nextItem
-                    notifyDataSetChanged()
-                } ?: run {
-                    notifyItemRemoved(index)
-                }
+            activity.clearCurrentFocus()
+            dataHolder.deleteItem(entry)?.let { index ->
+                notifyItemRemoved(index)
                 postSave()
             }
         }
     }
 
-    private fun toggleItem(entry: EntryListJsonModel.EntryJson, itemViewType: Int) {
+    internal fun mergeWithPrevious(entry: EntryListJsonModel.EntryJson) {
+        Timber.i("mergeWithPrevious($entry)")
         doOnMainThread {
-            dataHolder.toggle(
-                entry,
-                itemViewType
-            )?.also { result ->
+            getPreviousEntryIndex(entry).let { previousIndex ->
+                if (previousIndex > -1) {
+                    val previousEntry = getItem(previousIndex)
+                    val previousTextLength = previousEntry.text.length
+
+                    dataHolder.deleteItem(entry)?.let {
+                        previousEntry.text += entry.text
+                        insertedItem = InsertedItem(previousIndex, previousTextLength)
+
+                        notifyDataSetChanged()
+                        postSave()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun toggleItem(entry: EntryListJsonModel.EntryJson) {
+        doOnMainThread {
+            dataHolder.toggle(entry)?.also { result ->
                 notifyItemMoved(result.first, result.second)
                 postSave()
             }
@@ -1310,14 +1309,13 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
 
                 // delete the current entry item
                 holder.deleteButton.setOnClickListener {
-                    deleteItem(getItem(holder.adapterPosition), holder.itemViewType)
+                    deleteItem(getItem(holder.adapterPosition))
                 }
 
                 holder.checkedActionListener = { _, _ ->
                     activity.clearCurrentFocus()
                     toggleItem(
-                        getItem(holder.adapterPosition),
-                        holder.itemViewType
+                        getItem(holder.adapterPosition)
                     )
                 }
             }
@@ -1351,7 +1349,7 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
                                     return@onTextChanged
                                 }
                             }
-                            Timber.v("final text = $s")
+                            Timber.v("final text = '$s'")
                             entry.text = s.toString()
                             postSave()
                         }
@@ -1375,27 +1373,21 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
             if (insertedItem != null && insertedItem?.index == position) {
                 Timber.v("insertedItem found = $insertedItem")
 
-                val appendedText = insertedItem?.appendedText
-                val selectionStart = insertedItem?.setSelectionToStart
+                val selectionStart = insertedItem?.selectionStart
 
                 val action = {
+                    holder.text.showSoftInput()
                     with(holder.text as EditText) {
-                        appendedText?.let { appendedText ->
-                            this.append(appendedText)
-                            if (selectionStart == false) {
-                                this.setSelection(this.length() - appendedText.length)
-                            } else {
-                                this.setSelection(0)
-                            }
-                        } ?: run {
-                            this.setSelection(if (selectionStart == false) this.length() else 0)
+                        selectionStart?.let {
+                            this.setSelection(it)
                         }
-                        this.showSoftInput()
                     }
+                    Unit
                 }
 
                 if (activity.currentFocus is TextView) {
-                    holder.post(action)
+//                    holder.post(action)
+                    action.invoke()
                 } else {
 //                    holder.postDelayed(100, action)
                     holder.post(action)
@@ -1411,7 +1403,7 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
      */
     fun isFirstEntry(entry: EntryListJsonModel.EntryJson) = dataHolder.isFirstEntry(entry)
 
-    fun getPreviousEntry(entry: EntryListJsonModel.EntryJson) = dataHolder.getPreviousEntry(entry)
+    fun getPreviousEntryIndex(entry: EntryListJsonModel.EntryJson) = dataHolder.getPreviousItemIndex(entry)
 
     open class DetailViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val text: TextView = itemView.findViewById(android.R.id.text1)

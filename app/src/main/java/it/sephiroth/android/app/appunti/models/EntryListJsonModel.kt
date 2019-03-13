@@ -158,14 +158,14 @@ class EntryListJsonModel {
         checkedList.filter { it.position >= position }.forEach { it.position = it.position + 1 }
     }
 
-    fun deleteItem(entry: EntryJson, type: Int): Int? {
-        if (type == TYPE_UNCHECKED) {
+    fun deleteItem(entry: EntryJson): Int? {
+        if (!entry.checked) {
             val index = uncheckedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
             if (index > -1) {
                 uncheckedList.removeAt(index)
                 return index
             }
-        } else if (type == TYPE_CHECKED) {
+        } else if (entry.checked) {
             val index = checkedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
             if (index > -1) {
                 checkedList.removeAt(index)
@@ -195,7 +195,6 @@ class EntryListJsonModel {
     fun insertItem(id: Long, text: String?): Int {
         Timber.i("insertItem($id)")
         val itemBefore = getItemById(id)
-        Timber.v("itemBefore; $itemBefore")
 
         itemBefore?.let { itemBefore ->
             val position = itemBefore.position + 1
@@ -223,10 +222,10 @@ class EntryListJsonModel {
 
     }
 
-    fun toggle(entry: EntryJson, type: Int): Pair<Int, Int>? {
-        Timber.i("toggle($entry, $type)")
+    fun toggle(entry: EntryJson): Pair<Int, Int>? {
+        Timber.i("toggle($entry)")
 
-        if (type == TYPE_UNCHECKED) {
+        if (!entry.checked) {
             val removedIndex = uncheckedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
             if (removedIndex > -1) {
                 uncheckedList.removeAt(removedIndex)
@@ -239,7 +238,7 @@ class EntryListJsonModel {
                 return Pair(removedIndex, addedIndex + uncheckedList.size + 1)
 
             }
-        } else if (type == TYPE_CHECKED) {
+        } else if (entry.checked) {
             val removedIndex = checkedList.indexOfFirst { entryJson -> entryJson.id == entry.id }
             if (removedIndex > -1) {
                 checkedList.removeAt(removedIndex)
@@ -258,8 +257,6 @@ class EntryListJsonModel {
 
     @Suppress("NAME_SHADOWING")
     fun setData(triple: Triple<MutableList<EntryJson>, MutableList<EntryJson>, MutableList<EntryJson>>?) {
-
-
         triple?.let { triple ->
             Timber.v("uncheckedList = ${triple.second}")
             Timber.v("checkedList = ${triple.third}")
@@ -277,9 +274,5 @@ class EntryListJsonModel {
         } else {
             uncheckedList.indexOf(entry) == 0
         }
-    }
-
-    fun getPreviousEntry(entry: EntryJson): Int {
-        return getPreviousItemIndex(entry)
     }
 }
