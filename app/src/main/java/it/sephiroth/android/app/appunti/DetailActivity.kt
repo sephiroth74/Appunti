@@ -1072,10 +1072,8 @@ class DetailActivity : AppuntiActivity() {
         if (currentFocus is TextView) {
             Timber.i("clearCurrentFocus($currentFocus")
             currentFocus?.hideSoftInput()
-            currentFocus?.clearFocus()
         }
-
-        linearLayout.requestFocus()
+        //linearLayout.requestFocus()
     }
 
     /**
@@ -1095,23 +1093,16 @@ class DetailActivity : AppuntiActivity() {
                     // do nothing
                     result = false
                 } else {
+                    result = true
                     val index = adapter.getPreviousEntry(entry)
                     Timber.v("item index = ${holder.adapterPosition}")
                     Timber.v("previous item index = $index")
-                    Timber.v("$entry")
 
+                    val nextItem = InsertedItem(
+                        index, if (holder.text.length() > 0) holder.text.text.toString() else null, false
+                    )
 
-                    adapter.insertedItem =
-                        DetailListAdapter.InsertedItem(
-                            index,
-                            if (holder.text.length() > 0) holder.text.text.toString() else null,
-                            false
-                        )
-                    adapter.deleteItem(entry, holder.itemViewType)
-                    adapter.notifyItemChanged(index)
-
-                    // adapter.deleteItem(entry, holder.itemViewType)
-
+                    adapter.deleteItem(entry, holder.itemViewType, nextItem)
                 }
             }
 
@@ -1137,7 +1128,7 @@ class DetailActivity : AppuntiActivity() {
             deleteAction = deleteEntryListItemAction
         }
 
-        detailRecycler.itemAnimator = null
+//        detailRecycler.itemAnimator = null
         detailRecycler.adapter = detailListAdapter
     }
 
@@ -1162,6 +1153,11 @@ class DetailActivity : AppuntiActivity() {
 
 }
 
+data class InsertedItem(
+    val index: Int,
+    val appendedText: CharSequence? = null,
+    val setSelectionToStart: Boolean? = null
+)
 
 class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
     private var dataHolder = EntryListJsonModel()
@@ -1206,13 +1202,7 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
         return dataHolder.getItemType(position)
     }
 
-    data class InsertedItem(
-        val index: Int,
-        val appendedText: CharSequence? = null,
-        val setSelectionToStart: Boolean? = null
-    )
-
-    internal var insertedItem: InsertedItem? = null
+    private var insertedItem: InsertedItem? = null
 
     private fun addItem() {
         Timber.v("addItem")
@@ -1244,12 +1234,21 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
     /**
      * Delete the passed [Entry] and remove the current focus
      */
-    internal fun deleteItem(entry: EntryListJsonModel.EntryJson, itemViewType: Int) {
+    internal fun deleteItem(entry: EntryListJsonModel.EntryJson, itemViewType: Int, nextItem: InsertedItem? = null) {
         Timber.i("deleteItem($entry, $itemViewType)")
         doOnMainThread {
-            activity.clearCurrentFocus()
+
+            if (nextItem == null) {
+                activity.clearCurrentFocus()
+            }
+
             dataHolder.deleteItem(entry, itemViewType)?.let { index ->
-                notifyItemRemoved(index)
+                nextItem?.let {
+                    insertedItem = nextItem
+                    notifyDataSetChanged()
+                } ?: run {
+                    notifyItemRemoved(index)
+                }
                 postSave()
             }
         }
@@ -1364,31 +1363,35 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
             }
 
             // new item requested. Give it focus and show the keyboard
-            insertedItem?.let { nextItem ->
-                if (nextItem.index == position) {
-                    Timber.v("insertedItem found = $nextItem")
+            if (insertedItem != null && insertedItem?.index == position) {
+                Timber.v("insertedItem found = $insertedItem")
 
-                    if (activity.currentFocus is TextView) {
-                        holder.post { holder.text.requestFocus() }
-                    } else {
-                        holder.postDelayed(100) {
-                            with(holder.text as EditText) {
-                                nextItem.appendedText?.let {
-                                    this.append(it)
-                                    if (nextItem.setSelectionToStart == false) {
-                                        this.setSelection(this.length() - it.length)
-                                    } else {
-                                        this.setSelection(0)
-                                    }
-                                } ?: run {
-                                    this.setSelection(if (nextItem.setSelectionToStart == false) this.length() else 0)
-                                }
-                                this.showSoftInput()
+                val appendedText = insertedItem?.appendedText
+                val selectionStart = insertedItem?.setSelectionToStart
+
+                val action = {
+                    with(holder.text as EditText) {
+                        appendedText?.let { appendedText ->
+                            this.append(appendedText)
+                            if (selectionStart == false) {
+                                this.setSelection(this.length() - appendedText.length)
+                            } else {
+                                this.setSelection(0)
                             }
+                        } ?: run {
+                            this.setSelection(if (selectionStart == false) this.length() else 0)
                         }
+                        this.showSoftInput()
                     }
-                    insertedItem = null
                 }
+
+                if (activity.currentFocus is TextView) {
+                    holder.post(action)
+                } else {
+                    holder.postDelayed(100, action)
+                }
+
+                insertedItem = null
             }
         }
     }
