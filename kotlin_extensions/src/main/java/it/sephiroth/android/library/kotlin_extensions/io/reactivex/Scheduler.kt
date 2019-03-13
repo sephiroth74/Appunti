@@ -6,6 +6,7 @@ import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import it.sephiroth.android.library.kotlin_extensions.lang.isMainThread
 import java.util.concurrent.TimeUnit
 
 fun <T> rxSingle(thread: Scheduler, func: () -> T): Single<T> {
@@ -38,7 +39,11 @@ fun doOnScheduler(scheduler: Scheduler, func: () -> Unit): Disposable {
     return scheduler.scheduleDirect(func)
 }
 
-fun doOnMainThread(func: () -> Unit): Disposable {
+fun doOnMainThread(func: () -> Unit): Disposable? {
+    if(isMainThread()) {
+        func.invoke()
+        return null
+    }
     return doOnScheduler(AndroidSchedulers.mainThread(), func)
 }
 

@@ -19,7 +19,6 @@ import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
@@ -1069,9 +1068,9 @@ class DetailActivity : AppuntiActivity() {
 
     // DETAIL LIST METHODS
 
-    private fun clearCurrentFocus() {
-        Timber.i("clearCurrentFocus($currentFocus")
+    internal fun clearCurrentFocus() {
         if (currentFocus is TextView) {
+            Timber.i("clearCurrentFocus($currentFocus")
             currentFocus?.hideSoftInput()
             currentFocus?.clearFocus()
         }
@@ -1101,14 +1100,14 @@ class DetailActivity : AppuntiActivity() {
                     Timber.v("previous item index = $index")
                     Timber.v("$entry")
 
-                    adapter.deleteItem(entry, holder.itemViewType)
 
                     adapter.insertedItem =
                         DetailListAdapter.InsertedItem(
                             index,
-                            if (holder.text.length() > 0) holder.text.text else null,
+                            if (holder.text.length() > 0) holder.text.text.toString() else null,
                             false
                         )
+                    adapter.deleteItem(entry, holder.itemViewType)
                     adapter.notifyItemChanged(index)
 
                     // adapter.deleteItem(entry, holder.itemViewType)
@@ -1116,36 +1115,6 @@ class DetailActivity : AppuntiActivity() {
                 }
             }
 
-
-            /*
-            if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.selectionEnd == 0 && holder.adapterPosition == 0) {
-                result = false
-            } else if (!holder.text.hasSelection() && holder.text.selectionStart == 0 && holder.text.selectionEnd == 0) {
-
-                val spareText = holder.text.text
-                clearCurrentFocus()
-                deleteItem(entry, holder.itemViewType)
-
-                if (holder.adapterPosition > 0) {
-                    val view =
-                        (detailRecycler.layoutManager as LinearLayoutManager).findViewByPosition(holder.adapterPosition - 1)
-                    view?.let { view ->
-                        val previous = detailRecycler.findContainingViewHolder(view)
-                        previous?.let { previous ->
-                            if (previous is DetailListAdapter.DetailEntryViewHolder) {
-                                with((previous.text as EditText)) {
-                                    this.requestFocusFromTouch()
-                                    this.text.append(spareText)
-                                    this.setSelection(this.length() - spareText.length)
-                                    this.showSoftInput()
-                                }
-                            }
-                        }
-                    }
-                }
-                result = true
-            }
-            */
             result
         }
 
@@ -1194,7 +1163,7 @@ class DetailActivity : AppuntiActivity() {
 }
 
 
-class DetailListAdapter(var activity: AppCompatActivity) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
+class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
     private var dataHolder = EntryListJsonModel()
     private var inflater = LayoutInflater.from(activity)
 
@@ -1278,7 +1247,7 @@ class DetailListAdapter(var activity: AppCompatActivity) : RecyclerView.Adapter<
     internal fun deleteItem(entry: EntryListJsonModel.EntryJson, itemViewType: Int) {
         Timber.i("deleteItem($entry, $itemViewType)")
         doOnMainThread {
-            clearCurrentFocus()
+            activity.clearCurrentFocus()
             dataHolder.deleteItem(entry, itemViewType)?.let { index ->
                 notifyItemRemoved(index)
                 postSave()
@@ -1298,20 +1267,12 @@ class DetailListAdapter(var activity: AppCompatActivity) : RecyclerView.Adapter<
         }
     }
 
-    internal fun clearCurrentFocus() {
-        Timber.i("clearCurrentFocus(${activity.currentFocus})")
-        if (activity.currentFocus is TextView) {
-            activity.currentFocus?.hideSoftInput()
-        }
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailViewHolder {
         return if (viewType == EntryListJsonModel.TYPE_NEW_ENTRY) {
             val view = inflater.inflate(R.layout.appunti_detail_new_entry_list_item, parent, false)
 
             view.setOnClickListener {
                 Timber.v("buttonAdd onClick")
-                //clearCurrentFocus()
                 addItem()
             }
 
@@ -1345,7 +1306,7 @@ class DetailListAdapter(var activity: AppCompatActivity) : RecyclerView.Adapter<
                 }
 
                 holder.checkedActionListener = { _, _ ->
-                    clearCurrentFocus()
+                    activity.clearCurrentFocus()
                     toggleItem(
                         getItem(holder.adapterPosition),
                         holder.itemViewType
@@ -1394,7 +1355,7 @@ class DetailListAdapter(var activity: AppCompatActivity) : RecyclerView.Adapter<
             holder.text.setOnEditorActionListener { v, actionId, event ->
                 Timber.i("setOnEditorActionListener = $actionId")
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    clearCurrentFocus()
+                    activity.clearCurrentFocus()
                     postSave()
                     true
                 } else {
