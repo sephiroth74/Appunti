@@ -109,7 +109,7 @@
                     android:id="@+id/detailRecycler"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
+                    app:layoutManager="it.sephiroth.android.app.appunti.widget.NpaLinearLayoutManager">
 
             </androidx.recyclerview.widget.RecyclerView>
 

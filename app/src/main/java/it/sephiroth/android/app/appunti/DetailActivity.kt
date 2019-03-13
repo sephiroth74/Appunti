@@ -1128,7 +1128,14 @@ class DetailActivity : AppuntiActivity() {
             deleteAction = deleteEntryListItemAction
         }
 
-//        detailRecycler.itemAnimator = null
+        val animator = detailRecycler.itemAnimator
+        animator?.apply {
+            addDuration = 0
+            moveDuration = 0
+            removeDuration = 0
+            changeDuration = 0
+        }
+
         detailRecycler.adapter = detailListAdapter
     }
 
@@ -1220,11 +1227,13 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
         Timber.i("insertItemAfter($entry)")
         val id = entry.id
         doOnMainThread {
-            val nextIndex = dataHolder.insertItem(id, text)
-            Timber.v("nextIndex = $nextIndex")
+            dataHolder.insertItem(id, null).also { nextIndex ->
+                Timber.v("nextIndex = $nextIndex")
 
-            if (nextIndex > -1) {
-                insertedItem = InsertedItem(nextIndex)
+                if (nextIndex > -1) {
+                    insertedItem = InsertedItem(nextIndex, text, true)
+                }
+
                 notifyDataSetChanged()
                 postSave()
             }
@@ -1388,7 +1397,8 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
                 if (activity.currentFocus is TextView) {
                     holder.post(action)
                 } else {
-                    holder.postDelayed(100, action)
+//                    holder.postDelayed(100, action)
+                    holder.post(action)
                 }
 
                 insertedItem = null
