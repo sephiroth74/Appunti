@@ -47,7 +47,7 @@ class EntryListJsonModel {
         }
     }
 
-    private val gson = if (BuildConfig.DEBUG) GsonBuilder().setPrettyPrinting().create() else Gson()
+    private val gson = if (!BuildConfig.DEBUG) GsonBuilder().setPrettyPrinting().create() else Gson()
     private var uncheckedList = mutableListOf<EntryJson>()
     private var checkedList = mutableListOf<EntryJson>()
 
@@ -114,8 +114,9 @@ class EntryListJsonModel {
     }
 
     private fun getNextPosition(): Int {
-        val pos1 = checkedList.sortedByDescending { it.position }.first().position
-        val pos2 = uncheckedList.sortedByDescending { it.position }.first().position
+        val pos1 = if (checkedList.isNotEmpty()) checkedList.sortedByDescending { it.position }.first().position else 0
+        val pos2 =
+            if (uncheckedList.isNotEmpty()) uncheckedList.sortedByDescending { it.position }.first().position else 0
         return if (pos1 > pos2) pos1 + 1 else pos2 + 1
     }
 
@@ -126,11 +127,29 @@ class EntryListJsonModel {
             }
     }
 
-    private fun getItemIndex(item: EntryJson): Int? {
+    /**
+     * Return the relative item index (according to its list)
+     */
+    private fun getItemIndexRelative(item: EntryJson): Int {
         return if (item.checked) {
             checkedList.indexOf(item)
         } else {
             uncheckedList.indexOf(item)
+        }
+    }
+
+    fun getPreviousItemIndex(item: EntryJson): Int {
+        return if (item.checked) {
+            val index = checkedList.indexOf(item)
+            if (index > 0) {
+                (uncheckedList.size + 1) + (index - 1)
+            } else {
+                if (uncheckedList.size > 0) (uncheckedList.size - 1) else -1
+            }
+
+        } else {
+            val index = uncheckedList.indexOf(item)
+            if (index > 0) index - 1 else -1
         }
     }
 
@@ -181,9 +200,9 @@ class EntryListJsonModel {
         itemBefore?.let { itemBefore ->
             val position = itemBefore.position + 1
             val checked = itemBefore.checked
-            val index = getItemIndex(itemBefore)
+            val index = getItemIndexRelative(itemBefore)
 
-            index?.let { index ->
+            index.let { index ->
                 Timber.v("index before = $index")
                 Timber.v("checked before = $checked")
 
@@ -250,5 +269,17 @@ class EntryListJsonModel {
             uncheckedList.clear()
             checkedList.clear()
         }
+    }
+
+    fun isFirstEntry(entry: EntryJson): Boolean {
+        return if (entry.checked) {
+            checkedList.indexOf(entry) == 0 && uncheckedList.size == 0
+        } else {
+            uncheckedList.indexOf(entry) == 0
+        }
+    }
+
+    fun getPreviousEntry(entry: EntryJson): Int {
+        return getPreviousItemIndex(entry)
     }
 }
