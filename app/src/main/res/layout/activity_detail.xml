@@ -96,7 +96,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:hint="@string/content_here"
-                    android:inputType="textMultiLine"
                     android:focusable="true"
                     android:textIsSelectable="true"
                     android:clickable="true"

@@ -132,11 +132,11 @@ object IntentUtils {
 
     fun createAttachmentShareIntent(context: Context, attachment: Attachment): Intent {
         val finalUri = attachment.getFileUri(context)
-        Timber.i("finalUri: ${finalUri.toString()}")
+        Timber.i("finalUri: $finalUri")
         return Intent(Intent.ACTION_SEND).apply {
+            type = attachment.attachmentMime
             putExtra(android.content.Intent.EXTRA_SUBJECT, attachment.attachmentTitle)
             putExtra(android.content.Intent.EXTRA_STREAM, finalUri)
-            setDataAndType(finalUri, attachment.attachmentMime)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
     }

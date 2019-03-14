@@ -152,7 +152,7 @@
         <item name="android:gravity">top|start</item>
         <item name="android:linksClickable">true</item>
         <item name="android:textAppearance">?attr/textAppearanceBody1</item>
-        <item name="android:inputType">textImeMultiLine|textMultiLine</item>
+        <item name="android:inputType">textMultiLine|textAutoCorrect|textAutoComplete|textCapSentences|textLongMessage</item>
         <item name="android:textSize">@dimen/text_size_large_material</item>
         <item name="fontFamily">@font/nunito_light</item>
         <item name="android:fontFamily">@font/nunito_light</item>
