@@ -70,7 +70,7 @@ class MainApplication : Application() {
         Entry().apply {
             this.entryTitle = "Welcome to your first Note"
             this.entryText =
-                "This is an simple text note so show you how simple it is.\n\nAlessandro\nhttp://blog.sephiroth.it"
+                "This is an simple text note to show you how simple it is.\n\nCheers,\nAlessandro\nhttp://blog.sephiroth.it"
             this.category = category
             this.entryPinned = 1
             this.touch()
@@ -83,9 +83,9 @@ class MainApplication : Application() {
             save()
         }
 
-        Entry.fromString("[ ] First entry\n[ ] Second entry\n[x] Also an be marked as done\n")
+        Entry.fromString("[ ] Bread\n[ ] Cheese\n[x] Beer. Indeed!\n")
             .apply {
-                this.entryTitle = "You can create also lists"
+                this.entryTitle = "Shopping List"
                 this.category = category
                 this.entryPinned = 0
                 this.touch()
