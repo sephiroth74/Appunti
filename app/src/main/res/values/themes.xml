@@ -24,7 +24,7 @@
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
 
-        <item name="search_theme">play</item>
+        <item name="search_theme">google</item>
         <item name="categoryColors">@array/category_colors_light</item>
 
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>

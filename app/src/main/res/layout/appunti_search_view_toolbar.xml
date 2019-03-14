@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-
 <androidx.appcompat.widget.Toolbar
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:transitionName="toolbar"
         android:id="@+id/toolbar"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:showIn="@layout/activity_main">
 
-    <com.lapism.searchview.widget.SearchView
+    <it.sephiroth.android.app.appunti.widget.SearchView
             android:id="@+id/searchView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

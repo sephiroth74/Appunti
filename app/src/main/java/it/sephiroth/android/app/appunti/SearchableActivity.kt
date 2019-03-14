@@ -76,6 +76,7 @@ class SearchableActivity : AppuntiActivity() {
     }
 
     private fun searchEntries(text: String): Single<MutableList<Entry>> {
+        Timber.i("searchEntries('$text')")
         return rxSingle(Schedulers.io()) {
             select().from(Entry::class)
                 .where(Entry_Table.entryText.like("%$text%"))
@@ -96,16 +97,18 @@ class SearchableActivity : AppuntiActivity() {
     private var timer: Disposable? = null
 
     private fun performSearch(text: String?) {
+        Timber.i("performSearch('$text')")
 
         timer?.dispose()
         timer = Observable.timer(300, TimeUnit.MILLISECONDS, Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
-
+                Timber.v("isNotNullOrEmpty = ${text.isNotNullOrEmpty()}")
                 if (text.isNotNullOrEmpty()) {
                     searchEntries(text!!)
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe { result, error ->
+                            Timber.v("result = $result")
                             adapter.update(result, text.toLowerCase(Locale.getDefault()))
                         }
                 } else {
@@ -180,9 +183,7 @@ class SearchableActivity : AppuntiActivity() {
             }
         })
 
-        searchView.setOnLogoClickListener {
-            supportFinishAfterTransition()
-        }
-
+        searchView.setOnLogoClickListener(Search.OnLogoClickListener { supportFinishAfterTransition() })
+        // searchView.setOnLogoClickListener { supportFinishAfterTransition() }
     }
 }

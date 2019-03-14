@@ -13,6 +13,7 @@
             android:id="@+id/coordinatorLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
             tools:context=".MainActivity">
 
         <include layout="@layout/appunti_entries_recycler_view"/>
@@ -39,6 +40,9 @@
                 android:id="@+id/statusbarBackground"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:clickable="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
                 android:background="?attr/statusbarBackgroundDrawable">
             <View
                     android:id="@+id/actionModeBackground"
@@ -59,6 +63,9 @@
                 android:id="@+id/navigationBackground"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:clickable="false"
+                android:focusableInTouchMode="false"
+                android:focusable="false"
                 android:background="?attr/navigationbarBackgroundDrawable"
         />
 

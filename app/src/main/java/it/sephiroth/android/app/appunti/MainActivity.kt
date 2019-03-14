@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
+import com.lapism.searchview.widget.SearchBar
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
@@ -450,7 +451,6 @@ class MainActivity : AppuntiActivityFullscreen() {
     }
 
     private fun setupSearchView() {
-
         val params = (searchView.layoutParams as ViewGroup.MarginLayoutParams)
         params.topMargin += statusbarHeight
 
@@ -458,7 +458,7 @@ class MainActivity : AppuntiActivityFullscreen() {
             Search.setVoiceSearch(this, "")
         }
 
-        searchView.setOnLogoClickListener { toggleDrawer() }
+        searchView.setOnLogoClickListener(Search.OnLogoClickListener { toggleDrawer() })
 
         val textEdit = searchView.findViewById<View>(R.id.search_imageView_image)
         textEdit.isFocusable = false
