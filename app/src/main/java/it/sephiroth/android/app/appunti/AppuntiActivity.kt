@@ -40,7 +40,6 @@ abstract class AppuntiActivity(
         isFullScreen =
             wantsFullscreen && !isInMultiWindow && !resources.getBoolean(R.bool.fullscreen_style_fit_system_windows) &&
                     resources.isNavBarAtBottom
-//                    (if (resources.isTablet) resources.isNavBarAtBottom else true)
 
         isDarkTheme = SettingsManager.getInstance(this).darkTheme
         setTheme(if (isDarkTheme) darkTheme else lightTheme)
@@ -72,7 +71,6 @@ abstract class AppuntiActivity(
 
 
         fitSystemWindows = !isFullScreen //if (isInMultiWindow) true else isFullScreen
-
         Timber.v("fitSystemWindows = $fitSystemWindows")
 
         setContentView(getContentLayout())
@@ -89,99 +87,8 @@ abstract class AppuntiActivity(
 
     @LayoutRes
     abstract fun getContentLayout(): Int
-//
-//    class DatePickerFragment : DialogFragment(), DatePickerDialog.OnDateSetListener {
-//
-//        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-//
-//            val c: Calendar = (arguments?.getSerializable("calendar") as Calendar?) ?: Calendar.getInstance()
-//            val year = c.get(Calendar.YEAR)
-//            val month = c.get(Calendar.MONTH)
-//            val day = c.get(Calendar.DAY_OF_MONTH)
-//            return DatePickerDialog(activity, this, year, month, day)
-//        }
-//
-//        var callback: DatePickerDialog.OnDateSetListener? = null
-//
-//        override fun onDateSet(view: DatePicker, year: Int, month: Int, day: Int) {
-//            callback?.onDateSet(view, year, month, day)
-//        }
-//
-//        companion object {
-//            fun newInstance(year: Int, month: Int, dayOfMonth: Int): DatePickerFragment {
-//                val c = Calendar.getInstance()
-//                c.set(Calendar.YEAR, year)
-//                c.set(Calendar.MONTH, month)
-//                c.set(Calendar.DAY_OF_MONTH, dayOfMonth)
-//
-//                return DatePickerFragment().apply {
-//                    arguments = Bundle().apply {
-//                        putSerializable("calendar", c)
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    class TimePickerFragment : DialogFragment(), TimePickerDialog.OnTimeSetListener {
-//
-//        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-//            val c: Calendar = (arguments?.getSerializable("calendar") as Calendar?) ?: Calendar.getInstance()
-//            val hour = c.get(Calendar.HOUR_OF_DAY)
-//            val minute = c.get(Calendar.MINUTE)
-//            return TimePickerDialog(activity, this, hour, minute, DateFormat.is24HourFormat(activity))
-//        }
-//
-//        var callback: TimePickerDialog.OnTimeSetListener? = null
-//
-//        override fun onTimeSet(view: TimePicker, hourOfDay: Int, minute: Int) {
-//            callback?.onTimeSet(view, hourOfDay, minute)
-//        }
-//
-//        companion object {
-//            fun newInstance(hours: Int, minutes: Int): TimePickerFragment {
-//                val c = Calendar.getInstance()
-//                c.set(Calendar.HOUR_OF_DAY, hours)
-//                c.set(Calendar.MINUTE, minutes)
-//
-//                return TimePickerFragment().apply {
-//                    arguments = Bundle().apply {
-//                        putSerializable("calendar", c)
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     fun pickDateTime(currentDateTime: ZonedDateTime, action: ((ZonedDateTime) -> (Unit))?) {
-//
-//        Timber.i("pickDateTime($currentDateTime)")
-//
-//        val dialog =
-//            DatePickerFragment.newInstance(
-//                currentDateTime.year,
-//                currentDateTime.monthValue - 1,
-//                currentDateTime.dayOfMonth
-//            )
-//
-//        dialog.callback = DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
-//            val timeDialog = TimePickerFragment.newInstance(currentDateTime.hour, currentDateTime.minute)
-//            timeDialog.callback = TimePickerDialog.OnTimeSetListener { view, hourOfDay, minute ->
-//                val result = currentDateTime
-//                    .withYear(year)
-//                    .withMonth(month + 1)
-//                    .withDayOfMonth(dayOfMonth)
-//                    .withHour(hourOfDay)
-//                    .withMinute(minute)
-//
-//                action?.invoke(result)
-//            }
-//            timeDialog.show(supportFragmentManager, "timeDialog")
-//        }
-//
-//        dialog.show(supportFragmentManager, "dateDialog")
-
-
         val darkTheme = SettingsManager.getInstance(this).darkTheme
         val buttonsColor = theme.getColor(this, android.R.attr.colorForegroundInverse)
         val accentColor = theme.getColor(this, R.attr.colorAccent)
