@@ -758,7 +758,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                     .setListener(null)
                     .start()
             } else {
-                window.statusBarColor = theme.getColor(this@MainActivity, R.attr.actionModeBackground)
+                //window.statusBarColor = theme.getColor(this@MainActivity, R.attr.actionModeBackground)
             }
 
             return true
@@ -782,7 +782,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                     }
                     .start()
             } else {
-                window.statusBarColor = theme.getColor(this@MainActivity, android.R.attr.statusBarColor)
+                //window.statusBarColor = theme.getColor(this@MainActivity, android.R.attr.statusBarColor)
             }
 
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
