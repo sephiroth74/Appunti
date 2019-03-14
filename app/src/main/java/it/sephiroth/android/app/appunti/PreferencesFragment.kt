@@ -2,8 +2,10 @@ package it.sephiroth.android.app.appunti
 
 
 import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.Intent.*
+import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -22,6 +24,23 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
         when (preference?.key) {
             SettingsManager.PREFS_KEY_DARK_THEME -> askToRestartApplication()
+            "preference.feedback" -> {
+                val intent = Intent(ACTION_SENDTO).apply {
+                    type = "text/plain"
+                    data = Uri.parse("mailto:alessandro.crugnola@gmail.com")
+                    putExtra(EXTRA_EMAIL, arrayOf("alessandro.crugnola@gmail.com"))
+                    putExtra(EXTRA_SUBJECT, "Feedback from {Appunti}")
+                }
+
+                if (intent.resolveActivity(activity?.packageManager!!) != null) {
+                    startActivity(intent)
+                } else {
+                    Toast
+                        .makeText(context, "Unable to find an application to handle this request", Toast.LENGTH_SHORT)
+                        .show()
+                }
+
+            }
         }
 
         return super.onPreferenceTreeClick(preference)
@@ -30,12 +49,12 @@ class PreferencesFragment : PreferenceFragmentCompat() {
     private fun askToRestartApplication() {
         activity?.let { activity ->
             AlertDialog.Builder(activity)
-                    .setTitle(getString(R.string.restart_required))
-                    .setMessage(getString(R.string.restart_required_body))
-                    .setCancelable(false)
-                    .setPositiveButton(getString(R.string.restart)) { _, _ -> triggerRebirth() }
-                    .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
-                    .show()
+                .setTitle(getString(R.string.restart_required))
+                .setMessage(getString(R.string.restart_required_body))
+                .setCancelable(false)
+                .setPositiveButton(getString(R.string.restart)) { _, _ -> triggerRebirth() }
+                .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
+                .show()
         }
     }
 

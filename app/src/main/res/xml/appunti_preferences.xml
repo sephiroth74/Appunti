@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+                  xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory android:title="Style">
 
         <SwitchPreferenceCompat
-            app:defaultValue="false"
-            app:key="main.isDarkTheme"
-            app:title="@string/dark_theme" />
+                android:icon="@drawable/sharp_invert_colors_off_24"
+                app:defaultValue="false"
+                app:key="main.isDarkTheme"
+                app:title="@string/dark_theme"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Misc">
+
+        <Preference
+                android:icon="@drawable/sharp_alternate_email_24"
+                android:key="preference.feedback"
+                android:persistent="false"
+                android:summary="Bugs, Questions, Suggestions?"
+                app:title="Send Feedback">
+        </Preference>
 
     </PreferenceCategory>
 </PreferenceScreen>
