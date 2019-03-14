@@ -80,6 +80,12 @@
     <string name="demo_category_work">Work</string>
     <string name="demo_category_other">Other</string>
     <string name="dark_theme">Dark Theme</string>
+    <string name="adding_file">Adding file...</string>
+    <string name="style">Style</string>
+    <string name="bugs_questions_suggestions">Bugs, Questions, Suggestions?</string>
+    <string name="send_feedback">Send Feedback</string>
+    <string name="feedback_from_app_subject">Feedback from {Appunti}</string>
+    <string name="unable_to_find_app_to_handle_request">Unable to find an application to handle this request</string>
 
     <plurals name="entries_archived_title">
         <item quantity="one">Entry Archived</item>

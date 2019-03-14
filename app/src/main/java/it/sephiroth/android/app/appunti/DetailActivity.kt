@@ -318,6 +318,7 @@ class DetailActivity : AppuntiActivity() {
     private fun addAttachmentToEntry(uri: Uri) {
         Timber.i("addAttachmentToEntry($uri)")
         setProgressVisible(true)
+        showConfirmation(getString(R.string.adding_file))
 
         model.addAttachment(uri) { success, throwable ->
             Timber.v("addAttachment result=$success")

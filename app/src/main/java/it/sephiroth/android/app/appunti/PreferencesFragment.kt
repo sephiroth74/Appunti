@@ -29,14 +29,14 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                     type = "text/plain"
                     data = Uri.parse("mailto:alessandro.crugnola@gmail.com")
                     putExtra(EXTRA_EMAIL, arrayOf("alessandro.crugnola@gmail.com"))
-                    putExtra(EXTRA_SUBJECT, "Feedback from {Appunti}")
+                    putExtra(EXTRA_SUBJECT, getString(R.string.feedback_from_app_subject))
                 }
 
                 if (intent.resolveActivity(activity?.packageManager!!) != null) {
                     startActivity(intent)
                 } else {
                     Toast
-                        .makeText(context, "Unable to find an application to handle this request", Toast.LENGTH_SHORT)
+                        .makeText(context, getString(R.string.unable_to_find_app_to_handle_request), Toast.LENGTH_SHORT)
                         .show()
                 }
 

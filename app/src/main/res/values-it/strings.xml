@@ -98,4 +98,11 @@
         <item quantity="other">%d Selezionati</item>
     </plurals>
     <string name="dark_theme">Tema Scuro</string>
+    <string name="adding_file">Aggiungo il file...</string>
+    <string name="bugs_questions_suggestions">Problemi, Domande, Suggerimenti?</string>
+    <string name="send_feedback">Invia un feedback</string>
+    <string name="style">Stile</string>
+    <string name="feedback_from_app_subject">Appunti Feedback</string>
+    <string name="unable_to_find_app_to_handle_request">Impossibile trovare un applicazione associata a questo evento
+    </string>
 </resources>

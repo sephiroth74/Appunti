@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory android:title="Style">
+    <PreferenceCategory android:title="@string/style">
 
         <SwitchPreferenceCompat
                 android:icon="@drawable/sharp_invert_colors_off_24"
@@ -17,8 +17,8 @@
                 android:icon="@drawable/sharp_alternate_email_24"
                 android:key="preference.feedback"
                 android:persistent="false"
-                android:summary="Bugs, Questions, Suggestions?"
-                app:title="Send Feedback">
+                android:summary="@string/bugs_questions_suggestions"
+                app:title="@string/send_feedback">
         </Preference>
 
     </PreferenceCategory>
