@@ -82,6 +82,7 @@
         <activity
                 android:name=".MainActivity"
                 android:label="@string/app_name"
+                android:theme="@style/Theme.Appunti.Light.Base.NoActionbar.FullScreen"
                 android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
