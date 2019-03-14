@@ -4,6 +4,14 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
 android {
+    signingConfigs {
+        release {
+            storeFile file('/Users/alessandro/Documents/git/sephiroth/Appunti/app/gplay-keystore.key')
+            storePassword 'ei296d'
+            keyAlias = 'alessandro.crugnola'
+            keyPassword 'ei296d'
+        }
+    }
     compileSdkVersion 28
     defaultConfig {
         applicationId "it.sephiroth.android.app.appunti"
@@ -94,11 +102,11 @@ dependencies {
 //    implementation 'eu.davidea:flexible-adapter-databinding:1.0.0'
 
     implementation 'com.wdullaer:materialdatetimepicker:4.1.2'
-    implementation 'com.jakewharton.threetenabp:threetenabp:1.1.1'
+    implementation 'com.jakewharton.threetenabp:threetenabp:1.2.0'
     implementation 'commons-io:commons-io:2.6'
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation 'com.github.barteksc:pdfium-android:1.9.0'
-    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.google.code.gson:gson:2.8.5'
 
     implementation 'com.github.tbruyelle:rxpermissions:0.10.2'
     implementation 'com.patloew.rxlocation:rxlocation:1.0.5'
