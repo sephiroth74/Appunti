@@ -1073,7 +1073,7 @@ class DetailActivity : AppuntiActivity() {
             Timber.i("clearCurrentFocus($currentFocus")
             currentFocus?.hideSoftInput()
         }
-        //linearLayout.requestFocus()
+        linearLayout.requestFocus()
     }
 
     /**
@@ -1386,10 +1386,8 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
                 }
 
                 if (activity.currentFocus is TextView) {
-//                    holder.post(action)
                     action.invoke()
                 } else {
-//                    holder.postDelayed(100, action)
                     holder.post(action)
                 }
 
@@ -1403,7 +1401,7 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
      */
     fun isFirstEntry(entry: EntryListJsonModel.EntryJson) = dataHolder.isFirstEntry(entry)
 
-    fun getPreviousEntryIndex(entry: EntryListJsonModel.EntryJson) = dataHolder.getPreviousItemIndex(entry)
+    private fun getPreviousEntryIndex(entry: EntryListJsonModel.EntryJson) = dataHolder.getPreviousItemIndex(entry)
 
     open class DetailViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val text: TextView = itemView.findViewById(android.R.id.text1)
