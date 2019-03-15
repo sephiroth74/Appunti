@@ -55,9 +55,7 @@
     <string name="unpin">Rimuovi dal Preferiti</string>
     <string name="view">Visualizza</string>
     <string name="yesterday_at">Ieri alle %s</string>
-    <string name="edit_reminder_dialog_text">Questo Appunto ha un alarme impostato per\\n%s.\\nVuoi cambiarlo o
-        rimuoverlo?
-    </string>
+    <string name="edit_reminder_dialog_text">Questo Appunto ha un alarme impostato per\\n%s.\\nVuoi cambiarlo o rimuoverlo?</string>
     <string name="demo_category_personal">Personale</string>
     <string name="demo_category_work">Lavoro</string>
     <string name="demo_category_other">Altro</string>
@@ -103,6 +101,8 @@
     <string name="send_feedback">Invia un feedback</string>
     <string name="style">Stile</string>
     <string name="feedback_from_app_subject">Appunti Feedback</string>
-    <string name="unable_to_find_app_to_handle_request">Impossibile trovare un applicazione associata a questo evento
-    </string>
+    <string name="unable_to_find_app_to_handle_request">Impossibile trovare un applicazione associata a questo evento</string>
+    <string name="misc">Altro</string>
+    <string name="version">Versione</string>
+    <string name="date">Data</string>
 </resources>

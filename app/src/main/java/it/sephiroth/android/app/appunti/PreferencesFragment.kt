@@ -11,12 +11,23 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import timber.log.Timber
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class PreferencesFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.appunti_preferences, rootKey)
+
+        // update version screen
+        var prefVersion = preferenceScreen.findPreference("preference.version")
+        prefVersion?.let {
+            val dateString = SimpleDateFormat.getDateTimeInstance().format(Date(BuildConfig.TIMESTAMP))
+            it.title = "Version: ${BuildConfig.VERSION_NAME} (Code: ${BuildConfig.VERSION_CODE})"
+            it.summary = "$dateString (hash: ${BuildConfig.COMMIT_HASH})"
+            it.isEnabled = false
+        }
     }
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {

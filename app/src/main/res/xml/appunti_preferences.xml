@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory android:title="@string/style">
 
         <SwitchPreferenceCompat
@@ -11,7 +12,7 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="Misc">
+    <PreferenceCategory android:title="@string/misc">
 
         <Preference
                 android:icon="@drawable/sharp_alternate_email_24"
@@ -19,6 +20,14 @@
                 android:persistent="false"
                 android:summary="@string/bugs_questions_suggestions"
                 app:title="@string/send_feedback">
+        </Preference>
+
+        <Preference
+                android:key="preference.version"
+                android:persistent="false"
+                android:summary="@string/bugs_questions_suggestions"
+                app:summary="Build date: Today"
+                app:title="Version 1.0.2">
         </Preference>
 
     </PreferenceCategory>
