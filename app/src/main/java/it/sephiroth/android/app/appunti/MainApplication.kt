@@ -18,6 +18,10 @@ import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.ShortcutHelper
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnScheduler
 import timber.log.Timber
+import com.crashlytics.android.Crashlytics
+import io.fabric.sdk.android.Fabric
+
+
 
 
 @Suppress("unused")
@@ -25,13 +29,19 @@ class MainApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        // initialize crashlytics
+        Fabric.with(this, Crashlytics())
+
+        // Plant Timber Debug
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
             Timber.i("SDK Version = ${Build.VERSION.SDK_INT}")
         }
 
+        // Initialize ThreeTen date-time library
         AndroidThreeTen.init(this)
 
+        // Initialize the database
         FlowManager.init(
             FlowConfig.Builder(this)
                 .database(
