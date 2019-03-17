@@ -12,6 +12,17 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="Editing">
+
+        <PreferenceScreen
+                android:key="preference.tmp.clickOnLinks"
+                android:persistent="false"
+                android:title="Click on Links"
+                android:summary="Always ask">
+
+        </PreferenceScreen>
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/misc">
 
         <Preference

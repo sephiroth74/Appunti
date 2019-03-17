@@ -15,19 +15,22 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
+@Suppress("NAME_SHADOWING")
 class PreferencesFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.appunti_preferences, rootKey)
 
-        // update version screen
-        var prefVersion = preferenceScreen.findPreference("preference.version")
+        // updateClickOnLinks version screen
+        val prefVersion = preferenceScreen.findPreference("preference.version")
         prefVersion?.let {
             val dateString = SimpleDateFormat.getDateTimeInstance().format(Date(BuildConfig.TIMESTAMP))
             it.title = "Version: ${BuildConfig.VERSION_NAME} (Code: ${BuildConfig.VERSION_CODE})"
             it.summary = "$dateString (hash: ${BuildConfig.COMMIT_HASH})"
             it.isEnabled = false
         }
+
+        updateClickOnLinks()
     }
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
@@ -52,9 +55,44 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                 }
 
             }
+
+            "preference.tmp.clickOnLinks" -> {
+                AlertDialog
+                    .Builder(context!!)
+                    .setItems(
+                        arrayOf(
+                            getString(R.string.open_link),
+                            getString(R.string.keep_editing),
+                            getString(R.string.always_ask)
+                        )
+                    ) { _, which ->
+                        SettingsManager.getInstance(context!!).openLinksOnClick = when (which) {
+                            0 -> true
+                            1 -> false
+                            else -> null
+                        }
+                        updateClickOnLinks()
+                    }
+                    .create()
+                    .show()
+
+            }
         }
 
         return super.onPreferenceTreeClick(preference)
+    }
+
+    private fun updateClickOnLinks() {
+        val prefClickOnLinks = preferenceScreen.findPreference("preference.tmp.clickOnLinks")
+        prefClickOnLinks?.let { prefClickOnLinks ->
+            val value = SettingsManager.getInstance(context!!).openLinksOnClick
+            value?.let { value ->
+                prefClickOnLinks.summary =
+                    if (value) getString(R.string.open_link) else getString(R.string.keep_editing)
+            } ?: run {
+                prefClickOnLinks.summary = getString(R.string.always_ask)
+            }
+        }
     }
 
     private fun askToRestartApplication() {

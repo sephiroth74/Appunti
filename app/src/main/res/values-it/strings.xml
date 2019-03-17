@@ -105,4 +105,7 @@
     <string name="misc">Altro</string>
     <string name="version">Versione</string>
     <string name="date">Data</string>
+    <string name="open_link">Apri Link</string>
+    <string name="keep_editing">Torna al Testo</string>
+    <string name="always_ask">Chiedi Sempre</string>
 </resources>

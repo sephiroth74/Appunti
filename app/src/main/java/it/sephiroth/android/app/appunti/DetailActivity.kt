@@ -14,6 +14,7 @@ import android.provider.MediaStore
 import android.text.InputType
 import android.text.TextWatcher
 import android.text.style.StyleSpan
+import android.text.style.URLSpan
 import android.text.util.Linkify
 import android.view.*
 import android.view.inputmethod.EditorInfo
@@ -34,7 +35,6 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.structure.delete
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.snackbar.Snackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
@@ -45,6 +45,7 @@ import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import it.sephiroth.android.app.appunti.models.EntryListJsonModel
+import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
@@ -124,22 +125,32 @@ class DetailActivity : AppuntiActivity() {
         entryTitle.doOnTextChanged { s, start, count, after -> updateEntryTitle(s, start, count, after) }
         entryText.doOnTextChanged { s, start, count, after -> updateEntryText(s, start, count, after) }
         entryText.doOnAfterTextChanged { e ->
+
             //            LinkifyCompat.addLinks(e, Linkify.ALL)
 //            ClickableURLSpan.convert(entryText)
+
             BetterLinkMovementMethod.linkify(Linkify.ALL, entryText)
                 .setOnLinkClickListener { textView, url ->
-                    Timber.d("onclick: $url")
 
-                    Snackbar.make(coordinator, "Long Click to open the link", Snackbar.LENGTH_LONG)
-                        .setAction("Got it", View.OnClickListener {
-                            Timber.v("action clicked")
-                        }).show()
+                    SettingsManager.getInstance(this).openLinksOnClick?.let { openLinks ->
+                        return@setOnLinkClickListener !openLinks
+                    } ?: run {
+                        AlertDialog.Builder(this)
+                            .setItems(
+                                arrayOf(
+                                    getString(R.string.open_link),
+                                    getString(R.string.keep_editing)
+                                )
+                            ) { _, which ->
+                                when (which) {
+                                    0 -> URLSpan(url).onClick(textView)
+                                }
+                            }
+                            .create().show()
 
-                    true
-                }.setOnLinkLongClickListener { textView, url ->
-                    Timber.d("on long click: $url")
-                    false
-                }
+                        true
+                    }
+                }.setOnLinkLongClickListener { textView, url -> true }
         }
 
         entryCategory.background = MaterialBackgroundUtils.categoryChipClickable(this)

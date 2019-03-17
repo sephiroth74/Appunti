@@ -89,6 +89,9 @@
     <string name="misc">Misc</string>
     <string name="version">Version</string>
     <string name="date">Date</string>
+    <string name="open_link">Open Link</string>
+    <string name="keep_editing">Continue Editing</string>
+    <string name="always_ask">Always Ask</string>
 
     <plurals name="entries_archived_title">
         <item quantity="one">Entry Archived</item>

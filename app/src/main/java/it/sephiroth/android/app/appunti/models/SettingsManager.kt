@@ -23,6 +23,23 @@ class SettingsManager(val context: Context) {
         themeChangedListener = action
     }
 
+    var openLinksOnClick: Boolean?
+        get() {
+            if (prefs.contains(PREFS_KEY_OPEN_LINKS_ON_CLICK)) {
+                return prefs.getBoolean(PREFS_KEY_OPEN_LINKS_ON_CLICK, true)
+            }
+            return null
+        }
+        set(value) {
+            prefs.edit {
+                value?.let {
+                    putBoolean(PREFS_KEY_OPEN_LINKS_ON_CLICK, it)
+                } ?: run {
+                    remove(PREFS_KEY_OPEN_LINKS_ON_CLICK)
+                }
+            }
+        }
+
     val isFirstLaunch: Boolean by lazy {
         if (prefs.contains(PREFS_KEY_FIRST_LAUNCH)) {
             false
@@ -60,6 +77,7 @@ class SettingsManager(val context: Context) {
 
         const val PREFS_KEY_DARK_THEME = "main.isDarkTheme"
         const val PREFS_KEY_FIRST_LAUNCH = "app.isFirstLaunch"
+        const val PREFS_KEY_OPEN_LINKS_ON_CLICK = "app.openLinksOnClick"
 
 
         @SuppressLint("StaticFieldLeak")
