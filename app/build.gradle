@@ -30,8 +30,8 @@ android {
         applicationId "it.sephiroth.android.app.appunti"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 4
-        versionName "1.0.2"
+        versionCode 5
+        versionName "1.0.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField "String", "COMMIT_HASH", "\"${getGitHash()}\""
@@ -151,6 +151,8 @@ dependencies {
     implementation 'com.jakewharton.timber:timber:4.7.1'
 
     implementation 'com.leinardi.android:speed-dial:2.0.1'
+
+    implementation 'me.saket:better-link-movement-method:2.2.0'
 
     implementation('com.crashlytics.sdk.android:crashlytics:2.9.9@aar') {
         transitive = true

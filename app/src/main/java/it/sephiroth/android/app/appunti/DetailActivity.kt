@@ -24,7 +24,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
 import androidx.core.text.set
 import androidx.core.text.toSpannable
-import androidx.core.text.util.LinkifyCompat
 import androidx.core.transition.doOnEnd
 import androidx.core.transition.doOnStart
 import androidx.core.view.children
@@ -35,6 +34,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import com.dbflow5.structure.delete
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.snackbar.Snackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
@@ -63,6 +63,7 @@ import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
 import kotlinx.android.synthetic.main.appunti_detail_remoteurl_item.view.*
+import me.saket.bettermovementmethod.BetterLinkMovementMethod
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
@@ -122,7 +123,24 @@ class DetailActivity : AppuntiActivity() {
         entryCategory.setOnClickListener { dispatchPickCategoryIntent() }
         entryTitle.doOnTextChanged { s, start, count, after -> updateEntryTitle(s, start, count, after) }
         entryText.doOnTextChanged { s, start, count, after -> updateEntryText(s, start, count, after) }
-        entryText.doOnAfterTextChanged { e -> LinkifyCompat.addLinks(e, Linkify.ALL) }
+        entryText.doOnAfterTextChanged { e ->
+            //            LinkifyCompat.addLinks(e, Linkify.ALL)
+//            ClickableURLSpan.convert(entryText)
+            BetterLinkMovementMethod.linkify(Linkify.ALL, entryText)
+                .setOnLinkClickListener { textView, url ->
+                    Timber.d("onclick: $url")
+
+                    Snackbar.make(coordinator, "Long Click to open the link", Snackbar.LENGTH_LONG)
+                        .setAction("Got it", View.OnClickListener {
+                            Timber.v("action clicked")
+                        }).show()
+
+                    true
+                }.setOnLinkLongClickListener { textView, url ->
+                    Timber.d("on long click: $url")
+                    false
+                }
+        }
 
         entryCategory.background = MaterialBackgroundUtils.categoryChipClickable(this)
 
@@ -665,6 +683,17 @@ class DetailActivity : AppuntiActivity() {
         } else if (entry.entryType == Entry.EntryType.LIST) {
             setupListRecyclerView(entry)
         }
+
+        // clear current focus on touch outside of the recycler view
+        nestedScrollView.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_UP -> {
+                    clearCurrentFocus()
+                    false
+                }
+                else -> false
+            }
+        }
     }
 
     /**
@@ -1103,18 +1132,6 @@ class DetailActivity : AppuntiActivity() {
         }
 
     private fun setupListRecyclerView(entry: Entry) {
-
-        // clear current focus on touch outside of the recycler view
-        nestedScrollView.setOnTouchListener { _, event ->
-            when (event.actionMasked) {
-                MotionEvent.ACTION_UP -> {
-                    clearCurrentFocus()
-                    false
-                }
-                else -> false
-            }
-        }
-
         detailListAdapter = DetailListAdapter(this).apply {
             setData(entry)
             saveAction = saveEntryListAction
