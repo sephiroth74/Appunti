@@ -94,6 +94,32 @@ class DetailActivity : AppuntiActivity() {
 
     private var tickTimer: Disposable? = null
 
+    private val linkLongClickListener: BetterLinkMovementMethod.OnLinkLongClickListener =
+        BetterLinkMovementMethod.OnLinkLongClickListener { textView, url -> true }
+
+    private val linkClickListener: BetterLinkMovementMethod.OnLinkClickListener =
+        BetterLinkMovementMethod.OnLinkClickListener { textView: TextView, url: String ->
+            SettingsManager.getInstance(this).openLinksOnClick?.let { openLinks ->
+                return@OnLinkClickListener !openLinks
+            } ?: run {
+                AlertDialog.Builder(this)
+                    .setItems(
+                        arrayOf(
+                            getString(R.string.open_link),
+                            getString(R.string.keep_editing)
+                        )
+                    ) { _, which ->
+                        when (which) {
+                            0 -> URLSpan(url).onClick(textView)
+                        }
+                    }
+                    .create().show()
+
+                true
+
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         window.sharedElementReturnTransition = null
 
@@ -126,32 +152,14 @@ class DetailActivity : AppuntiActivity() {
         entryText.doOnTextChanged { s, start, count, after -> updateEntryText(s, start, count, after) }
         entryText.doOnAfterTextChanged { e ->
 
-            //            LinkifyCompat.addLinks(e, Linkify.ALL)
-//            ClickableURLSpan.convert(entryText)
+            // LinkifyCompat.addLinks(e, Linkify.ALL)
+            // ClickableURLSpan.convert(entryText)
 
             BetterLinkMovementMethod.linkify(Linkify.ALL, entryText)
-                .setOnLinkClickListener { textView, url ->
-
-                    SettingsManager.getInstance(this).openLinksOnClick?.let { openLinks ->
-                        return@setOnLinkClickListener !openLinks
-                    } ?: run {
-                        AlertDialog.Builder(this)
-                            .setItems(
-                                arrayOf(
-                                    getString(R.string.open_link),
-                                    getString(R.string.keep_editing)
-                                )
-                            ) { _, which ->
-                                when (which) {
-                                    0 -> URLSpan(url).onClick(textView)
-                                }
-                            }
-                            .create().show()
-
-                        true
-                    }
-                }.setOnLinkLongClickListener { textView, url -> true }
+                .setOnLinkClickListener(linkClickListener)
+                .setOnLinkLongClickListener(linkLongClickListener)
         }
+
 
         entryCategory.background = MaterialBackgroundUtils.categoryChipClickable(this)
 
@@ -162,7 +170,8 @@ class DetailActivity : AppuntiActivity() {
 
         entryTitle.setRawInputType(InputType.TYPE_CLASS_TEXT)
 
-        model.entry.observe(this, Observer { entry ->
+        model.entry.observe(this, Observer
+        { entry ->
             Timber.i("Model Entry Changed = $entry")
             onEntryChanged(entry)
         })
@@ -363,7 +372,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    // ENTRY TEXT LISTENERS
+// ENTRY TEXT LISTENERS
 
     @Suppress("UNUSED_PARAMETER")
     private fun updateEntryText(text: CharSequence?, start: Int, count: Int, after: Int) {
@@ -372,7 +381,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    // ENTRY TITLE LISTENERS
+// ENTRY TITLE LISTENERS
 
     @Suppress("UNUSED_PARAMETER")
     private fun updateEntryTitle(text: CharSequence?, start: Int, count: Int, after: Int) {
@@ -381,7 +390,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    // SHARED ELEMENTS TRANSITION
+// SHARED ELEMENTS TRANSITION
 
     private fun setupSharedElementsTransition() {
         val sharedElementEnterTransition = window.sharedElementEnterTransition
@@ -394,7 +403,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    // BOTTOM APP BAR
+// BOTTOM APP BAR
 
     private fun setNavigationMenuPicker(value: Boolean) {
         with(navigationView.menu) {
@@ -403,8 +412,10 @@ class DetailActivity : AppuntiActivity() {
             findItem(R.id.menu_action_file).isVisible = value
             findItem(R.id.menu_action_category).isVisible = !value
             findItem(R.id.menu_action_delete).isVisible = !value
-            findItem(R.id.menu_action_list).isVisible = !value && model.entry.value?.entryType == Entry.EntryType.TEXT
-            findItem(R.id.menu_action_text).isVisible = !value && model.entry.value?.entryType == Entry.EntryType.LIST
+            findItem(R.id.menu_action_list).isVisible =
+                !value && model.entry.value?.entryType == Entry.EntryType.TEXT
+            findItem(R.id.menu_action_text).isVisible =
+                !value && model.entry.value?.entryType == Entry.EntryType.LIST
             findItem(R.id.menu_action_share).setVisible(!value)
         }
     }
@@ -436,7 +447,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    // NAVIGATION VIEW
+// NAVIGATION VIEW
 
     private fun setupNavigationView() {
         navigationView.setNavigationItemSelectedListener { menuItem ->
@@ -462,7 +473,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    // External Intents
+// External Intents
 
     private fun dispatchPickCategoryIntent() {
         model.entry.whenNotNull { entry ->
@@ -629,7 +640,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    // Entry Changed/Updated
+// Entry Changed/Updated
 
     private fun onEntryChanged(entry: Entry) {
         Timber.i("onEntryChanged()")
@@ -712,8 +723,14 @@ class DetailActivity : AppuntiActivity() {
      */
     private fun clearListRecyclerView() {
         detailRecycler.adapter = null
-        detailListAdapter?.saveAction = null
-        detailListAdapter?.deleteAction = null
+
+        detailListAdapter?.let { adapter ->
+            adapter.saveAction = null
+            adapter.deleteAction = null
+            adapter.linkClickListener = null
+            adapter.linkLongClickListener = null
+        }
+
         detailListAdapter = null
         nestedScrollView.setOnTouchListener(null)
     }
@@ -727,7 +744,7 @@ class DetailActivity : AppuntiActivity() {
         updateThemeFromEntry(entry)
     }
 
-    // text switcher ticker
+// text switcher ticker
 
     private fun updateTextSwitcher() {
         tickNext(TICKER_STEP_CREATED)
@@ -786,7 +803,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    // text switcher ticker end
+// text switcher ticker end
 
     private fun updateEntryRemoteUrls(entry: Entry) {
         remoteUrlsContainer.removeAllViews()
@@ -956,7 +973,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    // END ENTRY UPDATE
+// END ENTRY UPDATE
 
     private fun removeEntryRemoteUrl(remoteUrl: RemoteUrl) {
         model.hideRemoteUrl(remoteUrl) { result, throwable ->
@@ -1107,7 +1124,7 @@ class DetailActivity : AppuntiActivity() {
         toolbarProgress.visibility = if (visible) View.VISIBLE else View.INVISIBLE
     }
 
-    // DETAIL LIST METHODS
+// DETAIL LIST METHODS
 
     internal fun clearCurrentFocus() {
         if (currentFocus is TextView) {
@@ -1143,10 +1160,12 @@ class DetailActivity : AppuntiActivity() {
         }
 
     private fun setupListRecyclerView(entry: Entry) {
-        detailListAdapter = DetailListAdapter(this).apply {
-            setData(entry)
-            saveAction = saveEntryListAction
-            deleteAction = deleteEntryListItemAction
+        detailListAdapter = DetailListAdapter(this).also { adapter ->
+            adapter.setData(entry)
+            adapter.saveAction = saveEntryListAction
+            adapter.deleteAction = deleteEntryListItemAction
+            adapter.linkClickListener = linkClickListener
+            adapter.linkLongClickListener = linkLongClickListener
         }
 
         val animator = detailRecycler.itemAnimator
@@ -1160,7 +1179,7 @@ class DetailActivity : AppuntiActivity() {
         detailRecycler.adapter = detailListAdapter
     }
 
-    // END DETAIL LIST METHODS
+// END DETAIL LIST METHODS
 
 
     companion object {
@@ -1186,12 +1205,15 @@ data class InsertedItem(
     val selectionStart: Int? = null
 )
 
-class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
+class DetailListAdapter(private var activity: DetailActivity) :
+    RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
     private var dataHolder = EntryListJsonModel()
     private var inflater = LayoutInflater.from(activity)
 
     var saveAction: ((DetailListAdapter, String) -> (Unit))? = null
     var deleteAction: ((DetailListAdapter, DetailEntryViewHolder, EntryListJsonModel.EntryJson) -> Boolean)? = null
+    var linkClickListener: BetterLinkMovementMethod.OnLinkClickListener? = null
+    var linkLongClickListener: BetterLinkMovementMethod.OnLinkLongClickListener? = null
 
     init {
         setHasStableIds(true)
@@ -1383,6 +1405,12 @@ class DetailListAdapter(var activity: DetailActivity) : RecyclerView.Adapter<Det
                             postSave()
                         }
                     }
+                }
+
+                afterTextChanged { textView, s ->
+                    BetterLinkMovementMethod.linkify(Linkify.ALL, textView)
+                        .setOnLinkClickListener(linkClickListener)
+                        .setOnLinkLongClickListener(linkLongClickListener)
                 }
             }
 
