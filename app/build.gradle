@@ -17,7 +17,7 @@ def getGitHash = { ->
 android {
     signingConfigs {
         release {
-            storeFile file('/Users/alessandro/Documents/git/sephiroth/Appunti/app/gplay-keystore.key')
+            storeFile file('./gplay-keystore.key')
             storePassword 'ei296d'
             keyAlias = 'alessandro.crugnola'
             keyPassword 'ei296d'
@@ -30,12 +30,17 @@ android {
         applicationId "it.sephiroth.android.app.appunti"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 8
-        versionName "1.0.6"
+        versionCode 9
+        versionName "1.0.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField "String", "COMMIT_HASH", "\"${getGitHash()}\""
 
+        ndk {
+            // Tells Gradle to build outputs for the following ABIs and package
+            // them into your APK.
+            abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
+        }
     }
 
     buildTypes {
@@ -66,6 +71,7 @@ android {
         abi {
             // This property is set to true by default.
             enableSplit = true
+
         }
     }
 
