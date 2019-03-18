@@ -44,6 +44,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
     private fun parseEntry(entry: Entry) {
         Timber.i("parseEntry($entry)")
 
+        // TODO(move before the previosu line in production)
         if (entry.hasRemoteUrls()) {
             Timber.v("entry has already a remote url. skipping...")
             return
@@ -155,7 +156,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
                     )
                     .build()
             WorkManager.getInstance()
-                .enqueueUniquePeriodicWork("remoteUrlWorker", ExistingPeriodicWorkPolicy.KEEP, saveRequest)
+                .enqueueUniquePeriodicWork("remoteUrlWorker", ExistingPeriodicWorkPolicy.REPLACE, saveRequest)
         }
     }
 }

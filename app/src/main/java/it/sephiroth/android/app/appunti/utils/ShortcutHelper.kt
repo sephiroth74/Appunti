@@ -45,6 +45,10 @@ class ShortcutHelper private constructor(private val context: Context) {
     @RequiresApi(Build.VERSION_CODES.N_MR1)
     fun updateShortcutsApi25() {
         val shortcutManager = context.getSystemService(ShortcutManager::class.java)
+        if(null == shortcutManager) {
+            Timber.w("Ops. shortcutManager is null")
+            return
+        }
 
         val shortcut = ShortcutInfo.Builder(context, "id0")
             .setShortLabel(context.getString(R.string.add_new_note))

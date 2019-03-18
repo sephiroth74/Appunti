@@ -158,9 +158,13 @@ fun Entry.asList(context: Context, textSize: Float, maxLines: Int = 10): Spannab
 }
 
 fun Entry.parseRemoteUrls(): List<String> {
+
+    Timber.i("parseRemoteUrls")
+
     val result = mutableListOf<String>()
     val pattern = Pattern.compile(
-        "(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/[^\\s\\n\\\"\\']*)?",
+//        "(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/[^\\s\\n\\\"\\']*)?",
+        "((https?:\\/\\/(www\\.)?)|www\\.)[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,4}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)",
         Pattern.CASE_INSENSITIVE
     )
 
@@ -168,14 +172,28 @@ fun Entry.parseRemoteUrls(): List<String> {
         val m = pattern.matcher(entryText)
 
         while (m.find()) {
-            result.add(m.group())
+            var url = m.group()
+            if (url.startsWith("http://", true)) {
+                url = url.replace("http://", "https://", true)
+            } else if (url.startsWith("www.", true)) {
+                url = "https://$url"
+            }
+            result.add(url)
         }
     } else {
         asList()?.let { triple ->
             for (line in triple.first) {
                 val m = pattern.matcher(line.text)
+
                 while (m.find()) {
-                    result.add(m.group())
+                    var url = m.group()
+                    if (url.startsWith("http://", true)) {
+                        url = url.replace("http://", "https://", true)
+                    } else if (url.startsWith("www.", true)) {
+                        url = "https://$url"
+                    }
+
+                    result.add(url)
                 }
             }
         }
