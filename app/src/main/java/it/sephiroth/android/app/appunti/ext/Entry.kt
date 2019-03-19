@@ -161,6 +161,15 @@ fun Entry.parseRemoteUrls(): List<String> {
 
     Timber.i("parseRemoteUrls")
 
+    fun addHTTPSIfRequired(url: String): String {
+        if (url.startsWith("http://", true)) {
+            return url.replace("http://", "https://", true)
+        } else if (url.startsWith("www.", true)) {
+            return "https://$url"
+        }
+        return url
+    }
+
     val result = mutableListOf<String>()
     val pattern = Pattern.compile(
 //        "(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/[^\\s\\n\\\"\\']*)?",
@@ -172,12 +181,7 @@ fun Entry.parseRemoteUrls(): List<String> {
         val m = pattern.matcher(entryText)
 
         while (m.find()) {
-            var url = m.group()
-            if (url.startsWith("http://", true)) {
-                url = url.replace("http://", "https://", true)
-            } else if (url.startsWith("www.", true)) {
-                url = "https://$url"
-            }
+            val url = addHTTPSIfRequired(m.group())
             result.add(url)
         }
     } else {
@@ -186,13 +190,7 @@ fun Entry.parseRemoteUrls(): List<String> {
                 val m = pattern.matcher(line.text)
 
                 while (m.find()) {
-                    var url = m.group()
-                    if (url.startsWith("http://", true)) {
-                        url = url.replace("http://", "https://", true)
-                    } else if (url.startsWith("www.", true)) {
-                        url = "https://$url"
-                    }
-
+                    val url = addHTTPSIfRequired(m.group())
                     result.add(url)
                 }
             }

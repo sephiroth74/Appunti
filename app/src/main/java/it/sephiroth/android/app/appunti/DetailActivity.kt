@@ -577,12 +577,11 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun closeBottomSheet() {
-        answers.logCustom(CustomEvent("detail.bottomSheet").putCustomAttribute("open", 0))
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
     }
 
     private fun openBottomSheet() {
-        answers.logCustom(CustomEvent("detail.bottomSheet").putCustomAttribute("open", 1))
+        answers.logCustom(CustomEvent("detail.bottomSheet.open"))
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
 

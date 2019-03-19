@@ -3,6 +3,7 @@ package it.sephiroth.android.app.appunti.ext
 import android.content.Context
 import android.graphics.drawable.BitmapDrawable
 import android.widget.ImageView
+import com.crashlytics.android.Crashlytics
 import com.squareup.picasso.Callback
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
@@ -27,6 +28,7 @@ fun RemoteUrl.loadThumbnail(context: Context, view: ImageView) {
         .into(view, object : Callback {
             override fun onError(e: Exception?) {
                 e?.printStackTrace()
+                Crashlytics.logException(e)
                 view.setImageResource(R.drawable.baseline_open_in_new_24)
             }
 
