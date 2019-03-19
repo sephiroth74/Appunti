@@ -106,8 +106,6 @@ class SearchableActivity : AppuntiActivity() {
     private fun performSearch(text: String?) {
         Timber.i("performSearch('$text')")
 
-        answers.logCustom(CustomEvent("search.performSearch"))
-
         timer?.dispose()
         timer = Observable.timer(300, TimeUnit.MILLISECONDS, Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -118,9 +116,16 @@ class SearchableActivity : AppuntiActivity() {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe { result, error ->
                             Timber.v("result = $result")
+                            answers.logCustom(
+                                CustomEvent("search.performSearch").putCustomAttribute(
+                                    "result",
+                                    if (result.isNullOrEmpty()) 0 else 1
+                                )
+                            )
                             adapter.update(result, text.toLowerCase(Locale.getDefault()))
                         }
                 } else {
+                    answers.logCustom(CustomEvent("search.performSearch").putCustomAttribute("result", 0))
                     adapter.update(arrayListOf())
                 }
             }
@@ -192,7 +197,7 @@ class SearchableActivity : AppuntiActivity() {
             }
         })
 
-        searchView.setOnLogoClickListener({ supportFinishAfterTransition() })
+        searchView.setOnLogoClickListener { supportFinishAfterTransition() }
         // searchView.setOnLogoClickListener { supportFinishAfterTransition() }
     }
 }
