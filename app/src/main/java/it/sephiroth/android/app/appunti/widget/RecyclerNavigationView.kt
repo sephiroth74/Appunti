@@ -17,6 +17,8 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
 import com.google.android.material.navigation.NavigationView
 import isTablet
 import it.sephiroth.android.app.appunti.R
@@ -292,6 +294,13 @@ class RecyclerNavigationView @JvmOverloads constructor(
                     holder.switchView.setOnCheckedChangeListener(null)
                     holder.isChecked = !SettingsManager.getInstance(context).displayAsList
                     holder.switchView.setOnCheckedChangeListener { _, isChecked ->
+
+                        Answers
+                            .getInstance()
+                            .logCustom(
+                                CustomEvent("displayAsList").putCustomAttribute("asGrid", if (isChecked) 1 else 0)
+                            )
+
                         SettingsManager.getInstance(context).displayAsList = !isChecked
                     }
                 }

@@ -22,10 +22,12 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_SWIPE
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
+import com.crashlytics.android.answers.SearchEvent
 import com.google.android.material.snackbar.Snackbar
 import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
-import com.lapism.searchview.widget.SearchBar
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
@@ -69,6 +71,8 @@ class MainActivity : AppuntiActivityFullscreen() {
 
     // save instance state for the main recyclerview
     private var mListState: Parcelable? = null
+
+    private val answers: Answers by lazy { Answers.getInstance() }
 
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -183,12 +187,13 @@ class MainActivity : AppuntiActivityFullscreen() {
             adapter.update(it)
         })
 
-
         // handle current intent
         if (intent?.action == ACTION_ENTRIES_BY_CATEGORY) {
             model.group.setCategoryID(intent.getLongExtra(KEY_CATEGORY_ID, 0))
+            answers.logCustom(CustomEvent("main.init").putCustomAttribute("fromCategory", 1))
         } else {
             model.group.setCategoryID(null)
+            answers.logCustom(CustomEvent("main.init").putCustomAttribute("fromCategory", 0))
         }
     }
 
@@ -219,15 +224,15 @@ class MainActivity : AppuntiActivityFullscreen() {
         speedDial.addAllActionItems(
             mutableListOf(
                 SpeedDialActionItem.Builder(R.id.fab_menu_new_text_note, R.drawable.sharp_text_fields_24)
-                    .setLabel("New Text Note")
+                    .setLabel(getString(R.string.new_text_note))
                     .create(),
                 SpeedDialActionItem.Builder(R.id.fab_menu_new_list_note, R.drawable.sharp_format_list_bulleted_24)
-                    .setLabel("New List Note")
+                    .setLabel(getString(R.string.new_list_note))
                     .create()
             )
         )
 
-        speedDial.setOnActionSelectedListener { it ->
+        speedDial.setOnActionSelectedListener {
             when (it.id) {
                 R.id.fab_menu_new_text_note -> startDetailActivity(Entry.EntryType.TEXT)
                 R.id.fab_menu_new_list_note -> startDetailActivity(Entry.EntryType.LIST)
@@ -310,6 +315,11 @@ class MainActivity : AppuntiActivityFullscreen() {
         navigationView.setNavigationItemSelectedListener { id ->
             when (id) {
                 RecyclerNavigationView.TYPE_LABEL_CATEGORY_ARCHIVED -> {
+                    answers
+                        .logCustom(
+                            CustomEvent("main.navigationItemClick").putCustomAttribute("name", "archived")
+                        )
+
                     model.group.setIsArchived(true)
                     closeDrawerIfOpened()
                 }
@@ -396,6 +406,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                 if (viewHolder.itemViewType == ItemEntryListAdapter.TYPE_ENTRY) {
                     val entry = (viewHolder as ItemEntryListAdapter.EntryViewHolder).entry
                     entry?.let { entry ->
+                        answers.logCustom(CustomEvent("main.itemSwiped"))
                         setEntriesArchived(listOf(entry), true)
                     }
                 }
@@ -456,9 +467,13 @@ class MainActivity : AppuntiActivityFullscreen() {
 
         searchView.setOnMicClickListener {
             Search.setVoiceSearch(this, "")
+            answers.logSearch(SearchEvent().putCustomAttribute("main.voiceSearch", 1))
         }
 
-        searchView.setOnLogoClickListener(Search.OnLogoClickListener { toggleDrawer() })
+        searchView.setOnLogoClickListener {
+            answers.logCustom(CustomEvent("main.toggleDrawer").putCustomAttribute("fromLogo", 1))
+            toggleDrawer()
+        }
 
         val textEdit = searchView.findViewById<View>(R.id.search_imageView_image)
         textEdit.isFocusable = false
@@ -467,6 +482,7 @@ class MainActivity : AppuntiActivityFullscreen() {
         textEdit.setOnClickListener {
             val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this, toolbar, "toolbar")
             startActivity(IntentUtils.createSearchableIntent(this), intentOptions.toBundle())
+            answers.logSearch(SearchEvent().putCustomAttribute("text", 1))
         }
     }
 
@@ -503,6 +519,10 @@ class MainActivity : AppuntiActivityFullscreen() {
 
     private fun startDetailActivity(type: Entry.EntryType) {
         startDetailActivityFromIntent(IntentUtils.createNewEntryIntent(this, type), null)
+
+        answers.logCustom(
+            CustomEvent("main.newNote").putCustomAttribute("type", type.name)
+        )
     }
 
     private fun startDetailActivity(holder: ItemEntryListAdapter.EntryViewHolder, entry: Entry) {
@@ -686,9 +706,12 @@ class MainActivity : AppuntiActivityFullscreen() {
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             Timber.i("onActionItemClicked: ${item.itemId}")
 
+            val event = CustomEvent("main.actionModeItemClick")
+
             when (item.itemId) {
                 R.id.menu_action_pin -> {
                     tracker?.let { tracker ->
+                        event.putCustomAttribute("name", "pin")
                         val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > -1
                         val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > -1
                         DatabaseHelper.setEntriesPinned(
@@ -701,6 +724,7 @@ class MainActivity : AppuntiActivityFullscreen() {
 
                 R.id.menu_action_delete -> {
                     tracker?.let { tracker ->
+                        event.putCustomAttribute("name", "delete")
                         val hasDeleted = tracker.selection.values.indexOfFirst { it.entryDeleted == 1 } > -1
                         val entries = tracker.selection.values.toList()
                         if (hasDeleted) {
@@ -713,6 +737,7 @@ class MainActivity : AppuntiActivityFullscreen() {
 
                 R.id.menu_action_archive -> {
                     tracker?.let { tracker ->
+                        event.putCustomAttribute("name", "archive")
                         val hasArchived = tracker.selection.values.indexOfFirst { it.entryArchived == 1 } > -1
                         val entries = tracker.selection.values.toList()
                         if (hasArchived) {
@@ -725,11 +750,14 @@ class MainActivity : AppuntiActivityFullscreen() {
                 }
             }
 
+            answers.logCustom(event)
             return true
         }
 
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
             Timber.i("onCreateActionMode")
+            answers.logCustom(CustomEvent("main.createActionMode"))
+
             menuInflater.inflate(R.menu.appunti_main_actionmode_menu, menu)
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
             toolbar.animate().alpha(0f).start()

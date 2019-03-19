@@ -108,4 +108,6 @@
     <string name="open_link">Apri Link</string>
     <string name="keep_editing">Ignora</string>
     <string name="always_ask">Chiedi Sempre</string>
+    <string name="new_text_note">Nuovo Appunto</string>
+    <string name="new_list_note">Nuova Lista</string>
 </resources>

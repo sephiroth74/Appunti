@@ -11,7 +11,6 @@ import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.text.InputType
 import android.text.TextWatcher
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
@@ -33,6 +32,9 @@ import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
+import com.crashlytics.android.answers.ShareEvent
 import com.dbflow5.structure.delete
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -94,11 +96,15 @@ class DetailActivity : AppuntiActivity() {
 
     private var tickTimer: Disposable? = null
 
+    private val answers: Answers by lazy { Answers.getInstance() }
+
     private val linkLongClickListener: BetterLinkMovementMethod.OnLinkLongClickListener =
         BetterLinkMovementMethod.OnLinkLongClickListener { textView, url -> true }
 
     private val linkClickListener: BetterLinkMovementMethod.OnLinkClickListener =
         BetterLinkMovementMethod.OnLinkClickListener { textView: TextView, url: String ->
+            answers.logCustom(CustomEvent("detail.linkClick"))
+
             SettingsManager.getInstance(this).openLinksOnClick?.let { openLinks ->
                 return@OnLinkClickListener !openLinks
             } ?: run {
@@ -168,11 +174,8 @@ class DetailActivity : AppuntiActivity() {
             entryText.setOnClickListener(null)
         }
 
-        entryTitle.setRawInputType(InputType.TYPE_CLASS_TEXT)
-
         model.entry.observe(this, Observer
         { entry ->
-            Timber.i("Model Entry Changed = $entry")
             onEntryChanged(entry)
         })
 
@@ -198,6 +201,7 @@ class DetailActivity : AppuntiActivity() {
 
         if (model.isNew && model.entry.value?.isEmpty() == true) {
             Timber.v("new entry is empty. delete it")
+            answers.logCustom(CustomEvent("detail.deleteNewItem"))
             model.entry.value?.delete()
         } else {
             if (model.modified) {
@@ -214,14 +218,15 @@ class DetailActivity : AppuntiActivity() {
         var newEntry: Entry? = null
         var isNewDocument = false
 
-        Timber.v("action=${intent.action}")
-
         savedInstanceState?.let { bundle ->
             if (bundle.containsKey(IntentUtils.KEY_ENTRY_ID)) {
                 entryID = bundle.getLong(IntentUtils.KEY_ENTRY_ID)
                 disablePostponedTransitions = false
             }
         }
+
+        val event = CustomEvent("detail.init")
+        intent.action?.let { event.putCustomAttribute("action", it) }
 
         if (null == entryID) {
             when (intent.action) {
@@ -230,8 +235,10 @@ class DetailActivity : AppuntiActivity() {
                     disablePostponedTransitions = true
                     newEntry = Entry()
 
+
                     if (intent.hasExtra(IntentUtils.KEY_ENTRY_TYPE)) {
                         val type = Entry.EntryType.values()[intent.getIntExtra(IntentUtils.KEY_ENTRY_TYPE, 0)]
+                        event.putCustomAttribute("type", type.name)
                         if (type == Entry.EntryType.LIST) {
                             newEntry.convertToList()
                         }
@@ -256,6 +263,7 @@ class DetailActivity : AppuntiActivity() {
                             if (intent.hasExtra(Intent.EXTRA_STREAM)) {
                                 val streamUri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
                                 entry.entryStream = streamUri
+                                event.putCustomAttribute("hasStream", 1)
                             }
                         }
                 }
@@ -272,6 +280,8 @@ class DetailActivity : AppuntiActivity() {
                 model.createNewEntry(it, isNewDocument)
             }
         }
+
+        answers.logCustom(event)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -280,8 +290,6 @@ class DetailActivity : AppuntiActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        Timber.i("onPrepareOptionsMenu")
-
         model.entry.whenNotNull { entry ->
             updateMenu(menu, entry)
             updateMenu(navigationView.menu, entry)
@@ -300,8 +308,6 @@ class DetailActivity : AppuntiActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        Timber.i("onActivityResult(requestCode=$requestCode, resultCode=$resultCode, data=$data)")
-
         if (resultCode == RESULT_OK) {
             when (requestCode) {
                 CATEGORY_PICK_REQUEST_CODE -> {
@@ -331,6 +337,7 @@ class DetailActivity : AppuntiActivity() {
      */
     private fun onImageCaptured(dstFile: RelativePath?) {
         Timber.i("onImageCaptured(${dstFile?.absolutePath})")
+        answers.logCustom(CustomEvent("detail.attachCamera.result"))
 
         dstFile?.let { dstFile ->
             model.addAttachment(dstFile) { success, throwable ->
@@ -347,6 +354,8 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun changeEntryCategory(categoryID: Long) {
+        answers.logCustom(CustomEvent("detail.pickCategory.result"))
+
         Timber.i("changeEntryCategory($categoryID)")
         if (model.setEntryCategory(categoryID)) {
             invalidate(UPDATE_CATEGORY)
@@ -355,6 +364,7 @@ class DetailActivity : AppuntiActivity() {
 
     private fun addAttachmentToEntry(uri: Uri) {
         Timber.i("addAttachmentToEntry($uri)")
+        answers.logCustom(CustomEvent("detail.attachImage.result"))
         setProgressVisible(true)
         showConfirmation(getString(R.string.adding_file))
 
@@ -476,6 +486,8 @@ class DetailActivity : AppuntiActivity() {
 // External Intents
 
     private fun dispatchPickCategoryIntent() {
+        answers.logCustom(CustomEvent("detail.pickCategory"))
+
         model.entry.whenNotNull { entry ->
             IntentUtils.Categories
                 .Builder(this)
@@ -487,26 +499,32 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun dispatchShareEntryIntent() {
+        answers.logCustom(CustomEvent("detail.shareEntry"))
+
         model.entry.whenNotNull { entry ->
             IntentUtils.createShareEntryIntent(this, entry).also {
                 startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
             }
+            answers.logShare(ShareEvent())
         }
     }
 
     private fun dispatchOpenFileIntent() {
+        answers.logCustom(CustomEvent("detail.attachImage").putCustomAttribute("type", "file"))
         IntentUtils.createPickDocumentIntent(this).also {
             startActivityForResult(it, OPEN_FILE_REQUEST_CODE)
         }
     }
 
     private fun dispatchOpenImageIntent() {
+        answers.logCustom(CustomEvent("detail.attachImage").putCustomAttribute("type", "image"))
         IntentUtils.createPickImageIntent(this).also {
             startActivityForResult(it, OPEN_FILE_REQUEST_CODE)
         }
     }
 
     private fun dispatchTakePictureIntent() {
+        answers.logCustom(CustomEvent("detail.attachCamera"))
         model.entry.whenNotNull { entry ->
             Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
                 takePictureIntent.resolveActivity(packageManager)?.also {
@@ -518,7 +536,7 @@ class DetailActivity : AppuntiActivity() {
                     }
 
                     photoFile?.also { file ->
-                        Timber.v("photoFile = ${file.toString()}")
+                        Timber.v("photoFile = $file")
                         mCurrentPhotoPath = file
                         val photoURI = FileSystemUtils.getFileUri(this, file)
                         takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
@@ -559,10 +577,12 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun closeBottomSheet() {
+        answers.logCustom(CustomEvent("detail.bottomSheet").putCustomAttribute("open", 0))
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
     }
 
     private fun openBottomSheet() {
+        answers.logCustom(CustomEvent("detail.bottomSheet").putCustomAttribute("open", 1))
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
 
@@ -826,6 +846,7 @@ class DetailActivity : AppuntiActivity() {
                 remoteUrl.loadThumbnail(this, view.remoteUrlImage)
 
                 view.setOnClickListener {
+                    answers.logCustom(CustomEvent("detail.remoteUrl.click"))
                     try {
                         IntentUtils.createRemoteUrlViewIntent(this, remoteUrl).also {
                             startActivity(it)
@@ -866,6 +887,7 @@ class DetailActivity : AppuntiActivity() {
                 attachment.loadThumbnail(this, view.attachmentImage)
 
                 view.setOnClickListener {
+                    answers.logCustom(CustomEvent("detail.attachment.click"))
                     try {
                         IntentUtils.createAttachmentViewIntent(this, attachment).also {
                             startActivity(it)
@@ -876,6 +898,7 @@ class DetailActivity : AppuntiActivity() {
                 }
 
                 view.attachmentShareButton.setOnClickListener {
+                    answers.logCustom(CustomEvent("detail.attachment.share"))
                     try {
                         IntentUtils.createAttachmentShareIntent(this, attachment).also {
                             startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
@@ -976,6 +999,7 @@ class DetailActivity : AppuntiActivity() {
 // END ENTRY UPDATE
 
     private fun removeEntryRemoteUrl(remoteUrl: RemoteUrl) {
+        answers.logCustom(CustomEvent("detail.remoteUrl.delete"))
         model.hideRemoteUrl(remoteUrl) { result, throwable ->
             doOnMainThread {
                 throwable?.let {
@@ -988,6 +1012,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun removeEntryAttachment(attachment: Attachment) {
+        answers.logCustom(CustomEvent("detail.attachment.delete"))
         model.removeAttachment(attachment) { result, throwable ->
             doOnMainThread {
                 throwable?.let { throwable ->
@@ -1002,18 +1027,21 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun convertEntryToList() {
+        answers.logCustom(CustomEvent("detail.convertEntryToList"))
         if (model.convertEntryToList()) {
             invalidate(UPDATE_TYPE_AND_TEXT)
         }
     }
 
     private fun convertEntryToText() {
+        answers.logCustom(CustomEvent("detail.convertEntryToText"))
         if (model.convertEntryToText(detailListAdapter.toString())) {
             invalidate(UPDATE_TYPE_AND_TEXT)
         }
     }
 
     private fun togglePin() {
+        answers.logCustom(CustomEvent("detail.togglePin"))
         val currentValue = model.entry.value?.isPinned()
         if (model.setEntryPinned(currentValue == false)) {
             showConfirmation(
@@ -1027,6 +1055,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun toggleDelete() {
+        answers.logCustom(CustomEvent("detail.toggleDelete"))
         model.entry.whenNotNull { entry ->
             val currentValue = entry.isDeleted()
             if (model.setEntryDeleted(!currentValue)) {
@@ -1047,6 +1076,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun toggleArchive() {
+        answers.logCustom(CustomEvent("detail.toggleArchive"))
         model.entry.whenNotNull { entry ->
             val currentValue = entry.isArchived()
             if (model.setEntryArchived(!currentValue)) {
@@ -1067,6 +1097,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun toggleReminder() {
+        answers.logCustom(CustomEvent("detail.toggleReminder"))
         model.entry.whenNotNull { entry ->
             if (entry.entryAlarm != null && !entry.isReminderExpired()) {
                 val date = entry.entryAlarm!!.atZone(ZoneId.systemDefault())
@@ -1209,6 +1240,7 @@ class DetailListAdapter(private var activity: DetailActivity) :
     RecyclerView.Adapter<DetailListAdapter.DetailViewHolder>() {
     private var dataHolder = EntryListJsonModel()
     private var inflater = LayoutInflater.from(activity)
+    private val answers: Answers by lazy { Answers.getInstance() }
 
     var saveAction: ((DetailListAdapter, String) -> (Unit))? = null
     var deleteAction: ((DetailListAdapter, DetailEntryViewHolder, EntryListJsonModel.EntryJson) -> Boolean)? = null
@@ -1255,6 +1287,8 @@ class DetailListAdapter(private var activity: DetailActivity) :
 
     private fun addItem() {
         Timber.v("addItem")
+        answers.logCustom(CustomEvent("detail.list.addItem"))
+
         doOnMainThread {
             dataHolder.addItem(checked = false).also { index ->
                 insertedItem = InsertedItem(index)
@@ -1266,6 +1300,8 @@ class DetailListAdapter(private var activity: DetailActivity) :
     }
 
     private fun insertItemAfter(entry: EntryListJsonModel.EntryJson, text: String?) {
+        answers.logCustom(CustomEvent("detail.list.addItemAfter"))
+
         Timber.i("insertItemAfter($entry)")
         val id = entry.id
         doOnMainThread {
@@ -1286,6 +1322,8 @@ class DetailListAdapter(private var activity: DetailActivity) :
      * Delete the passed [Entry] and remove the current focus
      */
     internal fun deleteItem(entry: EntryListJsonModel.EntryJson) {
+        answers.logCustom(CustomEvent("detail.list.deleteItem"))
+
         Timber.i("deleteItem($entry)")
         doOnMainThread {
             activity.clearCurrentFocus()
@@ -1297,6 +1335,8 @@ class DetailListAdapter(private var activity: DetailActivity) :
     }
 
     internal fun mergeWithPrevious(entry: EntryListJsonModel.EntryJson) {
+        answers.logCustom(CustomEvent("detail.list.mergeWithPrevious"))
+
         Timber.i("mergeWithPrevious($entry)")
         doOnMainThread {
             getPreviousEntryIndex(entry).let { previousIndex ->
@@ -1317,6 +1357,8 @@ class DetailListAdapter(private var activity: DetailActivity) :
     }
 
     private fun toggleItem(entry: EntryListJsonModel.EntryJson) {
+        answers.logCustom(CustomEvent("detail.list.toggleItem"))
+
         doOnMainThread {
             dataHolder.toggle(entry)?.also { result ->
                 notifyItemMoved(result.first, result.second)

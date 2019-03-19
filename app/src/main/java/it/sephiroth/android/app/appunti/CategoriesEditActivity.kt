@@ -19,6 +19,8 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
 import com.dbflow5.query.OrderBy
 import com.dbflow5.query.list
 import com.dbflow5.query.select
@@ -57,6 +59,8 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     private var mPickCategory = false
     private var mPickCategorySelection: Long = -1
 
+    private val answers: Answers by lazy { Answers.getInstance() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -65,15 +69,22 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
             setDisplayShowHomeEnabled(true)
         }
 
+        val event = CustomEvent("categories.init")
+
         intent?.let { intent ->
+            intent.action?.let { event.putCustomAttribute("action", it) }
+
             mPickCategory = intent.action == Intent.ACTION_PICK
             mPickCategorySelection = intent.getLongExtra(IntentUtils.KEY_CATEGORY_ID, -1)
         }
+
+        answers.logCustom(event)
 
         mAdapter = CategoriesAdapter(this, mPickCategory, mPickCategorySelection, mutableListOf())
 
         if (mPickCategory) {
             mAdapter.categorySelectedListener = { category ->
+                answers.logCustom(CustomEvent("categories.categorySelected"))
                 setResultAndFinish(category)
             }
         }
@@ -102,6 +113,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     }
 
     private fun presentNewCategoryDialog() {
+        answers.logCustom(CustomEvent("categories.presentNewCategoryDialog"))
         val alertDialog: AlertDialog = AlertDialog
             .Builder(this)
             .setCancelable(true)
@@ -138,6 +150,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     }
 
     private fun presentCategoryColorChooser(category: Category?) {
+        answers.logCustom(CustomEvent("categories.presentCategoryColorChooser"))
         if (null != category) {
             val categoryCopy = Category(category)
 
@@ -174,6 +187,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
     }
 
     private fun deleteCategory(adapterPosition: Int, category: Category?) {
+        answers.logCustom(CustomEvent("categories.deleteCategory"))
         if (null != category) {
 
             if (mSnackbar != null) {
@@ -198,6 +212,7 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
 
                         if (event == DISMISS_EVENT_ACTION) {
                             Timber.d("must undo the event!")
+                            answers.logCustom(CustomEvent("categories.undoDeleteCategory"))
                             mAdapter.restore(category)
 
                         } else {

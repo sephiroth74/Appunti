@@ -9,6 +9,8 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.util.Pair
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
 import com.dbflow5.isNotNullOrEmpty
 import com.dbflow5.query.OrderBy
 import com.dbflow5.query.list
@@ -39,9 +41,9 @@ class SearchableActivity : AppuntiActivity() {
 
     override fun getContentLayout(): Int = R.layout.searchable_activity
 
+    private val answers: Answers by lazy { Answers.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         window.sharedElementEnterTransition = Fade()
         window.sharedElementExitTransition = Fade()
         window.sharedElementReenterTransition = Fade()
@@ -52,12 +54,17 @@ class SearchableActivity : AppuntiActivity() {
         setupSearchView()
         setupRecyclerView()
 
+        val event = CustomEvent("search.init")
+        intent?.action?.let { event.putCustomAttribute("action", it) }
+
         if (Intent.ACTION_SEARCH == intent.action) {
             intent.getStringExtra(SearchManager.QUERY)?.also { query ->
                 Timber.i("QUERY: $query")
                 searchView.setText(query)
             }
         }
+
+        answers.logCustom(event)
 
         // add focus to the search view
         searchView.findViewById<View>(R.id.search_searchEditText).requestFocus()
@@ -98,6 +105,8 @@ class SearchableActivity : AppuntiActivity() {
 
     private fun performSearch(text: String?) {
         Timber.i("performSearch('$text')")
+
+        answers.logCustom(CustomEvent("search.performSearch"))
 
         timer?.dispose()
         timer = Observable.timer(300, TimeUnit.MILLISECONDS, Schedulers.io())
@@ -183,7 +192,7 @@ class SearchableActivity : AppuntiActivity() {
             }
         })
 
-        searchView.setOnLogoClickListener(Search.OnLogoClickListener { supportFinishAfterTransition() })
+        searchView.setOnLogoClickListener({ supportFinishAfterTransition() })
         // searchView.setOnLogoClickListener { supportFinishAfterTransition() }
     }
 }

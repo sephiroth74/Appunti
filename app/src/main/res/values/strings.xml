@@ -92,6 +92,8 @@
     <string name="open_link">Open Link</string>
     <string name="keep_editing">Continue Editing</string>
     <string name="always_ask">Always Ask</string>
+    <string name="new_text_note">New Text Note</string>
+    <string name="new_list_note">New List Note</string>
 
     <plurals name="entries_archived_title">
         <item quantity="one">Entry Archived</item>

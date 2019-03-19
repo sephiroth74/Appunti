@@ -3,6 +3,9 @@ package it.sephiroth.android.app.appunti.workers
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.work.*
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
+import com.dbflow5.isNullOrEmpty
 import com.dbflow5.structure.save
 import it.sephiroth.android.app.appunti.BuildConfig
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
@@ -22,6 +25,11 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
     @SuppressLint("CheckResult")
     override fun doWork(): Result {
         Timber.i("[${currentThread()}] doWork($workerParams)")
+
+        Answers.getInstance().logCustom(
+            CustomEvent("remoteUrlWorker.init")
+                .putCustomAttribute("runAttemptCount", workerParams.runAttemptCount)
+        )
 
         DatabaseHelper.getEntries {
             where(Entry_Table.entryDeleted.eq(0))
@@ -44,9 +52,9 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
     private fun parseEntry(entry: Entry) {
         Timber.i("parseEntry($entry)")
 
-        // TODO(move before the previosu line in production)
         if (entry.hasRemoteUrls()) {
             Timber.v("entry has already a remote url. skipping...")
+            Answers.getInstance().logCustom(CustomEvent("remoteUrlWorker.entry.hasRemoteUrls"))
             return
         }
 
@@ -61,6 +69,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
                     retrieveUrl(urlString)?.let { remoteUrl ->
                         remoteUrl.remoteUrlEntryID = entry.entryID
                         if (remoteUrl.save()) {
+                            Answers.getInstance().logCustom(CustomEvent("remoteUrlWorker.entry.addRemoteUrl"))
                             Timber.v("added $remoteUrl to ${entry.entryID}")
                             entryRemoteUrls.add(remoteUrl)
                             entry.invalidateRemoteUrls()
@@ -131,6 +140,13 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
         Timber.v("description = $description")
         Timber.v("imageUrl = $imageUrl")
 
+        Answers.getInstance().logCustom(
+            CustomEvent("remoteUrlWorker.entry.retrieveUrl")
+                .putCustomAttribute("hasTitle", if (title.isNullOrEmpty()) 0 else 1)
+                .putCustomAttribute("hasImage", if (imageUrl.isNullOrEmpty()) 0 else 1)
+                .putCustomAttribute("hasDescription", if (description.isNullOrEmpty()) 0 else 1)
+        )
+
         return RemoteUrl().apply {
             remoteUrlOriginalUri = urlString
             remoteThumbnailUrl = imageUrl
@@ -142,14 +158,17 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
     companion object {
         fun createPeriodicWorker() {
             Timber.i("createPeriodicWorker")
+
+            Answers.getInstance().logCustom(CustomEvent("remoteUrlWorker.create"))
+
             val saveRequest =
                 PeriodicWorkRequestBuilder<RemoteUrlParserWorker>(
-                    if (BuildConfig.DEBUG) 10L else 5L,
+                    if (BuildConfig.DEBUG) 15L else 5L,
                     if (BuildConfig.DEBUG) TimeUnit.MINUTES else TimeUnit.HOURS
                 )
                     .setConstraints(
                         Constraints.Builder()
-                            .setRequiresCharging(true)
+                            .setRequiresCharging(false)
                             .setRequiredNetworkType(NetworkType.UNMETERED)
                             .setRequiresBatteryNotLow(true)
                             .build()
