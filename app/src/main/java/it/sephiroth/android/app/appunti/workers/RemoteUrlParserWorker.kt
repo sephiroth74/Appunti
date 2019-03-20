@@ -1,3 +1,5 @@
+@file:Suppress("NAME_SHADOWING")
+
 package it.sephiroth.android.app.appunti.workers
 
 import android.annotation.SuppressLint
@@ -79,14 +81,16 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
             for (urlString in remoteUrls) {
                 if (!entryRemoteUrls.map { it.remoteUrlOriginalUri }.contains(urlString)) {
                     try {
-                        retrieveUrl(urlString)?.let { remoteUrl ->
-                            remoteUrl.remoteUrlEntryID = entry.entryID
-                            if (remoteUrl.save()) {
-                                answers.logCustom(CustomEvent("remoteUrlWorker.entry.addRemoteUrl"))
-                                Timber.v("added $remoteUrl to ${entry.entryID}")
-                                entryRemoteUrls.add(remoteUrl)
-                                entry.invalidateRemoteUrls()
-                                return
+                        tryConnect(urlString)?.also { doc ->
+                            retrievePageInfo(doc)?.let { remoteUrl ->
+                                remoteUrl.remoteUrlEntryID = entry.entryID
+                                if (remoteUrl.save()) {
+                                    answers.logCustom(CustomEvent("remoteUrlWorker.entry.addRemoteUrl"))
+                                    Timber.v("added $remoteUrl to ${entry.entryID}")
+                                    entryRemoteUrls.add(remoteUrl)
+                                    entry.invalidateRemoteUrls()
+                                    return
+                                }
                             }
                         }
                     } catch (t: Throwable) {
@@ -133,8 +137,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
         }
     }
 
-    private fun retrieveUrl(urlString: String): RemoteUrl? {
-        val doc: Document = tryConnect(urlString) ?: return null
+    private fun retrievePageInfo(doc: Document): RemoteUrl? {
         val url = URL(doc.location())
         val fullUrlString = doc.location()
 
@@ -172,29 +175,14 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
         if (null == title) title = url.host
         if (null == description) description = fullUrlString
 
-        imageUrl?.let {
-            imageUrl = it.replace(
-                Regex(
-                    "^(//geo[0-9]+\\.ggpht\\.com)",
-                    setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
-
-                ), "http:$1"
-            )
-
-            Timber.v("resolved = ${URI(fullUrlString).resolve(it)}")
-
-            if (it.startsWith("/")) {
-                val resultURI = URI(fullUrlString).resolve(it)
-                imageUrl = resultURI.toString()
-            }
-        }
+        imageUrl = normalizeImageUrl(fullUrlString, imageUrl)
 
         Timber.v("title = $title")
         Timber.v("description = $description")
         Timber.v("imageUrl = $imageUrl")
 
         answers.logCustom(
-            CustomEvent("remoteUrlWorker.entry.retrieveUrl")
+            CustomEvent("remoteUrlWorker.entry.retrievePageInfo")
                 .putCustomAttribute("hasTitle", if (title.isNullOrEmpty()) 0 else 1)
                 .putCustomAttribute("hasImage", if (imageUrl.isNullOrEmpty()) 0 else 1)
                 .putCustomAttribute("hasDescription", if (description.isNullOrEmpty()) 0 else 1)
@@ -205,6 +193,28 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
             remoteThumbnailUrl = imageUrl
             remoteUrlTitle = title
             remoteUrlDescription = description
+        }
+    }
+
+    private fun normalizeImageUrl(basePath: String, imageUrl: String?): String? {
+        imageUrl?.let { imageUrl ->
+            Timber.i("normalizeImageUrl($basePath, $imageUrl)")
+
+            var newImageUrl = imageUrl.replace(
+                Regex(
+                    "^(//geo[0-9]+\\.ggpht\\.com)",
+                    setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+
+                ), "http:$1"
+            )
+
+            if (newImageUrl.startsWith("/")) {
+                val resultURI = URI(basePath).resolve(newImageUrl)
+                newImageUrl = resultURI.toString()
+            }
+            return newImageUrl
+        } ?: run {
+            return null
         }
     }
 
