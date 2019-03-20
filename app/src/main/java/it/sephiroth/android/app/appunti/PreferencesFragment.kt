@@ -9,6 +9,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import timber.log.Timber
 import java.text.SimpleDateFormat
@@ -37,7 +39,11 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         Timber.i("onPreferenceTreeClick(${preference?.key})")
 
         when (preference?.key) {
-            SettingsManager.PREFS_KEY_DARK_THEME -> askToRestartApplication()
+            SettingsManager.PREFS_KEY_DARK_THEME -> {
+                Answers.getInstance().logCustom(CustomEvent("settings.themeChange"))
+                askToRestartApplication()
+            }
+
             "preference.feedback" -> {
                 val intent = Intent(ACTION_SENDTO).apply {
                     type = "text/plain"
@@ -66,6 +72,12 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                             getString(R.string.always_ask)
                         )
                     ) { _, which ->
+
+                        Answers.getInstance().logCustom(
+                            CustomEvent("settings.openLinksOnClick")
+                                .putCustomAttribute("value", which)
+                        )
+
                         SettingsManager.getInstance(context!!).openLinksOnClick = when (which) {
                             0 -> true
                             1 -> false

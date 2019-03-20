@@ -190,10 +190,18 @@ class MainActivity : AppuntiActivityFullscreen() {
         // handle current intent
         if (intent?.action == ACTION_ENTRIES_BY_CATEGORY) {
             model.group.setCategoryID(intent.getLongExtra(KEY_CATEGORY_ID, 0))
-            answers.logCustom(CustomEvent("main.init").putCustomAttribute("fromCategory", 1))
+            answers.logCustom(
+                CustomEvent("main.init")
+                    .putCustomAttribute("fromCategory", 1)
+                    .putCustomAttribute("darkTheme", if (isDarkTheme) 1 else 0)
+            )
         } else {
             model.group.setCategoryID(null)
-            answers.logCustom(CustomEvent("main.init").putCustomAttribute("fromCategory", 0))
+            answers.logCustom(
+                CustomEvent("main.init")
+                    .putCustomAttribute("fromCategory", 0)
+                    .putCustomAttribute("darkTheme", if (isDarkTheme) 1 else 0)
+            )
         }
     }
 

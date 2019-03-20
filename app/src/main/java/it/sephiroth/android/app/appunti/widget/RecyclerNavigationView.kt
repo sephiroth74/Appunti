@@ -1,3 +1,5 @@
+@file:Suppress("NAME_SHADOWING")
+
 package it.sephiroth.android.app.appunti.widget
 
 import android.annotation.SuppressLint
@@ -298,7 +300,8 @@ class RecyclerNavigationView @JvmOverloads constructor(
                         Answers
                             .getInstance()
                             .logCustom(
-                                CustomEvent("displayAsList").putCustomAttribute("asGrid", if (isChecked) 1 else 0)
+                                CustomEvent("main.setDisplayAsList")
+                                    .putCustomAttribute("value", if (isChecked) 1 else 0)
                             )
 
                         SettingsManager.getInstance(context).displayAsList = !isChecked
