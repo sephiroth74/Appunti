@@ -25,7 +25,6 @@ import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.getSummary
 import it.sephiroth.android.app.appunti.models.SettingsManager
-import it.sephiroth.android.app.appunti.utils.EntriesDiffCallback
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import it.sephiroth.android.library.kotlin_extensions.content.res.getColorStateList
@@ -65,7 +64,7 @@ class ItemEntryListAdapter(
         (!context.resources.isTablet && spanCount > 1) || (context.resources.isTablet && context.resources.isPortrait)
 
     companion object {
-        var NOW = Instant.now()
+        var NOW: Instant = Instant.now()
 
         val TYPE_EMPTY_START = EntryItem.ItemType.EMPTY_START.ordinal
         val TYPE_EMPTY_END = EntryItem.ItemType.EMPTY_END.ordinal
@@ -272,7 +271,7 @@ class ItemEntryListAdapter(
             }, EntryItem.ItemType.PINNED)
 
             val firstArchived = SearchIndex(
-                finalData.indexOfFirst { it.entry?.entryArchived == 1 && it.entry?.entryDeleted == 0 },
+                finalData.indexOfFirst { it.entry?.entryArchived == 1 && it.entry.entryDeleted == 0 },
                 EntryItem.ItemType.ARCHIVED
             )
 
@@ -325,7 +324,7 @@ class ItemEntryListAdapter(
 
             finalData.add(EntryItem(null, EntryItem.ItemType.EMPTY_END))
 
-            val callback = EntriesDiffCallback(values, finalData)
+            // val callback = EntriesDiffCallback(values, finalData)
             // val result = DiffUtil.calculateDiff(callback, true)
 
             values = finalData
@@ -361,7 +360,7 @@ class ItemEntryListAdapter(
             get() = getLayoutParams().isFullSpan
             set(value) {
                 if (value != getLayoutParams().isFullSpan) {
-                    var params = getLayoutParams()
+                    val params = getLayoutParams()
                     params.isFullSpan = value
                     itemView.layoutParams = params
                 }
@@ -375,11 +374,11 @@ class ItemEntryListAdapter(
         val contentTextView: TextView by lazy { view.id_content }
         val categoryTextView: AppCompatTextView by lazy { view.entryCategory }
         val cardView: CircularRevealCardView by lazy { view.id_card }
-        val alarmView: ImageView by lazy { view.id_alarm }
-        val attachmentView: ImageView by lazy { view.id_attachment }
+        private val alarmView: ImageView by lazy { view.id_alarm }
+        private val attachmentView: ImageView by lazy { view.id_attachment }
 
-        val maxLines: Int by lazy { view.context.resources.getInteger(R.integer.list_items_max_lines_display) }
-        val maxChars: Int by lazy { view.context.resources.getInteger(R.integer.list_items_max_chars_display) }
+        private val maxLines: Int by lazy { view.context.resources.getInteger(R.integer.list_items_max_lines_display) }
+        private val maxChars: Int by lazy { view.context.resources.getInteger(R.integer.list_items_max_chars_display) }
 
         init {
             val context = categoryTextView.context
