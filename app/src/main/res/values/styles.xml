@@ -54,7 +54,10 @@
         <item name="android:minWidth">55dp</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:padding">8dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
         <item name="android:textAppearance">?attr/textAppearanceListItemSmall</item>
         <item name="android:textSize">@dimen/text_size_caption_material</item>
         <item name="android:gravity">center</item>
