@@ -6,7 +6,7 @@ import it.sephiroth.android.app.appunti.db.AppDatabase
 
 
 @Table(database = AppDatabase::class)
-class RemoteUrl() : BaseRXModel() {
+open class RemoteUrl() : BaseRXModel() {
 
     constructor(other: RemoteUrl) : this() {
         remoteUrlID = other.remoteUrlID
@@ -16,6 +16,7 @@ class RemoteUrl() : BaseRXModel() {
         remoteThumbnailUrl = other.remoteThumbnailUrl
         remoteUrlOriginalUri = other.remoteUrlOriginalUri
         remoteUrlVisible = other.remoteUrlVisible
+        remoteParsedString = other.remoteParsedString
     }
 
     @PrimaryKey(autoincrement = true)
@@ -37,10 +38,13 @@ class RemoteUrl() : BaseRXModel() {
     /** original uri */
     var remoteUrlOriginalUri: String? = null
 
-    override fun toString(): String {
-        return "RemoteUrl(remoteUrlID=$remoteUrlID, remoteUrlEntryID=$remoteUrlEntryID, remoteUrlTitle=$remoteUrlTitle, remoteUrlDescription=$remoteUrlDescription, remoteThumbnailUrl='$remoteThumbnailUrl', remoteUrlOriginalUri=$remoteUrlOriginalUri)"
-    }
+    /** parsed string from text */
+    var remoteParsedString: String? = null
 
     @Suppress("unused")
     fun isRemoteUrlVisible() = remoteUrlVisible
+
+    override fun toString(): String {
+        return "RemoteUrl(remoteUrlID=$remoteUrlID, remoteUrlVisible=$remoteUrlVisible, remoteUrlEntryID=$remoteUrlEntryID, remoteUrlTitle=$remoteUrlTitle, remoteUrlDescription=$remoteUrlDescription, remoteThumbnailUrl=$remoteThumbnailUrl, remoteUrlOriginalUri=$remoteUrlOriginalUri, remoteParsedString=$remoteParsedString)"
+    }
 }

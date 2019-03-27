@@ -14,7 +14,7 @@ fun RemoteUrl.loadThumbnail(context: Context, view: ImageView) {
     Timber.i("loadThumbnail($remoteThumbnailUrl)")
 
     if (remoteThumbnailUrl == null) {
-        view.setImageResource(R.drawable.baseline_open_in_new_24)
+        view.setImageResource(R.drawable.remote_url_fallback_small)
         return
     }
 
@@ -29,7 +29,7 @@ fun RemoteUrl.loadThumbnail(context: Context, view: ImageView) {
             override fun onError(e: Exception?) {
                 e?.printStackTrace()
                 Crashlytics.logException(e)
-                view.setImageResource(R.drawable.baseline_open_in_new_24)
+                view.setImageResource(R.drawable.remote_url_fallback_small)
             }
 
             override fun onSuccess() {

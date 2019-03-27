@@ -19,6 +19,8 @@ import it.sephiroth.android.app.appunti.ext.parseRemoteUrls
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import org.jsoup.select.Elements
 import timber.log.Timber
 import java.net.URI
 import java.net.URL
@@ -60,36 +62,37 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
     private fun parseEntry(entry: Entry) {
         Timber.i("parseEntry($entry)")
 
-        if (entry.hasRemoteUrls()) {
-            Timber.v("entry has already a remote url. skipping...")
-            answers.logCustom(CustomEvent("remoteUrlWorker.entry.hasRemoteUrls"))
-            return
-        }
-
-        val remoteUrls = entry.parseRemoteUrls()
+        val parsedRemoteUrls = entry.parseRemoteUrls()
         answers.logCustom(
             CustomEvent("remoteUrlWorker.entry.parseRemoteUrls").putCustomAttribute(
                 "size",
-                remoteUrls.size
+                parsedRemoteUrls.size
             )
         )
 
-        if (remoteUrls.isNotEmpty()) {
-            Timber.v("remoteUrls = $remoteUrls")
+        if (parsedRemoteUrls.isNotEmpty()) {
+            Timber.v("parsed remoteUrls (size = ${parsedRemoteUrls.size}) = $parsedRemoteUrls")
             val entryRemoteUrls = entry.getAllRemoteUrls()?.toMutableList() ?: mutableListOf()
-            Timber.v("entry remote urls = ${entryRemoteUrls.size}")
-            for (urlString in remoteUrls) {
-                if (!entryRemoteUrls.map { it.remoteUrlOriginalUri }.contains(urlString)) {
+            val entryRemoteUrlsMap = entryRemoteUrls.map { it.remoteParsedString }.toMutableList()
+
+            Timber.v("entryRemoteUrlsMap: $entryRemoteUrlsMap")
+            Timber.v("parsedRemoteUrls: $parsedRemoteUrls")
+
+            for (urlString in parsedRemoteUrls) {
+                Timber.v("processing $urlString, (contains: ${entryRemoteUrlsMap.contains(urlString)})")
+                if (!entryRemoteUrlsMap.contains(urlString)) {
                     try {
                         tryConnect(urlString)?.also { doc ->
                             retrievePageInfo(doc)?.let { remoteUrl ->
                                 remoteUrl.remoteUrlEntryID = entry.entryID
+                                remoteUrl.remoteParsedString = urlString
+
                                 if (remoteUrl.save()) {
                                     answers.logCustom(CustomEvent("remoteUrlWorker.entry.addRemoteUrl"))
                                     Timber.v("added $remoteUrl to ${entry.entryID}")
-                                    entryRemoteUrls.add(remoteUrl)
+                                    entryRemoteUrlsMap.add(urlString)
                                     entry.invalidateRemoteUrls()
-                                    return
+                                    //return
                                 }
                             }
                         }
@@ -98,6 +101,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
                         Crashlytics.logException(t)
                     }
                 } else {
+                    Timber.w("entry already contains this url")
                     answers.logCustom(CustomEvent("remoteUrlWorker.entry.alreadyContainsUrl"))
                 }
             }
@@ -137,6 +141,28 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
         }
     }
 
+    private fun getAttribute(e: Element, vararg names: String): String? {
+//        Timber.d("getAttribute($e, $names)")
+        for (name in names) {
+            if (e.attr("property").equals(name, true) ||
+                e.attr("itemprop").equals(name, true) ||
+                e.attr("name").equals(name, true)
+            ) {
+                return e.attr("content")
+            }
+        }
+        return null
+    }
+
+    private fun findAttribute(e: Elements, vararg names: String): String? {
+        e.forEach { e ->
+            getAttribute(e, *names)?.let {
+                return it
+            }
+        }
+        return null
+    }
+
     private fun retrievePageInfo(doc: Document): RemoteUrl? {
         val url = URL(doc.location())
         val fullUrlString = doc.location()
@@ -145,26 +171,16 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
         var title: String? = null
         var description: String? = null
 
-        doc.select("meta").forEach { e ->
+        val elements = doc.select("meta")
 
-            if (e.attr("property").equals("og:image", true)
-                || e.attr("itemprop").equals("image", true)
-            ) {
-                imageUrl = e.attr("content")
-            }
+        imageUrl = findAttribute(elements, "image", "og:image")
+        title = findAttribute(elements, "og:title", "title", "name")
+        description = findAttribute(elements, "og:description", "description")
 
-            if (e.attr("property").equals("og:title", true)
-                || e.attr("itemprop").equals("name", true)
-            ) {
-                title = e.attr("content")
-            }
-
-            if (e.attr("property").equals("og:description", true)
-                || e.attr("itemprop").equals("description", true)
-            ) {
-                description = e.attr("content")
-            }
-        }
+        Timber.i("meta info")
+        Timber.v("title = $title")
+        Timber.v("description = $description")
+        Timber.v("imageUrl = $imageUrl")
 
         if (null == imageUrl) {
             doc.select("link[rel=icon]").forEach { element ->
@@ -172,11 +188,17 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
             }
         }
 
-        if (null == title) title = url.host
-        if (null == description) description = fullUrlString
+        if (title.isNullOrEmpty()) {
+            title = url.host
+        } else {
+            description = fullUrlString
+        }
+
+        if (description.isNullOrEmpty()) description = fullUrlString
 
         imageUrl = normalizeImageUrl(fullUrlString, imageUrl)
 
+        Timber.i("final values")
         Timber.v("title = $title")
         Timber.v("description = $description")
         Timber.v("imageUrl = $imageUrl")
@@ -238,7 +260,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
                     )
                     .build()
             WorkManager.getInstance()
-                .enqueueUniquePeriodicWork("remoteUrlWorker", ExistingPeriodicWorkPolicy.KEEP, saveRequest)
+                .enqueueUniquePeriodicWork("remoteUrlWorker", ExistingPeriodicWorkPolicy.REPLACE, saveRequest)
         }
     }
 }

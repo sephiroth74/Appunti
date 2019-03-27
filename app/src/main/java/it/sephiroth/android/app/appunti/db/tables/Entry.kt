@@ -152,7 +152,7 @@ class Entry() : BaseRXModel() {
                 (select().from(RemoteUrl::class).where(RemoteUrl_Table.remoteUrlEntryID_entryID.eq(entryID))
                     .and(
                         RemoteUrl_Table.remoteUrlVisible.eq(true)
-                    ).limit(1)).list
+                    )).list
         }
         return remoteUrlList
     }
