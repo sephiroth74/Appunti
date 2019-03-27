@@ -1311,7 +1311,7 @@ class RemoteUrlListAdapter(private var activity: DetailActivity) :
     }
 
     class OthersViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val textView: TextView = itemView.remoteUrlOtherTitle
+        private val textView: TextView = itemView.remoteUrlOtherTitle
 
         fun bind(expanded: Boolean, others: Int) {
             if (expanded) {
