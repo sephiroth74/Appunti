@@ -113,17 +113,15 @@
 
             <androidx.recyclerview.widget.RecyclerView
                     android:visibility="gone"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="16dp"
                     android:id="@+id/remoteUrlsRecycler"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:layoutManager="it.sephiroth.android.app.appunti.widget.NpaLinearLayoutManager">
+                    app:layoutManager="LinearLayoutManager">
             </androidx.recyclerview.widget.RecyclerView>
 
             <LinearLayout
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="16dp"
                     android:id="@+id/attachmentsContainer"
                     android:animateLayoutChanges="true"
                     android:visibility="gone"
@@ -132,11 +130,10 @@
                     android:layout_height="wrap_content">
             </LinearLayout>
 
-
             <androidx.appcompat.widget.AppCompatTextView
                     style="@style/Widget.Appunti.Text.CategoryChip"
                     android:id="@+id/entryCategory"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="16dp"
                     android:transitionName="itemCategory"
             />
 

@@ -52,20 +52,23 @@
                 android:textSize="14sp"/>
 
         <androidx.appcompat.widget.AppCompatTextView
+                app:layout_constraintStart_toEndOf="@+id/remoteUrlImage"
+                app:fontFamily="@font/nunito_extralight"
+                app:layout_constraintTop_toBottomOf="@+id/remoteUrlTitle"
+                app:layout_constraintEnd_toStartOf="@+id/remoteUrlRemoveButton"
                 android:text="Title"
                 android:textAppearance="?attr/textAppearanceListItem"
                 android:id="@+id/remoteUrlDescription"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toEndOf="@+id/remoteUrlImage"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:lines="1"
                 android:maxLines="1"
                 android:ellipsize="end"
-                app:fontFamily="@font/nunito_extralight"
-                android:textSize="12sp" app:layout_constraintTop_toBottomOf="@+id/remoteUrlTitle"
-                android:layout_marginTop="4dp" app:layout_constraintEnd_toStartOf="@+id/remoteUrlRemoveButton"/>
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+        />
 
         <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/remoteUrlRemoveButton"

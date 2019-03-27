@@ -130,4 +130,11 @@
         <item quantity="one">%d Selected</item>
         <item quantity="other">%d Selected</item>
     </plurals>
+
+    <plurals name="remote_url_others_count">
+        <item quantity="one">+ one more</item>
+        <item quantity="other">+ %d more</item>
+    </plurals>
+
+    <string name="remote_url_others_less">- less</string>
 </resources>

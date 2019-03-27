@@ -66,6 +66,7 @@ import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
 import kotlinx.android.synthetic.main.appunti_detail_remoteurl_item.view.*
+import kotlinx.android.synthetic.main.appunti_detail_remoteurl_others.view.*
 import me.saket.bettermovementmethod.BetterLinkMovementMethod
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
@@ -1217,35 +1218,87 @@ class DetailActivity : AppuntiActivity() {
 }
 
 class RemoteUrlListAdapter(private var activity: DetailActivity) :
-    RecyclerView.Adapter<RemoteUrlListAdapter.RemoteUrlViewHolder>() {
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val data: MutableList<RemoteUrl> = mutableListOf()
-    private var inflater = LayoutInflater.from(activity)
-    private val answers: Answers by lazy { Answers.getInstance() }
-    private val cardColor: Int by lazy { activity.theme.getColor(activity, android.R.attr.windowBackground) }
+    private val TYPE_ITEM = 0
+    private val TYPE_OTHERS = 1
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RemoteUrlViewHolder {
-        val view = inflater.inflate(R.layout.appunti_detail_remoteurl_item, parent, false).apply {
-            (this as CardView).setCardBackgroundColor(cardColor)
+    private var expanded: Boolean = false
+        set(value) {
+            field = value
+            notifyDataSetChanged()
         }
-        return RemoteUrlViewHolder(view)
-    }
-
-    override fun getItemCount(): Int = data.size
 
     var deleteAction: ((RemoteUrl) -> (Unit))? = null
     var linkClickAction: ((RemoteUrl) -> (Unit))? = null
+    private val data: MutableList<RemoteUrl> = mutableListOf()
+    private var inflater = LayoutInflater.from(activity)
+    private val cardColor: Int by lazy { activity.theme.getColor(activity, android.R.attr.windowBackground) }
 
-    override fun onBindViewHolder(holder: RemoteUrlViewHolder, position: Int) {
-        val remoteUrl = data.get(position)
-        holder.bind(remoteUrl)
+    private fun hasMore(): Boolean = data.size > 5
 
-        holder.itemView.setOnClickListener {
-            linkClickAction?.invoke(remoteUrl)
+    private fun getOthersItemCount(): Int {
+        return if (hasMore()) data.size - 5
+        else 0
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return if (viewType == TYPE_ITEM) {
+            val view = inflater.inflate(R.layout.appunti_detail_remoteurl_item, parent, false).apply {
+                (this as CardView).setCardBackgroundColor(cardColor)
+            }
+            ItemUrlViewHolder(view)
+        } else {
+            val view = inflater.inflate(R.layout.appunti_detail_remoteurl_others, parent, false)
+            OthersViewHolder(view)
         }
+    }
 
-        holder.remoteUrlRemoveButton.setOnClickListener {
-            deleteAction?.invoke(remoteUrl)
+    override fun getItemViewType(position: Int): Int {
+        Timber.v("getItemViewType($position)")
+        return if (hasMore()) {
+            if (!expanded) {
+                if (position == 5) TYPE_OTHERS
+                else TYPE_ITEM
+            } else {
+                if (position == data.size) TYPE_OTHERS
+                else TYPE_ITEM
+            }
+        } else {
+            TYPE_ITEM
+        }
+    }
+
+    override fun getItemCount(): Int {
+        return if (hasMore()) {
+            if (!expanded) 6
+            else data.size + 1
+        } else {
+            data.size
+        }
+    }
+
+    override fun onBindViewHolder(baseHolder: RecyclerView.ViewHolder, position: Int) {
+        Timber.v("onBindViewHolder($position)")
+        if (baseHolder.itemViewType == TYPE_ITEM) {
+            val holder = baseHolder as ItemUrlViewHolder
+            val remoteUrl = data.get(position)
+            holder.bind(remoteUrl)
+
+            holder.itemView.setOnClickListener {
+                linkClickAction?.invoke(remoteUrl)
+            }
+
+            holder.remoteUrlRemoveButton.setOnClickListener {
+                deleteAction?.invoke(remoteUrl)
+            }
+        } else {
+            val holder = baseHolder as OthersViewHolder
+            holder.bind(expanded, getOthersItemCount())
+
+            holder.itemView.setOnClickListener {
+                expanded = !expanded
+            }
         }
     }
 
@@ -1257,7 +1310,19 @@ class RemoteUrlListAdapter(private var activity: DetailActivity) :
         }
     }
 
-    class RemoteUrlViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class OthersViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val textView: TextView = itemView.remoteUrlOtherTitle
+
+        fun bind(expanded: Boolean, others: Int) {
+            if (expanded) {
+                textView.setText(R.string.remote_url_others_less)
+            } else {
+                textView.text = itemView.context.resources.getQuantityString(R.plurals.remote_url_others_count, others)
+            }
+        }
+    }
+
+    class ItemUrlViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val remoteUrlImage: ImageView = itemView.remoteUrlImage
         internal val remoteUrlRemoveButton: View = itemView.remoteUrlRemoveButton
         private val remoteUrlTitle: TextView = itemView.remoteUrlTitle
