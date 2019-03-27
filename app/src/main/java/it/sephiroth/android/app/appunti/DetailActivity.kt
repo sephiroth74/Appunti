@@ -93,6 +93,7 @@ class DetailActivity : AppuntiActivity() {
     private var mCurrentPhotoPath: RelativePath? = null
 
     private var detailListAdapter: DetailListAdapter? = null
+    private var remoteUrlListAdapter: RemoteUrlListAdapter? = null
 
     private var tickTimer: Disposable? = null
 
@@ -825,42 +826,28 @@ class DetailActivity : AppuntiActivity() {
 // text switcher ticker end
 
     private fun updateEntryRemoteUrls(entry: Entry) {
-        remoteUrlsContainer.removeAllViews()
+
         val remoteUrls = entry.getRemoteUrls()
 
-        remoteUrlsContainer.visibility = if (remoteUrls.isNullOrEmpty()) View.GONE else View.VISIBLE
-
-        remoteUrls?.let { remoteUrls ->
-            val cardColor = theme.getColor(this, android.R.attr.windowBackground)
-
-            for (remoteUrl in remoteUrls) {
-                val view = LayoutInflater.from(this)
-                    .inflate(R.layout.appunti_detail_remoteurl_item, attachmentsContainer, false) as CardView
-
-                view.setCardBackgroundColor(cardColor)
-                view.remoteUrlTitle.text = remoteUrl.remoteUrlTitle
-                view.remoteUrlDescription.text = remoteUrl.remoteUrlDescription
-                view.tag = remoteUrl
-
-                remoteUrl.loadThumbnail(this, view.remoteUrlImage)
-
-                view.setOnClickListener {
+        if (remoteUrlListAdapter == null) {
+            remoteUrlListAdapter = RemoteUrlListAdapter(this).also {
+                it.deleteAction = { remoteUrl -> removeEntryRemoteUrl(remoteUrl) }
+                it.linkClickAction = { remoteUrl ->
                     answers.logCustom(CustomEvent("detail.remoteUrl.click"))
                     try {
-                        IntentUtils.createRemoteUrlViewIntent(this, remoteUrl).also {
-                            startActivity(it)
+                        IntentUtils.createRemoteUrlViewIntent(this, remoteUrl).also { intent ->
+                            startActivity(intent)
                         }
                     } catch (e: Exception) {
                         Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
                 }
-
-                view.remoteUrlRemoveButton.setOnClickListener {
-                    removeEntryRemoteUrl(remoteUrl)
-                }
-                remoteUrlsContainer.addView(view)
             }
+            remoteUrlsRecycler.adapter = remoteUrlListAdapter
         }
+
+        remoteUrlsRecycler.visibility = if (remoteUrls.isNullOrEmpty()) View.GONE else View.VISIBLE
+        remoteUrlListAdapter?.update(remoteUrls)
     }
 
     private fun updateEntryAttachmentsList(entry: Entry) {
@@ -1227,8 +1214,65 @@ class DetailActivity : AppuntiActivity() {
         private const val TICKER_STEP_MODIFIED = 2
         private const val TICKER_STEP_ALARM = 3
     }
-
 }
+
+class RemoteUrlListAdapter(private var activity: DetailActivity) :
+    RecyclerView.Adapter<RemoteUrlListAdapter.RemoteUrlViewHolder>() {
+
+    private val data: MutableList<RemoteUrl> = mutableListOf()
+    private var inflater = LayoutInflater.from(activity)
+    private val answers: Answers by lazy { Answers.getInstance() }
+    private val cardColor: Int by lazy { activity.theme.getColor(activity, android.R.attr.windowBackground) }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RemoteUrlViewHolder {
+        val view = inflater.inflate(R.layout.appunti_detail_remoteurl_item, parent, false).apply {
+            (this as CardView).setCardBackgroundColor(cardColor)
+        }
+        return RemoteUrlViewHolder(view)
+    }
+
+    override fun getItemCount(): Int = data.size
+
+    var deleteAction: ((RemoteUrl) -> (Unit))? = null
+    var linkClickAction: ((RemoteUrl) -> (Unit))? = null
+
+    override fun onBindViewHolder(holder: RemoteUrlViewHolder, position: Int) {
+        val remoteUrl = data.get(position)
+        holder.bind(remoteUrl)
+
+        holder.itemView.setOnClickListener {
+            linkClickAction?.invoke(remoteUrl)
+        }
+
+        holder.remoteUrlRemoveButton.setOnClickListener {
+            deleteAction?.invoke(remoteUrl)
+        }
+    }
+
+    fun update(remoteUrls: List<RemoteUrl>?) {
+        doOnMainThread {
+            data.clear()
+            data.addAll(remoteUrls ?: listOf())
+            notifyDataSetChanged()
+        }
+    }
+
+    class RemoteUrlViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val remoteUrlImage: ImageView = itemView.remoteUrlImage
+        internal val remoteUrlRemoveButton: View = itemView.remoteUrlRemoveButton
+        private val remoteUrlTitle: TextView = itemView.remoteUrlTitle
+        private val remoteUrlDescription: TextView = itemView.remoteUrlDescription
+        private var remoteUrl: RemoteUrl? = null
+
+        fun bind(remoteUrl: RemoteUrl) {
+            this.remoteUrl = remoteUrl
+            remoteUrlTitle.text = remoteUrl.remoteUrlTitle
+            remoteUrlDescription.text = remoteUrl.remoteUrlDescription
+            remoteUrl.loadThumbnail(itemView.context, remoteUrlImage)
+        }
+    }
+}
+
 
 data class InsertedItem(
     val index: Int,

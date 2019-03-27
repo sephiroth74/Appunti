@@ -73,14 +73,17 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
         if (parsedRemoteUrls.isNotEmpty()) {
             Timber.v("parsed remoteUrls (size = ${parsedRemoteUrls.size}) = $parsedRemoteUrls")
             val entryRemoteUrls = entry.getAllRemoteUrls()?.toMutableList() ?: mutableListOf()
-            val entryRemoteUrlsMap = entryRemoteUrls.map { it.remoteParsedString }.toMutableList()
 
-            Timber.v("entryRemoteUrlsMap: $entryRemoteUrlsMap")
+            val entryRemoteUrlsList = entryRemoteUrls.map { it.remoteParsedString }.toMutableList().apply {
+                addAll(entryRemoteUrls.map { it.remoteUrlOriginalUri })
+            }
+
+            Timber.v("entryRemoteUrlsMap: $entryRemoteUrlsList")
             Timber.v("parsedRemoteUrls: $parsedRemoteUrls")
 
             for (urlString in parsedRemoteUrls) {
-                Timber.v("processing $urlString, (contains: ${entryRemoteUrlsMap.contains(urlString)})")
-                if (!entryRemoteUrlsMap.contains(urlString)) {
+                Timber.v("processing $urlString, (contains: ${entryRemoteUrlsList.contains(urlString)})")
+                if (!entryRemoteUrlsList.contains(urlString)) {
                     try {
                         tryConnect(urlString)?.also { doc ->
                             retrievePageInfo(doc)?.let { remoteUrl ->
@@ -90,7 +93,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
                                 if (remoteUrl.save()) {
                                     answers.logCustom(CustomEvent("remoteUrlWorker.entry.addRemoteUrl"))
                                     Timber.v("added $remoteUrl to ${entry.entryID}")
-                                    entryRemoteUrlsMap.add(urlString)
+                                    entryRemoteUrlsList.add(urlString)
                                     entry.invalidateRemoteUrls()
                                     //return
                                 }
