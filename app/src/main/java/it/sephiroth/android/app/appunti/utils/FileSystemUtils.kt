@@ -74,8 +74,10 @@ object FileSystemUtils {
     @SuppressLint("SimpleDateFormat")
     fun createImageFile(context: Context, entry: Entry): RelativePath {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-//        val storageDir: File = getAttachmentFilesDir(context, entry)
         val storagePath = getAttachmentFilesDir(context, entry)
+        Timber.v("storagePath = $storagePath")
+
+        if (!storagePath.exists()) storagePath.file.mkdirs()
 
         val tempFile = File.createTempFile(
             "JPEG_${timeStamp}_", /* prefix */

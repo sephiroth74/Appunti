@@ -43,6 +43,7 @@ fun Attachment.loadThumbnail(context: Context, view: ImageView) {
                 R.dimen.appunti_detail_attachment_thumbnail_size,
                 R.dimen.appunti_detail_attachment_thumbnail_size
             )
+            .centerCrop()
             .into(view, object : Callback {
                 override fun onError(e: Exception?) {
                     e?.printStackTrace()
@@ -51,8 +52,6 @@ fun Attachment.loadThumbnail(context: Context, view: ImageView) {
 
                 override fun onSuccess() {}
             })
-    } else if (isPdf()) {
-        view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
     } else if (isText()) {
         view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
     } else {

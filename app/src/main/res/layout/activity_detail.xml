@@ -120,15 +120,14 @@
                     app:layoutManager="LinearLayoutManager">
             </androidx.recyclerview.widget.RecyclerView>
 
-            <LinearLayout
-                    android:layout_marginTop="16dp"
-                    android:id="@+id/attachmentsContainer"
-                    android:animateLayoutChanges="true"
+            <androidx.recyclerview.widget.RecyclerView
                     android:visibility="gone"
-                    android:orientation="vertical"
+                    android:layout_marginTop="16dp"
+                    android:id="@+id/attachmentsRecycler"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-            </LinearLayout>
+                    android:layout_height="wrap_content"
+                    app:layoutManager="LinearLayoutManager">
+            </androidx.recyclerview.widget.RecyclerView>
 
             <androidx.appcompat.widget.AppCompatTextView
                     style="@style/Widget.Appunti.Text.CategoryChip"

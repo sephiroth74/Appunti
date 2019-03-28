@@ -146,7 +146,6 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
     }
 
     private fun getAttribute(e: Element, vararg names: String): String? {
-//        Timber.d("getAttribute($e, $names)")
         for (name in names) {
             if (e.attr("property").equals(name, true) ||
                 e.attr("itemprop").equals(name, true) ||
@@ -171,9 +170,9 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
         val url = URL(doc.location())
         val fullUrlString = doc.location()
 
-        var imageUrl: String? = null
-        var title: String? = null
-        var description: String? = null
+        var imageUrl: String?
+        var title: String?
+        var description: String?
 
         val elements = doc.select("meta")
 
@@ -247,9 +246,6 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
     companion object {
         fun createPeriodicWorker() {
             Timber.i("createPeriodicWorker")
-
-            Answers.getInstance().logCustom(CustomEvent("remoteUrlWorker.create"))
-
             val saveRequest =
                 PeriodicWorkRequestBuilder<RemoteUrlParserWorker>(
                     if (BuildConfig.DEBUG) 15L else 5L,

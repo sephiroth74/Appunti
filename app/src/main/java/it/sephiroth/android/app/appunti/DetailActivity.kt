@@ -21,17 +21,16 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
-import androidx.cardview.widget.CardView
 import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.core.transition.doOnEnd
 import androidx.core.transition.doOnStart
-import androidx.core.view.children
 import androidx.core.view.doOnPreDraw
 import androidx.emoji.widget.SpannableBuilder
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
+import com.crashlytics.android.Crashlytics
 import com.crashlytics.android.answers.Answers
 import com.crashlytics.android.answers.CustomEvent
 import com.crashlytics.android.answers.ShareEvent
@@ -40,6 +39,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import it.sephiroth.android.app.appunti.adapters.AttachmentsListAdapter
 import it.sephiroth.android.app.appunti.adapters.RemoteUrlListAdapter
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -64,7 +64,6 @@ import it.sephiroth.android.library.kotlin_extensions.widget.doOnAfterTextChange
 import it.sephiroth.android.library.kotlin_extensions.widget.doOnTextChanged
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
-import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
 import me.saket.bettermovementmethod.BetterLinkMovementMethod
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
@@ -93,6 +92,7 @@ class DetailActivity : AppuntiActivity() {
 
     private var detailListAdapter: DetailListAdapter? = null
     private var remoteUrlListAdapter: RemoteUrlListAdapter? = null
+    private var attachmentsListAdapter: AttachmentsListAdapter? = null
 
     private var tickTimer: Disposable? = null
 
@@ -343,9 +343,9 @@ class DetailActivity : AppuntiActivity() {
             model.addAttachment(dstFile) { success, throwable ->
                 doOnMainThread {
                     throwable?.let {
-                        showConfirmation(it.localizedMessage)
+                        showToastMessage(it.localizedMessage)
                     } ?: run {
-                        showConfirmation(getString(R.string.image_added))
+                        showToastMessage(getString(R.string.image_added))
                     }
                     invalidate(UPDATE_ATTACHMENTS)
                 }
@@ -366,15 +366,15 @@ class DetailActivity : AppuntiActivity() {
         Timber.i("addAttachmentToEntry($uri)")
         answers.logCustom(CustomEvent("detail.attachImage.result"))
         setProgressVisible(true)
-        showConfirmation(getString(R.string.adding_file))
+        showToastMessage(getString(R.string.adding_file))
 
         model.addAttachment(uri) { success, throwable ->
             Timber.v("addAttachment result=$success")
             doOnMainThread {
                 throwable?.let {
-                    showConfirmation(it.localizedMessage)
+                    showToastMessage(it.localizedMessage)
                 } ?: run {
-                    showConfirmation(getString(R.string.file_added))
+                    showToastMessage(getString(R.string.file_added))
                 }
                 invalidate(UPDATE_ATTACHMENTS)
             }
@@ -531,6 +531,8 @@ class DetailActivity : AppuntiActivity() {
                     val photoFile = try {
                         FileSystemUtils.createImageFile(this, entry)
                     } catch (ex: IOException) {
+                        Crashlytics.logException(ex)
+                        showToastMessage(ex.localizedMessage)
                         ex.printStackTrace()
                         null
                     }
@@ -850,56 +852,20 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun updateEntryAttachmentsList(entry: Entry) {
-        attachmentsContainer.removeAllViews()
+        if (attachmentsListAdapter == null) {
+            attachmentsListAdapter = AttachmentsListAdapter(this).also { adapter ->
+                adapter.deleteAction = { attachment -> removeEntryAttachment(attachment) }
+                adapter.shareAction = { attachment -> shareEntryAttachment(attachment) }
+                adapter.clickAction = { attachment -> viewEntryAttachment(attachment) }
+            }
+            attachmentsRecycler.adapter = attachmentsListAdapter
+        }
 
         val attachments = entry.getAttachments()
-        attachmentsContainer.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
+        attachmentsRecycler.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
 
-        attachments?.let { attachments ->
-            val cardColor = entry.getAttachmentColor(this)
-
-            for (attachment in attachments) {
-                val view = LayoutInflater.from(this)
-                    .inflate(R.layout.appunti_detail_attachment_item, attachmentsContainer, false) as CardView
-
-                view.setCardBackgroundColor(cardColor)
-                view.attachmentTitle.text = attachment.attachmentTitle
-                view.tag = attachment
-
-                Timber.v("$attachment")
-
-                // TODO(Specify the exact size here)
-                attachment.loadThumbnail(this, view.attachmentImage)
-
-                view.setOnClickListener {
-                    answers.logCustom(CustomEvent("detail.attachment.click"))
-                    try {
-                        IntentUtils.createAttachmentViewIntent(this, attachment).also {
-                            startActivity(it)
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                view.attachmentShareButton.setOnClickListener {
-                    answers.logCustom(CustomEvent("detail.attachment.share"))
-                    try {
-                        IntentUtils.createAttachmentShareIntent(this, attachment).also {
-                            startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                view.attachmentRemoveButton.setOnClickListener {
-                    removeEntryAttachment(attachment)
-                }
-
-                attachmentsContainer.addView(view)
-            }
-        }
+        attachmentsListAdapter?.cardColor = entry.getAttachmentColor(this)
+        attachmentsListAdapter?.update(attachments)
     }
 
     private fun updateThemeFromEntry(entry: Entry) {
@@ -924,13 +890,7 @@ class DetailActivity : AppuntiActivity() {
         }
 
         // attachments
-
-        if (attachmentsContainer.childCount > 0) {
-            val cardColor = entry.getAttachmentColor(this)
-            for (view in attachmentsContainer.children) {
-                (view as CardView).setCardBackgroundColor(cardColor)
-            }
-        }
+        attachmentsListAdapter?.cardColor = entry.getAttachmentColor(this)
     }
 
     private fun updateMenu(menu: Menu?, entry: Entry) {
@@ -988,11 +948,33 @@ class DetailActivity : AppuntiActivity() {
         model.hideRemoteUrl(remoteUrl) { result, throwable ->
             doOnMainThread {
                 throwable?.let {
-                    showConfirmation(throwable.localizedMessage)
+                    showToastMessage(throwable.localizedMessage)
                 } ?: run {
                     invalidate(UPDATE_REMOTE_URLS)
                 }
             }
+        }
+    }
+
+    private fun viewEntryAttachment(attachment: Attachment) {
+        answers.logCustom(CustomEvent("detail.attachment.click"))
+        try {
+            IntentUtils.createAttachmentViewIntent(this, attachment).also {
+                startActivity(it)
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun shareEntryAttachment(attachment: Attachment) {
+        answers.logCustom(CustomEvent("detail.attachment.share"))
+        try {
+            IntentUtils.createAttachmentShareIntent(this, attachment).also {
+                startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -1001,10 +983,10 @@ class DetailActivity : AppuntiActivity() {
         model.removeAttachment(attachment) { result, throwable ->
             doOnMainThread {
                 throwable?.let { throwable ->
-                    showConfirmation(throwable.localizedMessage)
+                    showToastMessage(throwable.localizedMessage)
                 } ?: run {
                     Timber.v("[${currentThread()}] success = $result")
-                    showConfirmation("File has been removed")
+                    showToastMessage("File has been removed")
                 }
                 invalidate(UPDATE_ATTACHMENTS)
             }
@@ -1029,7 +1011,7 @@ class DetailActivity : AppuntiActivity() {
         answers.logCustom(CustomEvent("detail.togglePin"))
         val currentValue = model.entry.value?.isPinned()
         if (model.setEntryPinned(currentValue == false)) {
-            showConfirmation(
+            showToastMessage(
                 resources.getQuantityString(
                     if (currentValue == true)
                         R.plurals.entries_unpinned_title else R.plurals.entries_pinned_title, 1, 1
@@ -1044,7 +1026,7 @@ class DetailActivity : AppuntiActivity() {
         model.entry.whenNotNull { entry ->
             val currentValue = entry.isDeleted()
             if (model.setEntryDeleted(!currentValue)) {
-                showConfirmation(
+                showToastMessage(
                     resources.getQuantityString(
                         if (currentValue)
                             R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1
@@ -1065,7 +1047,7 @@ class DetailActivity : AppuntiActivity() {
         model.entry.whenNotNull { entry ->
             val currentValue = entry.isArchived()
             if (model.setEntryArchived(!currentValue)) {
-                showConfirmation(
+                showToastMessage(
                     resources.getQuantityString(
                         if (currentValue)
                             R.plurals.entries_unarchived_title else R.plurals.entries_archived_title, 1, 1
@@ -1104,7 +1086,7 @@ class DetailActivity : AppuntiActivity() {
                         dialog.dismiss()
                         pickDateTime(date) { result ->
                             if (model.addReminder(result)) {
-                                showConfirmation(getString(R.string.reminder_set))
+                                showToastMessage(getString(R.string.reminder_set))
                             }
                         }
                     }
@@ -1112,7 +1094,7 @@ class DetailActivity : AppuntiActivity() {
                     .setNegativeButton(getString(R.string.remove)) { dialog, _ ->
                         dialog.dismiss()
                         if (model.removeReminder()) {
-                            showConfirmation(getString(R.string.reminder_removed))
+                            showToastMessage(getString(R.string.reminder_removed))
                             invalidate(UPDATE_REMINDER)
                         }
                     }
@@ -1124,7 +1106,7 @@ class DetailActivity : AppuntiActivity() {
                     Timber.v("date time picker! $result")
 
                     if (model.addReminder(result)) {
-                        showConfirmation(getString(R.string.reminder_set))
+                        showToastMessage(getString(R.string.reminder_set))
                         invalidate(UPDATE_REMINDER)
                     }
                 }
@@ -1132,7 +1114,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    private fun showConfirmation(text: String) {
+    private fun showToastMessage(text: String) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }
 
