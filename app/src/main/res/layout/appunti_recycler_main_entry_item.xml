@@ -66,7 +66,7 @@
 
         <androidx.recyclerview.widget.RecyclerView
                 android:visibility="gone"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="8dp"
                 android:id="@+id/attachmentsFlexRecycler"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -74,57 +74,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager">
         </androidx.recyclerview.widget.RecyclerView>
-
-        <!--<com.google.android.flexbox.FlexboxLayout-->
-        <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
-        <!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
-        <!--android:visibility="gone"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--android:id="@+id/flexBoxLayout"-->
-        <!--app:layout_constraintTop_toBottomOf="@+id/id_content"-->
-        <!--app:layout_constraintStart_toStartOf="parent"-->
-        <!--app:justifyContent="flex_start"-->
-        <!--app:flexWrap="wrap"-->
-        <!--app:alignItems="flex_start"-->
-        <!--app:alignContent="flex_start">-->
-
-        <!--<it.sephiroth.android.app.appunti.view.TextViewChip-->
-        <!--android:clickable="false"-->
-        <!--android:text="Very Very Long Document Title Unnamed.pdf"-->
-        <!--android:drawableStart="@drawable/filetype_pdf"-->
-        <!--android:maxWidth="160dp"-->
-        <!--android:layout_marginTop="8dp"-->
-        <!--style="@style/Widget.Appunti.Text.CategoryChip.NonClickable"/>-->
-        <!--<androidx.appcompat.widget.AppCompatTextView-->
-        <!--android:clickable="false"-->
-        <!--android:text="Document Title Unnamed.pdf"-->
-        <!--android:drawableStart="@drawable/filetype_pdf"-->
-        <!--android:maxWidth="160dp"-->
-        <!--android:layout_marginTop="8dp"-->
-        <!--style="@style/Widget.Appunti.Text.CategoryChip.NonClickable"/>-->
-        <!--<androidx.appcompat.widget.AppCompatTextView-->
-        <!--android:clickable="false"-->
-        <!--android:text="Very.pdf"-->
-        <!--android:drawableStart="@drawable/filetype_pdf"-->
-        <!--android:maxWidth="160dp"-->
-        <!--android:layout_marginTop="8dp"-->
-        <!--style="@style/Widget.Appunti.Text.CategoryChip.NonClickable"/>-->
-        <!--<androidx.appcompat.widget.AppCompatTextView-->
-        <!--android:clickable="false"-->
-        <!--android:text="Unnamed.pdf"-->
-        <!--android:drawableStart="@drawable/filetype_pdf"-->
-        <!--android:maxWidth="160dp"-->
-        <!--android:layout_marginTop="8dp"-->
-        <!--style="@style/Widget.Appunti.Text.CategoryChip.NonClickable"/>-->
-        <!--<androidx.appcompat.widget.AppCompatTextView-->
-        <!--android:clickable="false"-->
-        <!--android:text="Very Long Document Title Unnamed.pdf"-->
-        <!--android:drawableStart="@drawable/filetype_pdf"-->
-        <!--android:maxWidth="160dp"-->
-        <!--android:layout_marginTop="8dp"-->
-        <!--style="@style/Widget.Appunti.Text.CategoryChip.NonClickable"/>-->
-        <!--</com.google.android.flexbox.FlexboxLayout>-->
 
         <it.sephiroth.android.app.appunti.view.TextViewChip
                 android:id="@+id/entryCategory"
