@@ -17,7 +17,7 @@ import kotlinx.android.synthetic.main.appunti_detail_remoteurl_item.view.*
 import kotlinx.android.synthetic.main.appunti_detail_remoteurl_others.view.*
 import timber.log.Timber
 
-class RemoteUrlListAdapter(private var activity: DetailActivity) :
+class DetailRemoteUrlListAdapter(private var activity: DetailActivity) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -59,7 +59,6 @@ class RemoteUrlListAdapter(private var activity: DetailActivity) :
     }
 
     override fun getItemViewType(position: Int): Int {
-        Timber.v("getItemViewType($position)")
         return if (hasMore()) {
             if (!expanded) {
                 if (position == MAX_ITEMS_DISPLAY) TYPE_OTHERS

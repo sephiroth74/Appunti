@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:maxLevel="0" android:drawable="@drawable/filetype_image"/>
+    <item android:maxLevel="1" android:drawable="@drawable/filetype_pdf"/>
+    <item android:maxLevel="2" android:drawable="@drawable/filetype_txt"/>
+    <item android:maxLevel="3" android:drawable="@drawable/filetype_doc"/>
+    <item android:maxLevel="4" android:drawable="@drawable/filetype_zip"/>
+    <item android:maxLevel="5" android:drawable="@drawable/filetype_video"/>
+    <item android:maxLevel="6" android:drawable="@drawable/filetype_unknown"/>
+</level-list>

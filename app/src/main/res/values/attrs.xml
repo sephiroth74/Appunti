@@ -69,4 +69,21 @@
         <attr name="android:content"/>
     </declare-styleable>
 
+    <declare-styleable name="TextViewChip">
+        <attr name="android:minWidth"></attr>
+        <attr name="android:paddingTop"></attr>
+        <attr name="android:paddingBottom"></attr>
+        <attr name="android:paddingLeft"></attr>
+        <attr name="android:paddingRight"></attr>
+        <attr name="android:drawablePadding"></attr>
+        <attr name="android:textAppearance"></attr>
+        <attr name="android:textSize"></attr>
+        <attr name="android:gravity"></attr>
+        <attr name="fontFamily"></attr>
+        <attr name="android:fontFamily"></attr>
+        <attr name="android:lines"></attr>
+        <attr name="android:ellipsize"></attr>
+        <attr name="android:clickable"/>
+    </declare-styleable>
+
 </resources>

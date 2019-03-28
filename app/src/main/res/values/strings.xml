@@ -136,5 +136,11 @@
         <item quantity="other">+ %d more</item>
     </plurals>
 
+    <plurals name="attachments_others_count">
+        <item quantity="one">+ one more</item>
+        <item quantity="other">+ %d more</item>
+    </plurals>
+
     <string name="remote_url_others_less">- less</string>
+    <string name="activity_not_found">I can\'t find any installed application to view this file</string>
 </resources>

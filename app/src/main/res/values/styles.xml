@@ -58,11 +58,15 @@
         <item name="android:paddingBottom">6dp</item>
         <item name="android:paddingLeft">10dp</item>
         <item name="android:paddingRight">10dp</item>
+        <item name="android:drawablePadding">8dp</item>
         <item name="android:textAppearance">?attr/textAppearanceListItemSmall</item>
         <item name="android:textSize">@dimen/text_size_caption_material</item>
         <item name="android:gravity">center</item>
         <item name="fontFamily">@font/nunito_light</item>
         <item name="android:fontFamily">@font/nunito_light</item>
+        <item name="android:lines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:clickable">true</item>
     </style>
 
     <style name="Widget.Appunti.Text.CategoryChip.NonClickable">
@@ -155,7 +159,8 @@
         <item name="android:gravity">top|start</item>
         <item name="android:linksClickable">true</item>
         <item name="android:textAppearance">?attr/textAppearanceBody1</item>
-        <item name="android:inputType">textMultiLine|textAutoCorrect|textAutoComplete|textCapSentences|textLongMessage</item>
+        <item name="android:inputType">textMultiLine|textAutoCorrect|textAutoComplete|textCapSentences|textLongMessage
+        </item>
         <item name="android:textSize">@dimen/text_size_large_material</item>
         <item name="fontFamily">@font/nunito_light</item>
         <item name="android:fontFamily">@font/nunito_light</item>

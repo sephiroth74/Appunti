@@ -14,6 +14,7 @@ import com.dbflow5.runtime.OnTableChangedListener
 import com.dbflow5.structure.ChangeAction
 import io.reactivex.android.schedulers.AndroidSchedulers
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
+import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
@@ -140,7 +141,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         DatabaseHelper
             .getCategoriesWithNumEntriesAsync()
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { result, error ->
+            .subscribe { result, _ ->
                 (categoriesWithEntries as MutableLiveData).value = result.first
                 entriesArchivedCount = result.second
                 entriesDeletedCount = result.third
@@ -150,6 +151,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     override fun onCleared() {
         super.onCleared()
         DirectModelNotifier.get().unregisterForModelStateChanges(Category::class.java, this)
+        DirectModelNotifier.get().unregisterForModelStateChanges(Attachment::class.java, this)
         DirectModelNotifier.get().unregisterForModelStateChanges(Entry::class.java, this)
         DirectModelNotifier.get().unregisterForTableChanges(Entry::class.java, this)
     }
@@ -172,6 +174,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
             handler.removeCallbacks(updateCategoriesRunnable)
             handler.post(updateEntriesRunnable)
             handler.post(updateCategoriesRunnable)
+        } else if(model is Attachment) {
+            handler.removeCallbacks(updateEntriesRunnable)
+            handler.post(updateEntriesRunnable)
         }
     }
 
@@ -196,6 +201,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
     init {
         DirectModelNotifier.get().registerForModelStateChanges(Category::class.java, this)
+        DirectModelNotifier.get().registerForModelStateChanges(Attachment::class.java, this)
         DirectModelNotifier.get().registerForModelStateChanges(Entry::class.java, this)
         DirectModelNotifier.get().registerForTableChanges(Entry::class.java, this)
     }

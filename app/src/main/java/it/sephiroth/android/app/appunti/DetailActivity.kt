@@ -1,6 +1,7 @@
 package it.sephiroth.android.app.appunti
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Paint
@@ -39,8 +40,8 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import it.sephiroth.android.app.appunti.adapters.AttachmentsListAdapter
-import it.sephiroth.android.app.appunti.adapters.RemoteUrlListAdapter
+import it.sephiroth.android.app.appunti.adapters.DetailAttachmentsListAdapter
+import it.sephiroth.android.app.appunti.adapters.DetailRemoteUrlListAdapter
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
@@ -91,8 +92,8 @@ class DetailActivity : AppuntiActivity() {
     private var mCurrentPhotoPath: RelativePath? = null
 
     private var detailListAdapter: DetailListAdapter? = null
-    private var remoteUrlListAdapter: RemoteUrlListAdapter? = null
-    private var attachmentsListAdapter: AttachmentsListAdapter? = null
+    private var remoteUrlListAdapter: DetailRemoteUrlListAdapter? = null
+    private var attachmentsListAdapter: DetailAttachmentsListAdapter? = null
 
     private var tickTimer: Disposable? = null
 
@@ -166,8 +167,6 @@ class DetailActivity : AppuntiActivity() {
                 .setOnLinkLongClickListener(linkLongClickListener)
         }
 
-
-        entryCategory.background = MaterialBackgroundUtils.categoryChipClickable(this)
 
         entryText.setOnClickListener {
             entryText.requestFocus()
@@ -831,7 +830,7 @@ class DetailActivity : AppuntiActivity() {
         val remoteUrls = entry.getRemoteUrls()
 
         if (remoteUrlListAdapter == null) {
-            remoteUrlListAdapter = RemoteUrlListAdapter(this).also {
+            remoteUrlListAdapter = DetailRemoteUrlListAdapter(this).also {
                 it.deleteAction = { remoteUrl -> removeEntryRemoteUrl(remoteUrl) }
                 it.linkClickAction = { remoteUrl ->
                     answers.logCustom(CustomEvent("detail.remoteUrl.click"))
@@ -853,7 +852,7 @@ class DetailActivity : AppuntiActivity() {
 
     private fun updateEntryAttachmentsList(entry: Entry) {
         if (attachmentsListAdapter == null) {
-            attachmentsListAdapter = AttachmentsListAdapter(this).also { adapter ->
+            attachmentsListAdapter = DetailAttachmentsListAdapter(this).also { adapter ->
                 adapter.deleteAction = { attachment -> removeEntryAttachment(attachment) }
                 adapter.shareAction = { attachment -> shareEntryAttachment(attachment) }
                 adapter.clickAction = { attachment -> viewEntryAttachment(attachment) }
@@ -962,8 +961,12 @@ class DetailActivity : AppuntiActivity() {
             IntentUtils.createAttachmentViewIntent(this, attachment).also {
                 startActivity(it)
             }
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(this, R.string.activity_not_found, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+            Crashlytics.logException(e)
         }
     }
 
@@ -973,8 +976,12 @@ class DetailActivity : AppuntiActivity() {
             IntentUtils.createAttachmentShareIntent(this, attachment).also {
                 startActivity(Intent.createChooser(it, resources.getString(R.string.share)))
             }
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(this, R.string.activity_not_found, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+            Crashlytics.logException(e)
         }
     }
 

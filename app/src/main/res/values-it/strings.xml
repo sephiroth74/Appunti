@@ -111,11 +111,16 @@
     <string name="new_text_note">Nuovo Appunto</string>
     <string name="new_list_note">Nuova Lista</string>
 
-
     <plurals name="remote_url_others_count">
         <item quantity="one">+ un altro</item>
         <item quantity="other">+ altri %d</item>
     </plurals>
 
+    <plurals name="attachments_others_count">
+        <item quantity="one">+ un altro</item>
+        <item quantity="other">+ altri %d</item>
+    </plurals>
+
     <string name="remote_url_others_less">- meno</string>
+    <string name="activity_not_found">Non ho trovato nessuna applicazione installata per aprire questo tipo di file</string>
 </resources>

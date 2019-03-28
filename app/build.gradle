@@ -30,8 +30,8 @@ android {
         applicationId "it.sephiroth.android.app.appunti"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 14
-        versionName "1.0.12"
+        versionCode 15
+        versionName "1.0.20"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField "String", "COMMIT_HASH", "\"${getGitHash()}\""
@@ -141,6 +141,8 @@ dependencies {
 //    implementation 'eu.davidea:flexible-adapter-livedata:1.0.0-b3'
     // From 1.0.0-b3, library is compiled with data binding v2
 //    implementation 'eu.davidea:flexible-adapter-databinding:1.0.0'
+
+    implementation 'com.google.android:flexbox:1.1.0'
 
     implementation 'com.wdullaer:materialdatetimepicker:4.1.2'
     implementation 'com.jakewharton.threetenabp:threetenabp:1.2.0'

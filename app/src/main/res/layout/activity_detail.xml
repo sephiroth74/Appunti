@@ -129,7 +129,7 @@
                     app:layoutManager="LinearLayoutManager">
             </androidx.recyclerview.widget.RecyclerView>
 
-            <androidx.appcompat.widget.AppCompatTextView
+            <it.sephiroth.android.app.appunti.view.TextViewChip
                     style="@style/Widget.Appunti.Text.CategoryChip"
                     android:id="@+id/entryCategory"
                     android:layout_marginTop="16dp"

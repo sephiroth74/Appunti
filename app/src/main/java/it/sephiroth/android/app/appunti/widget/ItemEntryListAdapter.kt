@@ -18,14 +18,15 @@ import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.android.flexbox.*
 import com.google.android.material.circularreveal.cardview.CircularRevealCardView
 import io.reactivex.schedulers.Schedulers
 import isTablet
 import it.sephiroth.android.app.appunti.R
+import it.sephiroth.android.app.appunti.adapters.MainAttachmentsListAdapter
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.getSummary
 import it.sephiroth.android.app.appunti.models.SettingsManager
-import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import it.sephiroth.android.library.kotlin_extensions.content.res.getColorStateList
 import it.sephiroth.android.library.kotlin_extensions.content.res.isPortrait
@@ -35,6 +36,7 @@ import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import kotlinx.android.synthetic.main.appunti_recycler_main_entry_item.view.*
 import org.threeten.bp.Instant
 import timber.log.Timber
+
 
 class ItemEntryListAdapter(
     private val context: Activity,
@@ -142,7 +144,16 @@ class ItemEntryListAdapter(
 
             TYPE_ENTRY -> {
                 view = inflater.inflate(R.layout.appunti_recycler_main_entry_item, parent, false)
-                EntryViewHolder(view)
+                EntryViewHolder(view).also { holder ->
+                    with(holder.attachmentsRecyclerView.layoutManager as FlexboxLayoutManager) {
+                        flexWrap = FlexWrap.WRAP
+                        justifyContent = JustifyContent.FLEX_START
+                        alignItems = AlignItems.FLEX_START
+                        flexDirection = FlexDirection.ROW
+                    }
+
+                    holder.attachmentsRecyclerView.adapter = MainAttachmentsListAdapter(context)
+                }
             }
 
             else -> {
@@ -374,22 +385,19 @@ class ItemEntryListAdapter(
         val contentTextView: TextView by lazy { view.id_content }
         val categoryTextView: AppCompatTextView by lazy { view.entryCategory }
         val cardView: CircularRevealCardView by lazy { view.id_card }
+        var attachmentsRecyclerView = view.attachmentsFlexRecycler
         private val alarmView: ImageView by lazy { view.id_alarm }
-        private val attachmentView: ImageView by lazy { view.id_attachment }
 
         private val maxLines: Int by lazy { view.context.resources.getInteger(R.integer.list_items_max_lines_display) }
         private val maxChars: Int by lazy { view.context.resources.getInteger(R.integer.list_items_max_chars_display) }
 
         init {
-            val context = categoryTextView.context
-            categoryTextView.background = MaterialBackgroundUtils.categoryChip(context)
         }
 
         fun bind(entry: Entry, searchText: String?, isActivated: Boolean = false) {
             this.entry = entry
             itemView.isActivated = isActivated
 
-            // TODO(maybe execute asyc)
             val entryTitle = SpannableStringBuilder.valueOf(entry.entryTitle)
 
             if (!searchText.isNullOrEmpty()) {
@@ -407,7 +415,14 @@ class ItemEntryListAdapter(
             categoryTextView.text = entry.category?.categoryTitle
 
             alarmView.visibility = if (!entry.isReminderExpired(ItemEntryListAdapter.NOW)) View.VISIBLE else View.GONE
-            attachmentView.visibility = if (entry.hasAttachments()) View.VISIBLE else View.GONE
+
+            if (entry.hasAttachments()) {
+                (attachmentsRecyclerView.adapter as MainAttachmentsListAdapter).update(entry.getAttachments())
+                attachmentsRecyclerView.visibility = View.VISIBLE
+            } else {
+                (attachmentsRecyclerView.adapter as MainAttachmentsListAdapter).update(listOf())
+                attachmentsRecyclerView.visibility = View.GONE
+            }
         }
     }
 

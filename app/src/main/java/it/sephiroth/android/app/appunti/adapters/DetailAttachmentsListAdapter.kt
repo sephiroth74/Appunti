@@ -14,8 +14,8 @@ import it.sephiroth.android.app.appunti.ext.loadThumbnail
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnMainThread
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
 
-class AttachmentsListAdapter(private var activity: DetailActivity) :
-    RecyclerView.Adapter<AttachmentsListAdapter.AttachmentItemViewHolder>() {
+class DetailAttachmentsListAdapter(private var activity: DetailActivity) :
+    RecyclerView.Adapter<DetailAttachmentsListAdapter.AttachmentItemViewHolder>() {
 
     companion object {}
 
