@@ -41,9 +41,10 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
                 .putCustomAttribute("runAttemptCount", workerParams.runAttemptCount)
         )
 
+        // run worker on active entries only
         DatabaseHelper.getEntries {
-            where(Entry_Table.entryDeleted.eq(0))
-        }.subscribe { result, error ->
+            where(Entry_Table.entryDeleted.eq(0)).and(Entry_Table.entryArchived.eq(0))
+        }.subscribe { result, _ ->
             result?.let {
                 parseEntries(it)
             }

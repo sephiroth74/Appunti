@@ -40,6 +40,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import it.sephiroth.android.app.appunti.adapters.RemoteUrlListAdapter
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
@@ -51,7 +52,6 @@ import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
-import it.sephiroth.android.library.kotlin_extensions.content.res.getColor
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnMainThread
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnScheduler
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxTimer
@@ -65,8 +65,6 @@ import it.sephiroth.android.library.kotlin_extensions.widget.doOnTextChanged
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
-import kotlinx.android.synthetic.main.appunti_detail_remoteurl_item.view.*
-import kotlinx.android.synthetic.main.appunti_detail_remoteurl_others.view.*
 import me.saket.bettermovementmethod.BetterLinkMovementMethod
 import org.threeten.bp.Instant
 import org.threeten.bp.ZoneId
@@ -1214,127 +1212,6 @@ class DetailActivity : AppuntiActivity() {
         private const val TICKER_STEP_CREATED = 1
         private const val TICKER_STEP_MODIFIED = 2
         private const val TICKER_STEP_ALARM = 3
-    }
-}
-
-class RemoteUrlListAdapter(private var activity: DetailActivity) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
-    private val TYPE_ITEM = 0
-    private val TYPE_OTHERS = 1
-
-    private var expanded: Boolean = false
-        set(value) {
-            field = value
-            notifyDataSetChanged()
-        }
-
-    var deleteAction: ((RemoteUrl) -> (Unit))? = null
-    var linkClickAction: ((RemoteUrl) -> (Unit))? = null
-    private val data: MutableList<RemoteUrl> = mutableListOf()
-    private var inflater = LayoutInflater.from(activity)
-    private val cardColor: Int by lazy { activity.theme.getColor(activity, android.R.attr.windowBackground) }
-
-    private fun hasMore(): Boolean = data.size > 5
-
-    private fun getOthersItemCount(): Int {
-        return if (hasMore()) data.size - 5
-        else 0
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return if (viewType == TYPE_ITEM) {
-            val view = inflater.inflate(R.layout.appunti_detail_remoteurl_item, parent, false).apply {
-                (this as CardView).setCardBackgroundColor(cardColor)
-            }
-            ItemUrlViewHolder(view)
-        } else {
-            val view = inflater.inflate(R.layout.appunti_detail_remoteurl_others, parent, false)
-            OthersViewHolder(view)
-        }
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        Timber.v("getItemViewType($position)")
-        return if (hasMore()) {
-            if (!expanded) {
-                if (position == 5) TYPE_OTHERS
-                else TYPE_ITEM
-            } else {
-                if (position == data.size) TYPE_OTHERS
-                else TYPE_ITEM
-            }
-        } else {
-            TYPE_ITEM
-        }
-    }
-
-    override fun getItemCount(): Int {
-        return if (hasMore()) {
-            if (!expanded) 6
-            else data.size + 1
-        } else {
-            data.size
-        }
-    }
-
-    override fun onBindViewHolder(baseHolder: RecyclerView.ViewHolder, position: Int) {
-        Timber.v("onBindViewHolder($position)")
-        if (baseHolder.itemViewType == TYPE_ITEM) {
-            val holder = baseHolder as ItemUrlViewHolder
-            val remoteUrl = data.get(position)
-            holder.bind(remoteUrl)
-
-            holder.itemView.setOnClickListener {
-                linkClickAction?.invoke(remoteUrl)
-            }
-
-            holder.remoteUrlRemoveButton.setOnClickListener {
-                deleteAction?.invoke(remoteUrl)
-            }
-        } else {
-            val holder = baseHolder as OthersViewHolder
-            holder.bind(expanded, getOthersItemCount())
-
-            holder.itemView.setOnClickListener {
-                expanded = !expanded
-            }
-        }
-    }
-
-    fun update(remoteUrls: List<RemoteUrl>?) {
-        doOnMainThread {
-            data.clear()
-            data.addAll(remoteUrls ?: listOf())
-            notifyDataSetChanged()
-        }
-    }
-
-    class OthersViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val textView: TextView = itemView.remoteUrlOtherTitle
-
-        fun bind(expanded: Boolean, others: Int) {
-            if (expanded) {
-                textView.setText(R.string.remote_url_others_less)
-            } else {
-                textView.text = itemView.context.resources.getQuantityString(R.plurals.remote_url_others_count, others)
-            }
-        }
-    }
-
-    class ItemUrlViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val remoteUrlImage: ImageView = itemView.remoteUrlImage
-        internal val remoteUrlRemoveButton: View = itemView.remoteUrlRemoveButton
-        private val remoteUrlTitle: TextView = itemView.remoteUrlTitle
-        private val remoteUrlDescription: TextView = itemView.remoteUrlDescription
-        private var remoteUrl: RemoteUrl? = null
-
-        fun bind(remoteUrl: RemoteUrl) {
-            this.remoteUrl = remoteUrl
-            remoteUrlTitle.text = remoteUrl.remoteUrlTitle
-            remoteUrlDescription.text = remoteUrl.remoteUrlDescription
-            remoteUrl.loadThumbnail(itemView.context, remoteUrlImage)
-        }
     }
 }
 
