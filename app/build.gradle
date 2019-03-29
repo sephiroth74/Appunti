@@ -30,8 +30,8 @@ android {
         applicationId "it.sephiroth.android.app.appunti"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 15
-        versionName "1.0.20"
+        versionCode 16
+        versionName "1.0.21"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField "String", "COMMIT_HASH", "\"${getGitHash()}\""
@@ -126,7 +126,7 @@ dependencies {
 
     implementation 'com.github.sephiroth74:AndroidUIGestureRecognizer:v1.2.7'
     implementation 'com.lapism:searchview:27.1.1.0.0'
-    implementation 'com.github.arimorty:floatingsearchview:2.1.1'
+//    implementation 'com.github.arimorty:floatingsearchview:2.1.1'
 
     kapt "com.github.agrosner.dbflow:processor:${dbflow_version}"
     implementation "com.github.agrosner.dbflow:core:${dbflow_version}"
@@ -136,8 +136,8 @@ dependencies {
 //    implementation "com.github.agrosner.dbflow:dbflow-rx2:${dbflow_version}"
 //    implementation "com.github.agrosner.dbflow:dbflow-rx2-kotlinextensions:${dbflow_version}"
 
-    implementation 'eu.davidea:flexible-adapter:5.1.0'
-    implementation 'eu.davidea:flexible-adapter-ui:1.0.0'
+//    implementation 'eu.davidea:flexible-adapter:5.1.0'
+//    implementation 'eu.davidea:flexible-adapter-ui:1.0.0'
 //    implementation 'eu.davidea:flexible-adapter-livedata:1.0.0-b3'
     // From 1.0.0-b3, library is compiled with data binding v2
 //    implementation 'eu.davidea:flexible-adapter-databinding:1.0.0'

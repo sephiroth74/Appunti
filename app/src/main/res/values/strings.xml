@@ -143,4 +143,41 @@
 
     <string name="remote_url_others_less">- less</string>
     <string name="activity_not_found">I can\'t find any installed application to view this file</string>
+    <string name="title_activity_attribution">Credits</string>
+
+    <string name="attribution_html" translatable="false"><![CDATA[
+<h3>File Icons:</h3>
+<br />
+<ul>
+    &#09;<li>&nbsp;<a href="https://www.flaticon.com/authors/smashicons">Smashicons</a></li>
+    &#09;<li>&nbsp;<a href="https://www.flaticon.com/authors/pixel-buddha">Pixel Buddha</a></li>
+    &#09;<li>&nbsp;<a href="https://www.flaticon.com/authors/freepik">Freepik</a></li>
+</ul>
+<br />
+<p>from <a href="https://www.flaticon.com">www.flaticon.com</a></p>
+<br /><br />
+
+<h3>Application Icons:</h3>
+<br />
+    &#09;<li>&nbsp;<a href="https://material.io/tools/icons/">Material Icons</a>
+<br /><br />
+
+<h3>Third Party Libraries:</h3>
+<br />
+<ul>
+    &#09;<li>&nbsp;<a href="https://github.com/sephiroth74/AndroidUIGestureRecognizer">AndroidUIGestureRecognizer</a></li>
+    &#09;<li>&nbsp;<a href="https://github.com/saket/Better-Link-Movement-Method">Better-Link-Movement-Method</a></li>
+    &#09;<li>&nbsp;<a href="https://github.com/leinardi/FloatingActionButtonSpeedDial">FloatingActionButtonSpeedDial</a></li>
+    &#09;<li>&nbsp;<a href="https://github.com/tbruyelle/RxPermissions">RxPermissions</a></li>
+    &#09;<li>&nbsp;<a href="https://github.com/barteksc/PdfiumAndroid">PdfiumAndroid</a></li>
+    &#09;<li>&nbsp;<a href="https://github.com/square/picasso">picasso</a></li>
+    &#09;<li>&nbsp;<a href="https://commons.apache.org/proper/commons-io">commons-io</a></li>
+    &#09;<li>&nbsp;<a href="https://github.com/JakeWharton/ThreeTenABP">ThreeTenABP</a></li>
+    &#09;<li>&nbsp;<a href="https://github.com/wdullaer/MaterialDateTimePicker">MaterialDateTimePicker</a></li>
+    &#09;<li>&nbsp;<a href="https://github.com/google/flexbox-layout">flexbox-layout</a></li>
+    &#09;<li>&nbsp;<a href="https://github.com/agrosner/DBFlow">DBFlow</a></li>
+    &#09;<li>&nbsp;<a href="https://github.com/lapism/MaterialSearchView">MaterialSearchView</a></li>
+    &#09;<li>&nbsp;<a href="https://jsoup.org">jsoup</a></li>
+</ul>
+    ]]></string>
 </resources>

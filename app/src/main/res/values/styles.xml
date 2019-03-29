@@ -181,5 +181,11 @@
         <item name="fontFamily">@font/nunito_bold</item>
         <item name="android:fontFamily">@font/nunito_bold</item>
     </style>
+    <style name="Theme.Appunti.Default.NoActionbar.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+    <style name="Theme.Appunti.Default.NoActionbar.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
+    <style name="Theme.Appunti.Default.NoActionbar.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
 
 </resources>

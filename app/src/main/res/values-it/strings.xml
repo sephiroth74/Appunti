@@ -123,4 +123,5 @@
 
     <string name="remote_url_others_less">- meno</string>
     <string name="activity_not_found">Non ho trovato nessuna applicazione installata per aprire questo tipo di file</string>
+    <string name="title_activity_attribution">Crediti</string>
 </resources>

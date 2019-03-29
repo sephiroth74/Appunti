@@ -5,7 +5,7 @@
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
             <corners android:radius="@dimen/appunti_material_selector_cornerRadius" />
-            <solid android:color="@color/black" />
+            <solid android:color="@android:color/black" />
         </shape>
     </item>
 
@@ -16,7 +16,7 @@
                     android:shape="rectangle"
                     android:tint="?attr/colorControlHighlight">
                     <corners android:radius="@dimen/appunti_material_selector_cornerRadius" />
-                    <solid android:color="@color/black" />
+                    <solid android:color="@android:color/black" />
                 </shape>
             </item>
             <item android:state_checked="true">
@@ -24,7 +24,7 @@
                     android:shape="rectangle"
                     android:tint="?attr/colorControlHighlight">
                     <corners android:radius="@dimen/appunti_material_selector_cornerRadius" />
-                    <solid android:color="@color/black" />
+                    <solid android:color="@android:color/black" />
                 </shape>
             </item>
             <item android:drawable="@android:color/transparent" />

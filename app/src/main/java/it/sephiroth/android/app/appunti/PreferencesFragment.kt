@@ -87,7 +87,10 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                     }
                     .create()
                     .show()
+            }
 
+            "preference.attribution" -> {
+                startActivity(Intent(context, AttributionActivity::class.java))
             }
         }
 
