@@ -148,15 +148,33 @@ class DetailActivity : AppuntiActivity() {
         closeBottomSheet()
 
         textSwitcher.setFactory {
-            AppCompatTextView(ContextThemeWrapper(this, R.style.Widget_Appunti_Text_TextSwitcher), null, 0)
+            AppCompatTextView(
+                ContextThemeWrapper(this, R.style.Widget_Appunti_Text_TextSwitcher),
+                null,
+                0
+            )
         }
 
         nestedScrollView.requestFocusFromTouch()
 
         // UI elements listeners
         entryCategory.setOnClickListener { dispatchPickCategoryIntent() }
-        entryTitle.doOnTextChanged { s, start, count, after -> updateEntryTitle(s, start, count, after) }
-        entryText.doOnTextChanged { s, start, count, after -> updateEntryText(s, start, count, after) }
+        entryTitle.doOnTextChanged { s, start, count, after ->
+            updateEntryTitle(
+                s,
+                start,
+                count,
+                after
+            )
+        }
+        entryText.doOnTextChanged { s, start, count, after ->
+            updateEntryText(
+                s,
+                start,
+                count,
+                after
+            )
+        }
         entryText.doOnAfterTextChanged { e ->
 
             // LinkifyCompat.addLinks(e, Linkify.ALL)
@@ -236,7 +254,10 @@ class DetailActivity : AppuntiActivity() {
 
 
                     if (intent.hasExtra(IntentUtils.KEY_ENTRY_TYPE)) {
-                        val type = Entry.EntryType.values()[intent.getIntExtra(IntentUtils.KEY_ENTRY_TYPE, 0)]
+                        val type = Entry.EntryType.values()[intent.getIntExtra(
+                            IntentUtils.KEY_ENTRY_TYPE,
+                            0
+                        )]
                         event.putCustomAttribute("type", type.name)
                         if (type == Entry.EntryType.LIST) {
                             newEntry.convertToList()
@@ -257,7 +278,9 @@ class DetailActivity : AppuntiActivity() {
                         .fromString(intent.getStringExtra(Intent.EXTRA_TEXT))
                         .apply {
                             entryTitle =
-                                if (intent.hasExtra(Intent.EXTRA_SUBJECT)) intent.getStringExtra(Intent.EXTRA_SUBJECT) else ""
+                                if (intent.hasExtra(Intent.EXTRA_SUBJECT)) intent.getStringExtra(
+                                    Intent.EXTRA_SUBJECT
+                                ) else ""
                         }.also { entry ->
                             if (intent.hasExtra(Intent.EXTRA_STREAM)) {
                                 val streamUri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
@@ -405,10 +428,12 @@ class DetailActivity : AppuntiActivity() {
         val sharedElementEnterTransition = window.sharedElementEnterTransition
 
         sharedElementEnterTransition.doOnEnd {
-            entryCategory.visibility = if (model.entry.value?.category == null) View.INVISIBLE else View.VISIBLE
+            entryCategory.visibility =
+                if (model.entry.value?.category == null) View.INVISIBLE else View.VISIBLE
         }
         sharedElementEnterTransition.doOnStart {
-            entryCategory.visibility = if (model.entry.value?.category == null) View.INVISIBLE else View.VISIBLE
+            entryCategory.visibility =
+                if (model.entry.value?.category == null) View.INVISIBLE else View.VISIBLE
         }
     }
 
@@ -451,7 +476,8 @@ class DetailActivity : AppuntiActivity() {
 
         bottomAppBar.doOnPreDraw {
             if (navigationView.layoutParams is ViewGroup.MarginLayoutParams) {
-                (navigationView.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = it.height
+                (navigationView.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin =
+                    it.height
             }
         }
     }
@@ -551,7 +577,8 @@ class DetailActivity : AppuntiActivity() {
 // BOTTOM SHEET BEHAVIORS
 
     private fun setupBottomSheet() {
-        bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+        bottomSheetBehavior.setBottomSheetCallback(object :
+            BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(p0: View, p1: Float) {
                 bottomSheetModalBackground.background.alpha = (p1 * 255).toInt()
             }
@@ -715,8 +742,10 @@ class DetailActivity : AppuntiActivity() {
      * update entry type (list/text) and content
      */
     private fun updateEntryTypeAndText(entry: Entry) {
-        entryText.visibility = if (entry.entryType == Entry.EntryType.TEXT) View.VISIBLE else View.GONE
-        detailRecycler.visibility = if (entry.entryType == Entry.EntryType.LIST) View.VISIBLE else View.GONE
+        entryText.visibility =
+            if (entry.entryType == Entry.EntryType.TEXT) View.VISIBLE else View.GONE
+        detailRecycler.visibility =
+            if (entry.entryType == Entry.EntryType.LIST) View.VISIBLE else View.GONE
 
         if (entry.entryType == Entry.EntryType.TEXT) {
             clearListRecyclerView()
@@ -793,7 +822,11 @@ class DetailActivity : AppuntiActivity() {
                 TICKER_STEP_CREATED -> {
                     val lastModifiedString = resources.getString(
                         R.string.created_at,
-                        entry.entryCreationDate.atZone().formatDiff(this, FormatStyle.MEDIUM, FormatStyle.SHORT)
+                        entry.entryCreationDate.atZone().formatDiff(
+                            this,
+                            FormatStyle.MEDIUM,
+                            FormatStyle.SHORT
+                        )
                     )
                     textSwitcher.setText(lastModifiedString)
                     tickNext(TICKER_STEP_MODIFIED)
@@ -802,7 +835,11 @@ class DetailActivity : AppuntiActivity() {
                 TICKER_STEP_MODIFIED -> {
                     val lastModifiedString = resources.getString(
                         R.string.last_modified,
-                        entry.entryModifiedDate.atZone().formatDiff(this, FormatStyle.MEDIUM, FormatStyle.SHORT)
+                        entry.entryModifiedDate.atZone().formatDiff(
+                            this,
+                            FormatStyle.MEDIUM,
+                            FormatStyle.SHORT
+                        )
                     )
                     textSwitcher.setText(lastModifiedString)
                     tickNext(TICKER_STEP_ALARM)
@@ -811,7 +848,13 @@ class DetailActivity : AppuntiActivity() {
                 TICKER_STEP_ALARM -> {
                     if (entry.hasReminder()) {
                         val reminderDate = entry.entryAlarm!!.atZone()
-                        textSwitcher.setText(reminderDate.formatDiff(this, FormatStyle.MEDIUM, FormatStyle.SHORT))
+                        textSwitcher.setText(
+                            reminderDate.formatDiff(
+                                this,
+                                FormatStyle.MEDIUM,
+                                FormatStyle.SHORT
+                            )
+                        )
                         val textView = textSwitcher.currentView as TextView
 
                         val drawable = resources.getDrawable(R.drawable.sharp_alarm_24, theme)
@@ -861,7 +904,8 @@ class DetailActivity : AppuntiActivity() {
         }
 
         val attachments = entry.getAttachments()
-        attachmentsRecycler.visibility = if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
+        attachmentsRecycler.visibility =
+            if (attachments.isNullOrEmpty()) View.GONE else View.VISIBLE
 
         attachmentsListAdapter?.cardColor = entry.getAttachmentColor(this)
         attachmentsListAdapter?.update(attachments)
@@ -917,13 +961,8 @@ class DetailActivity : AppuntiActivity() {
 
             menuItem = menu.findItem(R.id.menu_action_delete)
             menuItem?.apply {
-                setIcon(
-                    if (entry.isDeleted())
-                        R.drawable.appunti_sharp_restore_from_trash_24_selector
-                    else R.drawable.appunti_sharp_delete_24_outline_selector
-                )
-
-                setTitle(if (entry.isDeleted()) R.string.restore else R.string.delete)
+                setIcon(R.drawable.appunti_sharp_delete_24_outline_selector)
+                setTitle(R.string.delete)
             }
 
             menuItem = menu.findItem(R.id.menu_action_alarm)
@@ -1030,23 +1069,7 @@ class DetailActivity : AppuntiActivity() {
 
     private fun toggleDelete() {
         answers.logCustom(CustomEvent("detail.toggleDelete"))
-        model.entry.whenNotNull { entry ->
-            val currentValue = entry.isDeleted()
-            if (model.setEntryDeleted(!currentValue)) {
-                showToastMessage(
-                    resources.getQuantityString(
-                        if (currentValue)
-                            R.plurals.entries_restored_title else R.plurals.entries_deleted_title, 1, 1
-                    )
-                )
-
-                if (!currentValue) {
-                    onBackPressed()
-                } else {
-                    invalidate(UPDATE_DELETED)
-                }
-            }
-        }
+        model.entry.whenNotNull { askToDeleteEntry() }
     }
 
     private fun toggleArchive() {
@@ -1057,7 +1080,9 @@ class DetailActivity : AppuntiActivity() {
                 showToastMessage(
                     resources.getQuantityString(
                         if (currentValue)
-                            R.plurals.entries_unarchived_title else R.plurals.entries_archived_title, 1, 1
+                            R.plurals.entries_unarchived_title else R.plurals.entries_archived_title,
+                        1,
+                        1
                     )
                 )
 
@@ -1118,6 +1143,38 @@ class DetailActivity : AppuntiActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun askToDeleteEntry() {
+        Timber.i("askToDeleteEntries()")
+
+        AlertDialog
+            .Builder(this)
+            .setTitle(R.string.confirm)
+            .setMessage(resources.getQuantityString(R.plurals.entries_delete_action_question, 1, 1))
+            .setPositiveButton(R.string.yes) { dialog, _ ->
+                dialog.dismiss()
+                deleteEntry()
+            }
+            .setNegativeButton(android.R.string.cancel) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create().show()
+    }
+
+
+    @SuppressLint("CheckResult")
+    private fun deleteEntry() {
+        Timber.i("deleteEntry()")
+
+        if (model.deleteEntry()) {
+            Toast.makeText(
+                this,
+                resources.getQuantityString(R.plurals.entries_deleted_title, 1, 1),
+                Toast.LENGTH_SHORT
+            ).show()
+            onBackPressed()
         }
     }
 
@@ -1217,7 +1274,8 @@ class DetailListAdapter(private var activity: DetailActivity) :
     private val answers: Answers by lazy { Answers.getInstance() }
 
     var saveAction: ((DetailListAdapter, String) -> (Unit))? = null
-    var deleteAction: ((DetailListAdapter, DetailEntryViewHolder, EntryListJsonModel.EntryJson) -> Boolean)? = null
+    var deleteAction: ((DetailListAdapter, DetailEntryViewHolder, EntryListJsonModel.EntryJson) -> Boolean)? =
+        null
     var linkClickListener: BetterLinkMovementMethod.OnLinkClickListener? = null
     var linkLongClickListener: BetterLinkMovementMethod.OnLinkLongClickListener? = null
 
@@ -1355,7 +1413,8 @@ class DetailListAdapter(private var activity: DetailActivity) :
             }
 
         } else {
-            val view = inflater.inflate(R.layout.appunti_detail_entry_list_item_checkable, parent, false)
+            val view =
+                inflater.inflate(R.layout.appunti_detail_entry_list_item_checkable, parent, false)
             DetailEntryViewHolder(view).also { holder ->
 
                 // toggle the delete button visibility based on the current focus
@@ -1368,7 +1427,9 @@ class DetailListAdapter(private var activity: DetailActivity) :
                     if (event.action == KeyEvent.ACTION_UP) {
                         if (keyCode == KeyEvent.KEYCODE_DEL) {
                             Timber.v("KEYCODE_DEL")
-                            returnType = deleteAction?.invoke(this, holder, getItem(holder.adapterPosition)) ?: true
+                            returnType =
+                                deleteAction?.invoke(this, holder, getItem(holder.adapterPosition))
+                                    ?: true
                         }
                     }
                     returnType
@@ -1474,7 +1535,8 @@ class DetailListAdapter(private var activity: DetailActivity) :
      */
     fun isFirstEntry(entry: EntryListJsonModel.EntryJson) = dataHolder.isFirstEntry(entry)
 
-    private fun getPreviousEntryIndex(entry: EntryListJsonModel.EntryJson) = dataHolder.getPreviousItemIndex(entry)
+    private fun getPreviousEntryIndex(entry: EntryListJsonModel.EntryJson) =
+        dataHolder.getPreviousItemIndex(entry)
 
     open class DetailViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val text: TextView = itemView.findViewById(android.R.id.text1)
@@ -1503,9 +1565,10 @@ class DetailListAdapter(private var activity: DetailActivity) :
 
         var checkedActionListener: ((DetailEntryViewHolder, Boolean) -> Unit)? = null
 
-        private val checkedChangeListener = CompoundButton.OnCheckedChangeListener { view, checked ->
-            checkedActionListener?.invoke(this, checked)
-        }
+        private val checkedChangeListener =
+            CompoundButton.OnCheckedChangeListener { view, checked ->
+                checkedActionListener?.invoke(this, checked)
+            }
 
         var isChecked: Boolean
             get() = itemViewType == EntryListJsonModel.TYPE_CHECKED
