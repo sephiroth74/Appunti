@@ -7,14 +7,14 @@
             android:id="@+id/menu_action_camera"
             android:checkable="false"
             android:icon="@drawable/baseline_camera_alt_24"
-            android:title="Take Picture"
+            android:title="@string/take_picture"
             app:showAsAction="ifRoom"/>
 
     <item
             android:id="@+id/menu_action_image"
             android:checkable="false"
             android:icon="@drawable/sharp_add_photo_alternate_24"
-            android:title="Attach Image"
+            android:title="@string/attach_image"
             app:showAsAction="always"/>
 
 
@@ -22,7 +22,7 @@
             android:id="@+id/menu_action_category"
             android:checkable="false"
             android:icon="@drawable/sharp_attach_file_24"
-            android:title="Attach File"
+            android:title="@string/attach_file"
             app:showAsAction="always"/>
 
 </menu>

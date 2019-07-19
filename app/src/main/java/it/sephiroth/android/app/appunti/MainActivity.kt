@@ -10,6 +10,7 @@ import android.os.Parcelable
 import android.speech.RecognizerIntent
 import android.view.*
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -84,7 +85,7 @@ class MainActivity : AppuntiActivityFullscreen() {
         coordinatorLayout.fitsSystemWindows = fitSystemWindows
 
         if (isFullScreen) {
-            navigationView.setOnApplyWindowInsetsListener { v, insets ->
+            navigationView.setOnApplyWindowInsetsListener { _, insets ->
                 Timber.w("applyWindowInsetsListener: $insets")
 
                 window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
@@ -170,7 +171,9 @@ class MainActivity : AppuntiActivityFullscreen() {
     private fun setDisplayAsList(value: Boolean) {
         Timber.i("setDisplayAsList($value)")
         val spanCount =
-            if (value) resources.getInteger(R.integer.list_items_columns_list) else resources.getInteger(R.integer.list_items_columns_grid)
+            if (value) resources.getInteger(R.integer.list_items_columns_list) else resources.getInteger(
+                R.integer.list_items_columns_grid
+            )
 
         adapter.spanCount = spanCount
         layoutManager.spanCount = spanCount
@@ -231,10 +234,16 @@ class MainActivity : AppuntiActivityFullscreen() {
 
         speedDial.addAllActionItems(
             mutableListOf(
-                SpeedDialActionItem.Builder(R.id.fab_menu_new_text_note, R.drawable.sharp_text_fields_24)
+                SpeedDialActionItem.Builder(
+                    R.id.fab_menu_new_text_note,
+                    R.drawable.sharp_text_fields_24
+                )
                     .setLabel(getString(R.string.new_text_note))
                     .create(),
-                SpeedDialActionItem.Builder(R.id.fab_menu_new_list_note, R.drawable.sharp_format_list_bulleted_24)
+                SpeedDialActionItem.Builder(
+                    R.id.fab_menu_new_list_note,
+                    R.drawable.sharp_format_list_bulleted_24
+                )
                     .setLabel(getString(R.string.new_list_note))
                     .create()
             )
@@ -261,7 +270,7 @@ class MainActivity : AppuntiActivityFullscreen() {
 
         Timber.v("top=$top, bottom=$bottom")
 
-        adapter = ItemEntryListAdapter(this, arrayListOf(), top, bottom) { holder, position ->
+        adapter = ItemEntryListAdapter(this, arrayListOf(), top, bottom) { _, position ->
             tracker?.isSelected(position.toLong()) ?: false
         }
 
@@ -325,17 +334,14 @@ class MainActivity : AppuntiActivityFullscreen() {
                 RecyclerNavigationView.TYPE_LABEL_CATEGORY_ARCHIVED -> {
                     answers
                         .logCustom(
-                            CustomEvent("main.navigationItemClick").putCustomAttribute("name", "archived")
+                            CustomEvent("main.navigationItemClick").putCustomAttribute(
+                                "name",
+                                "archived"
+                            )
                         )
 
                     model.group.setIsArchived(true)
                     closeDrawerIfOpened()
-                }
-
-                RecyclerNavigationView.TYPE_LABEL_CATEGORY_DELETED -> {
-                    model.group.setDeleted(true)
-                    closeDrawerIfOpened()
-
                 }
 
                 RecyclerNavigationView.TYPE_LABEL_NEW_CATEGORY -> {
@@ -371,7 +377,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                     ItemEntryListAdapter.TYPE_ENTRY -> {
                         val entry = (viewHolder as ItemEntryListAdapter.EntryViewHolder).entry
                         entry?.let { entry ->
-                            if (entry.entryDeleted == 1 || entry.entryArchived == 1) return false
+                            if (entry.entryArchived == 1) return false
                             return true
                         } ?: run {
                             return false
@@ -391,7 +397,10 @@ class MainActivity : AppuntiActivityFullscreen() {
             }
 
 
-            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+            override fun getMovementFlags(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder
+            ): Int {
                 if (null != mActionMode) return makeMovementFlags(0, 0)
 
                 return if (isValidEntry(viewHolder))
@@ -412,8 +421,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                 if (null != mActionMode) return
 
                 if (viewHolder.itemViewType == ItemEntryListAdapter.TYPE_ENTRY) {
-                    val entry = (viewHolder as ItemEntryListAdapter.EntryViewHolder).entry
-                    entry?.let { entry ->
+                    (viewHolder as ItemEntryListAdapter.EntryViewHolder).entry?.let { entry ->
                         answers.logCustom(CustomEvent("main.itemSwiped"))
                         setEntriesArchived(listOf(entry), true)
                     }
@@ -433,10 +441,26 @@ class MainActivity : AppuntiActivityFullscreen() {
             ) {
 
                 if (actionState == ACTION_STATE_SWIPE) {
-                    setTouchListener(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+                    setTouchListener(
+                        c,
+                        recyclerView,
+                        viewHolder,
+                        dX,
+                        dY,
+                        actionState,
+                        isCurrentlyActive
+                    )
                 }
 
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+                super.onChildDraw(
+                    c,
+                    recyclerView,
+                    viewHolder,
+                    dX,
+                    dY,
+                    actionState,
+                    isCurrentlyActive
+                )
             }
 
             @Suppress("UNUSED_PARAMETER")
@@ -488,7 +512,8 @@ class MainActivity : AppuntiActivityFullscreen() {
         textEdit.isFocusableInTouchMode = false
 
         textEdit.setOnClickListener {
-            val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this, toolbar, "toolbar")
+            val intentOptions =
+                ActivityOptionsCompat.makeSceneTransitionAnimation(this, toolbar, "toolbar")
             startActivity(IntentUtils.createSearchableIntent(this), intentOptions.toBundle())
             answers.logSearch(SearchEvent().putCustomAttribute("text", 1))
         }
@@ -546,11 +571,17 @@ class MainActivity : AppuntiActivityFullscreen() {
             elementsArray.add(Pair(holder.categoryTextView, "itemCategory"))
         }
 
-        val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(this, *(elementsArray.toTypedArray()))
+        val intentOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(
+            this,
+            *(elementsArray.toTypedArray())
+        )
         startDetailActivityFromIntent(intent, intentOptions)
     }
 
-    private fun startDetailActivityFromIntent(intent: Intent, intentOptions: ActivityOptionsCompat?) {
+    private fun startDetailActivityFromIntent(
+        intent: Intent,
+        intentOptions: ActivityOptionsCompat?
+    ) {
         startActivity(intent, intentOptions?.toBundle())
     }
 
@@ -572,28 +603,17 @@ class MainActivity : AppuntiActivityFullscreen() {
         else drawerLayout.closeDrawer(navigationView)
     }
 
-    private fun onEntriesDeleted(values: List<Entry>) {
-        val mSnackbar =
-            Snackbar
-                .make(
-                    coordinatorLayout,
-                    resources.getQuantityString(R.plurals.entries_deleted_title, values.size, values.size),
-                    Snackbar
-                        .LENGTH_LONG
-                )
-                .setAction(getString(R.string.undo_uppercase)) { setEntriesDeleted(values, false) }
-                .setActionTextColor(theme.getColorStateList(this@MainActivity, R.attr.colorError))
-
-        showSnackBack(mSnackbar)
-    }
-
     private fun onEntriesArchived(values: List<Entry>) {
         Timber.i("onEntriesArchived($values)")
         val mSnackbar =
             Snackbar
                 .make(
                     coordinatorLayout,
-                    resources.getQuantityString(R.plurals.entries_archived_title, values.size, values.size),
+                    resources.getQuantityString(
+                        R.plurals.entries_archived_title,
+                        values.size,
+                        values.size
+                    ),
                     Snackbar.LENGTH_LONG
                 )
                 .setAction(getString(R.string.undo_uppercase)) {
@@ -621,19 +641,47 @@ class MainActivity : AppuntiActivityFullscreen() {
             }
     }
 
+    private fun askToDeleteEntries(entries: List<Entry>) {
+        Timber.i("askToDeleteEntries($entries)")
+
+        AlertDialog
+            .Builder(this)
+            .setTitle(R.string.confirm)
+            .setMessage(
+                resources.getQuantityString(
+                    R.plurals.entries_delete_action_question,
+                    entries.size,
+                    entries.size
+                )
+            )
+            .setPositiveButton(R.string.yes) { dialog, _ ->
+                dialog.dismiss()
+                deleteEntries(entries)
+            }
+            .setNegativeButton(android.R.string.cancel) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create().show()
+    }
+
     @SuppressLint("CheckResult")
-    private fun setEntriesDeleted(entries: List<Entry>, deleted: Boolean) {
-        DatabaseHelper.setEntriesDeleted(entries, deleted)
+    private fun deleteEntries(entries: List<Entry>) {
+        Timber.i("deleteEntries($entries")
+
+        DatabaseHelper.deleteEntries(this, entries)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { _, error ->
                 error?.let {
-                    Timber.e("error=$error")
+                    Timber.e(error)
+                    Toast.makeText(this, "Oh Snap! An error occurred!", Toast.LENGTH_SHORT).show()
                 } ?: run {
-                    if (deleted) {
-                        onEntriesDeleted(entries)
-                    } else {
-                        Toast.makeText(this, R.string.entries_restored, Toast.LENGTH_SHORT).show()
-                    }
+                    Toast.makeText(
+                        this, resources.getQuantityString(
+                            R.plurals.entries_deleted_title,
+                            entries.size,
+                            entries.size
+                        ), Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
     }
@@ -647,24 +695,29 @@ class MainActivity : AppuntiActivityFullscreen() {
         var actionModeBar: View? = null
 
         @Suppress("NAME_SHADOWING")
-        private fun onTrackerSelectionChanged(selection: HashMap<Long, Entry>, actionMode: ActionMode?) {
+        private fun onTrackerSelectionChanged(
+            selection: HashMap<Long, Entry>,
+            actionMode: ActionMode?
+        ) {
             Timber.i("onTrackerSelectionChanged()")
             actionMode?.let { actionMode ->
                 if (selection.isEmpty()) {
                     actionMode.finish()
                 } else {
                     actionMode.title =
-                        resources.getQuantityString(R.plurals.entries_selected_count, selection.size, selection.size)
+                        resources.getQuantityString(
+                            R.plurals.entries_selected_count,
+                            selection.size,
+                            selection.size
+                        )
 
                     val pinned = selection.values.indexOfFirst { it.entryPinned == 1 } > -1
                     val unpinned = selection.values.indexOfFirst { it.entryPinned == 0 } > -1
 
                     val archived = selection.values.indexOfFirst { it.entryArchived == 1 } > -1
-                    val deleted = selection.values.indexOfFirst { it.entryDeleted == 1 } > -1
 
                     updatePinnedMenuItem(actionMode.menu, pinned && (pinned && !unpinned))
                     updateArchivedMenuItem(actionMode.menu, archived)
-                    updateDeletedMenuItem(actionMode.menu, deleted)
                 }
             }
         }
@@ -697,20 +750,6 @@ class MainActivity : AppuntiActivityFullscreen() {
             }
         }
 
-        @Suppress("NAME_SHADOWING")
-        private fun updateDeletedMenuItem(menu: Menu?, checked: Boolean) {
-            menu?.let { menu ->
-                val menuItem = menu.findItem(R.id.menu_action_delete)
-                if (checked) {
-                    menuItem.setIcon(R.drawable.appunti_sharp_restore_from_trash_24_selector_actionmode)
-                    menuItem.setTitle(R.string.restore)
-                } else {
-                    menuItem.setIcon(R.drawable.appunti_sharp_delete_24_outline_selector_actionmode)
-                    menuItem.setTitle(R.string.delete)
-                }
-            }
-        }
-
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             Timber.i("onActionItemClicked: ${item.itemId}")
 
@@ -720,8 +759,10 @@ class MainActivity : AppuntiActivityFullscreen() {
                 R.id.menu_action_pin -> {
                     tracker?.let { tracker ->
                         event.putCustomAttribute("name", "pin")
-                        val pinned = tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > -1
-                        val unpinned = tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > -1
+                        val pinned =
+                            tracker.selection.values.indexOfFirst { it.entryPinned == 1 } > -1
+                        val unpinned =
+                            tracker.selection.values.indexOfFirst { it.entryPinned == 0 } > -1
                         DatabaseHelper.setEntriesPinned(
                             tracker.selection.values.toList(),
                             !(pinned && (pinned && !unpinned))
@@ -733,20 +774,16 @@ class MainActivity : AppuntiActivityFullscreen() {
                 R.id.menu_action_delete -> {
                     tracker?.let { tracker ->
                         event.putCustomAttribute("name", "delete")
-                        val hasDeleted = tracker.selection.values.indexOfFirst { it.entryDeleted == 1 } > -1
                         val entries = tracker.selection.values.toList()
-                        if (hasDeleted) {
-                            setEntriesDeleted(entries, false)
-                        } else {
-                            setEntriesDeleted(entries, true)
-                        }
+                        askToDeleteEntries(entries)
                     }
                 }
 
                 R.id.menu_action_archive -> {
                     tracker?.let { tracker ->
                         event.putCustomAttribute("name", "archive")
-                        val hasArchived = tracker.selection.values.indexOfFirst { it.entryArchived == 1 } > -1
+                        val hasArchived =
+                            tracker.selection.values.indexOfFirst { it.entryArchived == 1 } > -1
                         val entries = tracker.selection.values.toList()
                         if (hasArchived) {
                             setEntriesArchived(entries, false)
@@ -811,7 +848,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                     .alpha(0f)
                     .setDuration(resources.getInteger(android.R.integer.config_mediumAnimTime).toLong())
                     .setAnimationListener {
-                        onAnimationEnd { property, animator ->
+                        onAnimationEnd { property, _ ->
                             actionModeBackground.visibility = View.INVISIBLE
                             property.setListener(null)
                         }

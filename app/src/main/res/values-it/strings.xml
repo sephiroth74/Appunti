@@ -124,4 +124,15 @@
     <string name="remote_url_others_less">- meno</string>
     <string name="activity_not_found">Non ho trovato nessuna applicazione installata per aprire questo tipo di file</string>
     <string name="title_activity_attribution">Crediti</string>
+
+    <string name="yes">Sì</string>
+    <string name="take_picture">Scatta una Foto</string>
+    <string name="attach_image">Aggiungi dalla Galleria</string>
+    <string name="attach_file">Aggiungi un Documento</string>
+    <string name="confirm">Conferma</string>
+
+    <plurals name="entries_delete_action_question">
+        <item quantity="one">Sei sicuro di voler eliminare questo Appunto? Questa azione non può essere annullata</item>
+        <item quantity="other">Sei sicuro di voler eliminare questi Appunti? Questa azione non può essere annullata</item>
+    </plurals>
 </resources>

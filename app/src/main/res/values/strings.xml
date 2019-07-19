@@ -105,6 +105,11 @@
         <item quantity="other">%d Entries Unarchived</item>
     </plurals>
 
+    <plurals name="entries_delete_action_question">
+        <item quantity="one">Are you sure you want to delete this Entry? This action cannot be undone</item>
+        <item quantity="other">Are you sure you want to delete these %d Entries? This action cannot be undone</item>
+    </plurals>
+
     <plurals name="entries_deleted_title">
         <item quantity="one">Entry Deleted</item>
         <item quantity="other">%d Entries Deleted</item>
@@ -144,6 +149,8 @@
     <string name="remote_url_others_less">- less</string>
     <string name="activity_not_found">I can\'t find any installed application to view this file</string>
     <string name="title_activity_attribution">Credits</string>
+    <string name="yes">Yes</string>
+    <string name="confirm">Confirm</string>
 
     <string name="attribution_html" translatable="false"><![CDATA[
 <h3>File Icons:</h3>
@@ -180,4 +187,7 @@
     &#09;<li>&nbsp;<a href="https://jsoup.org">jsoup</a></li>
 </ul>
     ]]></string>
+    <string name="take_picture">Take Picture</string>
+    <string name="attach_image">Attach Image</string>
+    <string name="attach_file">Attach File</string>
 </resources>
