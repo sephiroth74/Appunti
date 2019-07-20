@@ -1,16 +1,21 @@
 package it.sephiroth.android.app.appunti
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
+import android.location.Geocoder
+import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.provider.MediaStore
 import android.text.TextWatcher
 import android.text.style.StyleSpan
@@ -22,6 +27,8 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.core.transition.doOnEnd
@@ -36,6 +43,8 @@ import com.crashlytics.android.answers.Answers
 import com.crashlytics.android.answers.CustomEvent
 import com.crashlytics.android.answers.ShareEvent
 import com.dbflow5.structure.delete
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -50,6 +59,7 @@ import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
+import it.sephiroth.android.app.appunti.services.FetchAddressIntentService
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
@@ -126,6 +136,105 @@ class DetailActivity : AppuntiActivity() {
 
             }
         }
+
+    private var resultReceiver: AddressResultReceiver = AddressResultReceiver(Handler())
+    private var fusedLocationClient: FusedLocationProviderClient? = null
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        Timber.i("onRequestPermissionsResult($permissions)")
+    }
+
+    fun fetchAddressButtonHander() {
+        Timber.i("fetchAddressButtonHander")
+
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                1
+            )
+            return
+        }
+
+        if (null == fusedLocationClient) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(baseContext)
+        }
+
+        Timber.v("fusedLocationClient = $fusedLocationClient")
+
+        val lastLocation = fusedLocationClient?.lastLocation
+
+        lastLocation?.addOnFailureListener { exception ->
+            Timber.i("onFailure")
+            Timber.e(exception)
+        }
+
+        lastLocation?.addOnCompleteListener { Timber.i("onComplete") }
+
+        lastLocation?.addOnCanceledListener { Timber.i("onComplete") }
+
+        lastLocation?.addOnSuccessListener { location: Location? ->
+            Timber.i("onSuccess")
+            var lastKnownLocation = location
+
+            Timber.w("lastKnownLocation = $lastKnownLocation")
+            Timber.v("geocoder = ${Geocoder.isPresent()}")
+
+            if (lastKnownLocation == null) {
+                return@addOnSuccessListener
+            }
+
+            if (!Geocoder.isPresent()) {
+                Toast.makeText(
+                    this@DetailActivity.baseContext,
+                    "Geocoder not available",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@addOnSuccessListener
+            }
+
+            // Start service and update UI to reflect new location
+            startIntentService(lastKnownLocation)
+        }
+    }
+
+    private fun startIntentService(lastKnownLocation: Location) {
+        val intent = Intent(this, FetchAddressIntentService::class.java).apply {
+            putExtra(FetchAddressIntentService.Constants.RECEIVER, resultReceiver)
+            putExtra(FetchAddressIntentService.Constants.LOCATION_DATA_EXTRA, lastKnownLocation)
+        }
+        startService(intent)
+    }
+
+    internal inner class AddressResultReceiver(handler: Handler) :
+        android.os.ResultReceiver(handler) {
+
+        override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
+
+            // Display the address string
+            // or an error message sent from the intent service.
+            val addressOutput =
+                resultData?.getString(FetchAddressIntentService.Constants.RESULT_DATA_KEY) ?: ""
+//            displayAddressOutput()
+
+            Timber.i("resultCode: $resultCode")
+
+            // Show a toast message if an address was found.
+            if (resultCode == FetchAddressIntentService.Constants.SUCCESS_RESULT) {
+                Timber.v("addressOutput: $addressOutput")
+            }
+
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.sharedElementReturnTransition = null
@@ -1148,6 +1257,10 @@ class DetailActivity : AppuntiActivity() {
 
     private fun askToDeleteEntry() {
         Timber.i("askToDeleteEntries()")
+
+        fetchAddressButtonHander()
+
+        if (1 == 1) return
 
         AlertDialog
             .Builder(this)
