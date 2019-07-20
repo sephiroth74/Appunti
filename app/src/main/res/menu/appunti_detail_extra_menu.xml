@@ -28,36 +28,42 @@
             android:id="@+id/menu_action_list"
             android:checkable="false"
             android:icon="@drawable/sharp_format_list_bulleted_24"
-            android:title="Convert to List"
+            android:title="@string/convert_to_list"
             app:showAsAction="always"/>
 
     <item
             android:id="@+id/menu_action_text"
             android:checkable="false"
             android:icon="@drawable/sharp_text_fields_24"
-            android:title="Convert to Text"
+            android:title="@string/convert_to_text"
             app:showAsAction="always"/>
 
     <item
             android:id="@+id/menu_action_camera"
             android:checkable="false"
             android:icon="@drawable/baseline_camera_alt_24"
-            android:title="Take Picture"
+            android:title="@string/take_picture"
             app:showAsAction="ifRoom"/>
 
     <item
             android:id="@+id/menu_action_image"
             android:checkable="false"
             android:icon="@drawable/sharp_add_photo_alternate_24"
-            android:title="Attach Image"
+            android:title="@string/attach_image"
             app:showAsAction="always"/>
-
 
     <item
             android:id="@+id/menu_action_file"
             android:checkable="false"
             android:icon="@drawable/sharp_attach_file_24"
-            android:title="Attach File"
+            android:title="@string/attach_file"
+            app:showAsAction="always"/>
+
+    <item
+            android:id="@+id/menu_action_address"
+            android:checkable="false"
+            android:icon="@drawable/sharp_add_location_24"
+            android:title="@string/current_location"
             app:showAsAction="always"/>
 
 </menu>

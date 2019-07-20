@@ -248,7 +248,7 @@ class RemoteUrlParserWorker(context: Context, val workerParams: WorkerParameters
             Timber.i("createPeriodicWorker")
             val saveRequest =
                 PeriodicWorkRequestBuilder<RemoteUrlParserWorker>(
-                    if (BuildConfig.DEBUG) 15L else 5L,
+                    5L,
                     if (BuildConfig.DEBUG) TimeUnit.MINUTES else TimeUnit.HOURS
                 )
                     .setConstraints(

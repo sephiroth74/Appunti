@@ -173,7 +173,7 @@ fun Entry.parseRemoteUrls(): List<String> {
     val result = mutableListOf<String>()
     val pattern = Pattern.compile(
 //        "(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/[^\\s\\n\\\"\\']*)?",
-        "((https?:\\/\\/(www\\.)?)|www\\.)[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,4}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)",
+        "((https?:\\/\\/(www\\.)?)|www\\.)[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,4}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=,]*)",
         Pattern.CASE_INSENSITIVE
     )
 

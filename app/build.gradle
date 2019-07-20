@@ -30,8 +30,8 @@ android {
         applicationId "it.sephiroth.android.app.appunti"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 17
-        versionName "1.1.00"
+        versionCode 18
+        versionName "1.2.00"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField "String", "COMMIT_HASH", "\"${getGitHash()}\""
@@ -99,6 +99,7 @@ dependencies {
 
     implementation "android.arch.work:work-runtime-ktx:$work_version"
     implementation "android.arch.work:work-rxjava2:$work_version"
+    implementation "io.reactivex.rxjava2:rxkotlin:2.4.0-beta.1"
 
 //    implementation "androidx.room:room-runtime:$room_version"
 //    implementation "androidx.room:room-rxjava2:$room_version"

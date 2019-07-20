@@ -1,14 +1,18 @@
 package it.sephiroth.android.app.appunti
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ProgressDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
+import android.location.Address
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -22,6 +26,8 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.text.set
 import androidx.core.text.toSpannable
 import androidx.core.transition.doOnEnd
@@ -39,6 +45,7 @@ import com.dbflow5.structure.delete
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.adapters.DetailAttachmentsListAdapter
 import it.sephiroth.android.app.appunti.adapters.DetailRemoteUrlListAdapter
@@ -50,6 +57,8 @@ import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
+import it.sephiroth.android.app.appunti.services.LocationRepository
+import it.sephiroth.android.app.appunti.utils.AutoDisposable
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
@@ -99,6 +108,10 @@ class DetailActivity : AppuntiActivity() {
 
     private val answers: Answers by lazy { Answers.getInstance() }
 
+    private val autoDisposable = AutoDisposable()
+
+    private var progressDialog: ProgressDialog? = null
+
     private val linkLongClickListener: BetterLinkMovementMethod.OnLinkLongClickListener =
         BetterLinkMovementMethod.OnLinkLongClickListener { textView, url -> true }
 
@@ -126,6 +139,26 @@ class DetailActivity : AppuntiActivity() {
 
             }
         }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        Timber.i("onRequestPermissionsResult($permissions)")
+
+        if (requestCode == REQUEST_LOCATION_PERMISSION_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Timber.v("permission granted!")
+                answers.logCustom(CustomEvent("permissions.location.granted"))
+                insertCurrentAddress()
+            } else {
+                Timber.w("permission denied")
+                answers.logCustom(CustomEvent("permissions.location.deined"))
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.sharedElementReturnTransition = null
@@ -199,6 +232,8 @@ class DetailActivity : AppuntiActivity() {
         if (model.entry.value == null) {
             handleIntent(intent, savedInstanceState)
         }
+
+        autoDisposable.bindTo(this.lifecycle)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -354,6 +389,16 @@ class DetailActivity : AppuntiActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
+    override fun onBackPressed() {
+        progressDialog?.let { dialog ->
+            if (dialog.isShowing) {
+                dismissProgressDialog()
+                return
+            }
+        }
+        super.onBackPressed()
+    }
+
     /**
      * Result from [IMAGE_CAPTURE_REQUEST_CODE]
      */
@@ -407,8 +452,18 @@ class DetailActivity : AppuntiActivity() {
 // ENTRY TEXT LISTENERS
 
     @Suppress("UNUSED_PARAMETER")
-    private fun updateEntryText(text: CharSequence?, start: Int, count: Int, after: Int) {
-        if (currentFocus == entryText) {
+    private fun updateEntryText(forceUpdate: Boolean = false) {
+        updateEntryText(entryText.text, 0, 0, 0, forceUpdate)
+    }
+
+    private fun updateEntryText(
+        text: CharSequence?,
+        start: Int,
+        count: Int,
+        after: Int,
+        forceUpdate: Boolean = false
+    ) {
+        if (forceUpdate || currentFocus == entryText) {
             model.setEntryText(text)
         }
     }
@@ -502,6 +557,8 @@ class DetailActivity : AppuntiActivity() {
                 R.id.menu_action_list -> convertEntryToList()
 
                 R.id.menu_action_text -> convertEntryToText()
+
+                R.id.menu_action_address -> insertCurrentAddress()
             }
             closeBottomSheet()
             true
@@ -1148,7 +1205,6 @@ class DetailActivity : AppuntiActivity() {
 
     private fun askToDeleteEntry() {
         Timber.i("askToDeleteEntries()")
-
         AlertDialog
             .Builder(this)
             .setTitle(R.string.confirm)
@@ -1162,7 +1218,6 @@ class DetailActivity : AppuntiActivity() {
             }
             .create().show()
     }
-
 
     @SuppressLint("CheckResult")
     private fun deleteEntry() {
@@ -1178,6 +1233,126 @@ class DetailActivity : AppuntiActivity() {
         } else {
             Toast.makeText(this, getString(R.string.oh_snap), Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun insertCurrentAddress() {
+        Timber.i("insertCurrentAddress")
+        answers.logCustom(CustomEvent("detail.address.insert"))
+
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Timber.w("permission required")
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            ) {
+                showPermissionsDeniedDialog()
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    REQUEST_LOCATION_PERMISSION_CODE
+                )
+            }
+        } else {
+            Timber.v("permission granted!")
+            waitForCurrentAddress()
+        }
+    }
+
+    private fun waitForCurrentAddress() {
+        Timber.i("waitForCurrentAddress")
+        progressDialog = ProgressDialog(this).apply {
+            this.setMessage(getString(R.string.retrieving_current_location))
+            this.isIndeterminate = true
+        }
+
+        val disposable = LocationRepository.getInstance(this)
+            .getCurrentLocation(10, TimeUnit.SECONDS)
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .take(1)
+            .subscribeBy(  // named arguments for lambda Subscribers
+                onNext = { address ->
+                    insertAddress(address)
+                },
+                onError = {
+                    dismissProgressDialog()
+                    Toast.makeText(this, R.string.oh_snap, Toast.LENGTH_SHORT).show()
+                },
+                onComplete = {
+                    dismissProgressDialog()
+                }
+            )
+
+        autoDisposable.add(disposable)
+
+        progressDialog?.setOnCancelListener {
+            Timber.v("User cancelled progress dialog")
+            answers.logCustom(CustomEvent("detail.address.progress.cancelled"))
+            if (!disposable.isDisposed) {
+                disposable.dispose()
+            }
+        }
+        progressDialog?.show()
+    }
+
+    private fun dismissProgressDialog() {
+        progressDialog?.dismiss()
+        progressDialog = null
+    }
+
+    private fun insertAddress(address: Address) {
+        Timber.i("insertAddress($address)")
+
+        entryText.append("\n\n")
+        for (i in 0..address.maxAddressLineIndex) {
+            entryText.append(address.getAddressLine(i))
+            entryText.append("\n")
+        }
+
+        address.url?.let {
+            entryText.append("\n")
+            entryText.append(address.url)
+            entryText.append("\n")
+        }
+
+        if (address.hasLatitude() && address.hasLongitude()) {
+            val geoUrl =
+                "http://maps.google.com/maps?z=22&q=${address.latitude},${address.longitude}"
+            entryText.append(geoUrl)
+            entryText.append("\n")
+        }
+
+        entryText.append("\n")
+
+        entryText.setSelection(entryText.length())
+        entryText.requestFocus()
+
+        updateEntryText(true)
+    }
+
+    private fun showPermissionsDeniedDialog() {
+        Timber.i("showPermissionsDeniedDialog")
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.permissions_required))
+            .setMessage(getString(R.string.permissions_required_dialog_body))
+            .setPositiveButton(android.R.string.ok) { _, _ -> openActivitySettings() }
+            .setNegativeButton(android.R.string.cancel) { _, _ -> }
+            .create().show()
+
+    }
+
+    private fun openActivitySettings() {
+        Timber.i("openActivitySettings")
+        startActivity(IntentUtils.createSystemAppSettingsIntent(this))
     }
 
     private fun showToastMessage(text: String) {
@@ -1255,6 +1430,9 @@ class DetailActivity : AppuntiActivity() {
 
         // take picture
         const val IMAGE_CAPTURE_REQUEST_CODE = 3
+
+        // permission request - codes
+        const val REQUEST_LOCATION_PERMISSION_CODE = 1001
 
         // text switcher consts
         private const val TICKER_STEP_CREATED = 1
