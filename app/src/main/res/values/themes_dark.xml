@@ -39,6 +39,8 @@
         <!-- custom attributes -->
         <item name="fabBackgroundColorClosed">@color/material_grey_800</item>
         <item name="fabBackgroundColorOpened">@color/material_grey_800</item>
+
+        <item name="alertDialogTheme">@style/Theme.Appunti.Default.AlertDialogTheme</item>
     </style>
 
     <style name="Theme.Appunti.Dark.Base.NoActionbar">
