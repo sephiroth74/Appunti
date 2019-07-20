@@ -108,16 +108,15 @@ class RecyclerNavigationView @JvmOverloads constructor(
         const val TYPE_LABEL_CATEGORY_ITEM = 1
         const val TYPE_SEPARATOR = 2
         const val TYPE_LABEL_CATEGORY_ARCHIVED = 3
-        const val TYPE_LABEL_CATEGORY_DELETED = 4
-        const val TYPE_LABEL_NEW_CATEGORY = 5
-        const val TYPE_LABEL_EDIT_CATEGORY = 6
-        const val TYPE_DISPLAY_TYPE = 7
-        const val TYPE_SETTINGS = 8
+        const val TYPE_LABEL_NEW_CATEGORY = 4
+        const val TYPE_LABEL_EDIT_CATEGORY = 5
+        const val TYPE_DISPLAY_TYPE = 6
+        const val TYPE_SETTINGS = 7
     }
 
     inner class NavigationItemsAdapter(context: Context, var values: List<EntryWithCategory>) :
         RecyclerView.Adapter<ViewHolderBase>() {
-        val isTablet = context.resources.isTablet
+        private val isTablet = context.resources.isTablet
 
         init {
             setHasStableIds(true)
@@ -178,7 +177,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
                 return ViewHolderSwitch(view).also {
                     it.switchView.setText(R.string.display_as_grid)
                 }
-            } else if (viewType == TYPE_LABEL_CATEGORY_ARCHIVED || viewType == TYPE_LABEL_CATEGORY_DELETED) {
+            } else if (viewType == TYPE_LABEL_CATEGORY_ARCHIVED) {
                 val view = layoutInflater.inflate(R.layout.appunti_main_drawer_navigation_item_checkable, parent, false)
                     .apply {
                         setOnClickListener {
@@ -214,40 +213,37 @@ class RecyclerNavigationView @JvmOverloads constructor(
         }
 
         override fun getItemCount(): Int {
-            return values.size + if (isTablet) 10 else 11
+            return values.size + if (isTablet) 9 else 10
         }
 
         override fun getItemViewType(position: Int): Int {
+            Timber.i("getItemViewType($position, size=${values.size})")
             return when (position) {
                 0 -> TYPE_LABEL_CATEGORY_HEADER
                 values.size + 2 -> TYPE_SEPARATOR
                 values.size + 3 -> TYPE_LABEL_CATEGORY_ARCHIVED
-                values.size + 4 -> TYPE_LABEL_CATEGORY_DELETED
-                values.size + 5 -> TYPE_SEPARATOR
-                values.size + 6 -> TYPE_LABEL_NEW_CATEGORY
-                values.size + 7 -> TYPE_LABEL_EDIT_CATEGORY
-                values.size + 8 -> TYPE_SEPARATOR
-                values.size + 9 -> if (isTablet) TYPE_SETTINGS else TYPE_DISPLAY_TYPE
-                values.size + 10 -> TYPE_SETTINGS
+                values.size + 4 -> TYPE_SEPARATOR
+                values.size + 5 -> TYPE_LABEL_NEW_CATEGORY
+                values.size + 6 -> TYPE_LABEL_EDIT_CATEGORY
+                values.size + 7 -> TYPE_SEPARATOR
+                values.size + 8 -> if (isTablet) TYPE_SETTINGS else TYPE_DISPLAY_TYPE
+                values.size + 9 -> TYPE_SETTINGS
                 else -> TYPE_LABEL_CATEGORY_ITEM
             }
         }
 
         override fun getItemId(position: Int): Long {
-            val type = getItemViewType(position)
-            val itemId = when (type) {
+            return when (getItemViewType(position)) {
                 TYPE_LABEL_CATEGORY_HEADER -> -2
                 TYPE_LABEL_CATEGORY_ARCHIVED -> -4
-                TYPE_LABEL_CATEGORY_DELETED -> -5
-                TYPE_LABEL_NEW_CATEGORY -> -6
-                TYPE_LABEL_EDIT_CATEGORY -> -7
-                TYPE_SETTINGS -> -8
-                TYPE_DISPLAY_TYPE -> -9
-                TYPE_SEPARATOR -> -10 - position.toLong()
+                TYPE_LABEL_NEW_CATEGORY -> -5
+                TYPE_LABEL_EDIT_CATEGORY -> -6
+                TYPE_SETTINGS -> -7
+                TYPE_DISPLAY_TYPE -> -8
+                TYPE_SEPARATOR -> -9 - position.toLong()
                 TYPE_LABEL_CATEGORY_ITEM -> getItem(position)?.categoryID ?: -1
                 else -> -1
             }
-            return itemId
         }
 
         private fun getItem(position: Int): EntryWithCategory? {
@@ -256,18 +252,18 @@ class RecyclerNavigationView @JvmOverloads constructor(
         }
 
         override fun onBindViewHolder(baseHolder: ViewHolderBase, position: Int) {
+            Timber.i("onBindViewHolder(position=$position, type=${baseHolder.itemViewType}, id=${baseHolder.itemId})")
             when {
                 baseHolder.itemViewType == TYPE_LABEL_CATEGORY_ITEM -> {
                     val holder = baseHolder as ViewHolderCategoryItem
-
                     val item = getItem(position)
 
                     holder.category = item
                     holder.isChecked = item?.let { category ->
                         model?.group?.getCategoryID() == category.categoryID
-                    } ?: kotlin.run {
+                    } ?: run {
                         model?.let {
-                            !it.group.isDeleted() && !it.group.isArchived() && it.group.getCategoryID() == null
+                            !it.group.isArchived() && it.group.getCategoryID() == null
                         } ?: false
                     }
 
@@ -281,13 +277,6 @@ class RecyclerNavigationView @JvmOverloads constructor(
                     (baseHolder as ViewHolderCheckableWithBadge).apply {
                         this.isChecked = model?.group?.isArchived() ?: false
                         this.setCount(model?.entriesArchivedCount)
-                    }
-                }
-
-                baseHolder.itemViewType == TYPE_LABEL_CATEGORY_DELETED -> {
-                    (baseHolder as ViewHolderCheckableWithBadge).apply {
-                        this.isChecked = model?.group?.isDeleted() ?: false
-                        this.setCount(model?.entriesDeletedCount)
                     }
                 }
 
@@ -363,10 +352,10 @@ class RecyclerNavigationView @JvmOverloads constructor(
     }
 
     open class ViewHolderCheckableWithBadge(view: View) : ViewHolderSelectableItem(view), ViewHolderCheckableBase {
-        val numEntriesText = view.findViewById<TextView>(android.R.id.text2)
-        val textView = view.findViewById<TextView>(android.R.id.text1)
+        private val numEntriesText: TextView = view.findViewById(android.R.id.text2)
+        val textView: TextView = view.findViewById(android.R.id.text1)
         val checkableItemView = itemView as CheckableLinearLayout
-        val textColors = textView.textColors
+        private val textColors: ColorStateList = textView.textColors
 
         override var isChecked: Boolean
             get() = checkableItemView.isChecked
@@ -400,7 +389,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
         }
 
         private fun setTextCompoundDrawablesColorFilter(colorFilter: PorterDuffColorFilter?) {
-            textView.compoundDrawables.filter { it != null }.forEach { it.colorFilter = colorFilter }
+            textView.compoundDrawables.filterNotNull().forEach { it.colorFilter = colorFilter }
         }
 
         fun setCount(value: Long?) {

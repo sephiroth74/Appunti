@@ -28,7 +28,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     class Group(private val callback: (() -> (Unit))? = null) {
         private var mCategoryID: Long? = null
         private var mArchived: Boolean = false
-        private var mDeleted: Boolean = false
 
         private fun dispatchValue() {
             callback?.invoke()
@@ -38,46 +37,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
             Timber.i("setCategoryID = $id")
             mCategoryID = id
             mArchived = false
-            mDeleted = false
             dispatchValue()
         }
 
         fun setIsArchived(value: Boolean) {
             if (value != mArchived) {
                 mArchived = value
-                mDeleted = if (value) false else mDeleted
                 dispatchValue()
             }
         }
-
-        fun setDeleted(value: Boolean) {
-            if (value != mDeleted) {
-                mDeleted = value
-                mArchived = if (value) false else mArchived
-                dispatchValue()
-            }
-        }
-
-        fun isDeleted() = mDeleted
 
         fun isArchived() = mArchived
 
         fun getCategoryID(): Long? {
-            if (!mDeleted && !mArchived) return mCategoryID
+            if (!mArchived) return mCategoryID
             return null
         }
 
         override fun toString(): String {
-            return "Group(deleted=$mDeleted, archived=$mArchived, category=$mCategoryID)"
+            return "Group(archived=$mArchived, category=$mCategoryID)"
         }
 
         fun buildQuery(from: From<Entry>): Transformable<Entry> {
             Timber.i("buildQuery($this)")
 
-            // prima deleted and archived e poi il resto
-            return if (mDeleted) {
-                from.where(Entry_Table.entryDeleted.eq(1))
-            } else if (mArchived) {
+            return if (mArchived) {
                 from.where(Entry_Table.entryArchived.eq(1))
                     .and(Entry_Table.entryDeleted.eq(0))
             } else {
@@ -109,13 +93,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         data
     }
 
-    var entriesDeletedCount: Long = 0
-        private set
-
     var entriesArchivedCount: Long = 0
         private set
 
-    val entries: LiveData<MutableList<Entry>> = MutableLiveData<MutableList<Entry>>()
+    val entries: LiveData<MutableList<Entry>> = MutableLiveData()
 
     val categoryChanged: LiveData<Boolean> = MutableLiveData()
 
@@ -144,7 +125,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
             .subscribe { result, _ ->
                 (categoriesWithEntries as MutableLiveData).value = result.first
                 entriesArchivedCount = result.second
-                entriesDeletedCount = result.third
             }
     }
 
@@ -174,7 +154,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
             handler.removeCallbacks(updateCategoriesRunnable)
             handler.post(updateEntriesRunnable)
             handler.post(updateCategoriesRunnable)
-        } else if(model is Attachment) {
+        } else if (model is Attachment) {
             handler.removeCallbacks(updateEntriesRunnable)
             handler.post(updateEntriesRunnable)
         }

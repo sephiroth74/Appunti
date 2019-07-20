@@ -186,11 +186,12 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     /**
-     * Toggle the [Entry] deleted status
+     * Delete the [Entry]
      */
-    fun setEntryDeleted(value: Boolean): Boolean {
+
+    fun deleteEntry(): Boolean {
         entry.whenNotNull { entry ->
-            return DatabaseHelper.setEntryDeleted(getApplication(), entry, value)
+            return DatabaseHelper.deleteEntry(getApplication(), entry)
         } ?: run { return false }
     }
 

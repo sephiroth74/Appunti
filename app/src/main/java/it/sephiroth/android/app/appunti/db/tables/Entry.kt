@@ -83,6 +83,7 @@ class Entry() : BaseRXModel() {
     @Column
     var entryArchived: Int = 0
 
+    @Deprecated("Entry will be permanently deleted")
     @Column
     var entryDeleted: Int = 0
 

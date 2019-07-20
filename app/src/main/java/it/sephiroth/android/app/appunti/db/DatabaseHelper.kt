@@ -29,17 +29,16 @@ object DatabaseHelper {
 
     fun getCategories(): Single<MutableList<Category>> {
         return rxSingle(Schedulers.io()) {
-            select().from(Category::class).orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
+            select().from(Category::class)
+                .orderBy(OrderBy(Category_Table.categoryID.nameAlias, true)).list
         }
     }
 
-    fun getCategoriesWithNumEntriesAsync(): Single<Triple<MutableList<EntryWithCategory>, Long, Long>> {
+    fun getCategoriesWithNumEntriesAsync(): Single<Pair<MutableList<EntryWithCategory>, Long>> {
         return rxSingle(Schedulers.io()) {
             val archived = getEntriesArchivedCount()
             Timber.v("archived = $archived")
-            val deleted = getEntriesDeletedCount()
-            Timber.v("deleted = $deleted")
-            Triple(select().from(EntryWithCategory::class).list, archived, deleted)
+            Pair(select().from(EntryWithCategory::class).list, archived)
         }
     }
 
@@ -47,21 +46,10 @@ object DatabaseHelper {
         return rxSingle(Schedulers.io()) { getEntriesArchivedCount() }
     }
 
-    fun getEntriesDeletedCountAsync(): Single<Long> {
-        return rxSingle(Schedulers.io()) { getEntriesDeletedCount() }
-    }
-
     fun getEntriesArchivedCount(): Long {
         return selectCountOf(Entry_Table.entryID)
             .from(Entry::class)
             .where(Entry_Table.entryArchived.eq(1))
-            .longValue(FlowManager.getDatabase(AppDatabase::class.java))
-    }
-
-    fun getEntriesDeletedCount(): Long {
-        return selectCountOf(Entry_Table.entryID)
-            .from(Entry::class)
-            .where(Entry_Table.entryDeleted.eq(1))
             .longValue(FlowManager.getDatabase(AppDatabase::class.java))
     }
 
@@ -82,18 +70,13 @@ object DatabaseHelper {
         return entry.touch().save()
     }
 
-    fun setEntryDeleted(context: Context, entry: Entry, value: Boolean): Boolean {
-        Timber.i("setEntryDeleted($entry, $value)")
-        entry.entryDeleted = if (value) 1 else 0
-
-        if (value) {
-            entry.entryArchived = 0
-            entry.entryAlarmEnabled = false
-            entry.entryAlarm = null
-            Entry.removeReminder(entry, context)
-        }
-
-        return entry.touch().save()
+    fun deleteEntry(context: Context, entry: Entry): Boolean {
+        Timber.i("deleteEntry($entry)")
+        entry.entryArchived = 0
+        entry.entryAlarmEnabled = false
+        entry.entryAlarm = null
+        Entry.removeReminder(entry, context)
+        return entry.delete()
     }
 
     fun setEntryCategory(entry: Entry, category: Category?): Boolean {
@@ -138,21 +121,24 @@ object DatabaseHelper {
 
         return rxSingle(Schedulers.io()) {
             update(Entry::class)
-                .set(Entry_Table.entryPinned.eq(pinnedValue), Entry_Table.entryModifiedDate.eq(Instant.now()))
+                .set(
+                    Entry_Table.entryPinned.eq(pinnedValue),
+                    Entry_Table.entryModifiedDate.eq(Instant.now())
+                )
                 .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
                 .execute(FlowManager.getDatabase(AppDatabase::class.java))
         }
     }
 
-    fun setEntriesDeleted(values: List<Entry>, delete: Boolean): Single<Unit> {
-        // TODO(Remove reminder)
+    fun deleteEntries(context: Context, values: List<Entry>): Single<Unit> {
         return rxSingle(Schedulers.io()) {
-            update(Entry::class)
-                .set(
-                    Entry_Table.entryDeleted.eq(if (delete) 1 else 0),
-                    Entry_Table.entryArchived.eq(0),
-                    Entry_Table.entryModifiedDate.eq(Instant.now())
-                )
+
+            values.forEach {
+                Entry.removeReminder(it, context)
+            }
+
+            com.dbflow5.query.delete()
+                .from(Entry::class)
                 .where(Entry_Table.entryID.`in`(values.map { it.entryID }))
                 .execute(FlowManager.getDatabase(AppDatabase::class.java))
         }
@@ -185,7 +171,10 @@ object DatabaseHelper {
         Timber.i("deleteAttachment($attachment")
 
         if (attachment.attachmentEntryID != entry.entryID) {
-            callback?.invoke(false, IllegalArgumentException("This attachment doesn't belong to the provided entry!"))
+            callback?.invoke(
+                false,
+                IllegalArgumentException("This attachment doesn't belong to the provided entry!")
+            )
             return
         }
 
@@ -218,7 +207,10 @@ object DatabaseHelper {
         Timber.i("hideRemoteUrl($remoteUrl")
 
         if (remoteUrl.remoteUrlEntryID != entry.entryID) {
-            callback?.invoke(false, IllegalArgumentException("This attachment doesn't belong to the provided entry!"))
+            callback?.invoke(
+                false,
+                IllegalArgumentException("This attachment doesn't belong to the provided entry!")
+            )
             return
         }
 
@@ -249,7 +241,10 @@ object DatabaseHelper {
 
         val filesDir = FileSystemUtils.getPrivateFilesDir(context)
         val attachmentsDir = FileSystemUtils.getAttachmentFilesDir(context, entry)
-        val dstFile = FileSystemUtils.getNextFile(attachmentsDir, FileSystemUtils.normalizeFileName(displayName))
+        val dstFile = FileSystemUtils.getNextFile(
+            attachmentsDir,
+            FileSystemUtils.normalizeFileName(displayName)
+        )
         val relativePath = dstFile.path
 
         Timber.v("filesDir=${filesDir.absolutePath}")
@@ -294,7 +289,8 @@ object DatabaseHelper {
 
         val displayName: String = dstFile.name
         val mimeType =
-            dstFileMimeType ?: MimeTypeMap.getSingleton().getMimeTypeFromExtension(dstFile.extension.toLowerCase())
+            dstFileMimeType
+                ?: MimeTypeMap.getSingleton().getMimeTypeFromExtension(dstFile.extension.toLowerCase())
 
         Timber.v("displayName: $displayName, mimeType: $mimeType")
 
