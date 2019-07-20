@@ -190,4 +190,5 @@
     <string name="take_picture">Take Picture</string>
     <string name="attach_image">Attach Image</string>
     <string name="attach_file">Attach File</string>
+    <string name="oh_snap">Oh Snap! An error occurred!</string>
 </resources>

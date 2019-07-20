@@ -1175,6 +1175,8 @@ class DetailActivity : AppuntiActivity() {
                 Toast.LENGTH_SHORT
             ).show()
             onBackPressed()
+        } else {
+            Toast.makeText(this, getString(R.string.oh_snap), Toast.LENGTH_SHORT).show()
         }
     }
 
