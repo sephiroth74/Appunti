@@ -193,4 +193,8 @@
     <string name="oh_snap">Oh Snap! An error occurred!</string>
     <string name="convert_to_text">Convert to Text</string>
     <string name="convert_to_list">Convert to List</string>
+    <string name="current_location">Current Location</string>
+    <string name="retrieving_current_location">Retrieving current location....</string>
+    <string name="permissions_required">Permissions required</string>
+    <string name="permissions_required_dialog_body">You need to grant location permissions in order to do this. Press Ok to open System Settings and change the App Permissions</string>
 </resources>

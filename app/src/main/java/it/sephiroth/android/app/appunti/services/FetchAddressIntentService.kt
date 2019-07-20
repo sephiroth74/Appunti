@@ -12,17 +12,13 @@ import java.io.IOException
 import java.util.*
 
 class FetchAddressIntentService : IntentService("fetch-address") {
-
-
-    override fun onHandleIntent(intent: Intent?) {
+override fun onHandleIntent(intent: Intent?) {
         Timber.i("onHandleIntent($intent)")
         intent ?: return
 
-        var receiver: android.os.ResultReceiver? = null
+        var receiver: ResultReceiver? = null
         var errorMessage = ""
         val geocoder = Geocoder(this, Locale.getDefault())
-
-        Timber.v("geocoder = $geocoder")
 
         // Get the location passed to this service through an extra.
         val location: Location
