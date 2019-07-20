@@ -31,7 +31,7 @@ android {
         minSdkVersion 23
         targetSdkVersion 28
         versionCode 16
-        versionName "1.0.21"
+        versionName "1.1.00"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField "String", "COMMIT_HASH", "\"${getGitHash()}\""
