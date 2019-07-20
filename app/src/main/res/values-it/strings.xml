@@ -131,6 +131,8 @@
     <string name="attach_file">Aggiungi un Documento</string>
     <string name="confirm">Conferma</string>
     <string name="oh_snap">Oh Snap! Si è verificato un errore!</string>
+    <string name="convert_to_text">Converti in Testo</string>
+    <string name="convert_to_list">Converti in Lista</string>
 
     <plurals name="entries_delete_action_question">
         <item quantity="one">Sei sicuro di voler eliminare questo Appunto? Questa azione non può essere annullata</item>

@@ -191,4 +191,6 @@
     <string name="attach_image">Attach Image</string>
     <string name="attach_file">Attach File</string>
     <string name="oh_snap">Oh Snap! An error occurred!</string>
+    <string name="convert_to_text">Convert to Text</string>
+    <string name="convert_to_list">Convert to List</string>
 </resources>
