@@ -77,6 +77,7 @@ import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 import java.io.IOException
+import java.lang.StringBuilder
 import java.util.concurrent.TimeUnit
 
 
@@ -1307,6 +1308,37 @@ class DetailActivity : AppuntiActivity() {
     private fun insertAddress(address: Address) {
         Timber.i("insertAddress($address)")
 
+        if (model.entry.value?.entryType == Entry.EntryType.LIST) {
+            insertAddressIntoList(address)
+        } else {
+            insertAddressAsPlainText(address)
+        }
+    }
+
+    private fun insertAddressIntoList(address: Address) {
+        val builder = StringBuilder()
+        for (i in 0..address.maxAddressLineIndex) {
+            builder.append(address.getAddressLine(i))
+            entryText.append("\n")
+        }
+
+        address.url?.let {
+            builder.append("\n")
+            builder.append(address.url)
+            builder.append("\n")
+        }
+
+        if (address.hasLatitude() && address.hasLongitude()) {
+            val geoUrl =
+                "http://maps.google.com/maps?z=22&q=${address.latitude},${address.longitude}"
+            builder.append(geoUrl)
+            builder.append("\n")
+        }
+
+        detailListAdapter?.addItem(builder.toString())
+    }
+
+    private fun insertAddressAsPlainText(address: Address) {
         entryText.append("\n\n")
         for (i in 0..address.maxAddressLineIndex) {
             entryText.append(address.getAddressLine(i))
@@ -1498,6 +1530,20 @@ class DetailListAdapter(private var activity: DetailActivity) :
 
         doOnMainThread {
             dataHolder.addItem(checked = false).also { index ->
+                insertedItem = InsertedItem(index)
+                Timber.v("insertedItem = $insertedItem")
+                notifyItemInserted(index)
+                postSave()
+            }
+        }
+    }
+
+    internal fun addItem(text: String) {
+        Timber.v("addItem($text)")
+        answers.logCustom(CustomEvent("detail.list.addItem"))
+
+        doOnMainThread {
+            dataHolder.addItem(text = text, checked = false).also { index ->
                 insertedItem = InsertedItem(index)
                 Timber.v("insertedItem = $insertedItem")
                 notifyItemInserted(index)
