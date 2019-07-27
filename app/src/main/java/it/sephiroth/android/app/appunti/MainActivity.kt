@@ -344,6 +344,17 @@ class MainActivity : AppuntiActivityFullscreen() {
                     closeDrawerIfOpened()
                 }
 
+                RecyclerNavigationView.TYPE_WITH_REMINDER -> {
+                    answers.logCustom(
+                        CustomEvent("main.navigationItemClick").putCustomAttribute(
+                            "name",
+                            "reminder"
+                        )
+                    )
+                    model.group.setWithReminder(true)
+                    closeDrawerIfOpened()
+                }
+
                 RecyclerNavigationView.TYPE_LABEL_NEW_CATEGORY -> {
                     startCategoriesEditActivity(true)
                 }

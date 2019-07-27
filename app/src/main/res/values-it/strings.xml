@@ -142,4 +142,6 @@
         <item quantity="one">Sei sicuro di voler eliminare questo Appunto? Questa azione non può essere annullata</item>
         <item quantity="other">Sei sicuro di voler eliminare questi Appunti? Questa azione non può essere annullata</item>
     </plurals>
+
+    <string name="category_reminder">Con Alarme</string>
 </resources>

@@ -28,6 +28,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     class Group(private val callback: (() -> (Unit))? = null) {
         private var mCategoryID: Long? = null
         private var mArchived: Boolean = false
+        private var mReminder: Boolean = false
 
         private fun dispatchValue() {
             callback?.invoke()
@@ -37,17 +38,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
             Timber.i("setCategoryID = $id")
             mCategoryID = id
             mArchived = false
+            mReminder = false
             dispatchValue()
         }
 
         fun setIsArchived(value: Boolean) {
             if (value != mArchived) {
                 mArchived = value
+                mReminder = false
+                dispatchValue()
+            }
+        }
+
+        fun setWithReminder(value: Boolean) {
+            if(value != mReminder) {
+                mArchived = false
+                mReminder = value
                 dispatchValue()
             }
         }
 
         fun isArchived() = mArchived
+
+        fun isReminder() = mReminder
 
         fun getCategoryID(): Long? {
             if (!mArchived) return mCategoryID
@@ -96,6 +109,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     var entriesArchivedCount: Long = 0
         private set
 
+    var entriesWithReminder: Long = 0
+        private set
+
     val entries: LiveData<MutableList<Entry>> = MutableLiveData()
 
     val categoryChanged: LiveData<Boolean> = MutableLiveData()
@@ -125,6 +141,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
             .subscribe { result, _ ->
                 (categoriesWithEntries as MutableLiveData).value = result.first
                 entriesArchivedCount = result.second
+                entriesWithReminder = result.third
             }
     }
 

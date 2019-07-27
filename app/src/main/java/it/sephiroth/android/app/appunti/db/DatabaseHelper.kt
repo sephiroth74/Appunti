@@ -34,11 +34,12 @@ object DatabaseHelper {
         }
     }
 
-    fun getCategoriesWithNumEntriesAsync(): Single<Pair<MutableList<EntryWithCategory>, Long>> {
+    fun getCategoriesWithNumEntriesAsync(): Single<Triple<MutableList<EntryWithCategory>, Long, Long>> {
         return rxSingle(Schedulers.io()) {
             val archived = getEntriesArchivedCount()
+            val reminder = getEntriesWithReminder()
             Timber.v("archived = $archived")
-            Pair(select().from(EntryWithCategory::class).list, archived)
+            Triple(select().from(EntryWithCategory::class).list, archived, reminder)
         }
     }
 
@@ -50,6 +51,14 @@ object DatabaseHelper {
         return selectCountOf(Entry_Table.entryID)
             .from(Entry::class)
             .where(Entry_Table.entryArchived.eq(1))
+            .longValue(FlowManager.getDatabase(AppDatabase::class.java))
+    }
+
+    fun getEntriesWithReminder(): Long {
+        return selectCountOf(Entry_Table.entryID)
+            .from(Entry::class)
+            .where(Entry_Table.entryAlarmEnabled.eq(true))
+            .and(Entry_Table.entryAlarm.greaterThan(Instant.now()))
             .longValue(FlowManager.getDatabase(AppDatabase::class.java))
     }
 
