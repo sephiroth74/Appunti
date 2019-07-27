@@ -112,7 +112,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
         const val TYPE_LABEL_EDIT_CATEGORY = 5
         const val TYPE_DISPLAY_TYPE = 6
         const val TYPE_SETTINGS = 7
-        const val TYPE_WITH_REMINDER = 8
+        const val TYPE_LABEL_CATEGORY_REMINDER = 8
     }
 
     inner class NavigationItemsAdapter(context: Context, var values: List<EntryWithCategory>) :
@@ -178,7 +178,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
                 return ViewHolderSwitch(view).also {
                     it.switchView.setText(R.string.display_as_grid)
                 }
-            } else if (viewType == TYPE_LABEL_CATEGORY_ARCHIVED) {
+            } else if (viewType == TYPE_LABEL_CATEGORY_ARCHIVED || viewType == TYPE_LABEL_CATEGORY_REMINDER) {
                 val view = layoutInflater.inflate(R.layout.appunti_main_drawer_navigation_item_checkable, parent, false)
                     .apply {
                         setOnClickListener {
@@ -194,7 +194,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
                             text = R.string.archived
                             drawableRes = R.drawable.outline_archive_24
                         }
-                        TYPE_WITH_REMINDER -> {
+                        TYPE_LABEL_CATEGORY_REMINDER -> {
                             text = R.string.category_reminder
                             drawableRes = R.drawable.sharp_alarm_24
                         }
@@ -222,12 +222,12 @@ class RecyclerNavigationView @JvmOverloads constructor(
         }
 
         override fun getItemViewType(position: Int): Int {
-            Timber.i("getItemViewType($position, size=${values.size})")
+            // Timber.i("getItemViewType($position, size=${values.size})")
             return when (position) {
                 0 -> TYPE_LABEL_CATEGORY_HEADER
                 values.size + 2 -> TYPE_SEPARATOR
                 values.size + 3 -> TYPE_LABEL_CATEGORY_ARCHIVED
-                values.size + 4 -> TYPE_WITH_REMINDER
+                values.size + 4 -> TYPE_LABEL_CATEGORY_REMINDER
                 values.size + 5 -> TYPE_SEPARATOR
                 values.size + 6 -> TYPE_LABEL_NEW_CATEGORY
                 values.size + 7 -> TYPE_LABEL_EDIT_CATEGORY
@@ -242,7 +242,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
             return when (getItemViewType(position)) {
                 TYPE_LABEL_CATEGORY_HEADER -> -2
                 TYPE_LABEL_CATEGORY_ARCHIVED -> -4
-                TYPE_WITH_REMINDER -> -5
+                TYPE_LABEL_CATEGORY_REMINDER -> -5
                 TYPE_LABEL_NEW_CATEGORY -> -6
                 TYPE_LABEL_EDIT_CATEGORY -> -7
                 TYPE_SETTINGS -> -8
@@ -270,7 +270,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
                         model?.group?.getCategoryID() == category.categoryID
                     } ?: run {
                         model?.let {
-                            !it.group.isArchived() && it.group.getCategoryID() == null
+                            (!it.group.isArchived() && !it.group.isReminder()) && it.group.getCategoryID() == null
                         } ?: false
                     }
 
@@ -287,7 +287,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
                     }
                 }
 
-                baseHolder.itemViewType == TYPE_WITH_REMINDER -> {
+                baseHolder.itemViewType == TYPE_LABEL_CATEGORY_REMINDER -> {
                     (baseHolder as ViewHolderCheckableWithBadge).apply {
                         this.isChecked = model?.group?.isReminder() ?: false
                         this.setCount(model?.entriesWithReminder)

@@ -330,6 +330,7 @@ class MainActivity : AppuntiActivityFullscreen() {
         }
 
         navigationView.setNavigationItemSelectedListener { id ->
+            Timber.i("setNavigationItemSelectedListener($id)")
             when (id) {
                 RecyclerNavigationView.TYPE_LABEL_CATEGORY_ARCHIVED -> {
                     answers
@@ -344,7 +345,7 @@ class MainActivity : AppuntiActivityFullscreen() {
                     closeDrawerIfOpened()
                 }
 
-                RecyclerNavigationView.TYPE_WITH_REMINDER -> {
+                RecyclerNavigationView.TYPE_LABEL_CATEGORY_REMINDER -> {
                     answers.logCustom(
                         CustomEvent("main.navigationItemClick").putCustomAttribute(
                             "name",

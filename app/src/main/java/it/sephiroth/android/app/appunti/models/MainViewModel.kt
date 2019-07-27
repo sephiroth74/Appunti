@@ -20,6 +20,7 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.Entry_Table
 import it.sephiroth.android.app.appunti.db.views.EntryWithCategory
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
+import org.threeten.bp.Instant
 import timber.log.Timber
 
 class MainViewModel(application: Application) : AndroidViewModel(application),
@@ -63,12 +64,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         fun isReminder() = mReminder
 
         fun getCategoryID(): Long? {
-            if (!mArchived) return mCategoryID
+            if (!mArchived && !mReminder) return mCategoryID
             return null
         }
 
         override fun toString(): String {
-            return "Group(archived=$mArchived, category=$mCategoryID)"
+            return "Group(archived=$mArchived, reminder=$mReminder, category=$mCategoryID)"
         }
 
         fun buildQuery(from: From<Entry>): Transformable<Entry> {
@@ -77,6 +78,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
             return if (mArchived) {
                 from.where(Entry_Table.entryArchived.eq(1))
                     .and(Entry_Table.entryDeleted.eq(0))
+            } else if(mReminder) {
+                from.where(Entry_Table.entryAlarmEnabled.eq(true))
+                    .and(Entry_Table.entryAlarm.greaterThan(Instant.now()))
             } else {
                 return from
                     .where(Entry_Table.entryArchived.eq(0))

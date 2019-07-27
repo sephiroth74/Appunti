@@ -144,4 +144,7 @@
     </plurals>
 
     <string name="category_reminder">Con Alarme</string>
+    <string name="snooze">Spegni</string>
+    <string name="postpone">Posticipa</string>
+    <string name="alarm_postponed">Alarme posticipato di %d minuti</string>
 </resources>

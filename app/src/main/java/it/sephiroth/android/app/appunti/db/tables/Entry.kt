@@ -292,6 +292,10 @@ class Entry() : BaseRXModel() {
             return getReminderPendingIntent(entry, context, AlarmReceiver.ACTION_ENTRY_REMOVE_REMINDER)
         }
 
+        fun getPostponeReminderPendingIntent(entry: Entry, context: Context): PendingIntent {
+            return getReminderPendingIntent(entry, context, AlarmReceiver.ACTION_ENTRY_POSTPONE_REMINDER)
+        }
+
         private fun getReminderPendingIntent(entry: Entry, context: Context, action: String): PendingIntent {
             return Intent(context, AlarmReceiver::class.java).let { intent ->
                 intent.action = action
