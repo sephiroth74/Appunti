@@ -58,13 +58,10 @@ import it.sephiroth.android.app.appunti.models.DetailViewModel
 import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.services.LocationRepository
-import it.sephiroth.android.app.appunti.utils.AutoDisposable
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
-import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnMainThread
-import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnScheduler
-import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxTimer
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.*
 import it.sephiroth.android.library.kotlin_extensions.kotlin.hasBits
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import it.sephiroth.android.library.kotlin_extensions.view.hideSoftInput
@@ -108,7 +105,7 @@ class DetailActivity : AppuntiActivity() {
 
     private val answers: Answers by lazy { Answers.getInstance() }
 
-    private val autoDisposable = AutoDisposable()
+    private lateinit var autoDisposable: AutoDisposable
 
     private var progressDialog: ProgressDialog? = null
 
@@ -164,6 +161,8 @@ class DetailActivity : AppuntiActivity() {
         window.sharedElementReturnTransition = null
 
         super.onCreate(savedInstanceState)
+
+        autoDisposable = AutoDisposable(this)
 
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
@@ -232,8 +231,6 @@ class DetailActivity : AppuntiActivity() {
         if (model.entry.value == null) {
             handleIntent(intent, savedInstanceState)
         }
-
-        autoDisposable.bindTo(this.lifecycle)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -1290,9 +1287,7 @@ class DetailActivity : AppuntiActivity() {
                 onComplete = {
                     dismissProgressDialog()
                 }
-            )
-
-        autoDisposable.add(disposable)
+            ).addTo(autoDisposable)
 
         progressDialog?.setOnCancelListener {
             Timber.v("User cancelled progress dialog")
@@ -1312,6 +1307,30 @@ class DetailActivity : AppuntiActivity() {
     private fun insertAddress(address: Address) {
         Timber.i("insertAddress($address)")
 
+        if (model.entry.value?.entryType == Entry.EntryType.LIST) {
+            insertAddressIntoList(address)
+        } else {
+            insertAddressAsPlainText(address)
+        }
+    }
+
+    private fun insertAddressIntoList(address: Address) {
+        for (i in 0..address.maxAddressLineIndex) {
+            detailListAdapter?.addItem(address.getAddressLine(i))
+        }
+
+        address.url?.let {
+            detailListAdapter?.addItem(address.url)
+        } ?: run {
+            if (address.hasLatitude() && address.hasLongitude()) {
+                val geoUrl =
+                    "http://maps.google.com/maps?z=22&q=${address.latitude},${address.longitude}"
+                detailListAdapter?.addItem(geoUrl)
+            }
+        }
+    }
+
+    private fun insertAddressAsPlainText(address: Address) {
         entryText.append("\n\n")
         for (i in 0..address.maxAddressLineIndex) {
             entryText.append(address.getAddressLine(i))
@@ -1503,6 +1522,20 @@ class DetailListAdapter(private var activity: DetailActivity) :
 
         doOnMainThread {
             dataHolder.addItem(checked = false).also { index ->
+                insertedItem = InsertedItem(index)
+                Timber.v("insertedItem = $insertedItem")
+                notifyItemInserted(index)
+                postSave()
+            }
+        }
+    }
+
+    internal fun addItem(text: String) {
+        Timber.v("addItem($text)")
+        answers.logCustom(CustomEvent("detail.list.addItem"))
+
+        doOnMainThread {
+            dataHolder.addItem(text = text, checked = false).also { index ->
                 insertedItem = InsertedItem(index)
                 Timber.v("insertedItem = $insertedItem")
                 notifyItemInserted(index)

@@ -30,8 +30,8 @@ android {
         applicationId "it.sephiroth.android.app.appunti"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 18
-        versionName "1.2.00"
+        versionCode 20
+        versionName "1.2.02"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField "String", "COMMIT_HASH", "\"${getGitHash()}\""
