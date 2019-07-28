@@ -233,8 +233,8 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
-        outState?.apply {
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.apply {
             currentEntryID?.let {
                 this.putLong(IntentUtils.KEY_ENTRY_ID, it)
             }

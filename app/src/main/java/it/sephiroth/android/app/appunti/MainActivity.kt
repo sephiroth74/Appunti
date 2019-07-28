@@ -113,11 +113,11 @@ class MainActivity : AppuntiActivityFullscreen() {
 //        drawerLayout.setStatusBarBackgroundColor(theme.getColor(this, android.R.attr.windowBackground))
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
+    override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
         val listState = itemsRecycler.layoutManager?.onSaveInstanceState()
-        outState?.putParcelable("LIST_STATE_KEY", listState)
+        outState.putParcelable("LIST_STATE_KEY", listState)
     }
 
     override fun onRestoreInstanceState(state: Bundle?) {
