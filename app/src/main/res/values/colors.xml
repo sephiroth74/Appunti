@@ -1,40 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+
     <color name="colorPrimary">#FFA726</color>
     <color name="colorPrimaryDark">#FFC400</color>
     <color name="colorAccent">#1E88E5</color>
     <color name="colorAccentDisabled">#661E88E5</color>
-
-    <color name="darkColorPrimary">#FF6F00</color>
-    <color name="darkColorPrimaryDark">#E65100</color>
-    <color name="darkColorAccent">#1E88E5</color>
-
-    <color name="material_grey_50">#fffafafa</color>
-    <color name="material_grey_100">#fff5f5f5</color>
-    <color name="material_grey_300">#ffe0e0e0</color>
-    <color name="material_grey_600">#ff757575</color>
-    <color name="material_grey_800">#ff424242</color>
-    <color name="material_grey_850">#ff303030</color>
-    <color name="material_grey_900">#ff212121</color>
-
-    <color name="background_material_dark"
-           tools:override="true">@color/material_grey_900
-    </color>
-    <color name="background_material_light"
-           tools:override="true">@color/material_grey_50
-    </color>
-
-    <color name="shortcut_background_color">@color/material_grey_300</color>
-
-    <color name="navigation_background_fill_light">#bbffffff</color>
-    <color name="navigation_background_stroke_light">#22000000</color>
-
-    <color name="navigation_background_fill_dark">#bb303030</color>
-    <color name="navigation_background_stroke_dark">#22000000</color>
+    <color name="colorControlActivated">@color/material_grey_850</color>
+    <color name="background_material_light" tools:override="true">@color/material_grey_50</color>
+    <color name="background_material_dark" tools:override="true">@color/material_grey_900</color>
+    <color name="actionModeBackground">@color/material_grey_50</color>
+    <color name="fabBackgroundColorClosed">@color/material_grey_300</color>
+    <color name="fabBackgroundColorOpened">@color/material_grey_300</color>
+    <color name="navigation_background_fill">#bbffffff</color>
+    <color name="navigation_background_stroke">#22000000</color>
 
     <!-- colors for categoriesWithEntries -->
 
-    <integer-array name="category_colors_light">
+    <integer-array name="category_colors">
         <item>0xFFFFFFFF</item>
         <item>0xFFFA9C7E</item>
         <item>0xFFFFB74D</item>
@@ -53,5 +35,22 @@
         <item>0xffEC80A4</item>
         <item>0xffE28888</item>
     </integer-array>
+
+
+
+    <color name="darkColorPrimary">#FF6F00</color>
+    <color name="darkColorPrimaryDark">#E65100</color>
+    <color name="darkColorAccent">#1E88E5</color>
+
+    <color name="material_grey_50">#fffafafa</color>
+    <color name="material_grey_100">#fff5f5f5</color>
+    <color name="material_grey_300">#ffe0e0e0</color>
+    <color name="material_grey_600">#ff757575</color>
+    <color name="material_grey_800">#ff424242</color>
+    <color name="material_grey_850">#ff303030</color>
+    <color name="material_grey_900">#ff212121</color>
+
+
+    <color name="shortcut_background_color">@color/material_grey_300</color>
 
 </resources>

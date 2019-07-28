@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- night mode -->
+    <item name="search_theme" type="integer">3003</item> <!-- dark -->
+</resources>

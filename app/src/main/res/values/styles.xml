@@ -1,26 +1,29 @@
 <resources>
 
-    <style name="Theme.Appunti.BottomSheetDialog"
-           parent="Theme.MaterialComponents.Light.BottomSheetDialog">
+    <!-- ActionMode -->
+    <style name="Widget.Appunti.ActionMode" parent="Base.Widget.AppCompat.ActionMode">
+        <item name="background">@color/material_grey_50</item>
+        <item name="backgroundSplit">@color/material_grey_50</item>
+        <item name="height">?attr/actionBarSize</item>
+        <item name="titleTextStyle">@style/TextAppearance.AppCompat.Widget.ActionMode.Title</item>
+        <item name="subtitleTextStyle">@style/TextAppearance.AppCompat.Widget.ActionMode.Subtitle</item>
+        <item name="android:elevation">6dp</item>
+    </style>
+
+    <style name="Theme.Appunti.BottomSheetDialog" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
-    <style name="Theme.Appunti.TextAppearance"
-           parent=""/>
+    <style name="Theme.Appunti.TextAppearance" parent=""/>
 
-    <style name="Widget.Appunti"
-           parent="">
+    <style name="Widget.Appunti" parent="" />
 
-    </style>
-
-    <style name="Widget.Appunti.Text"
-           parent="">
+    <style name="Widget.Appunti.Text" parent="">
         <item name="android:fontFamily">@font/nunito</item>
         <item name="fontFamily">@font/nunito</item>
     </style>
 
-    <style name="Theme.Appunti.TextAppearance.Medium"
-           parent="@android:style/TextAppearance.Material.Medium">
+    <style name="Theme.Appunti.TextAppearance.Medium" parent="@android:style/TextAppearance.Material.Medium">
         <item name="android:textSize">@dimen/text_size_menu_material</item>
     </style>
 

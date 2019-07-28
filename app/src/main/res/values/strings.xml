@@ -201,4 +201,7 @@
     <string name="snooze">Close</string>
     <string name="postpone">Snooze</string>
     <string name="alarm_postponed">Reminder postponed by %d minutes</string>
+
+    <!-- day theme -->
+    <item name="search_theme" type="integer">3001</item> <!-- google -->
 </resources>

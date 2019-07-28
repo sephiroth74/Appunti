@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- actionmode style -->
+    <style name="Widget.Appunti.ActionMode">
+        <item name="background">@color/material_grey_850</item>
+        <item name="backgroundSplit">@color/material_grey_850</item>
+        <item name="height">?attr/actionBarSize</item>
+        <item name="titleTextStyle">@style/TextAppearance.AppCompat.Widget.ActionMode.Title</item>
+        <item name="subtitleTextStyle">@style/TextAppearance.AppCompat.Widget.ActionMode.Subtitle</item>
+        <item name="android:elevation">6dp</item>
+    </style>
+
+</resources>

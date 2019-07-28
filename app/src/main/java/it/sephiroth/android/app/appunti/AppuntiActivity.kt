@@ -1,6 +1,7 @@
 package it.sephiroth.android.app.appunti
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
@@ -8,10 +9,12 @@ import android.view.View
 import android.view.WindowManager
 import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
 import isNavBarAtBottom
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.library.kotlin_extensions.app.isInMultiWindow
+import it.sephiroth.android.library.kotlin_extensions.app.isNightMode
 import it.sephiroth.android.library.kotlin_extensions.content.res.getColor
 import it.sephiroth.android.library.kotlin_extensions.os.isAPI
 import org.threeten.bp.ZonedDateTime
@@ -37,12 +40,16 @@ abstract class AppuntiActivity(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+
         isFullScreen =
             wantsFullscreen && !isInMultiWindow && !resources.getBoolean(R.bool.fullscreen_style_fit_system_windows) &&
                     resources.isNavBarAtBottom
 
-        isDarkTheme = SettingsManager.getInstance(this).darkTheme
-        setTheme(if (isDarkTheme) darkTheme else lightTheme)
+        Timber.v("uimode: ${resources.configuration.uiMode}")
+
+        isDarkTheme = isNightMode()
+//        setTheme(lightTheme)
 
         Timber.v("SDK = ${Build.VERSION.SDK_INT}")
         if (BuildConfig.DEBUG) {
@@ -51,6 +58,7 @@ abstract class AppuntiActivity(
             Timber.v("resources.isNavBarAtBottom = ${resources.isNavBarAtBottom}")
             Timber.v("isInMultiWindow = $isInMultiWindow")
             Timber.v("fullscreen_style_fit_system_windows = ${resources.getBoolean(R.bool.fullscreen_style_fit_system_windows)}")
+            Timber.v("isDarkTheme: $isDarkTheme")
         }
 
         if (isFullScreen) {

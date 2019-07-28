@@ -7,11 +7,11 @@
             <size
                     android:width="24dp"
                     android:height="1dp"/>
-            <solid android:color="@color/navigation_background_stroke_dark"/>
+            <solid android:color="@color/navigation_background_stroke"/>
         </shape>
     </item>
     <item android:top="1dp">
-        <color android:color="@color/navigation_background_fill_dark"/>
+        <color android:color="@color/navigation_background_fill"/>
     </item>
 
 </layer-list>
