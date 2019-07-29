@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen
-        xmlns:android="http://schemas.android.com/apk/res/android"
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory android:title="@string/style">
 
-        <SwitchPreferenceCompat
+        <PreferenceScreen
                 android:icon="@drawable/sharp_invert_colors_off_24"
-                app:defaultValue="false"
-                app:key="main.isDarkTheme"
-                app:title="@string/dark_theme"/>
+                android:key="preference.tmp.darkThemeBehavior"
+                android:persistent="false"
+                android:summary=""
+                android:title="Theme" />
 
     </PreferenceCategory>
 
     <PreferenceCategory android:title="Editing">
 
         <PreferenceScreen
+                android:icon="@drawable/sharp_link_24"
                 android:key="preference.tmp.clickOnLinks"
                 android:persistent="false"
-                android:title="Click on Links"
-                android:summary="Always ask">
+                android:summary="Always ask"
+                android:title="Click on Links">
 
         </PreferenceScreen>
     </PreferenceCategory>
@@ -30,23 +31,20 @@
                 android:key="preference.feedback"
                 android:persistent="false"
                 android:summary="@string/bugs_questions_suggestions"
-                app:title="@string/send_feedback">
-        </Preference>
+                app:title="@string/send_feedback" />
 
         <Preference
                 android:icon="@drawable/open_source_drawable"
                 android:key="preference.attribution"
                 android:persistent="false"
-                app:title="Attribution">
-        </Preference>
+                app:title="Attribution" />
 
         <Preference
                 android:key="preference.version"
                 android:persistent="false"
                 android:summary="@string/bugs_questions_suggestions"
                 app:summary="Build date: Today"
-                app:title="Version 1.0.2">
-        </Preference>
+                app:title="Version 1.0.2" />
 
     </PreferenceCategory>
 </PreferenceScreen>

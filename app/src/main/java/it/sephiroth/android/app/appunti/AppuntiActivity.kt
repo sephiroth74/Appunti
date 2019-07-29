@@ -16,14 +16,13 @@ import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.library.kotlin_extensions.app.isInMultiWindow
 import it.sephiroth.android.library.kotlin_extensions.app.isNightMode
 import it.sephiroth.android.library.kotlin_extensions.content.res.getColor
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.AutoDisposable
 import it.sephiroth.android.library.kotlin_extensions.os.isAPI
 import org.threeten.bp.ZonedDateTime
 import timber.log.Timber
 
 abstract class AppuntiActivity(
-    private val wantsFullscreen: Boolean = false,
-    private val lightTheme: Int = R.style.Theme_Appunti_Light_NoActionbar,
-    private val darkTheme: Int = R.style.Theme_Appunti_Dark_NoActionbar
+    private val wantsFullscreen: Boolean = false
 ) : AppCompatActivity() {
 
     internal var statusbarHeight: Int = 0
@@ -36,20 +35,22 @@ abstract class AppuntiActivity(
 
     internal var isFullScreen: Boolean = false
 
+    protected lateinit var autoDisposable: AutoDisposable
+
     @SuppressLint("InlinedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        val darkThemeBehavior = SettingsManager.getInstance(this).darkThemeBehavior
+        var mode: Int = SettingsManager.getInstance(this).getNightMode(darkThemeBehavior)
+        AppCompatDelegate.setDefaultNightMode(mode)
 
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        super.onCreate(savedInstanceState)
+        autoDisposable = AutoDisposable(this)
 
         isFullScreen =
             wantsFullscreen && !isInMultiWindow && !resources.getBoolean(R.bool.fullscreen_style_fit_system_windows) &&
                     resources.isNavBarAtBottom
 
-        Timber.v("uimode: ${resources.configuration.uiMode}")
-
         isDarkTheme = isNightMode()
-//        setTheme(lightTheme)
 
         Timber.v("SDK = ${Build.VERSION.SDK_INT}")
         if (BuildConfig.DEBUG) {
@@ -71,7 +72,7 @@ abstract class AppuntiActivity(
             window.statusBarColor = theme.getColor(this, android.R.attr.statusBarColor)
             window.navigationBarColor = theme.getColor(this, android.R.attr.navigationBarColor)
         } else {
-            if(!isInMultiWindow) {
+            if (!isInMultiWindow) {
                 window.statusBarColor = theme.getColor(this, android.R.attr.navigationBarColor)
                 window.navigationBarColor = theme.getColor(this, android.R.attr.navigationBarColor)
             }
@@ -97,12 +98,12 @@ abstract class AppuntiActivity(
     abstract fun getContentLayout(): Int
 
     fun pickDateTime(currentDateTime: ZonedDateTime, action: ((ZonedDateTime) -> (Unit))?) {
-        val darkTheme = SettingsManager.getInstance(this).darkTheme
+        val darkTheme = isNightMode()
         val buttonsColor = theme.getColor(this, android.R.attr.colorForegroundInverse)
         val accentColor = theme.getColor(this, R.attr.colorAccent)
 
         val dateDialog = com.wdullaer.materialdatetimepicker.date.DatePickerDialog.newInstance(
-            { view, year, monthOfYear, dayOfMonth ->
+            { _, year, monthOfYear, dayOfMonth ->
                 Timber.v("date selection: $dayOfMonth/$monthOfYear/$year")
 
                 val timeDialog =
@@ -122,7 +123,8 @@ abstract class AppuntiActivity(
                     }, DateFormat.is24HourFormat(this))
 
                 timeDialog.isThemeDark = darkTheme
-                timeDialog.version = com.wdullaer.materialdatetimepicker.time.TimePickerDialog.Version.VERSION_2
+                timeDialog.version =
+                    com.wdullaer.materialdatetimepicker.time.TimePickerDialog.Version.VERSION_2
                 timeDialog.accentColor = accentColor
                 timeDialog.setOkColor(buttonsColor)
                 timeDialog.setCancelColor(buttonsColor)
@@ -136,7 +138,8 @@ abstract class AppuntiActivity(
         )
 
         dateDialog.isThemeDark = darkTheme
-        dateDialog.version = com.wdullaer.materialdatetimepicker.date.DatePickerDialog.Version.VERSION_2
+        dateDialog.version =
+            com.wdullaer.materialdatetimepicker.date.DatePickerDialog.Version.VERSION_2
         dateDialog.accentColor = accentColor
         dateDialog.vibrate(false)
         dateDialog.setOkColor(buttonsColor)

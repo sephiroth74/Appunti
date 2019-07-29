@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- light theme base -->
-    <style name="Theme.Appunti.Light.Base" parent="Theme.MaterialComponents.DayNight">
+    <style name="Theme.Appunti.DayNight.Base" parent="Theme.MaterialComponents.DayNight">
         <!-- day/night theme -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -30,12 +30,12 @@
         <item name="alertDialogTheme">@style/Theme.Appunti.Default.AlertDialogTheme</item>
     </style>
 
-    <style name="Theme.Appunti.Light.Base.NoActionbar">
+    <style name="Theme.Appunti.DayNight.Base.NoActionbar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="Theme.Appunti.Light.Base.NoActionbar.FullScreen">
+    <style name="Theme.Appunti.DayNight.Base.NoActionbar.FullScreen">
         <item name="android:fitsSystemWindows">@bool/fullscreen_style_fit_system_windows</item>
         <item name="navigationbarBackgroundDrawable">@drawable/appunti_navigationbar_background</item>
         <item name="statusbarBackgroundDrawable">@drawable/appunti_statusbar_background</item>
@@ -44,14 +44,13 @@
     <!--
         light theme implementations
     -->
-    <style name="Theme.Appunti.Light" parent="Theme.Appunti.Light.Base"/>
-    <style name="Theme.Appunti.Light.NoActionbar" parent="Theme.Appunti.Light.Base.NoActionbar"/>
-    <style name="Theme.Appunti.Light.NoActionbar.FullScreen" parent="Theme.Appunti.Light.Base.NoActionbar.FullScreen" />
+    <style name="Theme.Appunti.Light" parent="Theme.Appunti.DayNight.Base"/>
+    <style name="Theme.Appunti.Light.NoActionbar" parent="Theme.Appunti.DayNight.Base.NoActionbar"/>
+    <style name="Theme.Appunti.Light.NoActionbar.FullScreen" parent="Theme.Appunti.DayNight.Base.NoActionbar.FullScreen" />
 
 
     <!-- default theme -->
-    <style name="Theme.Appunti.Default.NoActionbar"
-           parent="Theme.Appunti.Light.NoActionbar"/>
+    <style name="Theme.Appunti.Default.NoActionbar" parent="Theme.Appunti.Light.NoActionbar"/>
 
 
     <style name="Theme.Appunti.AppBarOverlay"
@@ -63,9 +62,9 @@
            parent="ThemeOverlay.MaterialComponents.Light"/>
 
     <style name="Theme.Appunti.Default.AppBarOverlay"
-           parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
+           parent="ThemeOverlay.AppCompat.DayNight.ActionBar"/>
 
     <style name="Theme.Appunti.Default.PopupOverlay"
-           parent="ThemeOverlay.AppCompat.Light"/>
+           parent="ThemeOverlay.AppCompat.DayNight"/>
 
 </resources>

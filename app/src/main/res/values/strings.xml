@@ -202,6 +202,13 @@
     <string name="postpone">Snooze</string>
     <string name="alarm_postponed">Reminder postponed by %d minutes</string>
 
-    <!-- day theme -->
-    <item name="search_theme" type="integer">3001</item> <!-- google -->
+    <string name="appunti_settings_theme_behavior_automatic">Automatic</string>
+    <string name="appunti_settings_theme_behavior_Dark">Dark</string>
+    <string name="appunti_settings_theme_behavior_Light">Light</string>
+
+    <integer name="appunti_settings_theme_behavior_automatic">0</integer>
+    <integer name="appunti_settings_theme_behavior_Dark">1</integer>
+    <integer name="appunti_settings_theme_behavior_Light">2</integer>
+
+
 </resources>

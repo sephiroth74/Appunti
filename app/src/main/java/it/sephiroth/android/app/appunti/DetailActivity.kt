@@ -105,8 +105,6 @@ class DetailActivity : AppuntiActivity() {
 
     private val answers: Answers by lazy { Answers.getInstance() }
 
-    private lateinit var autoDisposable: AutoDisposable
-
     private var progressDialog: ProgressDialog? = null
 
     private val linkLongClickListener: BetterLinkMovementMethod.OnLinkLongClickListener =
@@ -161,8 +159,6 @@ class DetailActivity : AppuntiActivity() {
         window.sharedElementReturnTransition = null
 
         super.onCreate(savedInstanceState)
-
-        autoDisposable = AutoDisposable(this)
 
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
@@ -393,6 +389,12 @@ class DetailActivity : AppuntiActivity() {
                 return
             }
         }
+
+        if (isBottomSheetOpened()) {
+            closeBottomSheet()
+            return
+        }
+
         super.onBackPressed()
     }
 

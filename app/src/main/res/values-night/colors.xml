@@ -13,6 +13,8 @@
     <color name="navigation_background_fill">#bb303030</color>
     <color name="navigation_background_stroke">#22000000</color>
 
+    <color name="background_floating_material">@color/material_grey_850</color>
+
     <integer-array name="category_colors">
         <item>0xff2A2A2A</item>
         <item>0xffa65a42</item>

@@ -14,6 +14,11 @@
     <color name="navigation_background_fill">#bbffffff</color>
     <color name="navigation_background_stroke">#22000000</color>
 
+    <color name="background_floating_material">@color/material_grey_50</color>
+
+<!--    <color name="background_floating_material_dark">@color/material_grey_800</color>-->
+<!--    <color name="background_floating_material_light">@color/white</color>-->
+
     <!-- colors for categoriesWithEntries -->
 
     <integer-array name="category_colors">

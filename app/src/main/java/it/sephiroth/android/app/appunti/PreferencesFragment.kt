@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.crashlytics.android.answers.Answers
@@ -26,24 +27,21 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         // updateClickOnLinks version screen
         val prefVersion = preferenceScreen.findPreference("preference.version")
         prefVersion?.let {
-            val dateString = SimpleDateFormat.getDateTimeInstance().format(Date(BuildConfig.TIMESTAMP))
+            val dateString =
+                SimpleDateFormat.getDateTimeInstance().format(Date(BuildConfig.TIMESTAMP))
             it.title = "Version: ${BuildConfig.VERSION_NAME} (Code: ${BuildConfig.VERSION_CODE})"
             it.summary = "$dateString (hash: ${BuildConfig.COMMIT_HASH})"
             it.isEnabled = false
         }
 
         updateClickOnLinks()
+        updateThemeBehavior()
     }
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         Timber.i("onPreferenceTreeClick(${preference?.key})")
 
         when (preference?.key) {
-            SettingsManager.PREFS_KEY_DARK_THEME -> {
-                Answers.getInstance().logCustom(CustomEvent("settings.themeChange"))
-                askToRestartApplication()
-            }
-
             "preference.feedback" -> {
                 val intent = Intent(ACTION_SENDTO).apply {
                     type = "text/plain"
@@ -56,10 +54,18 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                     startActivity(intent)
                 } else {
                     Toast
-                        .makeText(context, getString(R.string.unable_to_find_app_to_handle_request), Toast.LENGTH_SHORT)
+                        .makeText(
+                            context,
+                            getString(R.string.unable_to_find_app_to_handle_request),
+                            Toast.LENGTH_SHORT
+                        )
                         .show()
                 }
 
+            }
+
+            "preference.tmp.darkThemeBehavior" -> {
+                showThemeChooser()
             }
 
             "preference.tmp.clickOnLinks" -> {
@@ -97,7 +103,46 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         return super.onPreferenceTreeClick(preference)
     }
 
+    private fun showThemeChooser() {
+        if (null == context) return
+        var choices: Array<String>? = getThemeChooserStrings()
+        if (null == choices) return
+
+        CustomEvent("settings.openThemeChooser")
+
+        AlertDialog
+            .Builder(context!!)
+            .setItems(choices) { _, which ->
+
+                Answers.getInstance().logCustom(
+                    CustomEvent("settings.theme.changed").putCustomAttribute("value", which)
+                )
+
+                SettingsManager.getInstance(context!!).darkThemeBehavior = when (which) {
+                    0 -> SettingsManager.Companion.DarkThemeBehavior.Automatic
+                    1 -> SettingsManager.Companion.DarkThemeBehavior.Day
+                    else -> SettingsManager.Companion.DarkThemeBehavior.Night
+                }
+                updateThemeBehavior()
+            }
+            .create()
+            .show()
+    }
+
+    fun getThemeChooserStrings(): Array<String>? {
+        context?.let {
+            return arrayOf(
+                it.getString(R.string.appunti_settings_theme_behavior_automatic),
+                it.getString(R.string.appunti_settings_theme_behavior_Light),
+                it.getString(R.string.appunti_settings_theme_behavior_Dark)
+            )
+        } ?: run {
+            return null
+        }
+    }
+
     private fun updateClickOnLinks() {
+        if (null == context) return
         val prefClickOnLinks = preferenceScreen.findPreference("preference.tmp.clickOnLinks")
         prefClickOnLinks?.let { prefClickOnLinks ->
             val value = SettingsManager.getInstance(context!!).openLinksOnClick
@@ -110,25 +155,41 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun askToRestartApplication() {
-        activity?.let { activity ->
-            AlertDialog.Builder(activity)
-                .setTitle(getString(R.string.restart_required))
-                .setMessage(getString(R.string.restart_required_body))
-                .setCancelable(false)
-                .setPositiveButton(getString(R.string.restart)) { _, _ -> triggerRebirth() }
-                .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
-                .show()
+    private fun updateThemeBehavior() {
+        if (null == context) return
+        preferenceScreen.findPreference("preference.tmp.darkThemeBehavior")?.let { screen ->
+            SettingsManager.getInstance(context!!).darkThemeBehavior.let { behavior ->
+                screen.summary = behavior.name
+            }
         }
-    }
 
-    private fun triggerRebirth() {
-        activity?.let { activity ->
-            val intent = Intent(activity, MainActivity::class.java)
-            intent.addFlags(FLAG_ACTIVITY_NEW_TASK)
-            activity.startActivity(intent)
-            activity.finish()
-        }
-        Runtime.getRuntime().exit(0)
+
     }
+//
+//    private fun askToRestartApplication(mode: Int) {
+//        activity?.let { activity ->
+//            AlertDialog.Builder(activity)
+//                .setTitle(getString(R.string.restart_required))
+//                .setMessage(getString(R.string.restart_required_body))
+//                .setCancelable(false)
+//                .setPositiveButton(getString(R.string.restart)) { _, _ ->
+//                    run {
+//                        AppCompatDelegate.setDefaultNightMode(mode)
+////                    triggerRebirth()
+//                    }
+//                }
+//                .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
+//                .show()
+//        }
+//    }
+//
+//    private fun triggerRebirth() {
+//        activity?.let { activity ->
+//            val intent = Intent(activity, MainActivity::class.java)
+//            intent.addFlags(FLAG_ACTIVITY_NEW_TASK)
+//            activity.startActivity(intent)
+//            activity.finish()
+//        }
+//        Runtime.getRuntime().exit(0)
+//    }
 }

@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- night theme configuration -->
+
     <bool name="windowLightNavigationBar">false</bool>
     <bool name="windowLightStatusBar">false</bool>
+    <item name="search_theme" type="integer">3003</item> <!-- dark -->
+
+    <!-- end night theme configuration -->
+
 </resources>
