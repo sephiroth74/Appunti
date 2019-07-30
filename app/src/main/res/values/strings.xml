@@ -205,6 +205,7 @@
     <string name="appunti_settings_theme_behavior_automatic">Automatic</string>
     <string name="appunti_settings_theme_behavior_Dark">Dark</string>
     <string name="appunti_settings_theme_behavior_Light">Light</string>
+    <string name="theme">Theme</string>
 
     <integer name="appunti_settings_theme_behavior_automatic">0</integer>
     <integer name="appunti_settings_theme_behavior_Dark">1</integer>

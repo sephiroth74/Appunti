@@ -147,4 +147,10 @@
     <string name="snooze">Spegni</string>
     <string name="postpone">Posticipa</string>
     <string name="alarm_postponed">Alarme posticipato di %d minuti</string>
+
+    <string name="appunti_settings_theme_behavior_automatic">Automatico</string>
+    <string name="appunti_settings_theme_behavior_Dark">Scuro</string>
+    <string name="appunti_settings_theme_behavior_Light">Chiaro</string>
+    <string name="theme">Tema</string>
+
 </resources>

@@ -8,7 +8,7 @@
                 android:key="preference.tmp.darkThemeBehavior"
                 android:persistent="false"
                 android:summary=""
-                android:title="Theme" />
+                android:title="@string/theme" />
 
     </PreferenceCategory>
 

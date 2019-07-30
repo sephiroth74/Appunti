@@ -12,6 +12,8 @@ import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.events.RxBus
 import it.sephiroth.android.app.appunti.events.ThemeChangedEvent
 import timber.log.Timber
+import java.time.Instant
+import java.util.*
 import kotlin.properties.Delegates
 
 class SettingsManager(val context: Context) {
@@ -74,10 +76,15 @@ class SettingsManager(val context: Context) {
     fun getNightMode(value: DarkThemeBehavior): Int {
         return when (value) {
             DarkThemeBehavior.Automatic -> {
-                if(BuildCompat.isAtLeastQ()) {
+                if (BuildCompat.isAtLeastQ()) {
                     AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                 } else {
-                    AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
+                    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                    if (hour < 7 || hour > 22) {
+                        AppCompatDelegate.MODE_NIGHT_YES
+                    } else {
+                        AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
+                    }
                 }
             }
             DarkThemeBehavior.Night -> AppCompatDelegate.MODE_NIGHT_YES
