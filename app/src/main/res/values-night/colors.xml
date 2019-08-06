@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- night theme colors -->
+    <color name="colorPrimary">#FF6F00</color>
+    <color name="colorPrimaryDark">#E65100</color>
+    <color name="colorAccent">#1E88E5</color>
+    <color name="colorControlActivated">@color/material_grey_100</color>
+    <color name="background_material_dark" tools:override="true">@color/material_grey_50</color>
+    <color name="background_material_light" tools:override="true">@color/material_grey_900</color>
+    <color name="actionModeBackground">@color/material_grey_850</color>
+    <color name="fabBackgroundColorClosed">@color/material_grey_600</color>
+    <color name="fabBackgroundColorOpened">@color/material_grey_600</color>
+    <color name="navigation_background_fill">#bb303030</color>
+    <color name="navigation_background_stroke">#22000000</color>
+
+    <color name="background_floating_material">@color/material_grey_850</color>
+
+    <integer-array name="category_colors">
+        <item>0xff2A2A2A</item>
+        <item>0xffa65a42</item>
+        <item>0xffa67732</item>
+        <item>0xff99802f</item>
+        <item>0xff999146</item>
+        <item>0xff91994e</item>
+        <item>0xff7d995d</item>
+        <item>0xff639966</item>
+        <item>0xff409990</item>
+        <item>0xff348d99</item>
+        <item>0xff317899</item>
+        <item>0xff3f7099</item>
+        <item>0xff5c6699</item>
+        <item>0xff6f5799</item>
+        <item>0xff8e5099</item>
+        <item>0xff993f5d</item>
+        <item>0xff994d4d</item>
+    </integer-array>
+</resources>

@@ -1,81 +1,56 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.Appunti.Light.Base"
-           parent="Theme.MaterialComponents.Light">
+    <!-- light theme base -->
+    <style name="Theme.Appunti.DayNight.Base" parent="Theme.MaterialComponents.DayNight">
+        <!-- day/night theme -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="colorAccentDisabled">@color/colorAccentDisabled</item>
-        <item name="colorControlActivated">@color/material_grey_850</item>
-
+        <item name="colorControlActivated">@color/colorControlActivated</item>
         <item name="android:textColorLink">?android:textColorPrimary</item>
         <item name="android:textColorLinkInverse">?android:textColorPrimaryInverse</item>
-
+        <item name="android:windowLightNavigationBar" tools:ignore="NewApi">@bool/windowLightNavigationBar</item>
+        <item name="android:windowLightStatusBar" tools:ignore="NewApi">@bool/windowLightStatusBar</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@color/background_material_light</item>
         <item name="android:navigationBarColor">@color/background_material_light</item>
         <item name="android:colorForegroundInverse">@color/background_material_dark</item>
-        <item name="android:windowLightNavigationBar"
-              tools:ignore="NewApi">true
-        </item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar"
-              tools:ignore="NewApi">true
-        </item>
-
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-
-        <item name="search_theme">google</item>
-        <item name="categoryColors">@array/category_colors_light</item>
-
+        <item name="search_theme">@integer/search_theme</item>
+        <item name="categoryColors">@array/category_colors</item>
         <item name="bottomSheetDialogTheme">@style/Theme.Appunti.BottomSheetDialog</item>
-
         <item name="windowActionModeOverlay">true</item>
-        <item name="actionModeBackground">@color/material_grey_50</item>
+        <item name="actionModeBackground">@color/actionModeBackground</item>
         <item name="actionModeStyle">@style/Widget.Appunti.ActionMode</item>
-
         <item name="android:fontFamily">@font/nunito_semibold</item>
         <item name="fontFamily">@font/nunito_semibold</item>
-
-        <!-- custom attributes -->
-        <item name="fabBackgroundColorClosed">@color/material_grey_300</item>
-        <item name="fabBackgroundColorOpened">@color/material_grey_300</item>
-        
+        <item name="fabBackgroundColorClosed">@color/fabBackgroundColorClosed</item>
+        <item name="fabBackgroundColorOpened">@color/fabBackgroundColorOpened</item>
         <item name="alertDialogTheme">@style/Theme.Appunti.Default.AlertDialogTheme</item>
-
     </style>
 
-    <style name="Theme.Appunti.Light.Base.NoActionbar">
+    <style name="Theme.Appunti.DayNight.Base.NoActionbar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="Theme.Appunti.Light.Base.NoActionbar.FullScreen">
+    <style name="Theme.Appunti.DayNight.Base.NoActionbar.FullScreen">
         <item name="android:fitsSystemWindows">@bool/fullscreen_style_fit_system_windows</item>
-        <item name="navigationbarBackgroundDrawable">@drawable/appunti_navigationbar_background_light</item>
-        <item name="statusbarBackgroundDrawable">@drawable/appunti_statusbar_background_light</item>
-        <!--<item name="android:windowTranslucentNavigation">false</item>-->
+        <item name="navigationbarBackgroundDrawable">@drawable/appunti_navigationbar_background</item>
+        <item name="statusbarBackgroundDrawable">@drawable/appunti_statusbar_background</item>
     </style>
 
-    <style name="Theme.Appunti.Light"
-           parent="Theme.Appunti.Light.Base"/>
-
-    <style name="Theme.Appunti.DayNight"
-           parent="Theme.Appunti.Default"/>
-
-    <style name="Theme.Appunti.Light.NoActionbar"
-           parent="Theme.Appunti.Light.Base.NoActionbar"/>
-
-    <style name="Theme.Appunti.DayNight.NoActionbar"
-           parent="Theme.Appunti.Default.NoActionbar"/>
+    <!--
+        light theme implementations
+    -->
+    <style name="Theme.Appunti.Light" parent="Theme.Appunti.DayNight.Base"/>
+    <style name="Theme.Appunti.Light.NoActionbar" parent="Theme.Appunti.DayNight.Base.NoActionbar"/>
+    <style name="Theme.Appunti.Light.NoActionbar.FullScreen" parent="Theme.Appunti.DayNight.Base.NoActionbar.FullScreen" />
 
 
     <!-- default theme -->
-
-    <style name="Theme.Appunti.Default"
-           parent="Theme.Appunti.Light"/>
-
-    <style name="Theme.Appunti.Default.NoActionbar"
-           parent="Theme.Appunti.Light.NoActionbar"/>
+    <style name="Theme.Appunti.Default.NoActionbar" parent="Theme.Appunti.Light.NoActionbar"/>
 
 
     <style name="Theme.Appunti.AppBarOverlay"
@@ -87,20 +62,9 @@
            parent="ThemeOverlay.MaterialComponents.Light"/>
 
     <style name="Theme.Appunti.Default.AppBarOverlay"
-           parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
+           parent="ThemeOverlay.AppCompat.DayNight.ActionBar"/>
 
     <style name="Theme.Appunti.Default.PopupOverlay"
-           parent="ThemeOverlay.AppCompat.Light"/>
-
-
-    <!-- ActionMode -->
-    <style name="Widget.Appunti.ActionMode" parent="Base.Widget.AppCompat.ActionMode">
-        <item name="background">@color/material_grey_50</item>
-        <item name="backgroundSplit">@color/material_grey_50</item>
-        <item name="height">?attr/actionBarSize</item>
-        <item name="titleTextStyle">@style/TextAppearance.AppCompat.Widget.ActionMode.Title</item>
-        <item name="subtitleTextStyle">@style/TextAppearance.AppCompat.Widget.ActionMode.Subtitle</item>
-        <item name="android:elevation">6dp</item>
-    </style>
+           parent="ThemeOverlay.AppCompat.DayNight"/>
 
 </resources>

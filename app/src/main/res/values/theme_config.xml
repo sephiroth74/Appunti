@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- day theme -->
+
+    <bool name="windowLightNavigationBar">true</bool>
+    <bool name="windowLightStatusBar">true</bool>
+    <item name="search_theme" type="integer">3001</item> <!-- google -->
+
+    <!-- end day theme -->
+
+</resources>

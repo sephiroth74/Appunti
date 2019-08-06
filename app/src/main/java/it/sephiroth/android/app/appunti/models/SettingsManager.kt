@@ -3,25 +3,28 @@ package it.sephiroth.android.app.appunti.models
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
+import androidx.core.os.BuildCompat
 import androidx.preference.PreferenceManager
 import it.sephiroth.android.app.appunti.R
+import it.sephiroth.android.app.appunti.events.RxBus
+import it.sephiroth.android.app.appunti.events.ThemeChangedEvent
 import timber.log.Timber
+import java.time.Instant
+import java.util.*
 import kotlin.properties.Delegates
 
 class SettingsManager(val context: Context) {
     private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
     private var displayAsListChanged: ((value: Boolean) -> Unit)? = null
-    private var themeChangedListener: ((value: Boolean) -> Unit)? = null
 
     fun setOnDisplayAsListChanged(action: (value: Boolean) -> Unit) {
         displayAsListChanged = action
     }
 
-    fun setOnThemeChanged(action: (value: Boolean) -> Unit) {
-        themeChangedListener = action
-    }
 
     var openLinksOnClick: Boolean?
         get() {
@@ -49,17 +52,45 @@ class SettingsManager(val context: Context) {
         }
     }
 
-    var darkTheme: Boolean = true
+    var darkThemeBehavior: DarkThemeBehavior = Companion.DarkThemeBehavior.Automatic
         get() {
-            if (prefs.contains(PREFS_KEY_DARK_THEME)) return prefs.getBoolean(PREFS_KEY_DARK_THEME, false)
-            return false
+            Timber.v("get themeBehavior")
+            if (prefs.contains(PREFS_KEY_THEME_BEHAVIOR)) {
+                val value =
+                    prefs.getInt(PREFS_KEY_THEME_BEHAVIOR, DarkThemeBehavior.Automatic.ordinal)
+                if (value >= 0 && value < DarkThemeBehavior.values().size) {
+                    return DarkThemeBehavior.values()[value]
+                }
+            }
+            return Companion.DarkThemeBehavior.Automatic
         }
         set(value) {
-            Timber.i("setDarkTheme: $value")
+            Timber.i("set themeBehavior = $value")
             field = value
-            prefs.edit { putBoolean(PREFS_KEY_DARK_THEME, value) }
-            themeChangedListener?.invoke(value)
+            prefs.edit { putInt(PREFS_KEY_THEME_BEHAVIOR, value.ordinal) }
+            RxBus.send(ThemeChangedEvent(value))
         }
+
+    fun getNightMode() = getNightMode(darkThemeBehavior)
+
+    fun getNightMode(value: DarkThemeBehavior): Int {
+        return when (value) {
+            DarkThemeBehavior.Automatic -> {
+                if (BuildCompat.isAtLeastQ()) {
+                    AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                } else {
+                    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                    if (hour < 7 || hour > 22) {
+                        AppCompatDelegate.MODE_NIGHT_YES
+                    } else {
+                        AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
+                    }
+                }
+            }
+            DarkThemeBehavior.Night -> AppCompatDelegate.MODE_NIGHT_YES
+            DarkThemeBehavior.Day -> AppCompatDelegate.MODE_NIGHT_NO
+        }
+    }
 
     internal var displayAsList: Boolean by Delegates.observable(
         prefs.getBoolean(
@@ -67,7 +98,7 @@ class SettingsManager(val context: Context) {
             context.resources.getInteger(R.integer.list_items_columns) ==
                     context.resources.getInteger(R.integer.list_items_columns_list)
         )
-    ) { prop, oldValue, newValue ->
+    ) { _, _, newValue ->
         Timber.i("displayAsList -> $newValue")
         prefs.edit { putBoolean("main.display_as_list", newValue) }
         displayAsListChanged?.invoke(newValue)
@@ -75,9 +106,18 @@ class SettingsManager(val context: Context) {
 
     companion object {
 
+        @Deprecated("use PREFS_KEY_DARK_THEME_BEHAVIOR")
         const val PREFS_KEY_DARK_THEME = "main.isDarkTheme"
+
+        const val PREFS_KEY_THEME_BEHAVIOR = "main.themeBehavior"
         const val PREFS_KEY_FIRST_LAUNCH = "app.isFirstLaunch"
         const val PREFS_KEY_OPEN_LINKS_ON_CLICK = "app.openLinksOnClick"
+
+        enum class DarkThemeBehavior {
+            Automatic,
+            Day,
+            Night
+        }
 
 
         @SuppressLint("StaticFieldLeak")

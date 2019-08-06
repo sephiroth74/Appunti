@@ -91,7 +91,7 @@
                 android:name=".MainActivity"
                 android:label="@string/app_name"
                 android:launchMode="singleTop"
-                android:theme="@style/Theme.Appunti.Light.Base.NoActionbar.FullScreen">
+                android:theme="@style/Theme.Appunti.Light.NoActionbar.FullScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

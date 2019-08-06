@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.content.res.Resources
 import android.graphics.Canvas
 import android.os.Bundle
 import android.os.Parcelable
@@ -23,6 +24,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_SWIPE
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.crashlytics.android.Crashlytics
 import com.crashlytics.android.answers.Answers
 import com.crashlytics.android.answers.CustomEvent
 import com.crashlytics.android.answers.SearchEvent
@@ -113,11 +115,11 @@ class MainActivity : AppuntiActivityFullscreen() {
 //        drawerLayout.setStatusBarBackgroundColor(theme.getColor(this, android.R.attr.windowBackground))
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
+    override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
         val listState = itemsRecycler.layoutManager?.onSaveInstanceState()
-        outState?.putParcelable("LIST_STATE_KEY", listState)
+        outState.putParcelable("LIST_STATE_KEY", listState)
     }
 
     override fun onRestoreInstanceState(state: Bundle?) {
@@ -141,6 +143,8 @@ class MainActivity : AppuntiActivityFullscreen() {
         }
 
         mListState = null
+
+        invalidateTheme()
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -166,6 +170,25 @@ class MainActivity : AppuntiActivityFullscreen() {
 
         setDisplayAsList(SettingsManager.getInstance(this).displayAsList)
         SettingsManager.getInstance(this).setOnDisplayAsListChanged { setDisplayAsList(it) }
+    }
+
+    private fun invalidateTheme() {
+        try {
+            val fabOpened = theme.getColor(this, R.attr.fabBackgroundColorOpened)
+            val fabOpenedNow = speedDial.mainFabOpenedBackgroundColor
+
+            if (fabOpenedNow != fabOpened) {
+                Timber.v("SpeedDial theme need to be updated")
+                val fabClosed = theme.getColor(this, R.attr.fabBackgroundColorClosed)
+                if (fabClosed != 0) {
+                    speedDial.mainFabOpenedBackgroundColor = fabOpened
+                    speedDial.mainFabClosedBackgroundColor = fabClosed
+                }
+            }
+        } catch (e: Resources.NotFoundException) {
+            Timber.w(e, "a problem getting fabBackgroundColorOpened")
+            Crashlytics.logException(e)
+        }
     }
 
     private fun setDisplayAsList(value: Boolean) {

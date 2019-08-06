@@ -28,6 +28,7 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.getSummary
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
+import it.sephiroth.android.library.kotlin_extensions.app.isNightMode
 import it.sephiroth.android.library.kotlin_extensions.content.res.getColorStateList
 import it.sephiroth.android.library.kotlin_extensions.content.res.isPortrait
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnMainThread
@@ -82,7 +83,7 @@ class ItemEntryListAdapter(
     var itemLongClickListener: ((ItemEntryListAdapter, BaseViewHolder) -> (Boolean))? = null
 
     init {
-        val isLightTheme = !SettingsManager.getInstance(context).darkTheme
+        val isLightTheme = !context.isNightMode()
         textColorInverse =
             context.theme.getColorStateList(
                 context,
