@@ -206,6 +206,9 @@
     <string name="appunti_settings_theme_behavior_Dark">Dark</string>
     <string name="appunti_settings_theme_behavior_Light">Light</string>
     <string name="theme">Theme</string>
+    <string name="nothing_here">Nothing here...</string>
+    <string name="ops_it_seems_like_you_don_t_have_any_note_in_this_category">Ops. It seems like you don\'t have any note in this category</string>
+    <string name="create_new">Create New</string>
 
     <integer name="appunti_settings_theme_behavior_automatic">0</integer>
     <integer name="appunti_settings_theme_behavior_Dark">1</integer>

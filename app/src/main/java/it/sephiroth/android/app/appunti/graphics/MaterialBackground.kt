@@ -143,7 +143,11 @@ class MaterialShape(private val type: Type) : Shape() {
     private fun invalidatePathStart() {
         path.moveTo(0f, 0f)
         path.lineTo(bounds.right - bounds.height() / 2, 0f)
-        path.arcTo(RectF(bounds.right - bounds.height(), 0f, bounds.right, bounds.height()), 270f, 180f)
+        path.arcTo(
+            RectF(bounds.right - bounds.height(), 0f, bounds.right, bounds.height()),
+            270f,
+            180f
+        )
         path.lineTo(0f, bounds.height())
         path.close()
     }

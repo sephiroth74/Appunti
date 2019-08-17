@@ -50,6 +50,7 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.adapters.DetailAttachmentsListAdapter
 import it.sephiroth.android.app.appunti.adapters.DetailRemoteUrlListAdapter
+import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
@@ -286,6 +287,12 @@ class DetailActivity : AppuntiActivity() {
                     disablePostponedTransitions = true
                     newEntry = Entry()
 
+                    if(intent.hasExtra(IntentUtils.KEY_CATEGORY_ID)) {
+                        val categoryId = intent.getLongExtra(IntentUtils.KEY_CATEGORY_ID, 0)
+                        DatabaseHelper.getCategoryByID(categoryId)?.let {
+                            newEntry?.category = it
+                        }
+                    }
 
                     if (intent.hasExtra(IntentUtils.KEY_ENTRY_TYPE)) {
                         val type = Entry.EntryType.values()[intent.getIntExtra(

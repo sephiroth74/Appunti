@@ -10,6 +10,7 @@ import it.sephiroth.android.app.appunti.DetailActivity
 import it.sephiroth.android.app.appunti.PreferencesActivity
 import it.sephiroth.android.app.appunti.SearchableActivity
 import it.sephiroth.android.app.appunti.db.tables.Attachment
+import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
 import it.sephiroth.android.app.appunti.ext.getFileUri
@@ -26,10 +27,14 @@ object IntentUtils {
 
     const val ACTION_ASK_NEW_CATEGORY_STARTUP = "ask_for_new_category_startup"
 
-    fun createNewEntryIntent(context: Context, type: Entry.EntryType = Entry.EntryType.TEXT): Intent {
+    fun createNewEntryIntent(context: Context, type: Entry.EntryType = Entry.EntryType.TEXT, categoryID: Long? = null): Intent {
         return Intent(context, DetailActivity::class.java).apply {
             action = Intent.ACTION_CREATE_DOCUMENT
             putExtra(KEY_ENTRY_TYPE, type.ordinal)
+
+            categoryID?.let {
+                putExtra(KEY_CATEGORY_ID, it)
+            }
         }
     }
 

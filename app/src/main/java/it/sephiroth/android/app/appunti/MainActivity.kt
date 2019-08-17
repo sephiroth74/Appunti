@@ -17,6 +17,8 @@ import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.util.Pair
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -39,6 +41,7 @@ import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.models.MainViewModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.IntentUtils
+import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
 import it.sephiroth.android.app.appunti.widget.ItemEntryListAdapter
 import it.sephiroth.android.app.appunti.widget.MultiChoiceHelper
 import it.sephiroth.android.app.appunti.widget.RecyclerNavigationView
@@ -49,6 +52,7 @@ import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import it.sephiroth.android.library.kotlin_extensions.view.setAnimationListener
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.appunti_entries_recycler_view.*
+import kotlinx.android.synthetic.main.appunti_main_activity_no_results.*
 import kotlinx.android.synthetic.main.appunti_main_drawer_navigation_content.*
 import kotlinx.android.synthetic.main.appunti_search_view_toolbar.*
 import timber.log.Timber
@@ -116,6 +120,10 @@ class MainActivity : AppuntiActivityFullscreen() {
 //        drawerLayout.setStatusBarBackgroundColor(theme.getColor(this, android.R.attr.windowBackground))
     }
 
+    override fun onContentChanged() {
+        super.onContentChanged()
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
@@ -163,6 +171,7 @@ class MainActivity : AppuntiActivityFullscreen() {
 
     private fun initializeUI() {
         initializeSystemUI()
+        setupNoResultsView()
         setupRecyclerView()
         setupSearchView()
         seupNavigationView()
@@ -212,6 +221,12 @@ class MainActivity : AppuntiActivityFullscreen() {
             itemsRecycler.recycledViewPool.clear()
 
             adapter.update(it)
+
+            if (it.isNullOrEmpty()) {
+                noResultsView.isVisible = true
+            } else {
+                noResultsView.isGone = true
+            }
         })
 
         // handle current intent
@@ -275,11 +290,18 @@ class MainActivity : AppuntiActivityFullscreen() {
 
         speedDial.setOnActionSelectedListener {
             when (it.id) {
-                R.id.fab_menu_new_text_note -> startDetailActivity(Entry.EntryType.TEXT)
-                R.id.fab_menu_new_list_note -> startDetailActivity(Entry.EntryType.LIST)
+                R.id.fab_menu_new_text_note -> startDetailActivity(Entry.EntryType.TEXT, model.group.getCategoryID())
+                R.id.fab_menu_new_list_note -> startDetailActivity(Entry.EntryType.LIST, model.group.getCategoryID())
             }
             speedDial.close(true)
             true
+        }
+    }
+
+    private fun setupNoResultsView() {
+        createNewNoteButton.background = MaterialBackgroundUtils.materialButton(this)
+        createNewNoteButton.setOnClickListener {
+            startDetailActivity(Entry.EntryType.TEXT, model.group.getCategoryID())
         }
     }
 
@@ -586,8 +608,8 @@ class MainActivity : AppuntiActivityFullscreen() {
         }
     }
 
-    private fun startDetailActivity(type: Entry.EntryType) {
-        startDetailActivityFromIntent(IntentUtils.createNewEntryIntent(this, type), null)
+    private fun startDetailActivity(type: Entry.EntryType, categoryId: Long? = null) {
+        startDetailActivityFromIntent(IntentUtils.createNewEntryIntent(this, type, categoryId), null)
 
         answers.logCustom(
             CustomEvent("main.newNote").putCustomAttribute("type", type.name)

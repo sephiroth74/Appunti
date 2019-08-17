@@ -93,4 +93,26 @@ object MaterialBackgroundUtils {
             )
             .build()
     }
+
+    fun materialButton(context: Context): Drawable {
+        return MaterialBackgroundDrawable
+            .Builder()
+            .addNormal(
+                MaterialShapeDrawable
+                    .Builder(MaterialShape.Type.ALL)
+                    .color(context.theme.getColor(context, R.attr.colorButtonNormal))
+                    .style(Paint.Style.FILL)
+            )
+            .addPressed(
+                MaterialShapeDrawable
+                    .Builder(MaterialShape.Type.ALL)
+                    .color(context.theme.getColor(context, R.attr.colorButtonNormal))
+                    .style(Paint.Style.FILL)
+            ).ripple(
+                context.theme.getColor(context, R.attr.colorControlHighlight),
+                MaterialShapeDrawable.Builder(MaterialShape.Type.ALL)
+            )
+            .build()
+
+    }
 }
