@@ -33,6 +33,7 @@ import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.rxkotlin.subscribeBy
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.models.MainViewModel
@@ -663,17 +664,19 @@ class MainActivity : AppuntiActivityFullscreen() {
         DatabaseHelper
             .setEntriesArchived(entries, archived)
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { _, error ->
-                error?.let {
-                    Timber.e(error)
-                } ?: run {
+            .subscribeBy(
+                onError = {
+                    Timber.w(it, "onError")
+                    Crashlytics.logException(it)
+                },
+                onComplete = {
                     if (archived) {
                         onEntriesArchived(entries)
                     } else {
                         Toast.makeText(this, R.string.entries_restored, Toast.LENGTH_SHORT).show()
                     }
                 }
-            }
+            )
     }
 
     private fun askToDeleteEntries(entries: List<Entry>) {
@@ -705,11 +708,13 @@ class MainActivity : AppuntiActivityFullscreen() {
 
         DatabaseHelper.deleteEntries(this, entries)
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { _, error ->
-                error?.let {
-                    Timber.e(error)
+            .subscribeBy(
+                onError = {
+                    Timber.e(it, "onError")
                     Toast.makeText(this, "Oh Snap! An error occurred!", Toast.LENGTH_SHORT).show()
-                } ?: run {
+                    Crashlytics.logException(it)
+                },
+                onComplete = {
                     Toast.makeText(
                         this, resources.getQuantityString(
                             R.plurals.entries_deleted_title,
@@ -717,8 +722,9 @@ class MainActivity : AppuntiActivityFullscreen() {
                             entries.size
                         ), Toast.LENGTH_SHORT
                     ).show()
+
                 }
-            }
+            )
     }
 
     // selection tracker

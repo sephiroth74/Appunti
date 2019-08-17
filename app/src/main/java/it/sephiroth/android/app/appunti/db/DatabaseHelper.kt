@@ -8,6 +8,7 @@ import com.dbflow5.query.*
 import com.dbflow5.structure.delete
 import com.dbflow5.structure.load
 import com.dbflow5.structure.save
+import io.reactivex.Completable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.*
@@ -17,6 +18,7 @@ import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.Optional
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnScheduler
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxCompletable
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxSingle
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import it.sephiroth.android.library.kotlin_extensions.net.resolveDisplayName
@@ -24,7 +26,7 @@ import it.sephiroth.android.library.kotlin_extensions.net.resolveMimeType
 import org.apache.commons.io.FileUtils
 import org.threeten.bp.Instant
 import timber.log.Timber
-import java.util.UUID
+import java.util.*
 
 object DatabaseHelper {
 
@@ -42,10 +44,6 @@ object DatabaseHelper {
             Timber.v("archived = $archived")
             Triple(select().from(EntryWithCategory::class).list, archived, reminder)
         }
-    }
-
-    fun getEntriesArchivedCountAsync(): Single<Long> {
-        return rxSingle(Schedulers.io()) { getEntriesArchivedCount() }
     }
 
     fun getEntriesArchivedCount(): Long {
@@ -126,10 +124,10 @@ object DatabaseHelper {
         return result
     }
 
-    fun setEntriesPinned(values: List<Entry>, pin: Boolean): Single<Unit> {
+    fun setEntriesPinned(values: List<Entry>, pin: Boolean): Completable {
         val pinnedValue = if (pin) 1 else 0
 
-        return rxSingle(Schedulers.io()) {
+        return rxCompletable(Schedulers.io()) {
             update(Entry::class)
                 .set(
                     Entry_Table.entryPinned.eq(pinnedValue),
@@ -140,8 +138,8 @@ object DatabaseHelper {
         }
     }
 
-    fun deleteEntries(context: Context, values: List<Entry>): Single<Unit> {
-        return rxSingle(Schedulers.io()) {
+    fun deleteEntries(context: Context, values: List<Entry>): Completable {
+        return rxCompletable(Schedulers.io()) {
 
             values.forEach {
                 Entry.removeReminder(it, context)
@@ -154,9 +152,9 @@ object DatabaseHelper {
         }
     }
 
-    fun setEntriesArchived(values: List<Entry>, archive: Boolean): Single<Unit> {
+    fun setEntriesArchived(values: List<Entry>, archive: Boolean): Completable {
         Timber.i("setEntriesArchived($archive, $values")
-        return rxSingle(Schedulers.io()) {
+        return rxCompletable(Schedulers.io()) {
             update(Entry::class)
                 .set(
                     Entry_Table.entryDeleted.eq(0),
