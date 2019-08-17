@@ -1707,9 +1707,13 @@ class DetailListAdapter(private var activity: DetailActivity) :
                 }
 
                 afterTextChanged { textView, s ->
-                    BetterLinkMovementMethod.linkify(Linkify.ALL, textView)
-                        .setOnLinkClickListener(linkClickListener)
-                        .setOnLinkLongClickListener(linkLongClickListener)
+                    if (s.isNullOrBlank() || s.isNullOrEmpty()) {
+                        textView.movementMethod = ArrowKeyMovementMethod.getInstance()
+                    } else {
+                        BetterLinkMovementMethod.linkify(Linkify.ALL, textView)
+                            .setOnLinkClickListener(linkClickListener)
+                            .setOnLinkLongClickListener(linkLongClickListener)
+                    }
                 }
             }
 
