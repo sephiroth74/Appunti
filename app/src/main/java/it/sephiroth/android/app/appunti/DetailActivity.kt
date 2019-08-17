@@ -17,6 +17,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.TextWatcher
+import android.text.method.ArrowKeyMovementMethod
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
 import android.text.util.Linkify
@@ -61,7 +62,10 @@ import it.sephiroth.android.app.appunti.services.LocationRepository
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
-import it.sephiroth.android.library.kotlin_extensions.io.reactivex.*
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.addTo
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnMainThread
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnScheduler
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxTimer
 import it.sephiroth.android.library.kotlin_extensions.kotlin.hasBits
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import it.sephiroth.android.library.kotlin_extensions.view.hideSoftInput
@@ -204,13 +208,15 @@ class DetailActivity : AppuntiActivity() {
             )
         }
         entryText.doOnAfterTextChanged { e ->
+            Timber.v("entryText.doOnAfterTextChanged(${e.isBlank()})")
 
-            // LinkifyCompat.addLinks(e, Linkify.ALL)
-            // ClickableURLSpan.convert(entryText)
-
-            BetterLinkMovementMethod.linkify(Linkify.ALL, entryText)
-                .setOnLinkClickListener(linkClickListener)
-                .setOnLinkLongClickListener(linkLongClickListener)
+            if (e.isBlank() || e.isEmpty()) {
+                entryText.movementMethod = ArrowKeyMovementMethod.getInstance()
+            } else {
+                BetterLinkMovementMethod.linkify(Linkify.ALL, entryText)
+                    .setOnLinkClickListener(linkClickListener)
+                    .setOnLinkLongClickListener(linkLongClickListener)
+            }
         }
 
 
