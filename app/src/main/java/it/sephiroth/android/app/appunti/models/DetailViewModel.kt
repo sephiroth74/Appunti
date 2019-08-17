@@ -34,10 +34,20 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     val entry: LiveData<Entry> = MutableLiveData()
 
     // set/get entry dirty
-    var modified = false
+    var isModified = false
+        get() {
+            return field && !isDeleted
+        }
+        private set
 
     // is a new entry
     var isNew = false
+        get() {
+            return field && !isDeleted
+        }
+        private set
+
+    var isDeleted = false
         private set
 
     var entryID: Long?
@@ -55,6 +65,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
                         onSuccess = { optional ->
                             if (optional.isPresent()) {
                                 isNew = false
+                                isDeleted = false
                                 setEntry(optional.get())
                             } else {
                                 Timber.w("entry is null!")
@@ -70,6 +81,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     fun createNewEntry(entry: Entry, isNewEntry: Boolean): Long? {
         if (entry.save()) {
             isNew = isNewEntry
+            isDeleted = false
             setEntry(entry)
             return entry.entryID
         }
@@ -103,6 +115,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun setEntry(value: Entry?) {
+        Timber.i("setEntry($value)")
         (entry as MutableLiveData).value = value
     }
 
@@ -112,7 +125,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     fun setEntryTitle(title: CharSequence?) {
         entry.whenNotNull {
             it.entryTitle = title?.toString() ?: ""
-            modified = true
+            isModified = true
         }
     }
 
@@ -122,7 +135,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     fun setEntryText(text: CharSequence?) {
         entry.whenNotNull {
             it.entryText = text?.toString() ?: ""
-            modified = true
+            isModified = true
         }
     }
 
@@ -131,9 +144,13 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
      */
     fun save(): Boolean {
         Timber.i("save")
+        if(isDeleted) {
+            Timber.w("error. trying to save a deleted note")
+            return false
+        }
         entry.whenNotNull { entry ->
             val result = entry.touch().save()
-            modified = false
+            isModified = false
             return result
         } ?: run { return false }
     }
@@ -202,7 +219,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
 
     fun deleteEntry(): Boolean {
         entry.whenNotNull { entry ->
-            return DatabaseHelper.deleteEntry(getApplication(), entry)
+            val result = DatabaseHelper.deleteEntry(getApplication(), entry)
+            isDeleted = result
+            return result
         } ?: run { return false }
     }
 

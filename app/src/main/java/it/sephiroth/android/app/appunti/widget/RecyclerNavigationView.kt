@@ -259,7 +259,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
         }
 
         override fun onBindViewHolder(baseHolder: ViewHolderBase, position: Int) {
-            Timber.i("onBindViewHolder(position=$position, type=${baseHolder.itemViewType}, id=${baseHolder.itemId})")
+            // Timber.i("onBindViewHolder(position=$position, type=${baseHolder.itemViewType}, id=${baseHolder.itemId})")
             when {
                 baseHolder.itemViewType == TYPE_LABEL_CATEGORY_ITEM -> {
                     val holder = baseHolder as ViewHolderCategoryItem

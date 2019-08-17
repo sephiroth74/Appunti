@@ -26,7 +26,6 @@ import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.adapters.MainAttachmentsListAdapter
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.getSummary
-import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.utils.ResourceUtils
 import it.sephiroth.android.library.kotlin_extensions.app.isNightMode
 import it.sephiroth.android.library.kotlin_extensions.content.res.getColorStateList
@@ -181,7 +180,7 @@ class ItemEntryListAdapter(
         val item = getItem(position)
 
         if (baseHolder.itemViewType == TYPE_ENTRY) {
-            Timber.v("onBindViewHolder($position)")
+            // Timber.v("onBindViewHolder($position)")
             val holder = baseHolder as EntryViewHolder
             val entryItem = item.entry!!
             var color = 0
@@ -227,10 +226,8 @@ class ItemEntryListAdapter(
             with(holder.itemView) {
                 tag = entryItem
 
-
                 setOnClickListener {
                     Timber.v("onClick!!")
-
                     itemClickListener?.invoke(holder)
                 }
 
@@ -267,7 +264,7 @@ class ItemEntryListAdapter(
     data class SearchIndex(val index: Int, val type: EntryItem.ItemType)
 
     fun update(newData: List<Entry>?, searchQuery: String? = null) {
-        Timber.i("[${currentThread()}] update: ${newData?.size}")
+        //Timber.i("[${currentThread()}] update: ${newData?.size}")
 
         doOnScheduler(Schedulers.single()) {
             Timber.v("doOnScheduler[${currentThread()}]")
@@ -295,7 +292,7 @@ class ItemEntryListAdapter(
                 sortBy { searchIndex -> searchIndex.index }
             }
 
-            Timber.v("arrayIndex: $arrayIndex")
+            //Timber.v("arrayIndex: $arrayIndex")
 
             var addedCount = 0
 
@@ -303,7 +300,7 @@ class ItemEntryListAdapter(
                 val index = item.index
                 val type = item.type
 
-                Timber.v("index=$index, type=$type")
+                //Timber.v("index=$index, type=$type")
 
                 if (index > -1) {
                     finalData.add(index + addedCount, EntryItem(null, type))
@@ -311,12 +308,12 @@ class ItemEntryListAdapter(
                 }
             }
 
-            Timber.v("firstPinned=$firstPinned, firstArchived=$firstArchived, firstDeleted=$firstDeleted")
-            Timber.v("added count: $addedCount")
+            //Timber.v("firstPinned=$firstPinned, firstArchived=$firstArchived, firstDeleted=$firstDeleted")
+            //Timber.v("added count: $addedCount")
 
             if (addedCount > 0) {
                 val firstIndex = arrayIndex.last().index + addedCount
-                Timber.v("firstIndex=$firstIndex")
+                //Timber.v("firstIndex=$firstIndex")
 
                 val subList = finalData.subList(firstIndex, finalData.size)
 
@@ -327,7 +324,7 @@ class ItemEntryListAdapter(
                     else -> -1
                 }
 
-                Timber.v("firstNonPinned=$firstNonPinned, final=${firstNonPinned + addedCount}")
+                //Timber.v("firstNonPinned=$firstNonPinned, final=${firstNonPinned + addedCount}")
 
                 if (firstNonPinned > -1) {
                     finalData.add(firstNonPinned + firstIndex, EntryItem(null, EntryItem.ItemType.OTHERS))
@@ -341,7 +338,7 @@ class ItemEntryListAdapter(
 
             values = finalData
 
-            Timber.v("[${currentThread()}] updated completed in (${Instant.now().minusMillis(NOW.toEpochMilli()).toEpochMilli()})")
+            //Timber.v("[${currentThread()}] updated completed in (${Instant.now().minusMillis(NOW.toEpochMilli()).toEpochMilli()})")
 
             doOnMainThread {
                 if (searchText != searchQuery) {

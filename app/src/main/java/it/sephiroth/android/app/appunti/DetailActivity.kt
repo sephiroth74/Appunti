@@ -249,7 +249,7 @@ class DetailActivity : AppuntiActivity() {
             answers.logCustom(CustomEvent("detail.deleteNewItem"))
             model.entry.value?.delete()
         } else {
-            if (model.modified) {
+            if (model.isModified) {
                 model.save()
             }
         }
@@ -993,6 +993,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun updateMenu(menu: Menu?, entry: Entry) {
+        Timber.i("updateMenu($entry)")
         menu?.let { menu ->
             var menuItem = menu.findItem(R.id.menu_action_pin)
             menuItem?.apply {
