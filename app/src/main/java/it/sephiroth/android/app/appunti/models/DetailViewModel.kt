@@ -6,10 +6,12 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.crashlytics.android.Crashlytics
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.ChangeAction
 import com.dbflow5.structure.save
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.rxkotlin.subscribeBy
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -45,11 +47,20 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
                 DatabaseHelper
                     .getEntryById(value)
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { result, error ->
-                        error?.printStackTrace()
-                        isNew = false
-                        setEntry(result)
-                    }
+                    .subscribeBy(
+                        onError = {
+                            Timber.w(it, "onError")
+                            Crashlytics.logException(it)
+                        },
+                        onSuccess = { optional ->
+                            if (optional.isPresent()) {
+                                isNew = false
+                                setEntry(optional.get())
+                            } else {
+                                Timber.w("entry is null!")
+                            }
+                        }
+                    )
             }
         }
         get() {
@@ -220,7 +231,11 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     fun addAttachment(uri: Uri, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
         Timber.i("addAttachment($uri)")
         entry.whenNotNull { entry ->
-            DatabaseHelper.addAttachmentFromUri(getApplication(), entry, uri) { success, throwable ->
+            DatabaseHelper.addAttachmentFromUri(
+                getApplication(),
+                entry,
+                uri
+            ) { success, throwable ->
                 entry.invalidateAttachments()
                 callback?.invoke(success, throwable)
             }
@@ -253,7 +268,10 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     /**
      * Remove an [Attachment] from the current [Entry]
      */
-    fun removeAttachment(attachment: Attachment, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
+    fun removeAttachment(
+        attachment: Attachment,
+        callback: ((Boolean, Throwable?) -> (Unit))? = null
+    ) {
         entry.whenNotNull { entry ->
             DatabaseHelper.deleteAttachment(
                 getApplication(),

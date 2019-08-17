@@ -15,6 +15,7 @@ import it.sephiroth.android.app.appunti.db.views.EntryWithCategory
 import it.sephiroth.android.app.appunti.ext.getFile
 import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
+import it.sephiroth.android.app.appunti.utils.Optional
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnScheduler
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxSingle
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
@@ -23,7 +24,7 @@ import it.sephiroth.android.library.kotlin_extensions.net.resolveMimeType
 import org.apache.commons.io.FileUtils
 import org.threeten.bp.Instant
 import timber.log.Timber
-import java.util.*
+import java.util.UUID
 
 object DatabaseHelper {
 
@@ -364,9 +365,11 @@ object DatabaseHelper {
         }
     }
 
-    fun getEntryById(id: Long): Single<Entry?> {
+    @Suppress("RemoveExplicitTypeArguments")
+    fun getEntryById(id: Long): Single<Optional<Entry>> {
         return rxSingle(Schedulers.io()) {
-            select().from(Entry::class).where(Entry_Table.entryID.eq(id)).result
+            val entry = select().from(Entry::class).where(Entry_Table.entryID.eq(id)).result
+            entry?.let { Optional.of(it) } ?: run { Optional.empty<Entry>() }
         }
     }
 
