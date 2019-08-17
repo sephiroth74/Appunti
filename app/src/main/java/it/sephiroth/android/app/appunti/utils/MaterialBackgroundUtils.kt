@@ -5,10 +5,10 @@ import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import getFloat
 import it.sephiroth.android.app.appunti.R
-import it.sephiroth.android.app.appunti.graphics.MaterialBackgroundDrawable
-import it.sephiroth.android.app.appunti.graphics.MaterialShape
-import it.sephiroth.android.app.appunti.graphics.MaterialShapeDrawable
 import it.sephiroth.android.library.kotlin_extensions.content.res.getColor
+import it.sephiroth.android.library.material.drawable.graphics.MaterialBackgroundDrawable
+import it.sephiroth.android.library.material.drawable.graphics.MaterialShape
+import it.sephiroth.android.library.material.drawable.graphics.MaterialShapeDrawable
 
 object MaterialBackgroundUtils {
 

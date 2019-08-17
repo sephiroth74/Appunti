@@ -93,6 +93,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation project(':kotlin_extensions')
+    implementation project(':mt_drawable')
 
     implementation 'androidx.appcompat:appcompat:1.0.2'
 
