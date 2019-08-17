@@ -358,6 +358,7 @@ class DetailActivity : AppuntiActivity() {
             R.id.menu_action_pin -> togglePin()
             R.id.menu_action_archive -> toggleArchive()
             R.id.menu_action_alarm -> toggleReminder()
+            R.id.menu_action_share -> dispatchShareEntryIntent()
             android.R.id.home -> onBackPressed()
         }
         return true
@@ -510,7 +511,6 @@ class DetailActivity : AppuntiActivity() {
                 !value && model.entry.value?.entryType == Entry.EntryType.TEXT
             findItem(R.id.menu_action_text).isVisible =
                 !value && model.entry.value?.entryType == Entry.EntryType.LIST
-            findItem(R.id.menu_action_share).setVisible(!value)
         }
     }
 
@@ -550,8 +550,6 @@ class DetailActivity : AppuntiActivity() {
                 R.id.menu_action_category -> dispatchPickCategoryIntent()
 
                 R.id.menu_action_delete -> toggleDelete()
-
-                R.id.menu_action_share -> dispatchShareEntryIntent()
 
                 R.id.menu_action_image -> dispatchOpenImageIntent()
 
