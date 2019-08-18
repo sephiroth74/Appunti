@@ -112,6 +112,8 @@ class DetailActivity : AppuntiActivity() {
 
     private var progressDialog: ProgressDialog? = null
 
+    private var pauseListeners = false
+
     private val linkLongClickListener: BetterLinkMovementMethod.OnLinkLongClickListener =
         BetterLinkMovementMethod.OnLinkLongClickListener { textView, url -> true }
 
@@ -193,20 +195,14 @@ class DetailActivity : AppuntiActivity() {
         // UI elements listeners
         entryCategory.setOnClickListener { dispatchPickCategoryIntent() }
         entryTitle.doOnTextChanged { s, start, count, after ->
-            updateEntryTitle(
-                s,
-                start,
-                count,
-                after
-            )
+            if (!pauseListeners) {
+                updateEntryTitle(s, start, count, after)
+            }
         }
         entryText.doOnTextChanged { s, start, count, after ->
-            updateEntryText(
-                s,
-                start,
-                count,
-                after
-            )
+            if(!pauseListeners) {
+                updateEntryText(s, start, count, after)
+            }
         }
         entryText.doOnAfterTextChanged { e ->
             Timber.v("entryText.doOnAfterTextChanged(${e.isBlank()})")
@@ -219,8 +215,6 @@ class DetailActivity : AppuntiActivity() {
                     .setOnLinkLongClickListener(linkLongClickListener)
             }
         }
-
-
         entryText.setOnClickListener {
             entryText.requestFocus()
             entryText.setOnClickListener(null)
@@ -287,7 +281,7 @@ class DetailActivity : AppuntiActivity() {
                     disablePostponedTransitions = true
                     newEntry = Entry()
 
-                    if(intent.hasExtra(IntentUtils.KEY_CATEGORY_ID)) {
+                    if (intent.hasExtra(IntentUtils.KEY_CATEGORY_ID)) {
                         val categoryId = intent.getLongExtra(IntentUtils.KEY_CATEGORY_ID, 0)
                         DatabaseHelper.getCategoryByID(categoryId)?.let {
                             newEntry?.category = it
@@ -766,6 +760,8 @@ class DetailActivity : AppuntiActivity() {
 
         currentEntryID = entry.entryID
 
+        pauseListeners = true
+
         invalidate(
             UPDATE_TITLE
                     or UPDATE_TYPE_AND_TEXT
@@ -782,6 +778,7 @@ class DetailActivity : AppuntiActivity() {
             }
             shouldRemoveAlarm = false
         }
+
 
         // invoke the postponed transition only the first time
         // when it's not a new document
@@ -802,6 +799,8 @@ class DetailActivity : AppuntiActivity() {
             entry.entryStream = null
             addAttachmentToEntry(it)
         }
+
+        pauseListeners = false
     }
 
 
