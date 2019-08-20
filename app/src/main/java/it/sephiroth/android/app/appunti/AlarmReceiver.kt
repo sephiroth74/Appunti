@@ -18,7 +18,9 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.TaskStackBuilder
+import com.crashlytics.android.Crashlytics
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.rxkotlin.subscribeBy
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.ext.getSummary
@@ -62,18 +64,30 @@ class AlarmReceiver : BroadcastReceiver() {
                 DatabaseHelper
                     .getEntryById(entryID)
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { entry, error ->
-                        entry?.let { entry ->
-                            val instant = Instant.now().plus(POSTPONE_MINUTES, ChronoUnit.MINUTES)
-                            if (DatabaseHelper.addReminder(entry, instant, context)) {
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.alarm_postponed, POSTPONE_MINUTES),
-                                    Toast.LENGTH_LONG
-                                ).show()
+                    .subscribeBy(
+                        onSuccess = { optional ->
+                            if (optional.isPresent()) {
+                                val instant =
+                                    Instant.now().plus(POSTPONE_MINUTES, ChronoUnit.MINUTES)
+                                if (DatabaseHelper.addReminder(optional.get(), instant, context)) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(
+                                            R.string.alarm_postponed,
+                                            POSTPONE_MINUTES
+                                        ),
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            } else {
+                                Timber.w("entry is null!")
                             }
+                        },
+                        onError = {
+                            Timber.w(it, "onError")
+                            Crashlytics.logException(it)
                         }
-                    }
+                    )
             }
         }
     }
@@ -92,16 +106,21 @@ class AlarmReceiver : BroadcastReceiver() {
                 wakeLock.acquire(1000)
 
                 Timber.i("entryID=$entryID")
-                DatabaseHelper.getEntryById(entryID).subscribe { entry, error ->
-                    error?.let {
-                        Timber.e(error)
-                    }
-
-                    entry?.let { entry ->
-                        DatabaseHelper.removeReminder(entry, context)
-                        wakeLock.release()
-                    }
-                }
+                DatabaseHelper.getEntryById(entryID)
+                    .subscribeBy(
+                        onError = {
+                            Timber.w(it, "onError")
+                            Crashlytics.logException(it)
+                        },
+                        onSuccess = { optional ->
+                            if (optional.isPresent()) {
+                                DatabaseHelper.removeReminder(optional.get(), context)
+                                wakeLock.release()
+                            } else {
+                                Timber.w("entry is null")
+                            }
+                        }
+                    )
             }
         }
     }
@@ -117,86 +136,91 @@ class AlarmReceiver : BroadcastReceiver() {
                     powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
                 wakeLock.acquire(1000)
 
-                DatabaseHelper.getEntryById(entryID).subscribe { entry, error ->
-                    if (null != error) {
-                        Timber.e(error)
-                    } else if (entry != null) {
-                        createNotificationChannel(context)
+                DatabaseHelper.getEntryById(entryID)
+                    .subscribeBy(
+                        onError = {
+                            Timber.w(it, "onError")
+                            Crashlytics.logException(it)
+                        },
+                        onSuccess = { optional ->
+                            if(optional.isPresent()) {
+                                val entry = optional.get()
+                                createNotificationChannel(context)
 
-                        val contentIntent =
-                            IntentUtils.createViewEntryIntent(context, entry.entryID, true)
+                                val contentIntent =
+                                    IntentUtils.createViewEntryIntent(context, entry.entryID, true)
 
-                        val pendingIntent = TaskStackBuilder.create(context)
-                            .addParentStack(DetailActivity::class.java)
-                            .addNextIntent(contentIntent)
-                            .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+                                val pendingIntent = TaskStackBuilder.create(context)
+                                    .addParentStack(DetailActivity::class.java)
+                                    .addNextIntent(contentIntent)
+                                    .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
 
-                        Timber.v("entry = $entry")
-                        Timber.v("entryType = ${entry.entryType}")
+                                Timber.v("entry = $entry")
+                                Timber.v("entryType = ${entry.entryType}")
 
-                        val builder = NotificationCompat
-                            .Builder(context, ENTRY_ALARM_CHANNEL_ID)
-                            .setLargeIcon(
-                                BitmapFactory.decodeResource(
-                                    context.resources,
-                                    R.mipmap.ic_launcher_round
-                                )
-                            )
-                            .setSmallIcon(R.drawable.sharp_alarm_24)
-                            .setContentTitle(entry.entryTitle)
-                            .setContentText(
-                                entry.getSummary(
-                                    context,
-                                    context.resources.getDimension(R.dimen.text_size_body_1_material),
-                                    100,
-                                    1
-                                )
-                            )
-                            .setColor(entry.getColor(context))
-                            .setTicker(entry.entryTitle)
-                            .setContentIntent(pendingIntent)
-                            .setPriority(NotificationCompat.PRIORITY_HIGH)
-                            .setCategory(NotificationCompat.CATEGORY_ALARM)
-                            .setSound(
-                                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
-                                AudioManager.STREAM_ALARM
-                            )
-                            .setStyle(
-                                NotificationCompat.BigTextStyle()
-                                    .bigText(
+                                val builder = NotificationCompat
+                                    .Builder(context, ENTRY_ALARM_CHANNEL_ID)
+                                    .setLargeIcon(
+                                        BitmapFactory.decodeResource(
+                                            context.resources,
+                                            R.mipmap.ic_launcher_round
+                                        )
+                                    )
+                                    .setSmallIcon(R.drawable.sharp_alarm_24)
+                                    .setContentTitle(entry.entryTitle)
+                                    .setContentText(
                                         entry.getSummary(
                                             context,
                                             context.resources.getDimension(R.dimen.text_size_body_1_material),
-                                            200,
-                                            5
+                                            100,
+                                            1
                                         )
                                     )
-                            )
-                            .setAutoCancel(true)
-                            .addAction(
-                                NotificationCompat.Action(
-                                    0,
-                                    context.getString(R.string.snooze),
-                                    Entry.getDeleteReminderPendingIntent(entry, context)
-                                )
-                            )
-                            .addAction(
-                                NotificationCompat.Action(
-                                    0,
-                                    context.getString(R.string.postpone),
-                                    Entry.getPostponeReminderPendingIntent(entry, context)
-                                )
-                            )
-                            .setDeleteIntent(Entry.getDeleteReminderPendingIntent(entry, context))
-
-                        with(NotificationManagerCompat.from(context)) {
-                            notify(NOTIFICATION_ALARM_BASE_ID + entryID.toInt(), builder.build())
+                                    .setColor(entry.getColor(context))
+                                    .setTicker(entry.entryTitle)
+                                    .setContentIntent(pendingIntent)
+                                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                                    .setSound(
+                                        RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
+                                        AudioManager.STREAM_ALARM
+                                    )
+                                    .setStyle(
+                                        NotificationCompat.BigTextStyle()
+                                            .bigText(
+                                                entry.getSummary(
+                                                    context,
+                                                    context.resources.getDimension(R.dimen.text_size_body_1_material),
+                                                    200,
+                                                    5
+                                                )
+                                            )
+                                    )
+                                    .setAutoCancel(true)
+                                    .addAction(
+                                        NotificationCompat.Action(
+                                            0,
+                                            context.getString(R.string.snooze),
+                                            Entry.getDeleteReminderPendingIntent(entry, context)
+                                        )
+                                    )
+                                    .addAction(
+                                        NotificationCompat.Action(
+                                            0,
+                                            context.getString(R.string.postpone),
+                                            Entry.getPostponeReminderPendingIntent(entry, context)
+                                        )
+                                    )
+                                    .setDeleteIntent(Entry.getDeleteReminderPendingIntent(entry, context))
+                                with(NotificationManagerCompat.from(context)) {
+                                    notify(NOTIFICATION_ALARM_BASE_ID + entryID.toInt(), builder.build())
+                                }
+                                wakeLock.release()
+                            } else {
+                                Timber.w("entry is null!")
+                            }
                         }
-
-                        wakeLock.release()
-                    }
-                }
-
+                    )
             }
         }
     }

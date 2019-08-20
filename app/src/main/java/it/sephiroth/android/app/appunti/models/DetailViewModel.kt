@@ -6,10 +6,12 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.crashlytics.android.Crashlytics
 import com.dbflow5.runtime.DirectModelNotifier
 import com.dbflow5.structure.ChangeAction
 import com.dbflow5.structure.save
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.rxkotlin.subscribeBy
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
@@ -32,10 +34,20 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     val entry: LiveData<Entry> = MutableLiveData()
 
     // set/get entry dirty
-    var modified = false
+    var isModified = false
+        get() {
+            return field && !isDeleted
+        }
+        private set
 
     // is a new entry
     var isNew = false
+        get() {
+            return field && !isDeleted
+        }
+        private set
+
+    var isDeleted = false
         private set
 
     var entryID: Long?
@@ -45,11 +57,21 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
                 DatabaseHelper
                     .getEntryById(value)
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { result, error ->
-                        error?.printStackTrace()
-                        isNew = false
-                        setEntry(result)
-                    }
+                    .subscribeBy(
+                        onError = {
+                            Timber.w(it, "onError")
+                            Crashlytics.logException(it)
+                        },
+                        onSuccess = { optional ->
+                            if (optional.isPresent()) {
+                                isNew = false
+                                isDeleted = false
+                                setEntry(optional.get())
+                            } else {
+                                Timber.w("entry is null!")
+                            }
+                        }
+                    )
             }
         }
         get() {
@@ -59,6 +81,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     fun createNewEntry(entry: Entry, isNewEntry: Boolean): Long? {
         if (entry.save()) {
             isNew = isNewEntry
+            isDeleted = false
             setEntry(entry)
             return entry.entryID
         }
@@ -92,6 +115,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun setEntry(value: Entry?) {
+        Timber.i("setEntry($value)")
         (entry as MutableLiveData).value = value
     }
 
@@ -101,7 +125,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     fun setEntryTitle(title: CharSequence?) {
         entry.whenNotNull {
             it.entryTitle = title?.toString() ?: ""
-            modified = true
+            isModified = true
         }
     }
 
@@ -111,7 +135,7 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     fun setEntryText(text: CharSequence?) {
         entry.whenNotNull {
             it.entryText = text?.toString() ?: ""
-            modified = true
+            isModified = true
         }
     }
 
@@ -120,9 +144,13 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
      */
     fun save(): Boolean {
         Timber.i("save")
+        if(isDeleted) {
+            Timber.w("error. trying to save a deleted note")
+            return false
+        }
         entry.whenNotNull { entry ->
             val result = entry.touch().save()
-            modified = false
+            isModified = false
             return result
         } ?: run { return false }
     }
@@ -191,7 +219,9 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
 
     fun deleteEntry(): Boolean {
         entry.whenNotNull { entry ->
-            return DatabaseHelper.deleteEntry(getApplication(), entry)
+            val result = DatabaseHelper.deleteEntry(getApplication(), entry)
+            isDeleted = result
+            return result
         } ?: run { return false }
     }
 
@@ -220,7 +250,11 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     fun addAttachment(uri: Uri, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
         Timber.i("addAttachment($uri)")
         entry.whenNotNull { entry ->
-            DatabaseHelper.addAttachmentFromUri(getApplication(), entry, uri) { success, throwable ->
+            DatabaseHelper.addAttachmentFromUri(
+                getApplication(),
+                entry,
+                uri
+            ) { success, throwable ->
                 entry.invalidateAttachments()
                 callback?.invoke(success, throwable)
             }
@@ -253,7 +287,10 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     /**
      * Remove an [Attachment] from the current [Entry]
      */
-    fun removeAttachment(attachment: Attachment, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
+    fun removeAttachment(
+        attachment: Attachment,
+        callback: ((Boolean, Throwable?) -> (Unit))? = null
+    ) {
         entry.whenNotNull { entry ->
             DatabaseHelper.deleteAttachment(
                 getApplication(),

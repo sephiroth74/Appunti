@@ -7,6 +7,7 @@
       <module fileurl="file://$PROJECT_DIR$/kotlin_extensions/Appunti-kotlin_extensions.iml" filepath="$PROJECT_DIR$/kotlin_extensions/Appunti-kotlin_extensions.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/kotlin_extensions/kotlin_extensions.iml" filepath="$PROJECT_DIR$/kotlin_extensions/kotlin_extensions.iml" />
+      <module fileurl="file://$PROJECT_DIR$/material_drawable/mt_drawable/mt_drawable.iml" filepath="$PROJECT_DIR$/material_drawable/mt_drawable/mt_drawable.iml" />
       <module fileurl="file://$PROJECT_DIR$/sephiroth74-Appunti.iml" filepath="$PROJECT_DIR$/sephiroth74-Appunti.iml" />
     </modules>
   </component>

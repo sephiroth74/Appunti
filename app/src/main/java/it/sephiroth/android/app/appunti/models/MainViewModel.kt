@@ -3,6 +3,7 @@ package it.sephiroth.android.app.appunti.models
 import android.annotation.SuppressLint
 import android.app.Application
 import android.os.Handler
+import androidx.databinding.Bindable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -119,6 +120,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
     val entries: LiveData<MutableList<Entry>> = MutableLiveData()
 
     val categoryChanged: LiveData<Boolean> = MutableLiveData()
+
+    fun isEmpty() = entries.value?.isEmpty() ?: run { true }
 
     @SuppressLint("CheckResult")
     private fun updateEntries() {

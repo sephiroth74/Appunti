@@ -17,6 +17,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.TextWatcher
+import android.text.method.ArrowKeyMovementMethod
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
 import android.text.util.Linkify
@@ -49,6 +50,7 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.adapters.DetailAttachmentsListAdapter
 import it.sephiroth.android.app.appunti.adapters.DetailRemoteUrlListAdapter
+import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
@@ -61,7 +63,10 @@ import it.sephiroth.android.app.appunti.services.LocationRepository
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
-import it.sephiroth.android.library.kotlin_extensions.io.reactivex.*
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.addTo
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnMainThread
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnScheduler
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxTimer
 import it.sephiroth.android.library.kotlin_extensions.kotlin.hasBits
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import it.sephiroth.android.library.kotlin_extensions.view.hideSoftInput
@@ -106,6 +111,8 @@ class DetailActivity : AppuntiActivity() {
     private val answers: Answers by lazy { Answers.getInstance() }
 
     private var progressDialog: ProgressDialog? = null
+
+    private var pauseListeners = false
 
     private val linkLongClickListener: BetterLinkMovementMethod.OnLinkLongClickListener =
         BetterLinkMovementMethod.OnLinkLongClickListener { textView, url -> true }
@@ -188,32 +195,26 @@ class DetailActivity : AppuntiActivity() {
         // UI elements listeners
         entryCategory.setOnClickListener { dispatchPickCategoryIntent() }
         entryTitle.doOnTextChanged { s, start, count, after ->
-            updateEntryTitle(
-                s,
-                start,
-                count,
-                after
-            )
+            if (!pauseListeners) {
+                updateEntryTitle(s, start, count, after)
+            }
         }
         entryText.doOnTextChanged { s, start, count, after ->
-            updateEntryText(
-                s,
-                start,
-                count,
-                after
-            )
+            if(!pauseListeners) {
+                updateEntryText(s, start, count, after)
+            }
         }
         entryText.doOnAfterTextChanged { e ->
+            Timber.v("entryText.doOnAfterTextChanged(${e.isBlank()})")
 
-            // LinkifyCompat.addLinks(e, Linkify.ALL)
-            // ClickableURLSpan.convert(entryText)
-
-            BetterLinkMovementMethod.linkify(Linkify.ALL, entryText)
-                .setOnLinkClickListener(linkClickListener)
-                .setOnLinkLongClickListener(linkLongClickListener)
+            if (e.isBlank() || e.isEmpty()) {
+                entryText.movementMethod = ArrowKeyMovementMethod.getInstance()
+            } else {
+                BetterLinkMovementMethod.linkify(Linkify.ALL, entryText)
+                    .setOnLinkClickListener(linkClickListener)
+                    .setOnLinkLongClickListener(linkLongClickListener)
+            }
         }
-
-
         entryText.setOnClickListener {
             entryText.requestFocus()
             entryText.setOnClickListener(null)
@@ -249,7 +250,7 @@ class DetailActivity : AppuntiActivity() {
             answers.logCustom(CustomEvent("detail.deleteNewItem"))
             model.entry.value?.delete()
         } else {
-            if (model.modified) {
+            if (model.isModified) {
                 model.save()
             }
         }
@@ -280,6 +281,12 @@ class DetailActivity : AppuntiActivity() {
                     disablePostponedTransitions = true
                     newEntry = Entry()
 
+                    if (intent.hasExtra(IntentUtils.KEY_CATEGORY_ID)) {
+                        val categoryId = intent.getLongExtra(IntentUtils.KEY_CATEGORY_ID, 0)
+                        DatabaseHelper.getCategoryByID(categoryId)?.let {
+                            newEntry?.category = it
+                        }
+                    }
 
                     if (intent.hasExtra(IntentUtils.KEY_ENTRY_TYPE)) {
                         val type = Entry.EntryType.values()[intent.getIntExtra(
@@ -352,6 +359,7 @@ class DetailActivity : AppuntiActivity() {
             R.id.menu_action_pin -> togglePin()
             R.id.menu_action_archive -> toggleArchive()
             R.id.menu_action_alarm -> toggleReminder()
+            R.id.menu_action_share -> dispatchShareEntryIntent()
             android.R.id.home -> onBackPressed()
         }
         return true
@@ -504,7 +512,6 @@ class DetailActivity : AppuntiActivity() {
                 !value && model.entry.value?.entryType == Entry.EntryType.TEXT
             findItem(R.id.menu_action_text).isVisible =
                 !value && model.entry.value?.entryType == Entry.EntryType.LIST
-            findItem(R.id.menu_action_share).setVisible(!value)
         }
     }
 
@@ -544,8 +551,6 @@ class DetailActivity : AppuntiActivity() {
                 R.id.menu_action_category -> dispatchPickCategoryIntent()
 
                 R.id.menu_action_delete -> toggleDelete()
-
-                R.id.menu_action_share -> dispatchShareEntryIntent()
 
                 R.id.menu_action_image -> dispatchOpenImageIntent()
 
@@ -755,6 +760,8 @@ class DetailActivity : AppuntiActivity() {
 
         currentEntryID = entry.entryID
 
+        pauseListeners = true
+
         invalidate(
             UPDATE_TITLE
                     or UPDATE_TYPE_AND_TEXT
@@ -771,6 +778,7 @@ class DetailActivity : AppuntiActivity() {
             }
             shouldRemoveAlarm = false
         }
+
 
         // invoke the postponed transition only the first time
         // when it's not a new document
@@ -791,6 +799,8 @@ class DetailActivity : AppuntiActivity() {
             entry.entryStream = null
             addAttachmentToEntry(it)
         }
+
+        pauseListeners = false
     }
 
 
@@ -993,6 +1003,7 @@ class DetailActivity : AppuntiActivity() {
     }
 
     private fun updateMenu(menu: Menu?, entry: Entry) {
+        Timber.i("updateMenu($entry)")
         menu?.let { menu ->
             var menuItem = menu.findItem(R.id.menu_action_pin)
             menuItem?.apply {
@@ -1700,9 +1711,13 @@ class DetailListAdapter(private var activity: DetailActivity) :
                 }
 
                 afterTextChanged { textView, s ->
-                    BetterLinkMovementMethod.linkify(Linkify.ALL, textView)
-                        .setOnLinkClickListener(linkClickListener)
-                        .setOnLinkLongClickListener(linkLongClickListener)
+                    if (s.isNullOrBlank() || s.isNullOrEmpty()) {
+                        textView.movementMethod = ArrowKeyMovementMethod.getInstance()
+                    } else {
+                        BetterLinkMovementMethod.linkify(Linkify.ALL, textView)
+                            .setOnLinkClickListener(linkClickListener)
+                            .setOnLinkLongClickListener(linkLongClickListener)
+                    }
                 }
             }
 

@@ -1,1 +1,3 @@
-include ':app', ':kotlin_extensions'
+include ':app', ':kotlin_extensions', ':mt_drawable'
+
+project(':mt_drawable').projectDir = file('material_drawable/mt_drawable')

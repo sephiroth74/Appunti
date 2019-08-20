@@ -11,13 +11,6 @@
             app:showAsAction="ifRoom"/>
 
     <item
-            android:id="@+id/menu_action_share"
-            android:checkable="false"
-            android:icon="@drawable/sharp_share_24"
-            android:title="@string/share"
-            app:showAsAction="always"/>
-
-    <item
             android:id="@+id/menu_action_category"
             android:checkable="false"
             android:icon="@drawable/outline_label_24"
