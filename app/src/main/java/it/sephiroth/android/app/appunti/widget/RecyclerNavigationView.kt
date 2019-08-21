@@ -5,6 +5,7 @@ package it.sephiroth.android.app.appunti.widget
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.util.AttributeSet
@@ -14,10 +15,12 @@ import android.view.ViewGroup
 import android.widget.CheckedTextView
 import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.Observer
+import androidx.palette.graphics.Palette
 import androidx.recyclerview.widget.RecyclerView
 import com.crashlytics.android.answers.Answers
 import com.crashlytics.android.answers.CustomEvent
@@ -385,15 +388,41 @@ class RecyclerNavigationView @JvmOverloads constructor(
         protected fun setTintAndColor(colorStateList: ColorStateList?) {
             colorStateList?.let { colorStateList ->
 
+
+                val swatch = Palette.Swatch(colorStateList.defaultColor, 255)
+                val hsl = swatch.hsl
+                val luminosity = hsl[2]
+
+                Timber.v("defaultColor = %x", colorStateList.defaultColor)
+                Timber.v("hsl = %s, %s, %s", swatch.hsl[0], swatch.hsl[1], swatch.hsl[2])
+
+                // adjust text color based on luminosity
+                var textColor = colorStateList
+
+                if(luminosity > 0.6f) {
+                    hsl[2] /= 1.65f
+
+                    if(hsl[1] < 1f) {
+                        hsl[1] *= 2f
+                    }
+
+                    textColor = ColorStateList.valueOf(ColorUtils.HSLToColor(hsl))
+                } else if(luminosity < 0.2f) {
+                    hsl[2] *= 2f
+                    textColor = ColorStateList.valueOf(ColorUtils.HSLToColor(hsl))
+                }
+
                 itemView.backgroundTintList = colorStateList
                 setTextCompoundDrawablesColorFilter(
                     PorterDuffColorFilter(
-                        colorStateList.defaultColor,
+                        textColor.defaultColor,
                         PorterDuff.Mode.SRC_IN
                     )
                 )
-                textView.setTextColor(colorStateList)
-                numEntriesText.setTextColor(colorStateList)
+
+
+                textView.setTextColor(textColor)
+                numEntriesText.setTextColor(textColor)
             } ?: run {
                 itemView.backgroundTintList = null
                 setTextCompoundDrawablesColorFilter(null)
