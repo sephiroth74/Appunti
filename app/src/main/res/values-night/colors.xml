@@ -8,8 +8,8 @@
     <color name="background_material_dark" tools:override="true">@color/material_grey_50</color>
     <color name="background_material_light" tools:override="true">@color/material_grey_900</color>
     <color name="actionModeBackground">@color/material_grey_850</color>
-    <color name="fabBackgroundColorClosed">@color/material_grey_600</color>
-    <color name="fabBackgroundColorOpened">@color/material_grey_600</color>
+    <color name="fabBackgroundColorClosed">@color/colorPrimary</color>
+    <color name="fabBackgroundColorOpened">@color/colorPrimaryDark</color>
     <color name="navigation_background_fill">#bb303030</color>
     <color name="navigation_background_stroke">#22000000</color>
 

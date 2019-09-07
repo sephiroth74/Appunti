@@ -155,5 +155,7 @@
     <string name="nothing_here">Qui Niente</string>
     <string name="ops_it_seems_like_you_don_t_have_any_note_in_this_category">Ops. Direi che questa categoria è vuota!</string>
     <string name="create_new">Nuovo Appunto</string>
+    <string name="attribution">Crediti</string>
+    <string name="click_on_links">Click sui collegamenti</string>
 
 </resources>
