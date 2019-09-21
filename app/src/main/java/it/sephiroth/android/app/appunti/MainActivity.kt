@@ -222,7 +222,11 @@ class MainActivity : AppuntiActivityFullscreen() {
 
             adapter.update(it)
 
-            if (it.isNullOrEmpty()) {
+            // do not show the no results screen in case group is not empty and it's not
+            // archived or with alarm category
+            val shouldDisplayNoResultScreen = it.isNullOrEmpty() && !model.group.isReminder() && !model.group.isArchived()
+
+            if (shouldDisplayNoResultScreen) {
                 noResultsView.isVisible = true
             } else {
                 noResultsView.isGone = true

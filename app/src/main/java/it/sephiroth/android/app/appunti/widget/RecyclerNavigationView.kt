@@ -387,30 +387,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
         protected fun setTintAndColor(colorStateList: ColorStateList?) {
             colorStateList?.let { colorStateList ->
-
-
-                val swatch = Palette.Swatch(colorStateList.defaultColor, 255)
-                val hsl = swatch.hsl
-                val luminosity = hsl[2]
-
-                Timber.v("defaultColor = %x", colorStateList.defaultColor)
-                Timber.v("hsl = %s, %s, %s", swatch.hsl[0], swatch.hsl[1], swatch.hsl[2])
-
-                // adjust text color based on luminosity
-                var textColor = colorStateList
-
-                if(luminosity > 0.6f) {
-                    hsl[2] /= 1.65f
-
-                    if(hsl[1] < 1f) {
-                        hsl[1] *= 2f
-                    }
-
-                    textColor = ColorStateList.valueOf(ColorUtils.HSLToColor(hsl))
-                } else if(luminosity < 0.2f) {
-                    hsl[2] *= 2f
-                    textColor = ColorStateList.valueOf(ColorUtils.HSLToColor(hsl))
-                }
+                var textColor = extractTextColor(colorStateList)
 
                 itemView.backgroundTintList = colorStateList
                 setTextCompoundDrawablesColorFilter(
@@ -429,6 +406,32 @@ class RecyclerNavigationView @JvmOverloads constructor(
                 textView.setTextColor(textColors)
                 numEntriesText.setTextColor(textColors)
             }
+        }
+
+        private fun extractTextColor(colorStateList: ColorStateList): ColorStateList {
+            val swatch = Palette.Swatch(colorStateList.defaultColor, 255)
+            val hsl = swatch.hsl
+            val luminosity = hsl[2]
+
+            Timber.v("defaultColor = %x", colorStateList.defaultColor)
+            Timber.v("hsl = %s, %s, %s", swatch.hsl[0], swatch.hsl[1], swatch.hsl[2])
+
+            // adjust text color based on luminosity
+            var textColor = colorStateList
+
+            if (luminosity > 0.6f) {
+                hsl[2] /= 1.65f
+
+                if (hsl[1] < 1f) {
+                    hsl[1] *= 2f
+                }
+
+                textColor = ColorStateList.valueOf(ColorUtils.HSLToColor(hsl))
+            } else if (luminosity < 0.2f) {
+                hsl[2] *= 2f
+                textColor = ColorStateList.valueOf(ColorUtils.HSLToColor(hsl))
+            }
+            return textColor
         }
 
         private fun setTextCompoundDrawablesColorFilter(colorFilter: PorterDuffColorFilter?) {

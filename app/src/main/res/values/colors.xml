@@ -20,9 +20,11 @@
 <!--    <color name="background_floating_material_light">@color/white</color>-->
 
     <!-- colors for categoriesWithEntries -->
+<!--    <color name="ciao">#C7C7C7</color>-->
+<!--    <color name="ciao2">#333333</color>-->
 
     <integer-array name="category_colors">
-        <item>0xFFFFFFFF</item>
+        <item>0xFFC7C7C7</item>
         <item>0xFFFA9C7E</item>
         <item>0xFFFFB74D</item>
         <item>0xFFFFD54F</item>

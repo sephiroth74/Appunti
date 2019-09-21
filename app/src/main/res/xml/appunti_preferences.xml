@@ -19,7 +19,7 @@
                 android:key="preference.tmp.clickOnLinks"
                 android:persistent="false"
                 android:summary="Always ask"
-                android:title="Click on Links">
+                android:title="@string/click_on_links">
 
         </PreferenceScreen>
     </PreferenceCategory>
@@ -37,7 +37,7 @@
                 android:icon="@drawable/open_source_drawable"
                 android:key="preference.attribution"
                 android:persistent="false"
-                app:title="Attribution" />
+                app:title="@string/attribution" />
 
         <Preference
                 android:key="preference.version"

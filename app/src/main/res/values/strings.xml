@@ -209,6 +209,8 @@
     <string name="nothing_here">Nothing here...</string>
     <string name="ops_it_seems_like_you_don_t_have_any_note_in_this_category">Ops. It seems like you don\'t have any note in this category</string>
     <string name="create_new">Create New</string>
+    <string name="attribution">Attribution</string>
+    <string name="click_on_links">Click on Links</string>
 
     <integer name="appunti_settings_theme_behavior_automatic">0</integer>
     <integer name="appunti_settings_theme_behavior_Dark">1</integer>
