@@ -76,7 +76,7 @@
                 app:layout_constraintTop_toTopOf="parent">
 
 
-            <com.google.android.material.textfield.TextInputEditText
+            <androidx.appcompat.widget.AppCompatEditText
                     style="@style/Widget.Appunti.Text.EntryTitle"
                     android:id="@+id/entryTitle"
                     android:layout_width="match_parent"
@@ -86,7 +86,7 @@
                     android:transitionName="itemTitle"
             />
 
-            <com.google.android.material.textfield.TextInputEditText
+            <androidx.appcompat.widget.AppCompatEditText
                     style="@style/Widget.Appunti.Text.EntryContent"
                     android:nextFocusUp="@id/entryTitle"
                     android:minLines="3"

@@ -74,7 +74,7 @@ class CollapsingLinearLayout @JvmOverloads constructor(
     private fun expand() {
         Timber.i("expand")
 
-        contentView?.let { contentView ->
+        contentView?.let {
             animator.setIntValues(0, contentViewSize)
             animator.start()
         }

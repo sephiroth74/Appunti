@@ -109,7 +109,7 @@ class MySearchView : SearchLayout, Filter.FilterListener {
         filter(mQueryText)
 
         if (mShadow) {
-            SearchAnimator.fadeOpen(mViewShadow!!, mAnimationDuration)
+            SearchAnimator.fadeOpen(mViewShadow, mAnimationDuration)
         }
 
         setMicOrClearIcon(true)
@@ -468,9 +468,9 @@ class MySearchView : SearchLayout, Filter.FilterListener {
     }
 
     private fun hideSuggestions() {
-        if (adapter != null && adapter!!.getItemCount() > 0) {
-            mViewDivider!!.visibility = View.GONE
-            mRecyclerView.setVisibility(View.GONE)
+        if (adapter != null && adapter!!.itemCount > 0) {
+            mViewDivider.visibility = View.GONE
+            mRecyclerView.visibility = View.GONE
         }
     }
 
