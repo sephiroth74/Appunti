@@ -48,7 +48,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
     private var navigationItemSelectedListener: ((Int) -> Unit)? = null
 
     init {
-        mLifecycleRegistry.markState(Lifecycle.State.INITIALIZED)
+        mLifecycleRegistry.currentState = Lifecycle.State.INITIALIZED
         adapter = NavigationItemsAdapter(context, mutableListOf())
     }
 
@@ -86,7 +86,7 @@ class RecyclerNavigationView @JvmOverloads constructor(
 
     override fun onFinishInflate() {
         super.onFinishInflate()
-        mLifecycleRegistry.markState(Lifecycle.State.CREATED)
+        mLifecycleRegistry.currentState = Lifecycle.State.CREATED
         navigationRecycler.adapter = adapter
     }
 
@@ -97,13 +97,13 @@ class RecyclerNavigationView @JvmOverloads constructor(
     @SuppressLint("RestrictedApi")
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        mLifecycleRegistry.markState(Lifecycle.State.DESTROYED)
+        mLifecycleRegistry.currentState = Lifecycle.State.DESTROYED
     }
 
     @SuppressLint("RestrictedApi")
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        mLifecycleRegistry.markState(Lifecycle.State.RESUMED)
+        mLifecycleRegistry.currentState = Lifecycle.State.RESUMED
     }
 
     companion object {

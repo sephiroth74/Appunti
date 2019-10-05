@@ -1,40 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal">
 
     <androidx.appcompat.widget.AppCompatCheckBox
+            android:focusable="false"
             android:id="@+id/checkbox"
-            android:buttonTint="?attr/colorControlNormal"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="-8dp"
+            android:layout_marginEnd="-6dp"
+            android:layout_marginBottom="-8dp"
+            android:buttonTint="?attr/colorControlNormal" />
 
     <FrameLayout
             android:id="@+id/frameLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="-1dp"
+            android:layout_marginBottom="0dp"
             android:layout_weight="1">
 
         <androidx.appcompat.widget.AppCompatEditText
                 android:id="@android:id/text1"
+                style="@style/Widget.Appunti.Text.EntryContent.List"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:imeOptions="actionDone"
-                style="@style/Widget.Appunti.Text.EntryContent.List"
-                android:visibility="visible"/>
+                android:visibility="visible" />
 
     </FrameLayout>
 
     <androidx.appcompat.widget.AppCompatImageButton
-            style="@style/Widget.Appunti.BottomBar.ImageButton"
-            android:visibility="invisible"
+            android:focusable="false"
             android:id="@+id/deleteButton"
+            style="@style/Widget.Appunti.BottomBar.ImageButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:src="@drawable/appunti_sharp_delete_24_outline_selector"/>
+            android:layout_marginTop="-8dp"
+            android:layout_marginBottom="-8dp"
+            android:src="@drawable/appunti_sharp_delete_24_outline_selector"
+            android:visibility="invisible" />
 </LinearLayout>

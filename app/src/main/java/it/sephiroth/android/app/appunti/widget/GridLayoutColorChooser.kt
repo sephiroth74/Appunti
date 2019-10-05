@@ -97,10 +97,10 @@ class GridLayoutColorChooser @JvmOverloads constructor(context: Context, attrs: 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // Timber.i("onMeasure(${MeasureSpec.toString(widthMeasureSpec)}, ${MeasureSpec.toString(heightMeasureSpec)})")
 
-        val wmode = View.MeasureSpec.getMode(widthMeasureSpec)
-        val hmode = View.MeasureSpec.getMode(heightMeasureSpec)
-        var wsize = View.MeasureSpec.getSize(widthMeasureSpec)
-        var hsize = View.MeasureSpec.getSize(heightMeasureSpec)
+        val wmode = MeasureSpec.getMode(widthMeasureSpec)
+        val hmode = MeasureSpec.getMode(heightMeasureSpec)
+        var wsize = MeasureSpec.getSize(widthMeasureSpec)
+        var hsize = MeasureSpec.getSize(heightMeasureSpec)
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 

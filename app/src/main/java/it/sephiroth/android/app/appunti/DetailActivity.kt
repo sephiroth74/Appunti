@@ -74,6 +74,7 @@ import it.sephiroth.android.library.kotlin_extensions.view.showSoftInput
 import it.sephiroth.android.library.kotlin_extensions.widget.addTextWatcherListener
 import it.sephiroth.android.library.kotlin_extensions.widget.doOnAfterTextChanged
 import it.sephiroth.android.library.kotlin_extensions.widget.doOnTextChanged
+import jp.wasabeef.recyclerview.animators.SlideInUpAnimator
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_detail.view.*
 import me.saket.bettermovementmethod.BetterLinkMovementMethod
@@ -200,7 +201,7 @@ class DetailActivity : AppuntiActivity() {
             }
         }
         entryText.doOnTextChanged { s, start, count, after ->
-            if(!pauseListeners) {
+            if (!pauseListeners) {
                 updateEntryText(s, start, count, after)
             }
         }
@@ -228,6 +229,11 @@ class DetailActivity : AppuntiActivity() {
         if (model.entry.value == null) {
             handleIntent(intent, savedInstanceState)
         }
+
+
+//        coordinator.viewTreeObserver.addOnGlobalFocusChangeListener { oldFocus, newFocus ->
+//            Timber.i("onFocusChanged($oldFocus ==> $newFocus)")
+//        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -1448,6 +1454,13 @@ class DetailActivity : AppuntiActivity() {
         }
 
         detailRecycler.adapter = detailListAdapter
+
+        detailRecycler.itemAnimator = SlideInUpAnimator().apply {
+            addDuration = 100
+            removeDuration = 100
+            changeDuration = 100
+            moveDuration = 100
+        }
     }
 
 // END DETAIL LIST METHODS
