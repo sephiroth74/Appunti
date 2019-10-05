@@ -67,7 +67,6 @@ class DetailBottomAppBar @JvmOverloads constructor(
             val view = child.findDependent()
             view?.let { view ->
                 val params = view.layoutParams as CoordinatorLayout.LayoutParams
-//                Timber.d("found dependent:$view,  child.height=${child.height}, bottomMargin=${params.bottomMargin}")
                 params.bottomMargin = child.measuredHeight - shadowHeight
                 view.layoutParams = params
             }
