@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
 import androidx.core.os.BuildCompat
 import androidx.preference.PreferenceManager
+import com.hunter.library.debug.HunterDebug
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.events.RxBus
 import it.sephiroth.android.app.appunti.events.ThemeChangedEvent
@@ -73,10 +74,11 @@ class SettingsManager(val context: Context) {
 
     fun getNightMode() = getNightMode(darkThemeBehavior)
 
+    @HunterDebug(debugResult = true)
     fun getNightMode(value: DarkThemeBehavior): Int {
         return when (value) {
             DarkThemeBehavior.Automatic -> {
-                if (BuildCompat.isAtLeastQ()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                 } else {
                     val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
