@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'io.fabric'
-
+apply plugin: 'hunter-debug'
 
 def keys_prop = new Properties()
 file("../keys.properties").withInputStream { keys_prop.load(it) }
@@ -33,8 +33,8 @@ android {
         applicationId "it.sephiroth.android.app.appunti"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 29
-        versionName "1.3.8"
+        versionCode 30
+        versionName "1.4.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField "String", "COMMIT_HASH", "\"${getGitHash()}\""
@@ -114,13 +114,13 @@ dependencies {
 
     implementation 'androidx.core:core-ktx:1.1.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.recyclerview:recyclerview:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
 
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'androidx.constraintlayout:constraintlayout-solver:1.1.3'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.collection:collection:1.1.0'
-    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.0.0'
+    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.1.0'
     implementation 'androidx.preference:preference:1.1.0'
     implementation 'androidx.recyclerview:recyclerview-selection:1.0.0'
     implementation 'androidx.slidingpanelayout:slidingpanelayout:1.0.0'
@@ -128,10 +128,10 @@ dependencies {
     implementation 'androidx.emoji:emoji-appcompat:1.0.0'
     implementation 'androidx.emoji:emoji-bundled:1.0.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.0.0'
-    implementation 'androidx.transition:transition:1.1.0'
+    implementation 'androidx.transition:transition:1.2.0'
     implementation 'androidx.palette:palette:1.0.0'
 
-    implementation 'com.google.android.material:material:1.1.0-alpha10'
+    implementation 'com.google.android.material:material:1.2.0-alpha03'
 
     implementation 'com.github.sephiroth74:AndroidUIGestureRecognizer:v1.2.7'
     implementation 'com.lapism:searchview:27.1.1.0.0'
@@ -173,12 +173,20 @@ dependencies {
 
     implementation 'jp.wasabeef:recyclerview-animators:3.0.0'
 
-    implementation('com.crashlytics.sdk.android:crashlytics:2.9.9@aar') {
+    implementation('com.crashlytics.sdk.android:crashlytics:2.10.1@aar') {
         transitive = true
     }
+
+    implementation 'it.sephiroth.hunter:hunter-debug-library:1.0.4'
 
     testImplementation 'junit:junit:4.12'
 
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+}
+
+
+debugHunterExt {
+    debugResult false
+    logLevel 2
 }
