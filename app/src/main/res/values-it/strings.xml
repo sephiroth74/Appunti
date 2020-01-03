@@ -129,6 +129,7 @@
     <string name="take_picture">Scatta una Foto</string>
     <string name="attach_image">Aggiungi dalla Galleria</string>
     <string name="attach_file">Aggiungi un Documento</string>
+    <string name="attach_voice">Aggiungi Nota vocale</string>
     <string name="confirm">Conferma</string>
     <string name="oh_snap">Oh Snap! Si è verificato un errore!</string>
     <string name="convert_to_text">Converti in Testo</string>
@@ -157,5 +158,6 @@
     <string name="create_new">Nuovo Appunto</string>
     <string name="attribution">Crediti</string>
     <string name="click_on_links">Click sui collegamenti</string>
+    <string name="no_transcription_found">Spiacenti, nessuna trascrizione trovata</string>
 
 </resources>

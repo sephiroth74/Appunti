@@ -9,7 +9,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.util.Pair
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.crashlytics.android.answers.Answers
 import com.crashlytics.android.answers.CustomEvent
 import com.dbflow5.isNotNullOrEmpty
 import com.dbflow5.query.OrderBy
@@ -40,8 +39,6 @@ class SearchableActivity : AppuntiActivity() {
     override fun getToolbar(): Toolbar? = toolbar
 
     override fun getContentLayout(): Int = R.layout.searchable_activity
-
-    private val answers: Answers by lazy { Answers.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.sharedElementEnterTransition = Fade()

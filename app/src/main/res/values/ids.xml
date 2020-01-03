@@ -6,5 +6,6 @@
     <item name="navigation_item_category_edit" type="id" />
     <item name="fab_menu_new_text_note" type="id" />
     <item name="fab_menu_new_list_note" type="id" />
+    <item name="fab_menu_new_audio_note" type="id" />
 
 </resources>

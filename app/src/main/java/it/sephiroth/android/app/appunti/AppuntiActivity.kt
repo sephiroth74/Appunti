@@ -1,7 +1,6 @@
 package it.sephiroth.android.app.appunti
 
 import android.annotation.SuppressLint
-import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
@@ -11,6 +10,7 @@ import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
+import com.crashlytics.android.answers.Answers
 import isNavBarAtBottom
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.library.kotlin_extensions.app.isInMultiWindow
@@ -21,9 +21,7 @@ import it.sephiroth.android.library.kotlin_extensions.os.isAPI
 import org.threeten.bp.ZonedDateTime
 import timber.log.Timber
 
-abstract class AppuntiActivity(
-    private val wantsFullscreen: Boolean = false
-) : AppCompatActivity() {
+abstract class AppuntiActivity(private val wantsFullscreen: Boolean = false) : AppCompatActivity() {
 
     internal var statusbarHeight: Int = 0
 
@@ -92,6 +90,8 @@ abstract class AppuntiActivity(
         }
     }
 
+
+
     abstract fun getToolbar(): Toolbar?
 
     @LayoutRes
@@ -146,4 +146,7 @@ abstract class AppuntiActivity(
         dateDialog.setCancelColor(buttonsColor)
         dateDialog.show(supportFragmentManager, "Datepickerdialog")
     }
+
+    val answers: Answers by lazy { Answers.getInstance() }
+
 }

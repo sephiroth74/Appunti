@@ -54,6 +54,8 @@ fun Attachment.loadThumbnail(context: Context, view: ImageView) {
             })
     } else if (isText()) {
         view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
+    } else if(isAudio()) {
+        view.setImageResource(R.drawable.sharp_play_circle_outline_24)
     } else {
         view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
     }

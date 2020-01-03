@@ -6,5 +6,6 @@
     <item android:maxLevel="3" android:drawable="@drawable/filetype_doc"/>
     <item android:maxLevel="4" android:drawable="@drawable/filetype_zip"/>
     <item android:maxLevel="5" android:drawable="@drawable/filetype_video"/>
-    <item android:maxLevel="6" android:drawable="@drawable/filetype_unknown"/>
+    <item android:maxLevel="6" android:drawable="@drawable/filetype_audio"/>
+    <item android:maxLevel="7" android:drawable="@drawable/filetype_unknown"/>
 </level-list>

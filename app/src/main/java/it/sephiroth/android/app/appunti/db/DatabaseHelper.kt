@@ -26,6 +26,7 @@ import it.sephiroth.android.library.kotlin_extensions.net.resolveMimeType
 import org.apache.commons.io.FileUtils
 import org.threeten.bp.Instant
 import timber.log.Timber
+import java.io.File
 import java.util.*
 
 object DatabaseHelper {
@@ -388,5 +389,16 @@ object DatabaseHelper {
                     ).list
                 }
         }
+    }
+
+    fun copyDatabase(context: Context, dstDir: File) {
+        Timber.i("copyDatabase: %s", dstDir.absolutePath)
+        val db = FlowManager.getDatabase(AppDatabase::class.java)
+        val src = db.databaseFileName
+        Timber.v("db path: %s", context.getDatabasePath(db.databaseFileName))
+        val srcFile = context.getDatabasePath(db.databaseFileName)
+        val dstFile = File(dstDir, db.databaseFileName)
+        Timber.v("dstFile: %s", dstFile.absolutePath)
+        return FileUtils.copyFile(srcFile, dstFile)
     }
 }

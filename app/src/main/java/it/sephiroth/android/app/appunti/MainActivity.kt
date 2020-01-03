@@ -6,9 +6,11 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Canvas
+import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
 import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -27,10 +29,10 @@ import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_SWIPE
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.crashlytics.android.Crashlytics
-import com.crashlytics.android.answers.Answers
 import com.crashlytics.android.answers.CustomEvent
 import com.crashlytics.android.answers.SearchEvent
 import com.google.android.material.snackbar.Snackbar
+import com.hunter.library.debug.HunterDebug
 import com.lapism.searchview.Search
 import com.lapism.searchview.Search.SPEECH_REQUEST_CODE
 import com.leinardi.android.speeddial.SpeedDialActionItem
@@ -58,7 +60,7 @@ import kotlinx.android.synthetic.main.appunti_search_view_toolbar.*
 import timber.log.Timber
 import java.util.*
 
-class MainActivity : AppuntiActivityFullscreen() {
+class MainActivity : AudioRecordActivity(true) {
 
     // recycler view adapter
     lateinit var adapter: ItemEntryListAdapter
@@ -79,8 +81,6 @@ class MainActivity : AppuntiActivityFullscreen() {
 
     // save instance state for the main recyclerview
     private var mListState: Parcelable? = null
-
-    private val answers: Answers by lazy { Answers.getInstance() }
 
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,6 +118,7 @@ class MainActivity : AppuntiActivityFullscreen() {
         initializeWorkers()
 
 //        drawerLayout.setStatusBarBackgroundColor(theme.getColor(this, android.R.attr.windowBackground))
+//        DatabaseHelper.copyDatabase(this, getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!)
     }
 
     override fun onContentChanged() {
@@ -275,27 +276,30 @@ class MainActivity : AppuntiActivityFullscreen() {
         val params = speedDial.layoutParams as ViewGroup.MarginLayoutParams
         params.bottomMargin += navigationbarHeight
 
-        speedDial.addAllActionItems(
-            mutableListOf(
-                SpeedDialActionItem.Builder(
-                    R.id.fab_menu_new_text_note,
-                    R.drawable.sharp_text_fields_24
-                )
-                    .setLabel(getString(R.string.new_text_note))
-                    .create(),
-                SpeedDialActionItem.Builder(
-                    R.id.fab_menu_new_list_note,
-                    R.drawable.sharp_format_list_bulleted_24
-                )
-                    .setLabel(getString(R.string.new_list_note))
+        val list = mutableListOf<SpeedDialActionItem>(
+            SpeedDialActionItem.Builder(R.id.fab_menu_new_text_note, R.drawable.sharp_text_fields_24)
+                .setLabel(getString(R.string.new_text_note))
+                .create(),
+            SpeedDialActionItem.Builder(R.id.fab_menu_new_list_note, R.drawable.sharp_format_list_bulleted_24)
+                .setLabel(getString(R.string.new_list_note))
+                .create()
+        )
+
+        if (SpeechRecognizer.isRecognitionAvailable(this)) {
+            list.add(
+                SpeedDialActionItem.Builder(R.id.fab_menu_new_audio_note, R.drawable.sharp_play_circle_outline_24)
+                    .setLabel("New Audio Note")
                     .create()
             )
-        )
+        }
+
+        speedDial.addAllActionItems(list.asReversed())
 
         speedDial.setOnActionSelectedListener {
             when (it.id) {
                 R.id.fab_menu_new_text_note -> startDetailActivity(Entry.EntryType.TEXT, model.group.getCategoryID())
                 R.id.fab_menu_new_list_note -> startDetailActivity(Entry.EntryType.LIST, model.group.getCategoryID())
+                R.id.fab_menu_new_audio_note -> askForAudioPermission()
             }
             speedDial.close(true)
             true
@@ -310,7 +314,6 @@ class MainActivity : AppuntiActivityFullscreen() {
     }
 
     private fun setupRecyclerView() {
-
         var top = 0
         var bottom = 0
         if (isFullScreen) {
@@ -612,8 +615,26 @@ class MainActivity : AppuntiActivityFullscreen() {
         }
     }
 
-    private fun startDetailActivity(type: Entry.EntryType, categoryId: Long? = null) {
-        startDetailActivityFromIntent(IntentUtils.createNewEntryIntent(this, type, categoryId), null)
+    @HunterDebug
+    override fun onAudioPermissionsDenied() {
+    }
+
+    @HunterDebug
+    override fun onAudioPermissionsGranted() {
+        dispatchVoiceRecordingIntent()
+    }
+
+    override fun onAudioCaptured(data: Intent) {
+        startDetailActivity(Entry.EntryType.TEXT, model.group.getCategoryID(), kotlin.Pair(IntentUtils.KEY_AUDIO_BUNDLE, data))
+    }
+
+    @HunterDebug
+    override fun onAudioCaptured(audioUri: Uri?, result: String?) {
+    }
+
+
+    private fun startDetailActivity(type: Entry.EntryType, categoryId: Long? = null, extra: kotlin.Pair<String, Intent>? = null) {
+        startDetailActivityFromIntent(IntentUtils.createNewEntryIntent(this, type, categoryId, extra), null)
 
         answers.logCustom(
             CustomEvent("main.newNote").putCustomAttribute("type", type.name)
@@ -936,6 +957,8 @@ class MainActivity : AppuntiActivityFullscreen() {
         const val ACTION_ENTRIES_BY_CATEGORY = "view_entries_by_category"
 
         const val KEY_CATEGORY_ID = "categoryID"
+
+
     }
 
 }

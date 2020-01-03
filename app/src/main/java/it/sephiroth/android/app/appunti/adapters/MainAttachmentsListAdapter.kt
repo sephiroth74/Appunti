@@ -110,7 +110,8 @@ class MainAttachmentsListAdapter(private var context: Context) :
                     attachment.isDoc() -> fileIconDrawable.level = 3
                     attachment.isZip() -> fileIconDrawable.level = 4
                     attachment.isVideo() -> fileIconDrawable.level = 5
-                    else -> fileIconDrawable.level = 6
+                    attachment.isAudio() -> fileIconDrawable.level = 6
+                    else -> fileIconDrawable.level = 7
                 }
             }
 

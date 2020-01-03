@@ -16,6 +16,7 @@ import android.location.Address
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.speech.SpeechRecognizer
 import android.text.TextWatcher
 import android.text.method.ArrowKeyMovementMethod
 import android.text.style.StyleSpan
@@ -42,8 +43,10 @@ import com.crashlytics.android.Crashlytics
 import com.crashlytics.android.answers.Answers
 import com.crashlytics.android.answers.CustomEvent
 import com.crashlytics.android.answers.ShareEvent
+import com.dbflow5.isNotNullOrEmpty
 import com.dbflow5.structure.delete
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.hunter.library.debug.HunterDebug
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.rxkotlin.subscribeBy
@@ -60,6 +63,10 @@ import it.sephiroth.android.app.appunti.models.DetailViewModel
 import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.services.LocationRepository
+import it.sephiroth.android.app.appunti.utils.Constants.ActivityRequestCodes.CATEGORY_PICK_REQUEST_CODE
+import it.sephiroth.android.app.appunti.utils.Constants.ActivityRequestCodes.IMAGE_CAPTURE_REQUEST_CODE
+import it.sephiroth.android.app.appunti.utils.Constants.ActivityRequestCodes.OPEN_FILE_REQUEST_CODE
+import it.sephiroth.android.app.appunti.utils.Constants.ActivityRequestCodes.REQUEST_LOCATION_PERMISSION_CODE
 import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.IntentUtils
 import it.sephiroth.android.app.appunti.utils.MaterialBackgroundUtils
@@ -86,12 +93,13 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 
-@Suppress("NAME_SHADOWING")
-class DetailActivity : AppuntiActivity() {
+@Suppress("NAME_SHADOWING", "PrivatePropertyName")
+class DetailActivity : AudioRecordActivity() {
     override fun getToolbar(): Toolbar? = toolbar
 
     override fun getContentLayout(): Int = R.layout.activity_detail
 
+    private var audioIntent: Intent? = null
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<FrameLayout>
     private lateinit var model: DetailViewModel
 
@@ -108,8 +116,6 @@ class DetailActivity : AppuntiActivity() {
     private var attachmentsListAdapter: DetailAttachmentsListAdapter? = null
 
     private var tickTimer: Disposable? = null
-
-    private val answers: Answers by lazy { Answers.getInstance() }
 
     private var progressDialog: ProgressDialog? = null
 
@@ -143,11 +149,7 @@ class DetailActivity : AppuntiActivity() {
             }
         }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         Timber.i("onRequestPermissionsResult($permissions)")
 
@@ -176,8 +178,8 @@ class DetailActivity : AppuntiActivity() {
         model = ViewModelProviders.of(this).get(DetailViewModel::class.java)
 
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
+        bottomSheetBehavior.addBottomSheetCallback(bottomSheetCallback)
 
-        setupBottomSheet()
         setupNavigationView()
         setupBottomAppBar()
         setupSharedElementsTransition()
@@ -249,6 +251,8 @@ class DetailActivity : AppuntiActivity() {
         Timber.i("onDestroy")
         setProgressVisible(false)
 
+        bottomSheetBehavior.removeBottomSheetCallback(bottomSheetCallback)
+
         tickTimer?.dispose()
 
         if (model.isNew && model.entry.value?.isEmpty() == true) {
@@ -319,9 +323,7 @@ class DetailActivity : AppuntiActivity() {
                         .fromString(intent.getStringExtra(Intent.EXTRA_TEXT))
                         .apply {
                             entryTitle =
-                                if (intent.hasExtra(Intent.EXTRA_SUBJECT)) intent.getStringExtra(
-                                    Intent.EXTRA_SUBJECT
-                                ) else ""
+                                if (intent.hasExtra(Intent.EXTRA_SUBJECT)) intent.getStringExtra(Intent.EXTRA_SUBJECT) else ""
                         }.also { entry ->
                             if (intent.hasExtra(Intent.EXTRA_STREAM)) {
                                 val streamUri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
@@ -342,6 +344,11 @@ class DetailActivity : AppuntiActivity() {
             newEntry?.let {
                 model.createNewEntry(it, isNewDocument)
             }
+        }
+
+        if (intent.hasExtra(IntentUtils.KEY_AUDIO_BUNDLE)) {
+            intent.getParcelableExtra<Intent>(IntentUtils.KEY_AUDIO_BUNDLE)?.let { audioIntent = it }
+            intent.removeExtra(IntentUtils.KEY_AUDIO_BUNDLE)
         }
 
         answers.logCustom(event)
@@ -371,6 +378,7 @@ class DetailActivity : AppuntiActivity() {
         return true
     }
 
+    @HunterDebug
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (resultCode == RESULT_OK) {
             when (requestCode) {
@@ -433,6 +441,23 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
+    override fun onAudioPermissionsGranted() {
+        dispatchVoiceRecordingIntent()
+    }
+
+    override fun onAudioPermissionsDenied() {
+        showToastMessage("Record audio permission is required.")
+    }
+
+    override fun onAudioCaptured(audioUri: Uri?, result: String?) {
+        if (result.isNotNullOrEmpty()) {
+            appendText(result!!)
+        } else {
+            showToastMessage(getString(R.string.no_transcription_found))
+        }
+        audioUri?.let { uri -> addAttachmentToEntry(uri) }
+    }
+
     private fun changeEntryCategory(categoryID: Long) {
         answers.logCustom(CustomEvent("detail.pickCategory.result"))
 
@@ -452,7 +477,7 @@ class DetailActivity : AppuntiActivity() {
             Timber.v("addAttachment result=$success")
             doOnMainThread {
                 throwable?.let {
-                    showToastMessage(it.localizedMessage)
+                    showToastMessage(it.localizedMessage ?: getString(R.string.oh_snap))
                 } ?: run {
                     showToastMessage(getString(R.string.file_added))
                 }
@@ -462,7 +487,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-// ENTRY TEXT LISTENERS
+    // ENTRY TEXT LISTENERS
 
     @Suppress("UNUSED_PARAMETER")
     private fun updateEntryText(forceUpdate: Boolean = false) {
@@ -481,7 +506,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-// ENTRY TITLE LISTENERS
+    // ENTRY TITLE LISTENERS
 
     @Suppress("UNUSED_PARAMETER")
     private fun updateEntryTitle(text: CharSequence?, start: Int, count: Int, after: Int) {
@@ -490,7 +515,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-// SHARED ELEMENTS TRANSITION
+    // SHARED ELEMENTS TRANSITION
 
     private fun setupSharedElementsTransition() {
         val sharedElementEnterTransition = window.sharedElementEnterTransition
@@ -505,19 +530,19 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-// BOTTOM APP BAR
+    // BOTTOM APP BAR
 
     private fun setNavigationMenuPicker(value: Boolean) {
+        val speechRecognitionAvailable = SpeechRecognizer.isRecognitionAvailable(this)
         with(navigationView.menu) {
             findItem(R.id.menu_action_camera).isVisible = value
             findItem(R.id.menu_action_image).isVisible = value
             findItem(R.id.menu_action_file).isVisible = value
+            findItem(R.id.menu_action_voice).isVisible = value && speechRecognitionAvailable
             findItem(R.id.menu_action_category).isVisible = !value
             findItem(R.id.menu_action_delete).isVisible = !value
-            findItem(R.id.menu_action_list).isVisible =
-                !value && model.entry.value?.entryType == Entry.EntryType.TEXT
-            findItem(R.id.menu_action_text).isVisible =
-                !value && model.entry.value?.entryType == Entry.EntryType.LIST
+            findItem(R.id.menu_action_list).isVisible = !value && model.entry.value?.entryType == Entry.EntryType.TEXT
+            findItem(R.id.menu_action_text).isVisible = !value && model.entry.value?.entryType == Entry.EntryType.LIST
         }
     }
 
@@ -549,7 +574,7 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-// NAVIGATION VIEW
+    // NAVIGATION VIEW
 
     private fun setupNavigationView() {
         navigationView.setNavigationItemSelectedListener { menuItem ->
@@ -569,13 +594,15 @@ class DetailActivity : AppuntiActivity() {
                 R.id.menu_action_text -> convertEntryToText()
 
                 R.id.menu_action_address -> insertCurrentAddress()
+
+                R.id.menu_action_voice -> askForAudioPermission()
             }
             closeBottomSheet()
             true
         }
     }
 
-// External Intents
+    // External Intents
 
     private fun dispatchPickCategoryIntent() {
         answers.logCustom(CustomEvent("detail.pickCategory"))
@@ -641,34 +668,31 @@ class DetailActivity : AppuntiActivity() {
         }
     }
 
-// BOTTOM SHEET BEHAVIORS
+    // BOTTOM SHEET BEHAVIORS
 
-    private fun setupBottomSheet() {
-        bottomSheetBehavior.setBottomSheetCallback(object :
-            BottomSheetBehavior.BottomSheetCallback() {
-            override fun onSlide(p0: View, p1: Float) {
-                bottomSheetModalBackground.background.alpha = (p1 * 255).toInt()
-            }
+    val bottomSheetCallback = object :
+        BottomSheetBehavior.BottomSheetCallback() {
+        override fun onSlide(p0: View, p1: Float) {
+            bottomSheetModalBackground.background.alpha = (p1 * 255).toInt()
+        }
 
-            @SuppressLint("SwitchIntDef")
-            override fun onStateChanged(p0: View, state: Int) {
-                when (state) {
-                    BottomSheetBehavior.STATE_SETTLING,
-                    BottomSheetBehavior.STATE_DRAGGING,
-                    BottomSheetBehavior.STATE_EXPANDED -> {
-                        bottomSheetModalBackground.visibility = View.VISIBLE
-                        bottomSheetModalBackground.requestFocus()
-                        bottomSheetModalBackground.hideSoftInput()
-                    }
+        @SuppressLint("SwitchIntDef")
+        override fun onStateChanged(p0: View, state: Int) {
+            when (state) {
+                BottomSheetBehavior.STATE_SETTLING,
+                BottomSheetBehavior.STATE_DRAGGING,
+                BottomSheetBehavior.STATE_EXPANDED -> {
+                    bottomSheetModalBackground.visibility = View.VISIBLE
+                    bottomSheetModalBackground.requestFocus()
+                    bottomSheetModalBackground.hideSoftInput()
+                }
 
-                    BottomSheetBehavior.STATE_COLLAPSED,
-                    BottomSheetBehavior.STATE_HIDDEN -> {
-                        bottomSheetModalBackground.visibility = View.INVISIBLE
-                    }
+                BottomSheetBehavior.STATE_COLLAPSED,
+                BottomSheetBehavior.STATE_HIDDEN -> {
+                    bottomSheetModalBackground.visibility = View.INVISIBLE
                 }
             }
-
-        })
+        }
     }
 
     private fun closeBottomSheet() {
@@ -697,21 +721,21 @@ class DetailActivity : AppuntiActivity() {
         return bottomSheetBehavior.state == BottomSheetBehavior.STATE_HIDDEN
     }
 
-    val UPDATE_TITLE = 1 shl 0
-    val UPDATE_TYPE_AND_TEXT = 1 shl 1
-    val UPDATE_CATEGORY = 1 shl 2
-    val UPDATE_ATTACHMENTS = 1 shl 3
-    val UPDATE_REMOTE_URLS = 1 shl 10
+    private val UPDATE_TITLE = 1 shl 0
+    private val UPDATE_TYPE_AND_TEXT = 1 shl 1
+    private val UPDATE_CATEGORY = 1 shl 2
+    private val UPDATE_ATTACHMENTS = 1 shl 3
+    private val UPDATE_REMOTE_URLS = 1 shl 10
 
-    val UPDATE_CREATION_DATE = 1 shl 4
-    val UPDATE_MODIFIED_DATE = 1 shl 5
+    private val UPDATE_CREATION_DATE = 1 shl 4
+    private val UPDATE_MODIFIED_DATE = 1 shl 5
 
-    val UPDATE_PINNED = 1 shl 6
-    val UPDATE_ARCHIVED = 1 shl 7
-    val UPDATE_DELETED = 1 shl 8
-    val UPDATE_REMINDER = 1 shl 9
+    private val UPDATE_PINNED = 1 shl 6
+    private val UPDATE_ARCHIVED = 1 shl 7
+    private val UPDATE_DELETED = 1 shl 8
+    private val UPDATE_REMINDER = 1 shl 9
 
-    val UPDATE_MENU = UPDATE_PINNED or UPDATE_ARCHIVED or UPDATE_DELETED or UPDATE_REMINDER
+    private val UPDATE_MENU = UPDATE_PINNED or UPDATE_ARCHIVED or UPDATE_DELETED or UPDATE_REMINDER
 
     private fun invalidate(bits: Int) {
         model.entry.whenNotNull { entry ->
@@ -757,7 +781,7 @@ class DetailActivity : AppuntiActivity() {
 // Entry Changed/Updated
 
     private fun onEntryChanged(entry: Entry) {
-        Timber.i("onEntryChanged()")
+        Timber.i("onEntryChanged(${entry.entryType})")
 
         if (currentEntryID == entry.entryID) {
             Timber.w("same entry id, skipping updates...")
@@ -804,6 +828,11 @@ class DetailActivity : AppuntiActivity() {
         entry.entryStream?.let {
             entry.entryStream = null
             addAttachmentToEntry(it)
+        }
+
+        audioIntent?.let {
+            audioIntent = null
+            onAudioCaptured(it)
         }
 
         pauseListeners = false
@@ -1059,7 +1088,7 @@ class DetailActivity : AppuntiActivity() {
         model.hideRemoteUrl(remoteUrl) { result, throwable ->
             doOnMainThread {
                 throwable?.let {
-                    showToastMessage(throwable.localizedMessage)
+                    showToastMessage(throwable.localizedMessage ?: getString(R.string.oh_snap))
                 } ?: run {
                     invalidate(UPDATE_REMOTE_URLS)
                 }
@@ -1102,7 +1131,7 @@ class DetailActivity : AppuntiActivity() {
         model.removeAttachment(attachment) { result, throwable ->
             doOnMainThread {
                 throwable?.let { throwable ->
-                    showToastMessage(throwable.localizedMessage)
+                    showToastMessage(throwable.localizedMessage ?: getString(R.string.oh_snap))
                 } ?: run {
                     Timber.v("[${currentThread()}] success = $result")
                     showToastMessage("File has been removed")
@@ -1330,6 +1359,7 @@ class DetailActivity : AppuntiActivity() {
             insertAddressIntoList(address)
         } else {
             insertAddressAsPlainText(address)
+            insertAddressAsPlainText(address)
         }
     }
 
@@ -1375,6 +1405,33 @@ class DetailActivity : AppuntiActivity() {
         entryText.requestFocus()
 
         updateEntryText(true)
+    }
+
+    @HunterDebug
+    private fun appendText(text: String) {
+        if (model.entry.value?.entryType == Entry.EntryType.TEXT) {
+            appendTextAsPlain(text)
+        } else {
+            appendTextAsList(text)
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    @HunterDebug
+    private fun appendTextAsPlain(text: String) {
+        val isBlank = entryText.text!!.isBlank()
+
+        if (!isBlank) {
+            entryText.append("\n")
+        }
+        entryText.append(text)
+        entryText.requestFocus()
+        updateEntryText(true)
+    }
+
+    @HunterDebug
+    private fun appendTextAsList(text: String) {
+        detailListAdapter?.addItem(text)
     }
 
     private fun showPermissionsDeniedDialog() {
@@ -1467,18 +1524,6 @@ class DetailActivity : AppuntiActivity() {
 
 
     companion object {
-        // pick new category
-        const val CATEGORY_PICK_REQUEST_CODE = 1
-
-        // pick file
-        const val OPEN_FILE_REQUEST_CODE = 2
-
-        // take picture
-        const val IMAGE_CAPTURE_REQUEST_CODE = 3
-
-        // permission request - codes
-        const val REQUEST_LOCATION_PERMISSION_CODE = 1001
-
         // text switcher consts
         private const val TICKER_STEP_CREATED = 1
         private const val TICKER_STEP_MODIFIED = 2
@@ -1689,6 +1734,7 @@ class DetailListAdapter(private var activity: DetailActivity) :
         }
     }
 
+    @Suppress("ControlFlowWithEmptyBody")
     override fun onBindViewHolder(baseHolder: DetailViewHolder, position: Int) {
         if (baseHolder.itemViewType == EntryListJsonModel.TYPE_NEW_ENTRY) {
             // empty on purpose
@@ -1735,7 +1781,7 @@ class DetailListAdapter(private var activity: DetailActivity) :
             }
 
 
-            holder.text.setOnEditorActionListener { v, actionId, event ->
+            holder.text.setOnEditorActionListener { _, actionId, _ ->
                 Timber.i("setOnEditorActionListener = $actionId")
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     activity.clearCurrentFocus()
@@ -1784,6 +1830,7 @@ class DetailListAdapter(private var activity: DetailActivity) :
     open class DetailViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val text: TextView = itemView.findViewById(android.R.id.text1)
 
+        @Suppress("unused")
         inline fun postDelayed(delayInMillis: Long, crossinline action: () -> Unit): Runnable {
             val runnable = Runnable { action() }
             itemView.postDelayed(runnable, delayInMillis)
