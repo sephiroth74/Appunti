@@ -445,8 +445,13 @@ class DetailActivity : AudioRecordActivity() {
         dispatchVoiceRecordingIntent()
     }
 
-    override fun onAudioPermissionsDenied() {
-        showToastMessage("Record audio permission is required.")
+    @HunterDebug
+    override fun onAudioPermissionsDenied(shouldShowRequestPermissionRationale: Boolean) {
+        if (shouldShowRequestPermissionRationale) {
+            IntentUtils.showPermissionsDeniedDialog(this, R.string.permissions_audio_required_dialog_body)
+        } else {
+            showToastMessage(getString(R.string.permissions_required))
+        }
     }
 
     override fun onAudioCaptured(audioUri: Uri?, result: String?) {
@@ -1284,20 +1289,12 @@ class DetailActivity : AudioRecordActivity() {
         Timber.i("insertCurrentAddress")
         answers.logCustom(CustomEvent("detail.address.insert"))
 
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Timber.w("permission required")
             // Permission is not granted
             // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            ) {
-                showPermissionsDeniedDialog()
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                IntentUtils.showPermissionsDeniedDialog(this, R.string.permissions_required_dialog_body)
             } else {
                 // No explanation needed; request the permission
                 ActivityCompat.requestPermissions(
@@ -1432,22 +1429,6 @@ class DetailActivity : AudioRecordActivity() {
     @HunterDebug
     private fun appendTextAsList(text: String) {
         detailListAdapter?.addItem(text)
-    }
-
-    private fun showPermissionsDeniedDialog() {
-        Timber.i("showPermissionsDeniedDialog")
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.permissions_required))
-            .setMessage(getString(R.string.permissions_required_dialog_body))
-            .setPositiveButton(android.R.string.ok) { _, _ -> openActivitySettings() }
-            .setNegativeButton(android.R.string.cancel) { _, _ -> }
-            .create().show()
-
-    }
-
-    private fun openActivitySettings() {
-        Timber.i("openActivitySettings")
-        startActivity(IntentUtils.createSystemAppSettingsIntent(this))
     }
 
     private fun showToastMessage(text: String) {

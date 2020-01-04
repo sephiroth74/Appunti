@@ -6,11 +6,10 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import android.speech.RecognizerIntent
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
 import com.hunter.library.debug.HunterDebug
-import it.sephiroth.android.app.appunti.CategoriesEditActivity
-import it.sephiroth.android.app.appunti.DetailActivity
-import it.sephiroth.android.app.appunti.PreferencesActivity
-import it.sephiroth.android.app.appunti.SearchableActivity
+import it.sephiroth.android.app.appunti.*
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
@@ -193,6 +192,21 @@ object IntentUtils {
         intent.putExtra("android.speech.extra.GET_AUDIO", true)
         intent.putExtra("android.speech.extra.GET_AUDIO_FORMAT", "audio/AMR")
         return intent
+    }
+
+    @HunterDebug
+    fun openActivitySettings(context: Context) {
+        context.startActivity(IntentUtils.createSystemAppSettingsIntent(context))
+    }
+
+    @HunterDebug
+    fun showPermissionsDeniedDialog(context: Context, @StringRes body: Int) {
+        AlertDialog.Builder(context)
+            .setTitle(context.getString(R.string.permissions_required))
+            .setMessage(context.getString(body))
+            .setPositiveButton(android.R.string.ok) { _, _ -> IntentUtils.openActivitySettings(context) }
+            .setNegativeButton(android.R.string.cancel) { _, _ -> }
+            .create().show()
     }
 
 }

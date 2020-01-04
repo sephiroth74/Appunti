@@ -137,7 +137,8 @@
     <string name="current_location">Posizione Attuale</string>
     <string name="retrieving_current_location">Sto cercando la posizione attuale....</string>
     <string name="permissions_required">Permessi necessari</string>
-    <string name="permissions_required_dialog_body">I permessi di localizzazione sono necessari qui. Clicca Ok per aprire le Impostazioni e cambiare i permessi</string>
+    <string name="permissions_required_dialog_body">I permessi di localizzazione sono necessari qui. Clicca Ok per aprire le Impostazioni e cambiare i permessi manualmente.</string>
+    <string name="permissions_audio_required_dialog_body">I permessi di registrazione audio necessari per poter continuare. Clicca Ok per aprire le Impostazioni e cambiare i permessi manualmente.</string>
 
     <plurals name="entries_delete_action_question">
         <item quantity="one">Sei sicuro di voler eliminare questo Appunto? Questa azione non può essere annullata</item>

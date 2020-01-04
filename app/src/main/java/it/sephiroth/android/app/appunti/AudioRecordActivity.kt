@@ -25,7 +25,7 @@ abstract class AudioRecordActivity(wantsFullscreen: Boolean = false) : AppuntiAc
                 onAudioPermissionsGranted()
             } else {
                 answers.logCustom(CustomEvent("recordAudio.permissions.denied"))
-                onAudioPermissionsDenied()
+                onAudioPermissionsDenied(false)
             }
         }
     }
@@ -75,8 +75,8 @@ abstract class AudioRecordActivity(wantsFullscreen: Boolean = false) : AppuntiAc
     protected fun askForAudioPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)) {
-                Timber.e("permission denied")
-                onAudioPermissionsDenied()
+                Timber.e("permission denied forever")
+                onAudioPermissionsDenied(true)
             } else {
                 // No explanation needed; request the permission
                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_RECORD_AUDIO_PERMISSION_CODE)
@@ -89,6 +89,6 @@ abstract class AudioRecordActivity(wantsFullscreen: Boolean = false) : AppuntiAc
 
     abstract fun onAudioPermissionsGranted()
 
-    abstract fun onAudioPermissionsDenied()
+    abstract fun onAudioPermissionsDenied(shouldShowRequestPermissionRationale: Boolean)
 
 }

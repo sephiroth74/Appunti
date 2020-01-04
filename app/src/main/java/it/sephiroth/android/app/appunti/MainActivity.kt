@@ -615,8 +615,14 @@ class MainActivity : AudioRecordActivity(true) {
         }
     }
 
+
     @HunterDebug
-    override fun onAudioPermissionsDenied() {
+    override fun onAudioPermissionsDenied(shouldShowRequestPermissionRationale: Boolean) {
+        if (shouldShowRequestPermissionRationale) {
+            IntentUtils.showPermissionsDeniedDialog(this, R.string.permissions_audio_required_dialog_body)
+        } else {
+            Toast.makeText(this, R.string.permissions_required, Toast.LENGTH_SHORT).show()
+        }
     }
 
     @HunterDebug
