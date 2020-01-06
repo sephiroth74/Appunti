@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="?attr/colorControlHighlight" />
+    <item
+            android:bottom="@dimen/appunti_attachment_large_icon_padding"
+            android:drawable="@drawable/sharp_attach_file_24_rotated"
+            android:left="@dimen/appunti_attachment_large_icon_padding"
+            android:right="@dimen/appunti_attachment_large_icon_padding"
+            android:top="@dimen/appunti_attachment_large_icon_padding" />
+</layer-list>

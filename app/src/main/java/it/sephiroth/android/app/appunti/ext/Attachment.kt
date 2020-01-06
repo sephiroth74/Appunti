@@ -47,18 +47,18 @@ fun Attachment.loadThumbnail(context: Context, view: ImageView) {
             .into(view, object : Callback {
                 override fun onError(e: Exception?) {
                     e?.printStackTrace()
-                    view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
+                    view.setImageResource(R.drawable.attachment_large_file)
                 }
 
                 override fun onSuccess() {}
             })
     } else if (isText()) {
-        view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
+        view.setImageResource(R.drawable.attachment_large_file)
     } else if (isVoice()) {
-        view.setImageResource(R.drawable.baseline_mic_24)
+        view.setImageResource(R.drawable.attachment_large_mic)
     } else if (isAudio()) {
-        view.setImageResource(R.drawable.sharp_play_circle_outline_24)
+        view.setImageResource(R.drawable.attachment_large_audio)
     } else {
-        view.setImageResource(R.drawable.sharp_attach_file_24_rotated)
+        view.setImageResource(R.drawable.attachment_large_file)
     }
 }

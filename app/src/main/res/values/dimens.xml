@@ -76,4 +76,6 @@
     <dimen name="appunti_detail_attachment_thumbnail_size">64dp</dimen>
 
     <dimen name="appunti_media_dialog_width">320dp</dimen>
+
+    <dimen name="appunti_attachment_large_icon_padding">6dp</dimen>
 </resources>
