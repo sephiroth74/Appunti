@@ -3,9 +3,13 @@ package it.sephiroth.android.app.appunti.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.io.RelativePath
+import it.sephiroth.android.library.kotlin_extensions.net.resolveDisplayName
+import it.sephiroth.android.library.kotlin_extensions.net.resolveMimeType
+import org.apache.commons.io.FilenameUtils
 import timber.log.Timber
 import java.io.File
 import java.text.SimpleDateFormat
@@ -129,5 +133,23 @@ object FileSystemUtils {
         }
 
         return curFile
+    }
+
+    fun getFileExtension(context: Context, uri: Uri): String? {
+        var extension: String? = null
+        uri.resolveDisplayName(context)?.let { displayName ->
+            val mimeType = uri.resolveMimeType(context)
+            extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
+            if (extension.isNullOrBlank()) {
+                extension = FilenameUtils.getExtension(displayName)
+            }
+            if (extension.isNullOrBlank()) {
+                val index = displayName.lastIndexOf(".")
+                if (index > -1) {
+                    extension = displayName.substring(index)
+                }
+            }
+        }
+        return extension
     }
 }

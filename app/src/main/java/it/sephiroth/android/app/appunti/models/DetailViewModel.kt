@@ -247,13 +247,14 @@ class DetailViewModel(application: Application) : AndroidViewModel(application) 
     /**
      * Add a new [Attachment] to the current [Entry]
      */
-    fun addAttachment(uri: Uri, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
+    fun addAttachment(uri: Uri, dstName: String? = null, callback: ((Boolean, Throwable?) -> (Unit))? = null) {
         Timber.i("addAttachment($uri)")
         entry.whenNotNull { entry ->
             DatabaseHelper.addAttachmentFromUri(
                 getApplication(),
                 entry,
-                uri
+                uri,
+                dstName
             ) { success, throwable ->
                 entry.invalidateAttachments()
                 callback?.invoke(success, throwable)

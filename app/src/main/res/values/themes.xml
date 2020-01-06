@@ -67,4 +67,29 @@
     <style name="Theme.Appunti.Default.PopupOverlay"
            parent="ThemeOverlay.AppCompat.DayNight"/>
 
+    <style name="Theme.Appunti.MediaPlayer" parent="Theme.MaterialComponents.DayNight.Dialog">
+        <item name="android:windowBackground">@color/background_material_dark</item>
+        <item name="android:colorForegroundInverse">@color/background_material_dark</item>
+
+        <item name="android:textColor">?android:textColorPrimaryInverse</item>
+        <item name="android:textColorPrimary">?android:textColorPrimaryInverse</item>
+        <item name="android:textColorSecondary">?android:textColorSecondaryInverse</item>
+        <item name="android:textColorTertiary">?android:textColorTertiaryInverse</item>
+
+<!--        <item name="colorControlNormal">@color/background_material_light</item>-->
+        <item name="colorControlHighlight">@color/background_material_light</item>
+
+<!--        <item name="android:disabledAlpha">0.1</item>-->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccentDisabled">@color/colorAccentDisabled</item>
+
+        <item name="android:progressTint">@color/colorAccent</item>
+        <item name="android:windowContentTransitions">true</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
+        <item name="fontFamily">@font/nunito_semibold</item>
+    </style>
+
 </resources>

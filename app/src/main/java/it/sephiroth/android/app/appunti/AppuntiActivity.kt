@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
 import com.crashlytics.android.answers.Answers
+import io.sellmair.disposer.Disposer
+import io.sellmair.disposer.disposers
 import isNavBarAtBottom
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.library.kotlin_extensions.app.isInMultiWindow
@@ -34,6 +36,8 @@ abstract class AppuntiActivity(private val wantsFullscreen: Boolean = false) : A
     internal var isFullScreen: Boolean = false
 
     protected lateinit var autoDisposable: AutoDisposable
+
+    protected val onStop: Disposer by lazy { lifecycle.disposers.onStop }
 
     @SuppressLint("InlinedApi")
     override fun onCreate(savedInstanceState: Bundle?) {

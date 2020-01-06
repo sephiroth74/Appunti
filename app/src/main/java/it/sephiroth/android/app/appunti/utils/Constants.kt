@@ -2,6 +2,10 @@ package it.sephiroth.android.app.appunti.utils
 
 object Constants {
 
+    const val KEY_ID = "key_id"
+    const val KEY_AUTOPLAY = "key_autoplay"
+
+
     /**
      * Contains all the REQUEST CODES used in any Activity
      */

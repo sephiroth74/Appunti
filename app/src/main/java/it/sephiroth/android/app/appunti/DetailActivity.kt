@@ -51,18 +51,24 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import io.sellmair.disposer.disposeBy
 import it.sephiroth.android.app.appunti.adapters.DetailAttachmentsListAdapter
 import it.sephiroth.android.app.appunti.adapters.DetailRemoteUrlListAdapter
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
 import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
+import it.sephiroth.android.app.appunti.events.RxBus
+import it.sephiroth.android.app.appunti.events.impl.AttachmentOnClickEvent
+import it.sephiroth.android.app.appunti.events.impl.AttachmentOnDeleteEvent
+import it.sephiroth.android.app.appunti.events.impl.AttachmentOnShareEvent
 import it.sephiroth.android.app.appunti.ext.*
 import it.sephiroth.android.app.appunti.io.RelativePath
 import it.sephiroth.android.app.appunti.models.DetailViewModel
 import it.sephiroth.android.app.appunti.models.EntryListJsonModel
 import it.sephiroth.android.app.appunti.models.SettingsManager
 import it.sephiroth.android.app.appunti.services.LocationRepository
+import it.sephiroth.android.app.appunti.utils.Constants
 import it.sephiroth.android.app.appunti.utils.Constants.ActivityRequestCodes.CATEGORY_PICK_REQUEST_CODE
 import it.sephiroth.android.app.appunti.utils.Constants.ActivityRequestCodes.IMAGE_CAPTURE_REQUEST_CODE
 import it.sephiroth.android.app.appunti.utils.Constants.ActivityRequestCodes.OPEN_FILE_REQUEST_CODE
@@ -90,6 +96,8 @@ import org.threeten.bp.ZoneId
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 
@@ -236,6 +244,14 @@ class DetailActivity : AudioRecordActivity() {
 //        coordinator.viewTreeObserver.addOnGlobalFocusChangeListener { oldFocus, newFocus ->
 //            Timber.i("onFocusChanged($oldFocus ==> $newFocus)")
 //        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        RxBus.listen(AttachmentOnShareEvent::class.java).subscribe { shareEntryAttachment(it.attachment) }.disposeBy(onStop)
+        RxBus.listen(AttachmentOnDeleteEvent::class.java).subscribe { askToDeleteAttachment(it.attachment) }.disposeBy(onStop)
+        RxBus.listen(AttachmentOnClickEvent::class.java).subscribe { viewEntryAttachment(it.attachment) }.disposeBy(onStop)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -460,7 +476,10 @@ class DetailActivity : AudioRecordActivity() {
         } else {
             showToastMessage(getString(R.string.no_transcription_found))
         }
-        audioUri?.let { uri -> addAttachmentToEntry(uri) }
+        audioUri?.let { uri ->
+            val timeStamp = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.SHORT, SimpleDateFormat.SHORT).format(Date())
+            addAttachmentToEntry(uri, timeStamp)
+        }
     }
 
     private fun changeEntryCategory(categoryID: Long) {
@@ -472,13 +491,13 @@ class DetailActivity : AudioRecordActivity() {
         }
     }
 
-    private fun addAttachmentToEntry(uri: Uri) {
-        Timber.i("addAttachmentToEntry($uri)")
+    private fun addAttachmentToEntry(uri: Uri, displayName: String? = null) {
+        Timber.i("addAttachmentToEntry($uri, $displayName)")
         answers.logCustom(CustomEvent("detail.attachImage.result"))
         setProgressVisible(true)
         showToastMessage(getString(R.string.adding_file))
 
-        model.addAttachment(uri) { success, throwable ->
+        model.addAttachment(uri, displayName) { success, throwable ->
             Timber.v("addAttachment result=$success")
             doOnMainThread {
                 throwable?.let {
@@ -1001,11 +1020,7 @@ class DetailActivity : AudioRecordActivity() {
 
     private fun updateEntryAttachmentsList(entry: Entry) {
         if (attachmentsListAdapter == null) {
-            attachmentsListAdapter = DetailAttachmentsListAdapter(this).also { adapter ->
-                adapter.deleteAction = { attachment -> removeEntryAttachment(attachment) }
-                adapter.shareAction = { attachment -> shareEntryAttachment(attachment) }
-                adapter.clickAction = { attachment -> viewEntryAttachment(attachment) }
-            }
+            attachmentsListAdapter = DetailAttachmentsListAdapter(this)
             attachmentsRecycler.adapter = attachmentsListAdapter
         }
 
@@ -1103,6 +1118,19 @@ class DetailActivity : AudioRecordActivity() {
 
     private fun viewEntryAttachment(attachment: Attachment) {
         answers.logCustom(CustomEvent("detail.attachment.click"))
+
+        Timber.v("attachment type: %s", attachment.attachmentMime)
+
+        if (attachment.isVoice()) {
+            val dialog = MediaPlayerDialogFragment()
+            dialog.arguments = Bundle().apply {
+                putLong(Constants.KEY_ID, attachment.attachmentID)
+                putBoolean(Constants.KEY_AUTOPLAY, true)
+            }
+            dialog.show(supportFragmentManager, MediaPlayerDialogFragment::class.java.name)
+            return
+        }
+
         try {
             IntentUtils.createAttachmentViewIntent(this, attachment).also {
                 startActivity(it)
@@ -1129,6 +1157,24 @@ class DetailActivity : AudioRecordActivity() {
             e.printStackTrace()
             Crashlytics.logException(e)
         }
+    }
+
+    /**
+     * Ask the use to confirm to remove the current attachment
+     * [removeEntryAttachment] will be called then
+     */
+    private fun askToDeleteAttachment(attachment: Attachment) {
+        AlertDialog
+            .Builder(this)
+            .setCancelable(true)
+            .setTitle(getString(R.string.confirm))
+            .setMessage(getString(R.string.confirm_attachment_delete_body))
+            .setPositiveButton(android.R.string.yes) { dialog, _ ->
+                dialog.dismiss()
+                removeEntryAttachment(attachment)
+            }
+            .setNegativeButton(android.R.string.no) { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 
     private fun removeEntryAttachment(attachment: Attachment) {

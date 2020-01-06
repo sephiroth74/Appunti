@@ -67,6 +67,7 @@ abstract class AudioRecordActivity(wantsFullscreen: Boolean = false) : AppuntiAc
 
     @HunterDebug
     protected fun dispatchVoiceRecordingIntent() {
+        answers.logCustom(CustomEvent("recordAudio.initialize"))
         val intent = IntentUtils.createVoiceRecordingIntent()
         startActivityForResult(intent, AUDIO_CAPTURE_REQUEST_CODE)
     }

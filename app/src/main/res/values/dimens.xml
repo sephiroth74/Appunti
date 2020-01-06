@@ -73,5 +73,7 @@
 
     <dimen name="appunti_color_button_small">22dp</dimen>
     <dimen name="appunti_color_button_small_margin">2dp</dimen>
-    <dimen name="appunti_detail_attachment_thumbnail_size">80dp</dimen>
+    <dimen name="appunti_detail_attachment_thumbnail_size">64dp</dimen>
+
+    <dimen name="appunti_media_dialog_width">320dp</dimen>
 </resources>

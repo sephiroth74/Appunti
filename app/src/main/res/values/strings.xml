@@ -214,7 +214,7 @@
     <string name="attribution">Attribution</string>
     <string name="click_on_links">Click on Links</string>
     <string name="no_transcription_found">Sorry, no transcription found</string>
-
+    <string name="confirm_attachment_delete_body">Are you sure you want to remove this attachment? You cannot undo.</string>
     <integer name="appunti_settings_theme_behavior_automatic">0</integer>
     <integer name="appunti_settings_theme_behavior_Dark">1</integer>
     <integer name="appunti_settings_theme_behavior_Light">2</integer>

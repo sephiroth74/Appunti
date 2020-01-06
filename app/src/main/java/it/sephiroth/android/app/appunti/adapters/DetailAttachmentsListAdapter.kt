@@ -10,18 +10,16 @@ import androidx.recyclerview.widget.RecyclerView
 import it.sephiroth.android.app.appunti.DetailActivity
 import it.sephiroth.android.app.appunti.R
 import it.sephiroth.android.app.appunti.db.tables.Attachment
+import it.sephiroth.android.app.appunti.events.RxBus
+import it.sephiroth.android.app.appunti.events.impl.AttachmentOnClickEvent
+import it.sephiroth.android.app.appunti.events.impl.AttachmentOnDeleteEvent
+import it.sephiroth.android.app.appunti.events.impl.AttachmentOnShareEvent
 import it.sephiroth.android.app.appunti.ext.loadThumbnail
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnMainThread
 import kotlinx.android.synthetic.main.appunti_detail_attachment_item.view.*
 
 class DetailAttachmentsListAdapter(private var activity: DetailActivity) :
     RecyclerView.Adapter<DetailAttachmentsListAdapter.AttachmentItemViewHolder>() {
-
-    companion object {}
-
-    var deleteAction: ((Attachment) -> (Unit))? = null
-    var shareAction: ((Attachment) -> (Unit))? = null
-    var clickAction: ((Attachment) -> (Unit))? = null
 
     private val data: MutableList<Attachment> = mutableListOf()
     private val inflater: LayoutInflater by lazy { LayoutInflater.from(activity) }
@@ -46,17 +44,6 @@ class DetailAttachmentsListAdapter(private var activity: DetailActivity) :
 
         (holder.itemView as CardView).setCardBackgroundColor(cardColor)
         holder.bind(attachment)
-
-        holder.removeButton.setOnClickListener {
-            deleteAction?.invoke(attachment)
-        }
-
-        holder.shareButton.setOnClickListener {
-            shareAction?.invoke(attachment)
-        }
-
-        holder.itemView.setOnClickListener { clickAction?.invoke(attachment) }
-
     }
 
     fun update(attachments: List<Attachment>?) {
@@ -70,12 +57,24 @@ class DetailAttachmentsListAdapter(private var activity: DetailActivity) :
     class AttachmentItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val attachmentTitle: TextView = itemView.attachmentTitle
         private val attachmentImage: ImageView = itemView.attachmentImage
-        var removeButton: View = itemView.attachmentRemoveButton
-        var shareButton: View = itemView.attachmentShareButton
+        private var removeButton: View = itemView.attachmentRemoveButton
+        private var shareButton: View = itemView.attachmentShareButton
 
         fun bind(attachment: Attachment) {
             attachmentTitle.text = attachment.attachmentTitle
             attachment.loadThumbnail(itemView.context, attachmentImage)
+
+            shareButton.setOnClickListener {
+                RxBus.send(AttachmentOnShareEvent(attachment))
+            }
+
+            removeButton.setOnClickListener {
+                RxBus.send(AttachmentOnDeleteEvent(attachment))
+            }
+
+            itemView.setOnClickListener {
+                RxBus.send(AttachmentOnClickEvent(attachment))
+            }
         }
     }
 }

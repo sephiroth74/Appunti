@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="@dimen/appunti_media_dialog_width"
+        android:layout_height="wrap_content"
+        android:minWidth="@dimen/appunti_media_dialog_width"
+        android:padding="16dp">
+
+    <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/media_title"
+            android:text="Titolo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+            android:id="@+id/progress"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:indeterminate="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/media_title" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/media_time_remaining"
+            style="@style/TextAppearance.AppCompat.Small"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-00:00"
+            app:layout_constraintEnd_toEndOf="@+id/progress"
+            app:layout_constraintTop_toBottomOf="@+id/progress" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/media_time_elapsed"
+            style="@style/TextAppearance.AppCompat.Small"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            app:layout_constraintStart_toStartOf="@+id/progress"
+            app:layout_constraintTop_toBottomOf="@+id/progress" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/button_play"
+            style="@style/Widget.Appunti.BottomBar.ImageButton"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:scaleType="fitXY"
+            app:layout_constraintStart_toStartOf="@+id/progress"
+            app:layout_constraintTop_toTopOf="@+id/button_stop"
+            app:srcCompat="@drawable/play_pause" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/button_stop"
+            style="@style/Widget.Appunti.BottomBar.ImageButton"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:scaleType="fitXY"
+            app:layout_constraintStart_toEndOf="@+id/button_play"
+            app:layout_constraintTop_toBottomOf="@+id/media_time_remaining"
+            app:srcCompat="@drawable/sharp_stop_24" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
