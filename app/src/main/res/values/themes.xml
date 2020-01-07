@@ -67,17 +67,18 @@
     <style name="Theme.Appunti.Default.PopupOverlay"
            parent="ThemeOverlay.AppCompat.DayNight"/>
 
+    <!-- media player style -->
     <style name="Theme.Appunti.MediaPlayer" parent="Theme.MaterialComponents.DayNight.Dialog">
-        <item name="android:windowBackground">@color/background_material_dark</item>
-        <item name="android:colorForegroundInverse">@color/background_material_dark</item>
+        <item name="android:windowBackground">@color/background_material_light</item>
+<!--        <item name="android:colorForegroundInverse">@color/background_material_dark</item>-->
 
-        <item name="android:textColor">?android:textColorPrimaryInverse</item>
-        <item name="android:textColorPrimary">?android:textColorPrimaryInverse</item>
-        <item name="android:textColorSecondary">?android:textColorSecondaryInverse</item>
-        <item name="android:textColorTertiary">?android:textColorTertiaryInverse</item>
+<!--        <item name="android:textColor">?android:textColorPrimaryInverse</item>-->
+<!--        <item name="android:textColorPrimary">?android:textColorPrimaryInverse</item>-->
+<!--        <item name="android:textColorSecondary">?android:textColorSecondaryInverse</item>-->
+<!--        <item name="android:textColorTertiary">?android:textColorTertiaryInverse</item>-->
 
 <!--        <item name="colorControlNormal">@color/background_material_light</item>-->
-        <item name="colorControlHighlight">@color/background_material_light</item>
+<!--        <item name="colorControlHighlight">@color/background_material_light</item>-->
 
 <!--        <item name="android:disabledAlpha">0.1</item>-->
         <item name="colorPrimary">@color/colorPrimary</item>
