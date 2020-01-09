@@ -53,6 +53,13 @@ class Attachment() : BaseRXModel() {
 
     fun isZip() = attachmentMime?.equals("application/zip", true) == true
 
+    fun isAudio() = attachmentMime?.startsWith("audio/", true) == true
+
+    fun isVoice() = isAudio() && (
+            attachmentMime?.endsWith("amr", true) == true
+                    || attachmentMime?.endsWith("amr-wb", true) == true
+            )
+
     override fun toString(): String {
         return "Attachment(entryID=$attachmentEntryID, attachmentTitle=$attachmentTitle, attachmentMime=$attachmentMime, attachmentPath=$attachmentPath)"
     }

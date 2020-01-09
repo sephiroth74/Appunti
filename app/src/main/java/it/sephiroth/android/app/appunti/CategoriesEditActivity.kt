@@ -19,7 +19,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.crashlytics.android.answers.Answers
 import com.crashlytics.android.answers.CustomEvent
 import com.dbflow5.query.OrderBy
 import com.dbflow5.query.list
@@ -58,8 +57,6 @@ class CategoriesEditActivity : AppuntiActivity(), DirectModelNotifier.OnModelSta
 
     private var mPickCategory = false
     private var mPickCategorySelection: Long = -1
-
-    private val answers: Answers by lazy { Answers.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

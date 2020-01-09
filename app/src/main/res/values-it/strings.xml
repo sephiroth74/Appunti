@@ -129,6 +129,7 @@
     <string name="take_picture">Scatta una Foto</string>
     <string name="attach_image">Aggiungi dalla Galleria</string>
     <string name="attach_file">Aggiungi un Documento</string>
+    <string name="attach_voice">Aggiungi Nota vocale</string>
     <string name="confirm">Conferma</string>
     <string name="oh_snap">Oh Snap! Si è verificato un errore!</string>
     <string name="convert_to_text">Converti in Testo</string>
@@ -136,7 +137,8 @@
     <string name="current_location">Posizione Attuale</string>
     <string name="retrieving_current_location">Sto cercando la posizione attuale....</string>
     <string name="permissions_required">Permessi necessari</string>
-    <string name="permissions_required_dialog_body">I permessi di localizzazione sono necessari qui. Clicca Ok per aprire le Impostazioni e cambiare i permessi</string>
+    <string name="permissions_required_dialog_body">I permessi di localizzazione sono necessari qui. Clicca Ok per aprire le Impostazioni e cambiare i permessi manualmente.</string>
+    <string name="permissions_audio_required_dialog_body">I permessi di registrazione audio necessari per poter continuare. Clicca Ok per aprire le Impostazioni e cambiare i permessi manualmente.</string>
 
     <plurals name="entries_delete_action_question">
         <item quantity="one">Sei sicuro di voler eliminare questo Appunto? Questa azione non può essere annullata</item>
@@ -157,5 +159,7 @@
     <string name="create_new">Nuovo Appunto</string>
     <string name="attribution">Crediti</string>
     <string name="click_on_links">Click sui collegamenti</string>
+    <string name="no_transcription_found">Spiacenti, nessuna trascrizione trovata</string>
+    <string name="confirm_attachment_delete_body">Sei sicuro di vole eliminare questo allegato? L\'operazione non è annullabile.</string>
 
 </resources>

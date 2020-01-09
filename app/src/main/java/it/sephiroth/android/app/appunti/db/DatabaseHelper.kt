@@ -9,6 +9,7 @@ import com.dbflow5.structure.delete
 import com.dbflow5.structure.load
 import com.dbflow5.structure.save
 import io.reactivex.Completable
+import io.reactivex.Maybe
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import it.sephiroth.android.app.appunti.db.tables.*
@@ -19,6 +20,7 @@ import it.sephiroth.android.app.appunti.utils.FileSystemUtils
 import it.sephiroth.android.app.appunti.utils.Optional
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.doOnScheduler
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxCompletable
+import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxMaybe
 import it.sephiroth.android.library.kotlin_extensions.io.reactivex.rxSingle
 import it.sephiroth.android.library.kotlin_extensions.lang.currentThread
 import it.sephiroth.android.library.kotlin_extensions.net.resolveDisplayName
@@ -26,7 +28,9 @@ import it.sephiroth.android.library.kotlin_extensions.net.resolveMimeType
 import org.apache.commons.io.FileUtils
 import org.threeten.bp.Instant
 import timber.log.Timber
+import java.io.File
 import java.util.*
+
 
 object DatabaseHelper {
 
@@ -238,21 +242,27 @@ object DatabaseHelper {
         context: Context,
         entry: Entry,
         uri: Uri,
+        dstName: String?,
         callback: ((Boolean, Throwable?) -> (Unit))? = null
     ) {
-        Timber.i("addAttachmentFromUri($entry, $uri)")
+        Timber.i("addAttachmentFromUri($entry, $uri, $dstName)")
 
-        val displayName: String = uri.resolveDisplayName(context) ?: UUID.randomUUID().toString()
+        var displayName: String = uri.resolveDisplayName(context) ?: UUID.randomUUID().toString()
         val mimeType = uri.resolveMimeType(context)
 
         Timber.v("displayName: $displayName, mimeType: $mimeType")
 
         val filesDir = FileSystemUtils.getPrivateFilesDir(context)
         val attachmentsDir = FileSystemUtils.getAttachmentFilesDir(context, entry)
-        val dstFile = FileSystemUtils.getNextFile(
-            attachmentsDir,
-            FileSystemUtils.normalizeFileName(displayName)
-        )
+        val dstFile = FileSystemUtils.getNextFile(attachmentsDir, FileSystemUtils.normalizeFileName(displayName))
+
+        if (!dstName.isNullOrBlank()) {
+            val extension = FileSystemUtils.getFileExtension(context, uri)
+            if (!extension.isNullOrBlank()) {
+                displayName = "$dstName.$extension"
+            }
+        }
+
         val relativePath = dstFile.path
 
         Timber.v("filesDir=${filesDir.absolutePath}")
@@ -388,5 +398,23 @@ object DatabaseHelper {
                     ).list
                 }
         }
+    }
+
+    fun copyDatabase(context: Context, dstDir: File) {
+        Timber.i("copyDatabase: %s", dstDir.absolutePath)
+        val db = FlowManager.getDatabase(AppDatabase::class.java)
+        val src = db.databaseFileName
+        Timber.v("db path: %s", context.getDatabasePath(db.databaseFileName))
+        val srcFile = context.getDatabasePath(db.databaseFileName)
+        val dstFile = File(dstDir, db.databaseFileName)
+        Timber.v("dstFile: %s", dstFile.absolutePath)
+        return FileUtils.copyFile(srcFile, dstFile)
+    }
+
+    fun loadAttachment(id: Long): Maybe<Attachment> {
+        return rxMaybe(Schedulers.io()) {
+            (select from Attachment::class where (Attachment_Table.attachmentID.eq(id))).result
+        }
+
     }
 }

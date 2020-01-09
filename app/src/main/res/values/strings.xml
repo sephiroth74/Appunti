@@ -190,6 +190,7 @@
     <string name="take_picture">Take Picture</string>
     <string name="attach_image">Attach Image</string>
     <string name="attach_file">Attach File</string>
+    <string name="attach_voice">Attach Audio</string>
     <string name="oh_snap">Oh Snap! An error occurred!</string>
     <string name="convert_to_text">Convert to Text</string>
     <string name="convert_to_list">Convert to List</string>
@@ -197,6 +198,7 @@
     <string name="retrieving_current_location">Retrieving current location....</string>
     <string name="permissions_required">Permissions required</string>
     <string name="permissions_required_dialog_body">You need to grant location permissions in order to do this. Press Ok to open System Settings and change the App Permissions</string>
+    <string name="permissions_audio_required_dialog_body">You need to grant audio recording permissions in order to do this. Press Ok to open System Settings and change the App Permissions</string>
     <string name="category_reminder">With Reminder</string>
     <string name="snooze">Close</string>
     <string name="postpone">Snooze</string>
@@ -211,7 +213,8 @@
     <string name="create_new">Create New</string>
     <string name="attribution">Attribution</string>
     <string name="click_on_links">Click on Links</string>
-
+    <string name="no_transcription_found">Sorry, no transcription found</string>
+    <string name="confirm_attachment_delete_body">Are you sure you want to remove this attachment? You cannot undo.</string>
     <integer name="appunti_settings_theme_behavior_automatic">0</integer>
     <integer name="appunti_settings_theme_behavior_Dark">1</integer>
     <integer name="appunti_settings_theme_behavior_Light">2</integer>

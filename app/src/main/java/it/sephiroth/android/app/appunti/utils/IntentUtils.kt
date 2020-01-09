@@ -5,12 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import it.sephiroth.android.app.appunti.CategoriesEditActivity
-import it.sephiroth.android.app.appunti.DetailActivity
-import it.sephiroth.android.app.appunti.PreferencesActivity
-import it.sephiroth.android.app.appunti.SearchableActivity
+import android.speech.RecognizerIntent
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
+import com.hunter.library.debug.HunterDebug
+import it.sephiroth.android.app.appunti.*
 import it.sephiroth.android.app.appunti.db.tables.Attachment
-import it.sephiroth.android.app.appunti.db.tables.Category
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
 import it.sephiroth.android.app.appunti.ext.getFileUri
@@ -19,6 +19,7 @@ import java.util.*
 
 object IntentUtils {
 
+    const val KEY_AUDIO_BUNDLE = "audioBundle"
     const val KEY_ENTRY_ID = "entryID"
     const val KEY_ENTRY_TYPE = "entryType"
     const val KEY_REMOVE_ALARM = "removeAlarm"
@@ -27,13 +28,17 @@ object IntentUtils {
 
     const val ACTION_ASK_NEW_CATEGORY_STARTUP = "ask_for_new_category_startup"
 
-    fun createNewEntryIntent(context: Context, type: Entry.EntryType = Entry.EntryType.TEXT, categoryID: Long? = null): Intent {
+    fun createNewEntryIntent(context: Context, type: Entry.EntryType = Entry.EntryType.TEXT, categoryID: Long? = null, extra: Pair<String, Intent>? = null): Intent {
         return Intent(context, DetailActivity::class.java).apply {
             action = Intent.ACTION_CREATE_DOCUMENT
             putExtra(KEY_ENTRY_TYPE, type.ordinal)
 
             categoryID?.let {
                 putExtra(KEY_CATEGORY_ID, it)
+            }
+
+            extra?.let {
+                putExtra(extra.first, extra.second)
             }
         }
     }
@@ -171,6 +176,37 @@ object IntentUtils {
             Timber.v("remoteUrlOriginalUri = ${remoteUrl.remoteUrlOriginalUri}")
             data = Uri.parse(remoteUrl.remoteUrlOriginalUri)
         }
+    }
+
+    /**
+     * Create the Intent to start the system-wide speech recognition
+     */
+    @HunterDebug
+    fun createVoiceRecordingIntent(): Intent {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        intent.putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+        )
+        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+        intent.putExtra("android.speech.extra.GET_AUDIO", true)
+        intent.putExtra("android.speech.extra.GET_AUDIO_FORMAT", "audio/AMR")
+        return intent
+    }
+
+    @HunterDebug
+    fun openActivitySettings(context: Context) {
+        context.startActivity(IntentUtils.createSystemAppSettingsIntent(context))
+    }
+
+    @HunterDebug
+    fun showPermissionsDeniedDialog(context: Context, @StringRes body: Int) {
+        AlertDialog.Builder(context)
+            .setTitle(context.getString(R.string.permissions_required))
+            .setMessage(context.getString(body))
+            .setPositiveButton(android.R.string.ok) { _, _ -> IntentUtils.openActivitySettings(context) }
+            .setNegativeButton(android.R.string.cancel) { _, _ -> }
+            .create().show()
     }
 
 }

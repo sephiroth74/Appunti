@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu
+<menu xmlns:tools="http://schemas.android.com/tools"
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto">
 
@@ -44,6 +44,14 @@
             android:icon="@drawable/sharp_add_photo_alternate_24"
             android:title="@string/attach_image"
             app:showAsAction="always"/>
+
+    <item
+            android:id="@+id/menu_action_voice"
+            android:checkable="false"
+            android:icon="@drawable/round_keyboard_voice_24"
+            android:title="@string/attach_voice"
+            app:showAsAction="always"
+            tools:ignore="AlwaysShowAction" />
 
     <item
             android:id="@+id/menu_action_file"

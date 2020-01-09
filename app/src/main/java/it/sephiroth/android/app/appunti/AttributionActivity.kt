@@ -23,11 +23,6 @@ class AttributionActivity : AppuntiActivity() {
 
         textView.text = HtmlCompat.fromHtml(getString(R.string.attribution_html), HtmlCompat.FROM_HTML_MODE_COMPACT)
         BetterLinkMovementMethod.linkifyHtml(textView)
-
-//        webView.loadUrl("file:///android_asset/attribution.html")
-//        webView.settings.loadWithOverviewMode = true
-//        webView.settings.useWideViewPort = true
-//        webView.settings.builtInZoomControls = true
     }
 
 }
