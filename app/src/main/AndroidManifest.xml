@@ -113,6 +113,11 @@
                     android:resource="@xml/searchable"/>
         </activity>
 
+        <service
+            android:name=".DummyService"
+            android:exported="false"
+            android:stopWithTask="false" />
+
         <meta-data
                 android:name="preloaded_fonts"
                 android:resource="@array/preloaded_fonts"/>

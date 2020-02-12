@@ -52,6 +52,7 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.sellmair.disposer.disposeBy
+import io.sellmair.disposer.onDestroy
 import it.sephiroth.android.app.appunti.adapters.DetailAttachmentsListAdapter
 import it.sephiroth.android.app.appunti.adapters.DetailRemoteUrlListAdapter
 import it.sephiroth.android.app.appunti.db.DatabaseHelper
@@ -59,6 +60,7 @@ import it.sephiroth.android.app.appunti.db.tables.Attachment
 import it.sephiroth.android.app.appunti.db.tables.Entry
 import it.sephiroth.android.app.appunti.db.tables.RemoteUrl
 import it.sephiroth.android.app.appunti.events.RxBus
+import it.sephiroth.android.app.appunti.events.TaskRemovedEvent
 import it.sephiroth.android.app.appunti.events.impl.AttachmentOnClickEvent
 import it.sephiroth.android.app.appunti.events.impl.AttachmentOnDeleteEvent
 import it.sephiroth.android.app.appunti.events.impl.AttachmentOnShareEvent
@@ -157,7 +159,11 @@ class DetailActivity : AudioRecordActivity() {
             }
         }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         Timber.i("onRequestPermissionsResult($permissions)")
 
@@ -175,6 +181,8 @@ class DetailActivity : AudioRecordActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.sharedElementReturnTransition = null
+
+        startService(Intent(this, DummyService::class.java))
 
         super.onCreate(savedInstanceState)
 
@@ -249,9 +257,33 @@ class DetailActivity : AudioRecordActivity() {
     override fun onStart() {
         super.onStart()
 
-        RxBus.listen(AttachmentOnShareEvent::class.java).subscribe { shareEntryAttachment(it.attachment) }.disposeBy(onStop)
-        RxBus.listen(AttachmentOnDeleteEvent::class.java).subscribe { askToDeleteAttachment(it.attachment) }.disposeBy(onStop)
-        RxBus.listen(AttachmentOnClickEvent::class.java).subscribe { viewEntryAttachment(it.attachment) }.disposeBy(onStop)
+        RxBus.listen(AttachmentOnShareEvent::class.java)
+            .subscribe { shareEntryAttachment(it.attachment) }.disposeBy(onStop)
+        RxBus.listen(AttachmentOnDeleteEvent::class.java)
+            .subscribe { askToDeleteAttachment(it.attachment) }.disposeBy(onStop)
+        RxBus.listen(AttachmentOnClickEvent::class.java)
+            .subscribe { viewEntryAttachment(it.attachment) }.disposeBy(onStop)
+        RxBus.listen(TaskRemovedEvent::class.java)
+            .subscribe { onTaskRemoved() }.disposeBy(onDestroy)
+    }
+
+    @HunterDebug
+    private fun saveOnDestroy(deleteIfEmpty: Boolean) {
+        if (deleteIfEmpty && model.isNew && model.entry.value?.isEmpty() == true) {
+            Timber.v("new entry is empty. delete it")
+            answers.logCustom(CustomEvent("detail.deleteNewItem"))
+            model.entry.value?.delete()
+        } else {
+            if (model.isModified) {
+                model.save()
+            }
+        }
+    }
+
+    private fun onTaskRemoved() {
+        Timber.i("onTaskRemoved")
+        answers.logCustom(CustomEvent("detail.onTaskRemoved"))
+        saveOnDestroy(false)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -271,15 +303,7 @@ class DetailActivity : AudioRecordActivity() {
 
         tickTimer?.dispose()
 
-        if (model.isNew && model.entry.value?.isEmpty() == true) {
-            Timber.v("new entry is empty. delete it")
-            answers.logCustom(CustomEvent("detail.deleteNewItem"))
-            model.entry.value?.delete()
-        } else {
-            if (model.isModified) {
-                model.save()
-            }
-        }
+        saveOnDestroy(true)
 
         super.onDestroy()
     }
@@ -339,7 +363,9 @@ class DetailActivity : AudioRecordActivity() {
                         .fromString(intent.getStringExtra(Intent.EXTRA_TEXT))
                         .apply {
                             entryTitle =
-                                if (intent.hasExtra(Intent.EXTRA_SUBJECT)) intent.getStringExtra(Intent.EXTRA_SUBJECT) else ""
+                                if (intent.hasExtra(Intent.EXTRA_SUBJECT)) intent.getStringExtra(
+                                    Intent.EXTRA_SUBJECT
+                                ) else ""
                         }.also { entry ->
                             if (intent.hasExtra(Intent.EXTRA_STREAM)) {
                                 val streamUri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
@@ -363,7 +389,8 @@ class DetailActivity : AudioRecordActivity() {
         }
 
         if (intent.hasExtra(IntentUtils.KEY_AUDIO_BUNDLE)) {
-            intent.getParcelableExtra<Intent>(IntentUtils.KEY_AUDIO_BUNDLE)?.let { audioIntent = it }
+            intent.getParcelableExtra<Intent>(IntentUtils.KEY_AUDIO_BUNDLE)
+                ?.let { audioIntent = it }
             intent.removeExtra(IntentUtils.KEY_AUDIO_BUNDLE)
         }
 
@@ -464,7 +491,10 @@ class DetailActivity : AudioRecordActivity() {
     @HunterDebug
     override fun onAudioPermissionsDenied(shouldShowRequestPermissionRationale: Boolean) {
         if (shouldShowRequestPermissionRationale) {
-            IntentUtils.showPermissionsDeniedDialog(this, R.string.permissions_audio_required_dialog_body)
+            IntentUtils.showPermissionsDeniedDialog(
+                this,
+                R.string.permissions_audio_required_dialog_body
+            )
         } else {
             showToastMessage(getString(R.string.permissions_required))
         }
@@ -477,7 +507,9 @@ class DetailActivity : AudioRecordActivity() {
             showToastMessage(getString(R.string.no_transcription_found))
         }
         audioUri?.let { uri ->
-            val timeStamp = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.SHORT, SimpleDateFormat.SHORT).format(Date())
+            val timeStamp =
+                SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.SHORT, SimpleDateFormat.SHORT)
+                    .format(Date())
             addAttachmentToEntry(uri, timeStamp)
         }
     }
@@ -565,8 +597,10 @@ class DetailActivity : AudioRecordActivity() {
             findItem(R.id.menu_action_voice).isVisible = value && speechRecognitionAvailable
             findItem(R.id.menu_action_category).isVisible = !value
             findItem(R.id.menu_action_delete).isVisible = !value
-            findItem(R.id.menu_action_list).isVisible = !value && model.entry.value?.entryType == Entry.EntryType.TEXT
-            findItem(R.id.menu_action_text).isVisible = !value && model.entry.value?.entryType == Entry.EntryType.LIST
+            findItem(R.id.menu_action_list).isVisible =
+                !value && model.entry.value?.entryType == Entry.EntryType.TEXT
+            findItem(R.id.menu_action_text).isVisible =
+                !value && model.entry.value?.entryType == Entry.EntryType.LIST
         }
     }
 
@@ -1335,12 +1369,23 @@ class DetailActivity : AudioRecordActivity() {
         Timber.i("insertCurrentAddress")
         answers.logCustom(CustomEvent("detail.address.insert"))
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             Timber.w("permission required")
             // Permission is not granted
             // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                IntentUtils.showPermissionsDeniedDialog(this, R.string.permissions_required_dialog_body)
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            ) {
+                IntentUtils.showPermissionsDeniedDialog(
+                    this,
+                    R.string.permissions_required_dialog_body
+                )
             } else {
                 // No explanation needed; request the permission
                 ActivityCompat.requestPermissions(

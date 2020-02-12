@@ -47,6 +47,7 @@ abstract class AppuntiActivity(private val wantsFullscreen: Boolean = false) : A
 
         super.onCreate(savedInstanceState)
         autoDisposable = AutoDisposable(this)
+        Timber.v("autoDisposable = %s", autoDisposable)
 
         isFullScreen =
             wantsFullscreen && !isInMultiWindow && !resources.getBoolean(R.bool.fullscreen_style_fit_system_windows) &&
