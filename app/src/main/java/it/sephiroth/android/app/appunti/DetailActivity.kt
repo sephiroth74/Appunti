@@ -556,17 +556,18 @@ class DetailActivity : AudioRecordActivity() {
 
     // BOTTOM APP BAR
 
-    private fun setNavigationMenuPicker(value: Boolean) {
+    private fun setNavigationMenuPicker(attachmentMenu: Boolean) {
         val speechRecognitionAvailable = SpeechRecognizer.isRecognitionAvailable(this)
         with(navigationView.menu) {
-            findItem(R.id.menu_action_camera).isVisible = value
-            findItem(R.id.menu_action_image).isVisible = value
-            findItem(R.id.menu_action_file).isVisible = value
-            findItem(R.id.menu_action_voice).isVisible = value && speechRecognitionAvailable
-            findItem(R.id.menu_action_category).isVisible = !value
-            findItem(R.id.menu_action_delete).isVisible = !value
-            findItem(R.id.menu_action_list).isVisible = !value && model.entry.value?.entryType == Entry.EntryType.TEXT
-            findItem(R.id.menu_action_text).isVisible = !value && model.entry.value?.entryType == Entry.EntryType.LIST
+            findItem(R.id.menu_action_camera).isVisible = attachmentMenu
+            findItem(R.id.menu_action_image).isVisible = attachmentMenu
+            findItem(R.id.menu_action_file).isVisible = attachmentMenu
+            findItem(R.id.menu_action_address).isVisible = attachmentMenu
+            findItem(R.id.menu_action_voice).isVisible = attachmentMenu && speechRecognitionAvailable
+            findItem(R.id.menu_action_category).isVisible = !attachmentMenu
+            findItem(R.id.menu_action_delete).isVisible = !attachmentMenu
+            findItem(R.id.menu_action_list).isVisible = !attachmentMenu && model.entry.value?.entryType == Entry.EntryType.TEXT
+            findItem(R.id.menu_action_text).isVisible = !attachmentMenu && model.entry.value?.entryType == Entry.EntryType.LIST
         }
     }
 

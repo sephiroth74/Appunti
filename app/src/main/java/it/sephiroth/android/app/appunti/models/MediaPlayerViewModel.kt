@@ -99,7 +99,7 @@ class MediaPlayerViewModel(application: Application) : AndroidViewModel(applicat
 
     fun stop() {
         mediaPlayer.value?.let { mediaPlayer ->
-            if (isReady() && mediaPlayer.isPlaying) {
+            if (isReady()) {
                 mediaPlayer.pause()
                 mediaPlayer.seekTo(0)
                 onMediaStopped()
