@@ -161,5 +161,5 @@
     <string name="click_on_links">Click sui collegamenti</string>
     <string name="no_transcription_found">Spiacenti, nessuna trascrizione trovata</string>
     <string name="confirm_attachment_delete_body">Sei sicuro di vole eliminare questo allegato? L\'operazione non è annullabile.</string>
-
+    <string name="delete_all_done">Rimuovi elementi completati</string>
 </resources>

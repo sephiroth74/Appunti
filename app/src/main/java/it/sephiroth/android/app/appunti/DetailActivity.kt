@@ -247,11 +247,6 @@ class DetailActivity : AudioRecordActivity() {
         if (model.entry.value == null) {
             handleIntent(intent, savedInstanceState)
         }
-
-
-//        coordinator.viewTreeObserver.addOnGlobalFocusChangeListener { oldFocus, newFocus ->
-//            Timber.i("onFocusChanged($oldFocus ==> $newFocus)")
-//        }
     }
 
     override fun onStart() {
@@ -414,6 +409,7 @@ class DetailActivity : AudioRecordActivity() {
         when (item.itemId) {
             R.id.menu_action_pin -> togglePin()
             R.id.menu_action_archive -> toggleArchive()
+            R.id.menu_action_delete -> toggleDelete()
             R.id.menu_action_alarm -> toggleReminder()
             R.id.menu_action_share -> dispatchShareEntryIntent()
             android.R.id.home -> onBackPressed()
@@ -595,11 +591,19 @@ class DetailActivity : AudioRecordActivity() {
             findItem(R.id.menu_action_image).isVisible = attachmentMenu
             findItem(R.id.menu_action_file).isVisible = attachmentMenu
             findItem(R.id.menu_action_address).isVisible = attachmentMenu
-            findItem(R.id.menu_action_voice).isVisible = attachmentMenu && speechRecognitionAvailable
+            findItem(R.id.menu_action_voice).isVisible =
+                attachmentMenu && speechRecognitionAvailable
             findItem(R.id.menu_action_category).isVisible = !attachmentMenu
-            findItem(R.id.menu_action_delete).isVisible = !attachmentMenu
-            findItem(R.id.menu_action_list).isVisible = !attachmentMenu && model.entry.value?.entryType == Entry.EntryType.TEXT
-            findItem(R.id.menu_action_text).isVisible = !attachmentMenu && model.entry.value?.entryType == Entry.EntryType.LIST
+            findItem(R.id.menu_action_list).isVisible =
+                !attachmentMenu && model.entry.value?.entryType == Entry.EntryType.TEXT
+            findItem(R.id.menu_action_text).isVisible =
+                !attachmentMenu && model.entry.value?.entryType == Entry.EntryType.LIST
+
+            findItem(R.id.menu_action_delete_all_done)?.let { menuItem ->
+                menuItem.isVisible = !attachmentMenu && isNoteListType()
+                menuItem.isEnabled =
+                    isNoteListType() && detailListAdapter?.let { adapter -> adapter.checkecListSize() > 0 } ?: run { false }
+            }
         }
     }
 
@@ -638,8 +642,6 @@ class DetailActivity : AudioRecordActivity() {
             when (menuItem.itemId) {
                 R.id.menu_action_category -> dispatchPickCategoryIntent()
 
-                R.id.menu_action_delete -> toggleDelete()
-
                 R.id.menu_action_image -> dispatchOpenImageIntent()
 
                 R.id.menu_action_file -> dispatchOpenFileIntent()
@@ -649,6 +651,8 @@ class DetailActivity : AudioRecordActivity() {
                 R.id.menu_action_list -> convertEntryToList()
 
                 R.id.menu_action_text -> convertEntryToText()
+
+                R.id.menu_action_delete_all_done -> deleteAllDone()
 
                 R.id.menu_action_address -> insertCurrentAddress()
 
@@ -1239,6 +1243,16 @@ class DetailActivity : AudioRecordActivity() {
         }
     }
 
+    private fun deleteAllDone() {
+        if (model.entry.value?.entryType == Entry.EntryType.LIST) {
+            detailListAdapter?.deleteAllDone()
+        }
+    }
+
+    private fun isNoteListType() = model.entry.value?.entryType == Entry.EntryType.LIST
+
+    private fun isNoteListText() = model.entry.value?.entryType == Entry.EntryType.TEXT
+
     private fun togglePin() {
         answers.logCustom(CustomEvent("detail.togglePin"))
         val currentValue = model.entry.value?.isPinned()
@@ -1656,6 +1670,8 @@ class DetailListAdapter(private var activity: DetailActivity) :
         return dataHolder.getItemType(position)
     }
 
+    fun checkecListSize() = dataHolder.checkedSize()
+
     private var insertedItem: InsertedItem? = null
 
     private fun addItem() {
@@ -1718,6 +1734,16 @@ class DetailListAdapter(private var activity: DetailActivity) :
                 notifyItemRemoved(index)
                 postSave()
             }
+        }
+    }
+
+    internal fun deleteAllDone() {
+        answers.logCustom(CustomEvent("detail.list.deleteAllDone"))
+        doOnMainThread {
+            activity.clearCurrentFocus()
+            dataHolder.deleteAllItemsDone()
+            notifyDataSetChanged()
+            postSave()
         }
     }
 

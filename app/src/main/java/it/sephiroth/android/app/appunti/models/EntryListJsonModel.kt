@@ -47,7 +47,8 @@ class EntryListJsonModel {
         }
     }
 
-    private val gson = if (!BuildConfig.DEBUG) GsonBuilder().setPrettyPrinting().create() else Gson()
+    private val gson =
+        if (!BuildConfig.DEBUG) GsonBuilder().setPrettyPrinting().create() else Gson()
     private var uncheckedList = mutableListOf<EntryJson>()
     private var checkedList = mutableListOf<EntryJson>()
 
@@ -90,6 +91,8 @@ class EntryListJsonModel {
         return uncheckedList.size + checkedList.size + 1
     }
 
+    fun checkedSize() = checkedList.size
+
     fun getItemId(position: Int): Long {
         return when {
             position < uncheckedList.size -> uncheckedList[position].id
@@ -114,9 +117,11 @@ class EntryListJsonModel {
     }
 
     private fun getNextPosition(): Int {
-        val pos1 = if (checkedList.isNotEmpty()) checkedList.sortedByDescending { it.position }.first().position else 0
+        val pos1 = if (checkedList.isNotEmpty()) checkedList.sortedByDescending { it.position }
+            .first().position else 0
         val pos2 =
-            if (uncheckedList.isNotEmpty()) uncheckedList.sortedByDescending { it.position }.first().position else 0
+            if (uncheckedList.isNotEmpty()) uncheckedList.sortedByDescending { it.position }
+                .first().position else 0
         return if (pos1 > pos2) pos1 + 1 else pos2 + 1
     }
 
@@ -156,6 +161,10 @@ class EntryListJsonModel {
     private fun increaseItemsPositions(position: Int) {
         uncheckedList.filter { it.position >= position }.forEach { it.position = it.position + 1 }
         checkedList.filter { it.position >= position }.forEach { it.position = it.position + 1 }
+    }
+
+    fun deleteAllItemsDone() {
+        checkedList.clear()
     }
 
     fun deleteItem(entry: EntryJson): Int? {
@@ -230,7 +239,8 @@ class EntryListJsonModel {
             if (removedIndex > -1) {
                 uncheckedList.removeAt(removedIndex)
                 entry.checked = true
-                var addedIndex = checkedList.indexOfFirst { entryJson -> entryJson.position > entry.position }
+                var addedIndex =
+                    checkedList.indexOfFirst { entryJson -> entryJson.position > entry.position }
                 if (addedIndex < 0) addedIndex = checkedList.size
                 checkedList.add(addedIndex, entry)
 
@@ -243,7 +253,8 @@ class EntryListJsonModel {
             if (removedIndex > -1) {
                 checkedList.removeAt(removedIndex)
                 entry.checked = false
-                var addedIndex = uncheckedList.indexOfFirst { entryJson -> entryJson.position > entry.position }
+                var addedIndex =
+                    uncheckedList.indexOfFirst { entryJson -> entryJson.position > entry.position }
                 if (addedIndex < 0) addedIndex = uncheckedList.size
                 uncheckedList.add(addedIndex, entry)
 

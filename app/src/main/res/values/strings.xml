@@ -203,6 +203,7 @@
     <string name="snooze">Close</string>
     <string name="postpone">Snooze</string>
     <string name="alarm_postponed">Reminder postponed by %d minutes</string>
+    <string name="delete_all_done">Remove Entries marked as done</string>
 
     <string name="appunti_settings_theme_behavior_automatic">Automatic</string>
     <string name="appunti_settings_theme_behavior_Dark">Dark</string>
