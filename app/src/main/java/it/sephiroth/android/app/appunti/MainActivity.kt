@@ -7,6 +7,7 @@ import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.speech.RecognizerIntent
@@ -19,6 +20,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.util.Pair
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
@@ -89,16 +91,27 @@ class MainActivity : AudioRecordActivity(true) {
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
         // Override the activity's theme when in multiwindow mode.
+        Timber.v("coordinatorLayout.fitsSystemWindows = $fitSystemWindows")
         coordinatorLayout.fitsSystemWindows = fitSystemWindows
+
+        Timber.v("isFullScreen: $isFullScreen")
 
         if (isFullScreen) {
             navigationView.setOnApplyWindowInsetsListener { _, insets ->
                 Timber.w("applyWindowInsetsListener: $insets")
+                val insetsCompat = WindowInsetsCompat.toWindowInsetsCompat(insets)
+                Timber.v("insetsCompat: ${insetsCompat.stableInsetTop}")
+                Timber.v("insetsCompat: ${insetsCompat.systemWindowInsetTop}")
 
-                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+                    statusbarHeight = insetsCompat.systemWindowInsetTop
+                } else {
+                    statusbarHeight = 0
+                }
 
-                navigationbarHeight = insets.systemWindowInsetBottom
-                statusbarHeight = insets.systemWindowInsetTop
+                navigationbarHeight = insetsCompat.systemWindowInsetBottom
+
 
                 Timber.v("navigationbarHeight = $navigationbarHeight")
                 Timber.v("statusbarHeight = $statusbarHeight")

@@ -1,6 +1,7 @@
 package it.sephiroth.android.app.appunti
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
@@ -71,7 +72,10 @@ abstract class AppuntiActivity(private val wantsFullscreen: Boolean = false) : A
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
             )
 
-            window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+            }
+
             window.statusBarColor = theme.getColor(this, android.R.attr.statusBarColor)
             window.navigationBarColor = theme.getColor(this, android.R.attr.navigationBarColor)
         } else {
@@ -94,7 +98,6 @@ abstract class AppuntiActivity(private val wantsFullscreen: Boolean = false) : A
             }
         }
     }
-
 
 
     abstract fun getToolbar(): Toolbar?
