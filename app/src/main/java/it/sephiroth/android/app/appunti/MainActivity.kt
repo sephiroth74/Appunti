@@ -132,7 +132,7 @@ class MainActivity : AudioRecordActivity(true) {
         outState.putParcelable("LIST_STATE_KEY", listState)
     }
 
-    override fun onRestoreInstanceState(state: Bundle?) {
+    override fun onRestoreInstanceState(state: Bundle) {
         super.onRestoreInstanceState(state)
 
         if (state != null)
@@ -225,7 +225,8 @@ class MainActivity : AudioRecordActivity(true) {
 
             // do not show the no results screen in case group is not empty and it's not
             // archived or with alarm category
-            val shouldDisplayNoResultScreen = it.isNullOrEmpty() && !model.group.isReminder() && !model.group.isArchived()
+            val shouldDisplayNoResultScreen =
+                it.isNullOrEmpty() && !model.group.isReminder() && !model.group.isArchived()
 
             if (shouldDisplayNoResultScreen) {
                 noResultsView.isVisible = true
@@ -277,17 +278,26 @@ class MainActivity : AudioRecordActivity(true) {
         params.bottomMargin += navigationbarHeight
 
         val list = mutableListOf<SpeedDialActionItem>(
-            SpeedDialActionItem.Builder(R.id.fab_menu_new_text_note, R.drawable.sharp_text_fields_24)
+            SpeedDialActionItem.Builder(
+                R.id.fab_menu_new_text_note,
+                R.drawable.sharp_text_fields_24
+            )
                 .setLabel(getString(R.string.new_text_note))
                 .create(),
-            SpeedDialActionItem.Builder(R.id.fab_menu_new_list_note, R.drawable.sharp_format_list_bulleted_24)
+            SpeedDialActionItem.Builder(
+                R.id.fab_menu_new_list_note,
+                R.drawable.sharp_format_list_bulleted_24
+            )
                 .setLabel(getString(R.string.new_list_note))
                 .create()
         )
 
         if (SpeechRecognizer.isRecognitionAvailable(this)) {
             list.add(
-                SpeedDialActionItem.Builder(R.id.fab_menu_new_audio_note, R.drawable.sharp_play_circle_outline_24)
+                SpeedDialActionItem.Builder(
+                    R.id.fab_menu_new_audio_note,
+                    R.drawable.sharp_play_circle_outline_24
+                )
                     .setLabel("New Audio Note")
                     .create()
             )
@@ -297,8 +307,14 @@ class MainActivity : AudioRecordActivity(true) {
 
         speedDial.setOnActionSelectedListener {
             when (it.id) {
-                R.id.fab_menu_new_text_note -> startDetailActivity(Entry.EntryType.TEXT, model.group.getCategoryID())
-                R.id.fab_menu_new_list_note -> startDetailActivity(Entry.EntryType.LIST, model.group.getCategoryID())
+                R.id.fab_menu_new_text_note -> startDetailActivity(
+                    Entry.EntryType.TEXT,
+                    model.group.getCategoryID()
+                )
+                R.id.fab_menu_new_list_note -> startDetailActivity(
+                    Entry.EntryType.LIST,
+                    model.group.getCategoryID()
+                )
                 R.id.fab_menu_new_audio_note -> askForAudioPermission()
             }
             speedDial.close(true)
@@ -608,8 +624,9 @@ class MainActivity : AudioRecordActivity(true) {
             if (resultCode == Activity.RESULT_OK) {
 
                 if (data?.hasExtra(RecognizerIntent.EXTRA_RESULTS) == true) {
-                    val results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                    startActivity(IntentUtils.createSearchableIntent(this, results[0]))
+                    data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.let { results ->
+                        startActivity(IntentUtils.createSearchableIntent(this, results[0]))
+                    }
                 }
             }
         }
@@ -619,7 +636,10 @@ class MainActivity : AudioRecordActivity(true) {
     @HunterDebug
     override fun onAudioPermissionsDenied(shouldShowRequestPermissionRationale: Boolean) {
         if (shouldShowRequestPermissionRationale) {
-            IntentUtils.showPermissionsDeniedDialog(this, R.string.permissions_audio_required_dialog_body)
+            IntentUtils.showPermissionsDeniedDialog(
+                this,
+                R.string.permissions_audio_required_dialog_body
+            )
         } else {
             Toast.makeText(this, R.string.permissions_required, Toast.LENGTH_SHORT).show()
         }
@@ -631,7 +651,11 @@ class MainActivity : AudioRecordActivity(true) {
     }
 
     override fun onAudioCaptured(data: Intent) {
-        startDetailActivity(Entry.EntryType.TEXT, model.group.getCategoryID(), kotlin.Pair(IntentUtils.KEY_AUDIO_BUNDLE, data))
+        startDetailActivity(
+            Entry.EntryType.TEXT,
+            model.group.getCategoryID(),
+            kotlin.Pair(IntentUtils.KEY_AUDIO_BUNDLE, data)
+        )
     }
 
     @HunterDebug
@@ -639,8 +663,19 @@ class MainActivity : AudioRecordActivity(true) {
     }
 
 
-    private fun startDetailActivity(type: Entry.EntryType, categoryId: Long? = null, extra: kotlin.Pair<String, Intent>? = null) {
-        startDetailActivityFromIntent(IntentUtils.createNewEntryIntent(this, type, categoryId, extra), null)
+    private fun startDetailActivity(
+        type: Entry.EntryType,
+        categoryId: Long? = null,
+        extra: kotlin.Pair<String, Intent>? = null
+    ) {
+        startDetailActivityFromIntent(
+            IntentUtils.createNewEntryIntent(
+                this,
+                type,
+                categoryId,
+                extra
+            ), null
+        )
 
         answers.logCustom(
             CustomEvent("main.newNote").putCustomAttribute("type", type.name)
@@ -921,7 +956,9 @@ class MainActivity : AudioRecordActivity(true) {
                 actionModeBackground
                     .animate()
                     .alpha(1f)
-                    .setDuration(resources.getInteger(android.R.integer.config_mediumAnimTime).toLong())
+                    .setDuration(
+                        resources.getInteger(android.R.integer.config_mediumAnimTime).toLong()
+                    )
                     .setListener(null)
                     .start()
             } else {
@@ -940,7 +977,9 @@ class MainActivity : AudioRecordActivity(true) {
                 actionModeBackground
                     .animate()
                     .alpha(0f)
-                    .setDuration(resources.getInteger(android.R.integer.config_mediumAnimTime).toLong())
+                    .setDuration(
+                        resources.getInteger(android.R.integer.config_mediumAnimTime).toLong()
+                    )
                     .setAnimationListener {
                         onAnimationEnd { property, _ ->
                             actionModeBackground.visibility = View.INVISIBLE

@@ -358,9 +358,7 @@ class DetailActivity : AudioRecordActivity() {
                         .fromString(intent.getStringExtra(Intent.EXTRA_TEXT))
                         .apply {
                             entryTitle =
-                                if (intent.hasExtra(Intent.EXTRA_SUBJECT)) intent.getStringExtra(
-                                    Intent.EXTRA_SUBJECT
-                                ) else ""
+                                intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: ""
                         }.also { entry ->
                             if (intent.hasExtra(Intent.EXTRA_STREAM)) {
                                 val streamUri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)

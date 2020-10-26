@@ -26,13 +26,16 @@ object PicassoUtils {
         override fun canHandleRequest(data: Request): Boolean {
             Timber.i("canHandleRequest(uri=${data.uri}, scheme=${data.uri.scheme})")
             val scheme = data.uri.scheme
-            return SCHEME_VIDEO == scheme || data.uri.resolveMimeTypeFromFilePart()?.startsWith("video/", true) == true
+            return SCHEME_VIDEO == scheme || data.uri.resolveMimeTypeFromFilePart()
+                ?.startsWith("video/", true) == true
         }
 
         @Throws(IOException::class)
         override fun load(data: Request, policy: Int): RequestHandler.Result {
             Timber.i("load(${data.uri}, $policy")
-            val bm = ThumbnailUtils.createVideoThumbnail(data.uri.path, MediaStore.Images.Thumbnails.MINI_KIND)
+            val bm = data.uri.path?.let { path ->
+                ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND)
+            } ?: throw IOException("Cannot create video thumbnail")
             return RequestHandler.Result(bm, LoadedFrom.NETWORK)
         }
     }
@@ -54,7 +57,9 @@ object PicassoUtils {
             Timber.i("load(${request.uri}, $networkPolicy")
 
             val cacheKey =
-                "${request.uri.toString().sha1().toLowerCase()}-${request.targetWidth}-${request.targetHeight}"
+                "${
+                    request.uri.toString().sha1().toLowerCase()
+                }-${request.targetWidth}-${request.targetHeight}"
 
             if (NetworkPolicy.shouldReadFromDiskCache(networkPolicy)) {
                 cache.get(cacheKey)?.let { bmp ->
