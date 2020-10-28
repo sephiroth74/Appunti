@@ -132,8 +132,8 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
 
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
-    implementation 'androidx.constraintlayout:constraintlayout-solver:2.0.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.3'
+    implementation 'androidx.constraintlayout:constraintlayout-solver:2.0.3'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.collection:collection-ktx:1.1.0'
     implementation 'androidx.coordinatorlayout:coordinatorlayout:1.1.0'
@@ -174,7 +174,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.6'
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation 'com.github.barteksc:pdfium-android:1.9.0'
-    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.google.code.gson:gson:2.8.6'
 
     implementation 'com.github.tbruyelle:rxpermissions:0.10.2'
     implementation 'com.patloew.rxlocation:rxlocation:1.0.5'
